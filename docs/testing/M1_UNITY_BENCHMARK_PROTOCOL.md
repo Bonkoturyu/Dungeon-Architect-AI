@@ -7,7 +7,7 @@ This is a clean-room production implementation and does not copy pre-production 
 
 ## Candidate
 
-- Unity Editor: `6000.3.20f1`
+- Unity Editor: `6000.3.23f1`
 - Build target: WebGL / Release
 - External assets: none
 - Third-party runtime packages: none beyond Unity-provided engine/runtime
@@ -83,6 +83,8 @@ git fetch origin; git switch feat/m1-unity-benchmark; git pull --ff-only origin 
 ```
 
 The command intentionally does not delete untracked files, so the previously reviewed local `package-lock.json` is preserved for hash verification.
+
+The runner expects Unity `6000.3.23f1` at the standard Unity Hub location. If installed elsewhere, set `UNITY_EDITOR` to the exact `Unity.exe` path before running.
 
 ## Output
 
