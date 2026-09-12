@@ -11,8 +11,8 @@ GitHub Issues are not created unless explicitly authorized.
 - DAI-006 Decision Log / ADR baseline — DONE
 
 ## M1
-- DAI-010 Re-measure 3D stack — BLOCKED (current environment cannot resolve npm registry; no Pre result substitution)
-- DAI-011 Select 3D stack via ADR — OPEN / blocked by DAI-010
+- DAI-010 Re-measure 3D stack — IN PROGRESS (clean-room production benchmark harness ready; controlled Three.js/Babylon.js execution pending local npm/browser run; Unity handled separately)
+- DAI-011 Select 3D stack via ADR — OPEN / blocked by DAI-010 evidence
 - DAI-012 Clean-room DungeonSpec v1 — DONE
 - DAI-013 Fixed-spec parser/validator — DONE
 - DAI-014 Minimal renderer adapter — BLOCKED by DAI-010/011

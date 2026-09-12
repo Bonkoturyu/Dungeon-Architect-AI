@@ -8,6 +8,14 @@
     "test:intent": "node --test packages/intent/test/*.test.js",
     "test:editor": "node --test packages/editor-core/test/*.test.js",
     "test:play": "node --test packages/play-core/test/*.test.js",
-    "test": "npm run test:core && npm run test:generator && npm run test:intent && npm run test:editor && npm run test:play"
+    "test:benchmark-fixture": "node --test benchmarks/renderers/*.test.js",
+    "bench:renderers": "node scripts/run-renderer-benchmark.mjs",
+    "test": "npm run test:core && npm run test:generator && npm run test:intent && npm run test:editor && npm run test:play && npm run test:benchmark-fixture"
+  },
+  "devDependencies": {
+    "@babylonjs/core": "9.18.0",
+    "playwright-core": "1.62.0",
+    "three": "0.185.1",
+    "vite": "8.1.5"
   }
 }
