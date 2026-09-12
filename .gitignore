@@ -1,0 +1,39 @@
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Dependencies / builds
+node_modules/
+dist/
+build/
+coverage/
+.tmp/
+.cache/
+
+# Unity candidates
+Library/
+Temp/
+Logs/
+obj/
+UserSettings/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Private evidence
+private/
+docs/legal/evidence/private/
+docs/registration/private/
+
+# Runtime/model caches
+models/
+model-cache/
+.browser-cache/
