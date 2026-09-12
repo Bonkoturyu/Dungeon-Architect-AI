@@ -1,44 +1,23 @@
 # Production Dependency Review — 2026-09-12
 
-## Purpose
+## Result
 
-Pre-production approvals were scoped to experiments and do not authorize production use. This file records the first production re-review state.
+Approved for scoped production M1 use:
 
-## Rendering candidates
+- `three@0.185.1` — renderer benchmark/candidate
+- `@babylonjs/core@9.18.0` — renderer benchmark/candidate
+- `vite@8.1.5` — benchmark/build/preview tooling
+- `playwright-core@1.62.0` — benchmark/smoke automation
 
-### `three`
+Still not Approved:
 
-- Pre reference version: 0.185.1 / r185
-- Upstream project license: MIT
-- Production status: Candidate
-- Production install/use: Not yet Approved
-- Required before approval: exact package/version source, archive/integrity/provenance, bundled license obligations, intended production usage.
+- Unity production selection (candidate toolchain; current terms/toolchain and production measurement still required)
+- all browser-local LLM runtimes/models
+- cloud LLM provider/runtime
+- any third-party creative asset not individually recorded as CC0 Approved
 
-### `@babylonjs/core`
+## Important distinction
 
-- Pre reference version: 9.18.0
-- Upstream project license: Apache-2.0
-- Production status: Candidate
-- Production install/use: Not yet Approved
-- Required before approval: exact package/version source, archive/integrity/provenance, NOTICE obligations, intended production usage.
+The approval above authorizes installing/using the exact versions for their recorded production scope. It does not choose the final renderer. Renderer selection still requires DAI-010 production measurement and DAI-011 ADR.
 
-### Unity 6000.3.20f1
-
-- Pre reference version: 6000.3.20f1
-- Official release exists and includes current Web/WebGL fixes.
-- Production status: Candidate toolchain
-- Production selection: Not Confirmed
-- Required: production benchmark under the frozen candidate protocol and current Unity licensing/toolchain review.
-
-## Local LLM candidates
-
-No local LLM runtime/model is Approved for production at this point.
-Pre DEP-006/007/008 unresolved evidence remains unresolved for production and must not be installed or used merely because development has started.
-
-## Cloud LLM
-
-Provider remains Open. Production review must cover terms, API-key handling, privacy/security, cost, structured-output reliability, and fallback behavior.
-
-## Rule
-
-Candidate ≠ Approved. No package/model/runtime in this document may be installed or used in production until the production legal register records `Approved` with exact evidence.
+After installation, the production lockfile and resolved integrity/provenance must be checked and the legal register updated if it differs from the reviewed package identity.
