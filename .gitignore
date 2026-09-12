@@ -24,6 +24,7 @@ Temp/
 Logs/
 obj/
 UserSettings/
+benchmarks/unity-webgl/Assets/Generated/
 
 # IDE / OS
 .vscode/
