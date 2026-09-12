@@ -6,6 +6,7 @@
     "test:core": "node --test packages/core/test/*.test.js",
     "test:generator": "node --test packages/generator/test/*.test.js",
     "test:intent": "node --test packages/intent/test/*.test.js",
-    "test": "npm run test:core && npm run test:generator && npm run test:intent"
+    "test:editor": "node --test packages/editor-core/test/*.test.js",
+    "test": "npm run test:core && npm run test:generator && npm run test:intent && npm run test:editor"
   }
 }
