@@ -1,0 +1,13 @@
+{
+  "name": "dungeon-architect-ai",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:core": "node --test packages/core/test/*.test.js",
+    "test:generator": "node --test packages/generator/test/*.test.js",
+    "test:intent": "node --test packages/intent/test/*.test.js",
+    "test:editor": "node --test packages/editor-core/test/*.test.js",
+    "test:play": "node --test packages/play-core/test/*.test.js",
+    "test": "npm run test:core && npm run test:generator && npm run test:intent && npm run test:editor && npm run test:play"
+  }
+}
