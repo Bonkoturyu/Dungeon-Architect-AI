@@ -17,7 +17,7 @@ GitHub Issues are not created unless explicitly authorized.
 - DAI-013 Fixed-spec parser/validator — DONE
 - DAI-014 Minimal renderer adapter — BLOCKED by DAI-010/011
 - DAI-015 Select/move/undo vertical slice — PARTIAL (renderer-independent move/undo core done; browser selection UI pending)
-- DAI-016 START→Goal→Result — OPEN
+- DAI-016 START→Goal→Result — PARTIAL (renderer-independent session/START/Result core done; browser vertical slice pending)
 - DAI-017 Perspective/combat evaluation — OPEN
 
 ## M2
@@ -29,7 +29,11 @@ GitHub Issues are not created unless explicitly authorized.
 - DAI-025 Seed reproducibility tests — DONE
 
 ## M3
-DAI-030 session state; DAI-031 enemy minimum; DAI-032 treasure/trap/recovery; DAI-033 supported event logic; DAI-034 clear/failure/Result.
+- DAI-030 Session state — PARTIAL (basic renderer-independent play state exists; gameplay state still pending)
+- DAI-031 Enemy minimum — OPEN
+- DAI-032 Treasure/trap/recovery runtime — OPEN
+- DAI-033 Supported event logic — OPEN
+- DAI-034 Clear/failure/Result — PARTIAL (clear/basic Result done; failure/gameplay metrics pending)
 
 ## M4
 - DAI-040 DesignIntent schema — DONE
@@ -41,10 +45,10 @@ DAI-030 session state; DAI-031 enemy minimum; DAI-032 treasure/trap/recovery; DA
 
 ## M5
 - DAI-050 EditCommand contract — DONE for renderer-independent v1 commands
-- DAI-051 Manual editor — OPEN (UI/renderer required)
-- DAI-052 Undo/redo — DONE at core command/session layer
+- DAI-051 Manual editor — OPEN
+- DAI-052 Undo/redo — DONE at core layer
 - DAI-053 Natural-language edit — OPEN
-- DAI-054 Validation/START gate — OPEN
+- DAI-054 Validation/START gate — PARTIAL (core START gate done; UI/editor integration pending)
 
 ## M6
 DAI-060 simulator; DAI-061 agents; DAI-062 metrics; DAI-063 intent-fit scoring; DAI-064 explainable summary.
