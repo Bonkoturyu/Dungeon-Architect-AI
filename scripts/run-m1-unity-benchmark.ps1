@@ -1,12 +1,24 @@
 $ErrorActionPreference = 'Stop'
 
 $ExpectedVersion = '6000.3.20f1'
+$ExpectedLockSha256 = 'ce94a9ee4241ee798c0c32c0fda55f00cb4462fb6ba6244acdd3d53589d261cc'
 $ProjectPath = Join-Path $PSScriptRoot '..\benchmarks\unity-webgl'
 $ProjectPath = [System.IO.Path]::GetFullPath($ProjectPath)
 $BuildDir = Join-Path $PSScriptRoot '..\.tmp\unity-webgl-build'
 $BuildDir = [System.IO.Path]::GetFullPath($BuildDir)
 $LogPath = Join-Path $PSScriptRoot '..\.tmp\unity-webgl-build.log'
 $LogPath = [System.IO.Path]::GetFullPath($LogPath)
+$RepoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+$LockPath = Join-Path $RepoRoot 'package-lock.json'
+
+if (-not (Test-Path $LockPath)) {
+    throw 'Audited package-lock.json is missing. Keep the previously reviewed lockfile in the repository working tree.'
+}
+
+$ActualLockSha256 = (Get-FileHash -Algorithm SHA256 -Path $LockPath).Hash.ToLowerInvariant()
+if ($ActualLockSha256 -ne $ExpectedLockSha256) {
+    throw "package-lock.json hash mismatch. Expected $ExpectedLockSha256, got $ActualLockSha256. Stop and re-review dependencies before continuing."
+}
 
 if (-not $env:UNITY_EDITOR) {
     $candidate = "C:\Program Files\Unity\Hub\Editor\$ExpectedVersion\Editor\Unity.exe"
@@ -36,14 +48,15 @@ if (-not $env:CHROME_PATH -or -not (Test-Path $env:CHROME_PATH)) {
     throw 'Chrome not found. Set CHROME_PATH.'
 }
 
+Write-Host "Audited lockfile: $ActualLockSha256"
 Write-Host "Unity: $env:UNITY_EDITOR"
 Write-Host "Chrome: $env:CHROME_PATH"
 Write-Host "Project: $ProjectPath"
 
-Write-Host 'Ensuring reviewed Node benchmark dependencies are installed...'
-npm install --ignore-scripts --no-audit --no-fund
+Write-Host 'Installing exactly the audited Node dependency graph...'
+npm ci --ignore-scripts --no-audit --no-fund
 if ($LASTEXITCODE -ne 0) {
-    throw 'npm install failed.'
+    throw 'npm ci failed.'
 }
 
 $env:DAI_UNITY_BUILD_DIR = $BuildDir
