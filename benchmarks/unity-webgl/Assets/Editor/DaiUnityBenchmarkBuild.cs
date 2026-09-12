@@ -20,11 +20,37 @@ namespace DungeonArchitectAI.Benchmark.Editor
                 );
             }
 
+            Directory.CreateDirectory("Assets/Generated");
+            AssetDatabase.Refresh();
+
+            const string materialPath = "Assets/Generated/BenchmarkMaterial.mat";
+            if (AssetDatabase.LoadAssetAtPath<Material>(materialPath) != null)
+            {
+                AssetDatabase.DeleteAsset(materialPath);
+            }
+
+            var shader = Shader.Find("Unlit/Color");
+            if (shader == null)
+            {
+                shader = Shader.Find("Standard");
+            }
+            if (shader == null)
+            {
+                throw new InvalidOperationException("Unity Editor could not resolve a benchmark shader.");
+            }
+
+            var material = new Material(shader)
+            {
+                color = new Color(0.557f, 0.604f, 0.686f, 1f)
+            };
+            AssetDatabase.CreateAsset(material, materialPath);
+            AssetDatabase.SaveAssets();
+
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             var root = new GameObject("DAI_Unity_Benchmark");
-            root.AddComponent<DaiUnityBenchmarkBootstrap>();
+            var bootstrap = root.AddComponent<DaiUnityBenchmarkBootstrap>();
+            bootstrap.BenchmarkMaterial = material;
 
-            Directory.CreateDirectory("Assets/Generated");
             var scenePath = "Assets/Generated/Benchmark.unity";
             EditorSceneManager.SaveScene(scene, scenePath);
 
