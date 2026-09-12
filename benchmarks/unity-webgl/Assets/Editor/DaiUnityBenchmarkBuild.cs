@@ -13,10 +13,10 @@ namespace DungeonArchitectAI.Benchmark.Editor
     {
         public static void Build()
         {
-            if (Application.unityVersion != "6000.3.20f1")
+            if (Application.unityVersion != "6000.3.23f1")
             {
                 throw new InvalidOperationException(
-                    $"Unity version mismatch. Expected 6000.3.20f1, got {Application.unityVersion}"
+                    $"Unity version mismatch. Expected 6000.3.23f1, got {Application.unityVersion}"
                 );
             }
 
