@@ -54,6 +54,8 @@ The browser runner records:
 - Do not use pre-production experiment implementation source.
 - Do not substitute pre-production measurements.
 - Do not treat a missing Unity result as a rejection.
+- Every accepted run must have `runtimeErrors == 0`, zero browser console/page errors, zero failed requests, and zero HTTP errors.
+- A run that reaches `complete` but reports runtime/browser errors is invalid evidence and must be fixed/repeated rather than averaged in.
 - Do not select a renderer until DAI-011 records an ADR.
 - A material fixture/protocol change requires a new benchmark revision.
 
