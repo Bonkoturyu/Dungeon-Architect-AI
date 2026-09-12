@@ -10,6 +10,19 @@ $LogPath = Join-Path $PSScriptRoot '..\.tmp\unity-webgl-build.log'
 $LogPath = [System.IO.Path]::GetFullPath($LogPath)
 $RepoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $LockPath = Join-Path $RepoRoot 'package-lock.json'
+$BuildIndex = Join-Path $BuildDir 'index.html'
+
+function Show-UnityLogTail {
+    if (Test-Path $LogPath) {
+        Write-Host ''
+        Write-Host '----- Unity build log (last 120 lines) -----' -ForegroundColor Yellow
+        Get-Content -Path $LogPath -Tail 120
+        Write-Host '----- End Unity build log -----' -ForegroundColor Yellow
+    }
+    else {
+        Write-Host "Unity log was not created: $LogPath" -ForegroundColor Yellow
+    }
+}
 
 if (-not (Test-Path $LockPath)) {
     throw 'Audited package-lock.json is missing. Keep the previously reviewed lockfile in the repository working tree.'
@@ -31,6 +44,12 @@ if (-not $env:UNITY_EDITOR -or -not (Test-Path $env:UNITY_EDITOR)) {
     throw "Unity $ExpectedVersion not found. Set UNITY_EDITOR to the exact Unity.exe path."
 }
 
+$UnityEditorDir = Split-Path -Parent $env:UNITY_EDITOR
+$WebGLSupportDir = Join-Path $UnityEditorDir 'Data\PlaybackEngines\WebGLSupport'
+if (-not (Test-Path $WebGLSupportDir)) {
+    throw "Unity WebGL Build Support is not installed for $ExpectedVersion. In Unity Hub, open Installs -> $ExpectedVersion -> Add modules, install Web Build Support/WebGL Build Support, then run this same command again. Expected path: $WebGLSupportDir"
+}
+
 if (-not $env:CHROME_PATH) {
     $chromeCandidates = @(
         'C:\Program Files\Google\Chrome\Application\chrome.exe',
@@ -50,6 +69,7 @@ if (-not $env:CHROME_PATH -or -not (Test-Path $env:CHROME_PATH)) {
 
 Write-Host "Audited lockfile: $ActualLockSha256"
 Write-Host "Unity: $env:UNITY_EDITOR"
+Write-Host "WebGL support: $WebGLSupportDir"
 Write-Host "Chrome: $env:CHROME_PATH"
 Write-Host "Project: $ProjectPath"
 
@@ -66,19 +86,32 @@ New-Item -ItemType Directory -Force -Path (Split-Path $BuildDir) | Out-Null
 if (Test-Path $BuildDir) {
     Remove-Item -Recurse -Force $BuildDir
 }
+if (Test-Path $LogPath) {
+    Remove-Item -Force $LogPath
+}
 
+Write-Host 'Building Unity WebGL benchmark...'
 & $env:UNITY_EDITOR `
     -batchmode `
-    -nographics `
     -quit `
+    -buildTarget WebGL `
     -projectPath $ProjectPath `
     -executeMethod DungeonArchitectAI.Benchmark.Editor.DaiUnityBenchmarkBuild.Build `
     -logFile $LogPath
 
-if ($LASTEXITCODE -ne 0) {
-    throw "Unity build failed. See $LogPath"
+$UnityExitCode = $LASTEXITCODE
+if ($UnityExitCode -ne 0) {
+    Show-UnityLogTail
+    throw "Unity process failed with exit code $UnityExitCode. See $LogPath"
 }
 
+if (-not (Test-Path $BuildIndex)) {
+    Show-UnityLogTail
+    throw "Unity exited without creating the expected WebGL build. Missing: $BuildIndex. The log above contains the actual Unity-side cause."
+}
+
+Write-Host "Unity build created: $BuildIndex"
+Write-Host 'Running browser benchmark (5 runs)...'
 node scripts/run-unity-renderer-benchmark.mjs
 if ($LASTEXITCODE -ne 0) {
     throw 'Unity browser benchmark failed.'
