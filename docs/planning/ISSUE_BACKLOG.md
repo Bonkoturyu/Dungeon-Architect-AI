@@ -3,7 +3,6 @@
 GitHub Issues are not created unless explicitly authorized.
 
 ## M0
-
 - DAI-001 Start gate — DONE
 - DAI-002 Clean production repository — DONE
 - DAI-003 Governance baseline — DONE on production branch
@@ -12,7 +11,6 @@ GitHub Issues are not created unless explicitly authorized.
 - DAI-006 Decision Log / ADR baseline — DONE
 
 ## M1
-
 - DAI-010 Re-measure 3D stack — BLOCKED (current execution environment cannot resolve npm registry; no Pre result substitution)
 - DAI-011 Select 3D stack via ADR — OPEN / blocked by DAI-010
 - DAI-012 Clean-room DungeonSpec v1 — DONE
@@ -23,19 +21,23 @@ GitHub Issues are not created unless explicitly authorized.
 - DAI-017 Perspective/combat evaluation — OPEN
 
 ## M2
-
 - DAI-020 Deterministic room graph — DONE
 - DAI-021 Spatial room placement/corridors — DONE for abstract Spec layout; renderer geometry pending
-- DAI-022 Walls/doors/Start/Goal — PARTIAL (Start/Goal done; walls/doors pending renderer/logic design)
-- DAI-023 Structural reachability validation — DONE for corridor connectivity; key/door/event soft locks later
-- DAI-024 Multiple-route constraints — PARTIAL (alternate edges implemented; risk/safety semantics pending)
+- DAI-022 Walls/doors/Start/Goal — PARTIAL (Start/Goal done; walls/doors pending)
+- DAI-023 Structural reachability validation — DONE for corridor connectivity
+- DAI-024 Multiple-route constraints — PARTIAL (alternate edges done; risk/safety semantics pending)
 - DAI-025 Seed reproducibility tests — DONE
 
 ## M3
 DAI-030 session state; DAI-031 enemy minimum; DAI-032 treasure/trap/recovery; DAI-033 supported event logic; DAI-034 clear/failure/Result.
 
 ## M4
-DAI-040 DesignIntent schema; DAI-041 deterministic fallback; DAI-042 cloud-provider review; DAI-043 cloud adapter; DAI-044 normalization/retry; DAI-045 prompt regression.
+- DAI-040 DesignIntent schema — DONE
+- DAI-041 Deterministic fallback parser/presets — DONE
+- DAI-042 Production cloud-provider review — OPEN
+- DAI-043 Cloud intent adapter — OPEN
+- DAI-044 Normalization/retry policy — PARTIAL (normalization done; provider retry/cancel pending)
+- DAI-045 Prompt regression — OPEN
 
 ## M5
 DAI-050 EditCommand; DAI-051 manual editor; DAI-052 undo/redo; DAI-053 natural-language edit; DAI-054 validation/START gate.
