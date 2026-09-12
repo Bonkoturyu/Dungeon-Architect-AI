@@ -11,17 +11,28 @@ $LogPath = [System.IO.Path]::GetFullPath($LogPath)
 $RepoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $LockPath = Join-Path $RepoRoot 'package-lock.json'
 $BuildIndex = Join-Path $BuildDir 'index.html'
+$ProjectLock = Join-Path $ProjectPath 'Temp\UnityLockfile'
+$DefaultEditorLog = Join-Path $env:LOCALAPPDATA 'Unity\Editor\Editor.log'
 
 function Show-UnityLogTail {
     if (Test-Path $LogPath) {
         Write-Host ''
-        Write-Host '----- Unity build log (last 120 lines) -----' -ForegroundColor Yellow
-        Get-Content -Path $LogPath -Tail 120
+        Write-Host '----- Unity build log (last 160 lines) -----' -ForegroundColor Yellow
+        Get-Content -Path $LogPath -Tail 160
         Write-Host '----- End Unity build log -----' -ForegroundColor Yellow
+        return
     }
-    else {
-        Write-Host "Unity log was not created: $LogPath" -ForegroundColor Yellow
+
+    if (Test-Path $DefaultEditorLog) {
+        Write-Host ''
+        Write-Host 'Custom Unity log was not created. Showing default Editor.log tail instead.' -ForegroundColor Yellow
+        Write-Host '----- Unity Editor.log (last 160 lines) -----' -ForegroundColor Yellow
+        Get-Content -Path $DefaultEditorLog -Tail 160
+        Write-Host '----- End Unity Editor.log -----' -ForegroundColor Yellow
+        return
     }
+
+    Write-Host "Neither Unity log exists: $LogPath / $DefaultEditorLog" -ForegroundColor Yellow
 }
 
 if (-not (Test-Path $LockPath)) {
@@ -48,6 +59,10 @@ $UnityEditorDir = Split-Path -Parent $env:UNITY_EDITOR
 $WebGLSupportDir = Join-Path $UnityEditorDir 'Data\PlaybackEngines\WebGLSupport'
 if (-not (Test-Path $WebGLSupportDir)) {
     throw "Unity WebGL Build Support is not installed for $ExpectedVersion. In Unity Hub, open Installs -> $ExpectedVersion -> Add modules, install Web Build Support/WebGL Build Support, then run this same command again. Expected path: $WebGLSupportDir"
+}
+
+if (Test-Path $ProjectLock) {
+    throw "The Unity benchmark project is already locked/open. A previous Unity process may still be running. Close that Unity instance (or wait for it to finish), then run this same command again. Lock: $ProjectLock"
 }
 
 if (-not $env:CHROME_PATH) {
@@ -91,15 +106,27 @@ if (Test-Path $LogPath) {
 }
 
 Write-Host 'Building Unity WebGL benchmark...'
-& $env:UNITY_EDITOR `
-    -batchmode `
-    -quit `
-    -buildTarget WebGL `
-    -projectPath $ProjectPath `
-    -executeMethod DungeonArchitectAI.Benchmark.Editor.DaiUnityBenchmarkBuild.Build `
-    -logFile $LogPath
+Write-Host 'Waiting for the Unity Editor process to finish (this can take several minutes on first import/build)...'
 
-$UnityExitCode = $LASTEXITCODE
+$UnityArgumentList = @(
+    '-batchmode',
+    '-quit',
+    '-accept-apiupdate',
+    '-buildTarget', 'WebGL',
+    '-projectPath', ('"' + $ProjectPath + '"'),
+    '-executeMethod', 'DungeonArchitectAI.Benchmark.Editor.DaiUnityBenchmarkBuild.Build',
+    '-logFile', ('"' + $LogPath + '"')
+)
+
+try {
+    $UnityProcess = Start-Process -FilePath $env:UNITY_EDITOR -ArgumentList $UnityArgumentList -PassThru -Wait
+    $UnityExitCode = $UnityProcess.ExitCode
+}
+catch {
+    Show-UnityLogTail
+    throw "Failed to launch/wait for Unity: $($_.Exception.Message)"
+}
+
 if ($UnityExitCode -ne 0) {
     Show-UnityLogTail
     throw "Unity process failed with exit code $UnityExitCode. See $LogPath"
@@ -107,7 +134,7 @@ if ($UnityExitCode -ne 0) {
 
 if (-not (Test-Path $BuildIndex)) {
     Show-UnityLogTail
-    throw "Unity exited without creating the expected WebGL build. Missing: $BuildIndex. The log above contains the actual Unity-side cause."
+    throw "Unity finished without creating the expected WebGL build. Missing: $BuildIndex. The log above contains the actual Unity-side cause."
 }
 
 Write-Host "Unity build created: $BuildIndex"
