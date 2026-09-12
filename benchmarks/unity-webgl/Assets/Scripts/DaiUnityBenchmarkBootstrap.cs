@@ -22,6 +22,7 @@ namespace DungeonArchitectAI.Benchmark
         private Material benchmarkMaterial;
 
         private readonly List<float> frameSamplesMs = new List<float>(EffectiveSamples);
+        private Mesh benchmarkCubeMesh;
         private float startRealtime;
         private float sceneGenerationMs;
         private int runtimeErrors;
@@ -54,6 +55,8 @@ namespace DungeonArchitectAI.Benchmark
                     throw new InvalidOperationException("Serialized benchmark material is missing.");
                 }
 
+                benchmarkCubeMesh = CreateCubeMesh();
+
                 var generationStart = Time.realtimeSinceStartup;
                 BuildFixture();
                 sceneGenerationMs = (Time.realtimeSinceStartup - generationStart) * 1000f;
@@ -72,6 +75,10 @@ namespace DungeonArchitectAI.Benchmark
         private void OnDestroy()
         {
             Application.logMessageReceived -= OnLogMessage;
+            if (benchmarkCubeMesh != null)
+            {
+                Destroy(benchmarkCubeMesh);
+            }
         }
 
         private void OnLogMessage(string condition, string stackTrace, LogType type)
@@ -93,11 +100,11 @@ namespace DungeonArchitectAI.Benchmark
                 {
                     var position = new Vector3(x * Spacing, 0f, z * Spacing);
                     rooms.Add(position);
-                    AddBox(new Vector3(RoomSize, 0.2f, RoomSize), position + new Vector3(0f, -0.1f, 0f));
-                    AddBox(new Vector3(RoomSize, RoomHeight, WallThickness), position + new Vector3(0f, RoomHeight / 2f, -RoomSize / 2f));
-                    AddBox(new Vector3(RoomSize, RoomHeight, WallThickness), position + new Vector3(0f, RoomHeight / 2f, RoomSize / 2f));
-                    AddBox(new Vector3(WallThickness, RoomHeight, RoomSize), position + new Vector3(-RoomSize / 2f, RoomHeight / 2f, 0f));
-                    AddBox(new Vector3(WallThickness, RoomHeight, RoomSize), position + new Vector3(RoomSize / 2f, RoomHeight / 2f, 0f));
+                    AddBox(new Vector3(RoomSize, 0.2f, RoomSize), position + new Vector3(0f, -0.1f, 0f), 0f, "BenchmarkBox");
+                    AddBox(new Vector3(RoomSize, RoomHeight, WallThickness), position + new Vector3(0f, RoomHeight / 2f, -RoomSize / 2f), 0f, "BenchmarkBox");
+                    AddBox(new Vector3(RoomSize, RoomHeight, WallThickness), position + new Vector3(0f, RoomHeight / 2f, RoomSize / 2f), 0f, "BenchmarkBox");
+                    AddBox(new Vector3(WallThickness, RoomHeight, RoomSize), position + new Vector3(-RoomSize / 2f, RoomHeight / 2f, 0f), 0f, "BenchmarkBox");
+                    AddBox(new Vector3(WallThickness, RoomHeight, RoomSize), position + new Vector3(RoomSize / 2f, RoomHeight / 2f, 0f), 0f, "BenchmarkBox");
 
                     var index = z * RoomColumns + x;
                     if (index > 0)
@@ -125,19 +132,17 @@ namespace DungeonArchitectAI.Benchmark
             lightObject.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
         }
 
-        private void AddBox(Vector3 scale, Vector3 position)
+        private void AddBox(Vector3 scale, Vector3 position, float rotationY, string objectName)
         {
-            var box = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            box.name = "BenchmarkBox";
+            var box = new GameObject(objectName);
             box.transform.position = position;
             box.transform.localScale = scale;
-            var collider = box.GetComponent<Collider>();
-            if (collider != null)
-            {
-                Destroy(collider);
-            }
+            box.transform.rotation = Quaternion.Euler(0f, rotationY, 0f);
 
-            var renderer = box.GetComponent<MeshRenderer>();
+            var filter = box.AddComponent<MeshFilter>();
+            filter.sharedMesh = benchmarkCubeMesh;
+
+            var renderer = box.AddComponent<MeshRenderer>();
             renderer.sharedMaterial = benchmarkMaterial;
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             renderer.receiveShadows = false;
@@ -149,23 +154,35 @@ namespace DungeonArchitectAI.Benchmark
             var length = new Vector2(delta.x, delta.z).magnitude;
             var center = (a + b) * 0.5f;
             var angle = Mathf.Atan2(delta.z, delta.x) * Mathf.Rad2Deg;
+            AddBox(
+                new Vector3(length, 0.2f, CorridorWidth),
+                center + new Vector3(0f, -0.1f, 0f),
+                -angle,
+                "BenchmarkCorridor"
+            );
+        }
 
-            var box = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            box.name = "BenchmarkCorridor";
-            box.transform.position = center + new Vector3(0f, -0.1f, 0f);
-            box.transform.localScale = new Vector3(length, 0.2f, CorridorWidth);
-            box.transform.rotation = Quaternion.Euler(0f, -angle, 0f);
-
-            var collider = box.GetComponent<Collider>();
-            if (collider != null)
+        private static Mesh CreateCubeMesh()
+        {
+            var mesh = new Mesh { name = "DAI_Benchmark_Cube" };
+            mesh.vertices = new[]
             {
-                Destroy(collider);
-            }
-
-            var renderer = box.GetComponent<MeshRenderer>();
-            renderer.sharedMaterial = benchmarkMaterial;
-            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            renderer.receiveShadows = false;
+                new Vector3(-0.5f, -0.5f, -0.5f), new Vector3( 0.5f, -0.5f, -0.5f), new Vector3( 0.5f,  0.5f, -0.5f), new Vector3(-0.5f,  0.5f, -0.5f),
+                new Vector3(-0.5f, -0.5f,  0.5f), new Vector3( 0.5f, -0.5f,  0.5f), new Vector3( 0.5f,  0.5f,  0.5f), new Vector3(-0.5f,  0.5f,  0.5f)
+            };
+            mesh.triangles = new[]
+            {
+                0, 2, 1, 0, 3, 2,
+                5, 6, 4, 6, 7, 4,
+                4, 7, 0, 7, 3, 0,
+                1, 2, 5, 2, 6, 5,
+                3, 7, 2, 7, 6, 2,
+                4, 0, 5, 0, 1, 5
+            };
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            mesh.UploadMeshData(true);
+            return mesh;
         }
 
         private IEnumerator MeasureFrames()
