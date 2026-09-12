@@ -15,6 +15,8 @@ if (!fs.existsSync(chromePath)) {
   throw new Error(`Chrome not found: ${chromePath}`);
 }
 
+fs.mkdirSync(outputDir, { recursive: true });
+
 const mime = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -43,6 +45,9 @@ const server = http.createServer((req, res) => {
   res.writeHead(200, {
     'Content-Type': mime[path.extname(filePath)] || 'application/octet-stream',
     'Cache-Control': 'no-store',
+    'Cross-Origin-Opener-Policy': 'same-origin',
+    'Cross-Origin-Embedder-Policy': 'require-corp',
+    'Cross-Origin-Resource-Policy': 'same-origin',
   });
   fs.createReadStream(filePath).pipe(res);
 });
@@ -54,10 +59,63 @@ const url = `http://127.0.0.1:${address.port}/`;
 const browser = await chromium.launch({
   executablePath: chromePath,
   headless: false,
-  args: ['--disable-background-timer-throttling', '--disable-renderer-backgrounding']
+  args: [
+    '--disable-background-timer-throttling',
+    '--disable-renderer-backgrounding',
+    '--enable-webgl',
+    '--ignore-gpu-blocklist',
+  ]
 });
 
 const results = [];
+
+async function writeDiagnostics({ page, run, consoleMessages, consoleErrors, pageErrors, failedRequests, httpErrors, reason }) {
+  const stamp = new Date().toISOString().replaceAll(':', '-');
+  const prefix = path.join(outputDir, `unity-diagnostic-run-${run}-${stamp}`);
+
+  let pageState = null;
+  let bodyText = null;
+  try {
+    pageState = await page.evaluate(() => ({
+      href: location.href,
+      readyState: document.readyState,
+      benchmarkReady: window.__DAI_UNITY_BENCHMARK_READY__ ?? null,
+      benchmarkStatus: window.__DAI_UNITY_BENCHMARK_STATUS__ ?? null,
+      benchmark: window.__DAI_UNITY_BENCHMARK__ ?? null,
+      canvasCount: document.querySelectorAll('canvas').length,
+      unityCanvasExists: Boolean(document.querySelector('#unity-canvas')),
+    }));
+    bodyText = await page.locator('body').innerText().catch(() => null);
+    await page.screenshot({ path: `${prefix}.png`, fullPage: true }).catch(() => {});
+  } catch {
+    // Keep whatever diagnostics were already captured.
+  }
+
+  const diagnostic = {
+    generatedAt: new Date().toISOString(),
+    run,
+    reason,
+    pageState,
+    bodyText,
+    consoleMessages,
+    consoleErrors,
+    pageErrors,
+    failedRequests,
+    httpErrors,
+  };
+
+  fs.writeFileSync(`${prefix}.json`, JSON.stringify(diagnostic, null, 2));
+  console.error(`Unity benchmark diagnostic: ${prefix}.json`);
+  if (fs.existsSync(`${prefix}.png`)) {
+    console.error(`Unity benchmark screenshot: ${prefix}.png`);
+  }
+  console.error('Unity benchmark page state:', JSON.stringify(pageState));
+  if (consoleErrors.length) console.error('Console errors:', consoleErrors);
+  if (pageErrors.length) console.error('Page errors:', pageErrors);
+  if (failedRequests.length) console.error('Failed requests:', failedRequests);
+  if (httpErrors.length) console.error('HTTP errors:', httpErrors);
+}
+
 try {
   for (let run = 1; run <= runs; run += 1) {
     const context = await browser.newContext({
@@ -65,31 +123,78 @@ try {
       deviceScaleFactor: 1,
     });
     const page = await context.newPage();
+    const consoleMessages = [];
     const consoleErrors = [];
     const pageErrors = [];
+    const failedRequests = [];
+    const httpErrors = [];
 
     page.on('console', (message) => {
-      if (message.type() === 'error') consoleErrors.push(message.text());
+      const text = message.text();
+      if (text.includes('DAI_BENCH_')) {
+        consoleMessages.push(`${message.type()}: ${text}`);
+        console.log(`[Unity browser] ${text}`);
+      }
+      if (message.type() === 'error') consoleErrors.push(text);
     });
     page.on('pageerror', (error) => pageErrors.push(String(error)));
+    page.on('requestfailed', (request) => {
+      failedRequests.push({ url: request.url(), failure: request.failure()?.errorText ?? 'unknown' });
+    });
+    page.on('response', (response) => {
+      if (response.status() >= 400) {
+        httpErrors.push({ url: response.url(), status: response.status() });
+      }
+    });
 
     const started = performance.now();
-    await page.goto(url, { waitUntil: 'load', timeout: 120_000 });
-    await page.waitForFunction(
-      () => window.__DAI_UNITY_BENCHMARK_READY__ === true &&
-            window.__DAI_UNITY_BENCHMARK__?.complete === true,
-      null,
-      { timeout: 120_000 }
-    );
+    try {
+      await page.goto(url, { waitUntil: 'load', timeout: 120_000 });
+      await page.waitForFunction(
+        () => window.__DAI_UNITY_BENCHMARK_READY__ === true,
+        null,
+        { timeout: 180_000 }
+      );
+    } catch (error) {
+      await writeDiagnostics({
+        page,
+        run,
+        consoleMessages,
+        consoleErrors,
+        pageErrors,
+        failedRequests,
+        httpErrors,
+        reason: String(error),
+      });
+      throw error;
+    }
+
     const navigationCompleteMs = performance.now() - started;
     const metrics = await page.evaluate(() => window.__DAI_UNITY_BENCHMARK__);
+
+    if (!metrics?.complete || metrics?.failed) {
+      await writeDiagnostics({
+        page,
+        run,
+        consoleMessages,
+        consoleErrors,
+        pageErrors,
+        failedRequests,
+        httpErrors,
+        reason: metrics?.failureMessage || metrics?.bridgeError || 'Unity benchmark reported failure',
+      });
+      throw new Error(metrics?.failureMessage || metrics?.bridgeError || 'Unity benchmark reported failure');
+    }
 
     results.push({
       renderer: 'unity-webgl',
       run,
       navigationCompleteMs,
+      consoleMessages,
       consoleErrors,
       pageErrors,
+      failedRequests,
+      httpErrors,
       ...metrics,
     });
 
@@ -100,7 +205,6 @@ try {
   server.close();
 }
 
-fs.mkdirSync(outputDir, { recursive: true });
 const generatedAt = new Date().toISOString();
 const output = {
   generatedAt,
