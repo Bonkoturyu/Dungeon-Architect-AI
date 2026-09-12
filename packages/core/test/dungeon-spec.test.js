@@ -52,3 +52,11 @@ test("malformed JSON is rejected without throwing", () => {
   assert.equal(result.ok, false);
   assert.equal(result.errors[0].code, "JSON_PARSE_ERROR");
 });
+
+test("unreachable Goal is rejected", async () => {
+  const spec = await loadFixture();
+  spec.corridors = [spec.corridors[0]];
+  const result = validateDungeonSpec(spec);
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((error) => error.code === "GOAL_UNREACHABLE"));
+});

@@ -140,6 +140,36 @@ function validateEntities(entities, ids, roomIds, errors) {
   }
 }
 
+function validateReachability(spec, roomIds, errors) {
+  if (!Array.isArray(spec.corridors) || !Array.isArray(spec.entities)) return;
+
+  const start = spec.entities.find((entity) => entity?.type === "start");
+  const goal = spec.entities.find((entity) => entity?.type === "goal");
+  if (!start || !goal || !roomIds.has(start.roomId) || !roomIds.has(goal.roomId)) return;
+
+  const adjacency = new Map([...roomIds].map((roomId) => [roomId, []]));
+  for (const corridor of spec.corridors) {
+    if (!corridor || !roomIds.has(corridor.fromRoomId) || !roomIds.has(corridor.toRoomId)) continue;
+    adjacency.get(corridor.fromRoomId).push(corridor.toRoomId);
+    adjacency.get(corridor.toRoomId).push(corridor.fromRoomId);
+  }
+
+  const visited = new Set([start.roomId]);
+  const queue = [start.roomId];
+  while (queue.length > 0) {
+    const current = queue.shift();
+    for (const next of adjacency.get(current) ?? []) {
+      if (visited.has(next)) continue;
+      visited.add(next);
+      queue.push(next);
+    }
+  }
+
+  if (!visited.has(goal.roomId)) {
+    pushError(errors, "GOAL_UNREACHABLE", "corridors", `Goal room ${goal.roomId} is unreachable from start room ${start.roomId}.`);
+  }
+}
+
 function validateEvents(events, ids, errors) {
   if (!Array.isArray(events)) {
     pushError(errors, "ARRAY_REQUIRED", "events", "events must be an array.");
@@ -181,6 +211,7 @@ export function validateDungeonSpec(spec) {
   validateCorridors(spec.corridors, ids, roomIds, errors);
   validateEntities(spec.entities, ids, roomIds, errors);
   validateEvents(spec.events, ids, errors);
+  validateReachability(spec, roomIds, errors);
 
   return { valid: errors.length === 0, errors };
 }

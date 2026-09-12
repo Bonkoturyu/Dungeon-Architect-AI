@@ -3,6 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test:core": "node --test packages/core/test/*.test.js"
+    "test:core": "node --test packages/core/test/*.test.js",
+    "test:generator": "node --test packages/generator/test/*.test.js",
+    "test": "npm run test:core && npm run test:generator"
   }
 }
