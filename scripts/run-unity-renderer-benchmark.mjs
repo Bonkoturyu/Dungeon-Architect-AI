@@ -172,7 +172,16 @@ try {
     const navigationCompleteMs = performance.now() - started;
     const metrics = await page.evaluate(() => window.__DAI_UNITY_BENCHMARK__);
 
-    if (!metrics?.complete || metrics?.failed) {
+    const invalidReasons = [];
+    if (!metrics?.complete || metrics?.failed) invalidReasons.push(metrics?.failureMessage || metrics?.bridgeError || 'Unity benchmark reported failure');
+    if ((metrics?.runtimeErrors ?? 0) > 0) invalidReasons.push(`runtimeErrors=${metrics.runtimeErrors}`);
+    if (consoleErrors.length > 0) invalidReasons.push(`consoleErrors=${consoleErrors.length}`);
+    if (pageErrors.length > 0) invalidReasons.push(`pageErrors=${pageErrors.length}`);
+    if (failedRequests.length > 0) invalidReasons.push(`failedRequests=${failedRequests.length}`);
+    if (httpErrors.length > 0) invalidReasons.push(`httpErrors=${httpErrors.length}`);
+
+    if (invalidReasons.length > 0) {
+      const reason = invalidReasons.filter(Boolean).join(', ');
       await writeDiagnostics({
         page,
         run,
@@ -181,9 +190,9 @@ try {
         pageErrors,
         failedRequests,
         httpErrors,
-        reason: metrics?.failureMessage || metrics?.bridgeError || 'Unity benchmark reported failure',
+        reason,
       });
-      throw new Error(metrics?.failureMessage || metrics?.bridgeError || 'Unity benchmark reported failure');
+      throw new Error(`Unity benchmark run ${run} is invalid: ${reason}`);
     }
 
     results.push({
