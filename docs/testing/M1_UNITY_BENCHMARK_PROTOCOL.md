@@ -57,12 +57,32 @@ The browser runner records:
 - Do not select a renderer until DAI-011 records an ADR.
 - A material fixture/protocol change requires a new benchmark revision.
 
+## Dependency reproducibility gate
+
+The runner requires the already reviewed `package-lock.json` to remain in the local working tree.
+Its SHA-256 must be exactly:
+
+`ce94a9ee4241ee798c0c32c0fda55f00cb4462fb6ba6244acdd3d53589d261cc`
+
+If the lockfile is missing or differs, the benchmark stops before dependency installation.
+The runner then uses `npm ci --ignore-scripts` so the audited dependency graph is reproduced rather than re-resolved.
+
 ## Unity licensing gate
 
 Before running Unity, the operator must use a Unity plan for which they are currently tier-eligible.
 The script does not attempt to determine account eligibility.
 
 If eligibility is uncertain, stop and verify current Unity licensing terms before running the Editor.
+
+## One-command local execution
+
+From the existing local repository clone, run this as one PowerShell command:
+
+```powershell
+git fetch origin; git switch feat/m1-unity-benchmark; git pull --ff-only origin feat/m1-unity-benchmark; powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-m1-unity-benchmark.ps1
+```
+
+The command intentionally does not delete untracked files, so the previously reviewed local `package-lock.json` is preserved for hash verification.
 
 ## Output
 
