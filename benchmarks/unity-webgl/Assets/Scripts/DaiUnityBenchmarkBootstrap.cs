@@ -18,28 +18,55 @@ namespace DungeonArchitectAI.Benchmark
         private const float Spacing = 12f;
         private const int EffectiveSamples = 179;
 
+        [SerializeField]
+        private Material benchmarkMaterial;
+
         private readonly List<float> frameSamplesMs = new List<float>(EffectiveSamples);
         private float startRealtime;
         private float sceneGenerationMs;
         private int runtimeErrors;
 
+        public Material BenchmarkMaterial
+        {
+            set => benchmarkMaterial = value;
+        }
+
 #if UNITY_WEBGL && !UNITY_EDITOR
         [DllImport("__Internal")]
         private static extern void DAI_ReportBenchmarkJson(string json);
+
+        [DllImport("__Internal")]
+        private static extern void DAI_ReportBenchmarkStatus(string status);
 #endif
 
         private void Awake()
         {
-            startRealtime = Time.realtimeSinceStartup;
-            Application.targetFrameRate = -1;
-            QualitySettings.vSyncCount = 0;
-            Application.logMessageReceived += OnLogMessage;
+            try
+            {
+                ReportStatus("awake");
+                startRealtime = Time.realtimeSinceStartup;
+                Application.targetFrameRate = -1;
+                QualitySettings.vSyncCount = 0;
+                Application.logMessageReceived += OnLogMessage;
 
-            var generationStart = Time.realtimeSinceStartup;
-            BuildFixture();
-            sceneGenerationMs = (Time.realtimeSinceStartup - generationStart) * 1000f;
+                if (benchmarkMaterial == null)
+                {
+                    throw new InvalidOperationException("Serialized benchmark material is missing.");
+                }
 
-            StartCoroutine(MeasureFrames());
+                var generationStart = Time.realtimeSinceStartup;
+                BuildFixture();
+                sceneGenerationMs = (Time.realtimeSinceStartup - generationStart) * 1000f;
+                ReportStatus("fixture-built");
+
+                StartCoroutine(MeasureFrames());
+            }
+            catch (Exception error)
+            {
+                runtimeErrors += 1;
+                Debug.LogException(error);
+                ReportFailure(error);
+            }
         }
 
         private void OnDestroy()
@@ -58,22 +85,6 @@ namespace DungeonArchitectAI.Benchmark
         private void BuildFixture()
         {
             RenderSettings.ambientLight = new Color(0.5f, 0.5f, 0.5f);
-
-            var shader = Shader.Find("Universal Render Pipeline/Lit");
-            if (shader == null)
-            {
-                shader = Shader.Find("Standard");
-            }
-            if (shader == null)
-            {
-                throw new InvalidOperationException("No supported benchmark shader was found.");
-            }
-
-            var material = new Material(shader)
-            {
-                color = new Color(0.557f, 0.604f, 0.686f, 1f)
-            };
-
             var rooms = new List<Vector3>(RoomColumns * RoomRows);
 
             for (var z = 0; z < RoomRows; z += 1)
@@ -82,16 +93,16 @@ namespace DungeonArchitectAI.Benchmark
                 {
                     var position = new Vector3(x * Spacing, 0f, z * Spacing);
                     rooms.Add(position);
-                    AddBox(material, new Vector3(RoomSize, 0.2f, RoomSize), position + new Vector3(0f, -0.1f, 0f));
-                    AddBox(material, new Vector3(RoomSize, RoomHeight, WallThickness), position + new Vector3(0f, RoomHeight / 2f, -RoomSize / 2f));
-                    AddBox(material, new Vector3(RoomSize, RoomHeight, WallThickness), position + new Vector3(0f, RoomHeight / 2f, RoomSize / 2f));
-                    AddBox(material, new Vector3(WallThickness, RoomHeight, RoomSize), position + new Vector3(-RoomSize / 2f, RoomHeight / 2f, 0f));
-                    AddBox(material, new Vector3(WallThickness, RoomHeight, RoomSize), position + new Vector3(RoomSize / 2f, RoomHeight / 2f, 0f));
+                    AddBox(new Vector3(RoomSize, 0.2f, RoomSize), position + new Vector3(0f, -0.1f, 0f));
+                    AddBox(new Vector3(RoomSize, RoomHeight, WallThickness), position + new Vector3(0f, RoomHeight / 2f, -RoomSize / 2f));
+                    AddBox(new Vector3(RoomSize, RoomHeight, WallThickness), position + new Vector3(0f, RoomHeight / 2f, RoomSize / 2f));
+                    AddBox(new Vector3(WallThickness, RoomHeight, RoomSize), position + new Vector3(-RoomSize / 2f, RoomHeight / 2f, 0f));
+                    AddBox(new Vector3(WallThickness, RoomHeight, RoomSize), position + new Vector3(RoomSize / 2f, RoomHeight / 2f, 0f));
 
                     var index = z * RoomColumns + x;
                     if (index > 0)
                     {
-                        AddCorridor(material, rooms[index - 1], position);
+                        AddCorridor(rooms[index - 1], position);
                     }
                 }
             }
@@ -114,7 +125,7 @@ namespace DungeonArchitectAI.Benchmark
             lightObject.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
         }
 
-        private static void AddBox(Material material, Vector3 scale, Vector3 position)
+        private void AddBox(Vector3 scale, Vector3 position)
         {
             var box = GameObject.CreatePrimitive(PrimitiveType.Cube);
             box.name = "BenchmarkBox";
@@ -127,12 +138,12 @@ namespace DungeonArchitectAI.Benchmark
             }
 
             var renderer = box.GetComponent<MeshRenderer>();
-            renderer.sharedMaterial = material;
+            renderer.sharedMaterial = benchmarkMaterial;
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             renderer.receiveShadows = false;
         }
 
-        private static void AddCorridor(Material material, Vector3 a, Vector3 b)
+        private void AddCorridor(Vector3 a, Vector3 b)
         {
             var delta = b - a;
             var length = new Vector2(delta.x, delta.z).magnitude;
@@ -152,16 +163,18 @@ namespace DungeonArchitectAI.Benchmark
             }
 
             var renderer = box.GetComponent<MeshRenderer>();
-            renderer.sharedMaterial = material;
+            renderer.sharedMaterial = benchmarkMaterial;
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             renderer.receiveShadows = false;
         }
 
         private IEnumerator MeasureFrames()
         {
+            ReportStatus("waiting-first-frame");
             yield return new WaitForEndOfFrame();
 
             var firstRenderMs = (Time.realtimeSinceStartup - startRealtime) * 1000f;
+            ReportStatus("sampling-frames");
             var previous = Time.realtimeSinceStartup;
 
             while (frameSamplesMs.Count < EffectiveSamples)
@@ -187,6 +200,8 @@ namespace DungeonArchitectAI.Benchmark
                 sceneGenerationMs = sceneGenerationMs,
                 firstRenderMs = firstRenderMs,
                 complete = true,
+                failed = false,
+                failureMessage = string.Empty,
                 sampleCount = frameSamplesMs.Count,
                 frameMsMedian = median,
                 frameMsP95 = p95,
@@ -197,6 +212,47 @@ namespace DungeonArchitectAI.Benchmark
                 runtimeErrors = runtimeErrors
             };
 
+            ReportStatus("complete");
+            ReportPayload(payload);
+        }
+
+        private void ReportFailure(Exception error)
+        {
+            var payload = new BenchmarkPayload
+            {
+                fixtureId = FixtureId,
+                renderer = "unity-webgl",
+                version = Application.unityVersion,
+                objectCount = 0,
+                sceneGenerationMs = sceneGenerationMs,
+                firstRenderMs = 0f,
+                complete = true,
+                failed = true,
+                failureMessage = error.ToString(),
+                sampleCount = frameSamplesMs.Count,
+                frameMsMedian = 0f,
+                frameMsP95 = 0f,
+                frameMsP99 = 0f,
+                fpsMedian = 0f,
+                drawCalls = -1,
+                triangles = 0,
+                runtimeErrors = runtimeErrors
+            };
+
+            ReportStatus("failed");
+            ReportPayload(payload);
+        }
+
+        private static void ReportStatus(string status)
+        {
+            Debug.Log($"DAI_BENCH_STATUS:{status}");
+#if UNITY_WEBGL && !UNITY_EDITOR
+            DAI_ReportBenchmarkStatus(status);
+#endif
+        }
+
+        private static void ReportPayload(BenchmarkPayload payload)
+        {
             var json = JsonUtility.ToJson(payload);
 #if UNITY_WEBGL && !UNITY_EDITOR
             DAI_ReportBenchmarkJson(json);
@@ -226,6 +282,8 @@ namespace DungeonArchitectAI.Benchmark
             public float sceneGenerationMs;
             public float firstRenderMs;
             public bool complete;
+            public bool failed;
+            public string failureMessage;
             public int sampleCount;
             public float frameMsMedian;
             public float frameMsP95;
