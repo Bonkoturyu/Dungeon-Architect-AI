@@ -10,42 +10,42 @@ Official start, Terms, current time, user authorization, clean repo state confir
 ### DAI-002 — Create clean production repository — DONE
 User created `Bonkoturyu/Dungeon-Architect-AI` as a new non-fork repository.
 
-### DAI-003 — Establish governance baseline — IN PROGRESS
-README, LICENSE, NOTICE, AGENTS, secret/privacy boundary, legal registers.
+### DAI-003 — Establish governance baseline — DONE
+README, LICENSE, NOTICE, AGENTS, secret/privacy boundary, legal registers established on the production branch.
 
-### DAI-004 — Migrate knowledge-only documents — IN PROGRESS
-Move only requirements/specification/acceptance/decision knowledge. Do not copy Pre implementation.
+### DAI-004 — Migrate knowledge-only documents — DONE
+Requirements/specification/acceptance/decision knowledge only; no Pre implementation copied.
 
-### DAI-005 — Establish verification baseline — OPEN
-Define formatter/typecheck/test/build/secret-scan commands after the stack is selected; establish stack-neutral verification rules now.
+### DAI-005 — Establish verification baseline — IN PROGRESS
+Stack-neutral rules exist. `test:core` is live. Formatter/typecheck/build/browser smoke commands remain pending stack selection.
 
-### DAI-006 — Production Decision Log / ADR baseline — IN PROGRESS
-Record all material architecture decisions with evidence and reversal conditions.
+### DAI-006 — Production Decision Log / ADR baseline — DONE
+Decision Log and ADR structure exist; material choices remain evidence-gated.
 
 ## M1
 
-### DAI-010 — Re-measure 3D stack in production
-Reimplement minimal candidate measurements clean-room; no Pre experiment source copy.
+### DAI-010 — Re-measure 3D stack in production — BLOCKED (ENVIRONMENT)
+Exact browser-native packages are scoped Approved, but current container cannot resolve npm registry. Production benchmark not run; no selection claimed.
 
-### DAI-011 — Select 3D stack via ADR
-Select/reject candidates only from production evidence.
+### DAI-011 — Select production 3D stack via ADR — OPEN
+Blocked by DAI-010 production evidence.
 
-### DAI-012 — Clean-room DungeonSpec v1 contract
-Renderer/runtime types forbidden in serialized spec.
+### DAI-012 — Clean-room DungeonSpec v1 contract — DONE
+Renderer/runtime types are excluded from serialized contract.
 
-### DAI-013 — Fixed-spec parser and validator
-Validate required fields, stable IDs and references.
+### DAI-013 — Fixed-spec parser and validator — DONE
+Required fields, IDs, Start/Goal counts and room references are validated. Core tests: 6/6 pass.
 
-### DAI-014 — Minimal renderer adapter
+### DAI-014 — Minimal renderer adapter — BLOCKED BY DAI-010/011
 Render a <20-room fixture without Core importing renderer types.
 
-### DAI-015 — Select/move/undo vertical slice
+### DAI-015 — Select/move/undo vertical slice — OPEN
 One deterministic edit path.
 
-### DAI-016 — START→Goal→Result vertical slice
+### DAI-016 — START→Goal→Result vertical slice — OPEN
 No Cloud AI requirement.
 
-### DAI-017 — Perspective/combat production evaluation
+### DAI-017 — Perspective/combat production evaluation — OPEN
 Run frozen PCE-1.0 protocol in production.
 
 ## M2

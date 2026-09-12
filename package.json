@@ -1,0 +1,8 @@
+{
+  "name": "dungeon-architect-ai",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:core": "node --test packages/core/test/*.test.js"
+  }
+}

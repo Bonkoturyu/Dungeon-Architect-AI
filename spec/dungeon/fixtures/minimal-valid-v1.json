@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "1.0",
+  "id": "fixture-minimal-valid-v1",
+  "seed": 12092026,
+  "rooms": [
+    { "id": "room-start", "x": 0, "z": 0, "width": 8, "depth": 8 },
+    { "id": "room-middle", "x": 12, "z": 0, "width": 8, "depth": 8 },
+    { "id": "room-goal", "x": 24, "z": 0, "width": 8, "depth": 8 }
+  ],
+  "corridors": [
+    { "id": "corridor-1", "fromRoomId": "room-start", "toRoomId": "room-middle", "width": 3 },
+    { "id": "corridor-2", "fromRoomId": "room-middle", "toRoomId": "room-goal", "width": 3 }
+  ],
+  "entities": [
+    { "id": "start-1", "type": "start", "roomId": "room-start" },
+    { "id": "enemy-1", "type": "enemy", "roomId": "room-middle" },
+    { "id": "treasure-1", "type": "treasure", "roomId": "room-middle" },
+    { "id": "goal-1", "type": "goal", "roomId": "room-goal" }
+  ],
+  "events": []
+}
