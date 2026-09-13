@@ -17,7 +17,7 @@ GitHub Issues are not created unless explicitly authorized.
 - DAI-013 Fixed-spec parser/validator — DONE
 - DAI-014 Minimal renderer adapter — DONE (Three.js minimal renderer + production Chrome smoke passed)
 - DAI-015 Select/move/undo vertical slice — DONE (canvas room selection + EditSession move + undo/redo production Chrome smoke passed)
-- DAI-016 START→Goal→Result — PARTIAL (renderer-independent session/START/Result core done; browser vertical slice pending)
+- DAI-016 START→Goal→Result — IN PROGRESS (browser START snapshot + room-click movement + Goal/Result slice implemented; production smoke pending)
 - DAI-017 Perspective/combat evaluation — OPEN
 
 ## M2
