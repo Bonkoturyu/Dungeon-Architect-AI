@@ -2,10 +2,10 @@
 
 ## Status
 
-**IN PROGRESS.**
+**DONE — production Windows/Chrome validation passed on 2026-09-13.**
 
 DAI-022 closes the structural mismatch where corridor floor geometry previously passed through continuous room walls.
-The current implementation carves deterministic wall openings from the corridor rectangle while preserving renderer-independent `DungeonSpec` input.
+The implementation carves deterministic wall openings from the corridor rectangle while preserving renderer-independent `DungeonSpec` input.
 
 ## Implemented geometry
 
@@ -45,46 +45,52 @@ This avoids assuming all corridors are axis-aligned. A diagonal corridor can leg
 
 The production PCE fixture test also remains part of `npm test`.
 
-## Browser smoke fixture
+## Production Chrome evidence
 
-The visible Chrome smoke uses:
+Visible Chrome smoke used:
 
 `spec/dungeon/fixtures/pce-perspective-combat-20-v1.json`
 
-Expected invariant:
+Reviewed raw evidence:
 
-- 20 rooms;
-- 22 corridors;
-- 2 Start/Goal markers;
-- every corridor has at least one wall opening at both endpoint rooms;
-- every room participates in at least one opening;
-- no console/page/request/HTTP errors.
+- JSON file: `dai-022-door-smoke.json`
+- JSON SHA-256: `652c0972b4a4761e3c69370a994f0f84af2349e383a386d01253b8dc8c16499d`
+- screenshot: `dai-022-door-smoke.png`
+- screenshot SHA-256: `1e82abc9e01ba686b57b4d98040171a1115a4847b7511b8173e743a8f0861347`
+- source Spec: `pce-perspective-combat-20-v1`
 
-The test intentionally does not claim dynamic door logic, combat, treasure/trap interactions, or PCE user-study results.
+Observed result:
 
-## Required production validation
+- `ready = true`
+- `failed = false`
+- rooms: 20
+- corridors: 22
+- Start/Goal markers: 2
+- runtime object groups: 44
+- total structural wall openings: 50
+- rooms with at least one opening: 20
+- diagonal/corner corridor count: 3
+- missing corridor endpoint openings: 0
+- `consoleErrors = []`
+- `pageErrors = []`
+- `failedRequests = []`
+- `httpErrors = []`
 
-Run from the Windows clone:
+The screenshot visually confirms the 20-room PCE fixture renders as one connected structural layout with wall passages instead of continuous walls blocking the corridors.
 
-```powershell
-git fetch origin; git switch feat/dai-022-door-openings; git pull --ff-only origin feat/dai-022-door-openings; powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-dai-022-validation.ps1
-```
+## Completion gate result
 
-The runner:
+DAI-022 acceptance conditions are satisfied for the structural passage slice:
 
-1. verifies the audited `package-lock.json` SHA-256;
-2. performs `npm ci --ignore-scripts`;
-3. runs the complete production Node test suite;
-4. starts Vite locally;
-5. renders the 20-room PCE production fixture in visible Chrome;
-6. verifies wall-opening coverage for all corridor endpoints;
-7. writes JSON evidence and a screenshot under `artifacts/door-smoke/`.
+- cardinal passage openings are deterministic;
+- diagonal corridor corner crossings are supported;
+- overlapping openings on one wall are merged before wall segmentation;
+- every one of the 22 corridors has an opening at both endpoint rooms;
+- all 20 rooms participate in at least one opening;
+- Start and Goal remain present;
+- the renderer-independent `DungeonSpec` boundary is preserved;
+- the visible Chrome smoke completed without browser/network errors.
 
-Expected evidence:
+## Explicit non-goals
 
-- `artifacts/door-smoke/dai-022-door-smoke.json`
-- `artifacts/door-smoke/dai-022-door-smoke.png`
-
-## Completion gate
-
-Do not mark DAI-022 DONE until the one-command production validation passes and its JSON/screenshot evidence is reviewed.
+This result does not claim dynamic lock/unlock door logic, keys, combat, treasure/trap interactions, final art direction, or a PCE-1.0 Perspective/Combat winner. Those remain later scope / Pending Evidence.
