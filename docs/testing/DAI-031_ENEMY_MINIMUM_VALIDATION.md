@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS.**
+**DONE — production Node validation passed on 2026-09-13.**
 
 DAI-031 adds the minimum renderer-independent enemy lifecycle required by later Play, event-logic, simulation, and PCE-1.0 Combat work.
 
@@ -101,29 +101,39 @@ The scenario:
 
 This is engineering evidence for the shared enemy runtime only. It is **not** a PCE-1.0 Combat-candidate result.
 
-## Required production validation
+## Reviewed production evidence
 
-Run from the Windows clone:
+Windows production validation completed successfully on 2026-09-13.
 
-```powershell
-git fetch origin; git switch feat/dai-031-enemy-minimum; git pull --ff-only origin feat/dai-031-enemy-minimum; powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-dai-031-validation.ps1
-```
+Reviewed raw evidence:
 
-The runner:
+- file: `dai-031-enemy-minimum.json`
+- generated at: `2026-09-13T07:41:42.445Z`
+- Node.js: `v24.15.0`
+- source fixture: `pce-perspective-combat-20-v1`
+- SHA-256: `ea5888d04b966b411fb0fbef2807930c6b6609ad732925d57308963edf89c9d5`
+- `passed = true`
+- 20 / 20 evidence checks passed
+- both PCE enemies were initially active
+- remote defeat was rejected
+- `enemy-01` and `enemy-02` each recorded one encounter and one defeat
+- `enemiesCleared` reached exactly `2`
+- duplicate defeat was rejected without double-counting
+- defeated enemies were hidden from the default active list but remained inspectable
+- the session reached `room-10` and cleared successfully
+- finished-session enemy action was rejected
+- authoring data and execution snapshot remained unchanged
+- enemy encounter/defeat audit events were present
+- existing Result remained valid
 
-1. verifies the audited `package-lock.json` SHA-256;
-2. installs the exact reviewed dependency graph with scripts disabled;
-3. runs the full production Node test suite;
-4. runs the PCE-fixture enemy runtime evidence scenario;
-5. writes `artifacts/enemy-runtime/dai-031-enemy-minimum.json`.
+## Completion gate result
 
-## Completion gate
+DAI-031 completion conditions are satisfied:
 
-Do not mark DAI-031 DONE until:
-
-- the complete production Node test suite passes;
-- the enemy runtime evidence reports `passed = true`;
-- the generated JSON evidence is reviewed.
+- the complete production Node test suite passed;
+- the PCE-fixture enemy runtime evidence reports `passed = true`;
+- every evidence check passed;
+- the generated JSON evidence was reviewed.
 
 ## Explicit non-goals
 
