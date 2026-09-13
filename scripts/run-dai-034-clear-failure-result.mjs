@@ -56,8 +56,10 @@ const failTrace = [];
 failedSession = move(failedSession, 'room-01', 7010, failTrace);
 failedSession = move(failedSession, 'room-02', 7020, failTrace);
 failedSession = increment(failedSession, 'damageTaken', 12, 7021);
-const beforeFailure = JSON.stringify(failedSession);
-const failedTransition = failPlaySession(failedSession, 'timeout', { at: 7060 });
+const failureInputSession = failedSession;
+const beforeFailure = JSON.stringify(failureInputSession);
+const failedTransition = failPlaySession(failureInputSession, 'timeout', { at: 7060 });
+const timeoutFailurePreviousPreserved = JSON.stringify(failureInputSession) === beforeFailure;
 failedSession = requireOk(failedTransition, 'fail timeout session');
 const failedResult = createPlayResult(failedSession);
 const moveAfterFailure = movePlaySession(failedSession, 'room-03', { at: 7070 });
@@ -104,7 +106,7 @@ const checks = {
   clearSnapshotUnchanged: JSON.stringify(clearedSession.snapshot) === clearSnapshotBefore,
   timeoutFailureTransition:
     failedSession.status === 'failed' && failedSession.failureReason === 'timeout' && failedSession.completedAt === 7060,
-  timeoutFailurePreviousPreserved: JSON.stringify(JSON.parse(beforeFailure)) === beforeFailure,
+  timeoutFailurePreviousPreserved,
   timeoutResultValid:
     failedResult.ok === true && failedResult.result.status === 'failed' && failedResult.result.failureReason === 'timeout',
   timeoutRouteCaptured:
