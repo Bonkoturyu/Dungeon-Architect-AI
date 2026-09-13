@@ -20,6 +20,13 @@ export const SUPPORTING_AXES = Object.freeze([
 ]);
 
 const ALL_AXES = Object.freeze([...CORE_AXES, ...SUPPORTING_AXES]);
+const DESIGN_INTENT_FIELDS = Object.freeze([
+  "schemaVersion",
+  ...ALL_AXES,
+  "targetDuration",
+  "instantDeathAllowed"
+]);
+const DESIGN_INTENT_FIELD_SET = new Set(DESIGN_INTENT_FIELDS);
 
 export const DEFAULT_DESIGN_INTENT = Object.freeze({
   schemaVersion: DESIGN_INTENT_VERSION,
@@ -52,12 +59,7 @@ export const DESIGN_INTENT_JSON_SCHEMA = Object.freeze({
     targetDuration: Object.freeze({ type: "integer", minimum: 120, maximum: 1800 }),
     instantDeathAllowed: Object.freeze({ type: "boolean", enum: [false] })
   }),
-  required: Object.freeze([
-    "schemaVersion",
-    ...ALL_AXES,
-    "targetDuration",
-    "instantDeathAllowed"
-  ])
+  required: DESIGN_INTENT_FIELDS
 });
 
 function clamp01(value, fallback) {
@@ -93,6 +95,16 @@ export function validateDesignIntent(intent) {
       valid: false,
       errors: [{ code: "INTENT_NOT_OBJECT", path: "$", message: "DesignIntent must be an object." }]
     };
+  }
+
+  for (const key of Object.keys(intent)) {
+    if (!DESIGN_INTENT_FIELD_SET.has(key)) {
+      errors.push({
+        code: "INTENT_FIELD_UNSUPPORTED",
+        path: key,
+        message: `Unsupported DesignIntent field: ${key}.`
+      });
+    }
   }
 
   if (intent.schemaVersion !== DESIGN_INTENT_VERSION) {
