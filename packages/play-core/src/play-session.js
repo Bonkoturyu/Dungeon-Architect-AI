@@ -1,5 +1,6 @@
 import { validateDungeonSpec } from "../../core/src/dungeon-spec.js";
 import { applyGameplayStateCommand, createGameplayState } from "./gameplay-state.js";
+import { dispatchSupportedEvents, isRuntimeCorridorEnabled } from "./event-runtime.js";
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -9,9 +10,11 @@ function findEntity(spec, type) {
   return spec.entities.find((entity) => entity.type === type);
 }
 
-function buildAdjacency(spec) {
+function buildAdjacency(session) {
+  const spec = session.snapshot;
   const adjacency = new Map(spec.rooms.map((room) => [room.id, new Set()]));
   for (const corridor of spec.corridors) {
+    if (!isRuntimeCorridorEnabled(session, corridor)) continue;
     adjacency.get(corridor.fromRoomId)?.add(corridor.toRoomId);
     adjacency.get(corridor.toRoomId)?.add(corridor.fromRoomId);
   }
@@ -32,7 +35,7 @@ export function startPlaySession(authoringSpec, { startedAt = 0 } = {}) {
   const start = findEntity(snapshot, "start");
   const goal = findEntity(snapshot, "goal");
 
-  const session = {
+  let session = {
     schemaVersion: "1.0",
     dungeonId: snapshot.id,
     dungeonSeed: snapshot.seed,
@@ -48,6 +51,19 @@ export function startPlaySession(authoringSpec, { startedAt = 0 } = {}) {
     events: []
   };
 
+  const dispatched = dispatchSupportedEvents(session, {
+    type: "on_enter_room",
+    roomId: start.roomId
+  }, { at: startedAt });
+  if (!dispatched.ok) {
+    return {
+      ok: false,
+      blocked: true,
+      errors: [{ code: "EVENT_RUNTIME_FAILURE", path: "events", message: JSON.stringify(dispatched.error) }]
+    };
+  }
+  session = dispatched.session;
+
   if (session.currentRoomId === session.goalRoomId) {
     session.status = "cleared";
     session.completedAt = startedAt;
@@ -61,8 +77,7 @@ export function movePlaySession(session, targetRoomId, { at = session?.startedAt
     return { ok: false, error: { code: "SESSION_NOT_PLAYING", message: "Session is not in playing state." } };
   }
 
-  const spec = session.snapshot;
-  const adjacency = buildAdjacency(spec);
+  const adjacency = buildAdjacency(session);
   if (!adjacency.has(targetRoomId)) {
     return { ok: false, error: { code: "ROOM_NOT_FOUND", message: `Unknown room: ${targetRoomId}` } };
   }
@@ -77,7 +92,7 @@ export function movePlaySession(session, targetRoomId, { at = session?.startedAt
     };
   }
 
-  const next = clone(session);
+  let next = clone(session);
   next.currentRoomId = targetRoomId;
   next.moves += 1;
   if (!next.visitedRoomIds.includes(targetRoomId)) next.visitedRoomIds.push(targetRoomId);
@@ -87,6 +102,13 @@ export function movePlaySession(session, targetRoomId, { at = session?.startedAt
     delta: 1
   });
   next.events.push({ type: "move", roomId: targetRoomId, at });
+
+  const dispatched = dispatchSupportedEvents(next, {
+    type: "on_enter_room",
+    roomId: targetRoomId
+  }, { at });
+  if (!dispatched.ok) return dispatched;
+  next = dispatched.session;
 
   if (targetRoomId === next.goalRoomId) {
     next.status = "cleared";
