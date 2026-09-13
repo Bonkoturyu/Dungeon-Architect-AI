@@ -2,11 +2,31 @@
 
 ## Status
 
-**IN PROGRESS.** Implementation is ready for production contract validation.
+**DONE.** Production contract validation passed on 2026-09-13.
 
 DAI-043 adds the first provider-neutral cloud `DesignIntent` adapter boundary and the reviewed OpenAI Responses API implementation candidate selected by DAI-042.
 
 No live provider request is required for this task's contract evidence. Live model quality, latency, token use, cost, and fallback behavior belong to DAI-045 prompt regression.
+
+## Reviewed production evidence
+
+- generated at: `2026-09-13T14:49:48.983Z`
+- Node.js: `v24.15.0`
+- JSON SHA-256: `429b3eb9d6ce1bdf286f1ddcbaf3055ec9ea6bea06e88c926a277da22f88e9ea`
+- `passed = true`
+- `liveProviderCallMade = false`
+- 14 / 14 evidence checks passed
+- exact DesignIntent schema rejects additional properties and requires all fields
+- default request model is `gpt-5.6-luna`
+- `store = false`
+- strict JSON Schema structured output is enabled
+- no tools are present
+- output is bounded to 4096 tokens in the evidence request
+- provider secret stays in the backend Authorization header
+- valid structured output passes independent validation
+- semantic-invalid and extra-field outputs are rejected
+- 429 is normalized with `Retry-After`
+- DAI-043 performs exactly one transport attempt; retry remains DAI-044 scope
 
 ## Architecture boundary
 
@@ -28,7 +48,7 @@ Provider/model metadata must not enter serialized `DesignIntent` or `DungeonSpec
 
 ## DesignIntent schema
 
-`packages/intent/src/design-intent.js` now exports `DESIGN_INTENT_JSON_SCHEMA` from the same production field contract used by `validateDesignIntent`.
+`packages/intent/src/design-intent.js` exports `DESIGN_INTENT_JSON_SCHEMA` from the same production field contract used by `validateDesignIntent`.
 
 The schema:
 
@@ -85,50 +105,7 @@ DAI-043 performs a single provider attempt. Retry/fallback orchestration remains
 
 `scripts/run-dai-043-cloud-intent-adapter.mjs` uses an injected fake HTTP boundary to verify the exact production request/response contract without a real secret or billable provider call.
 
-Checks include:
-
-- exact strict DesignIntent schema;
-- `gpt-5.6-luna` default;
-- explicit `store: false`;
-- no tool definitions;
-- bounded output;
-- authorization secret only in the HTTP header;
-- secret absent from request body/result/evidence;
-- valid provider output accepted;
-- invalid semantic output rejected by independent validation;
-- extra output fields rejected;
-- 429 normalized with `Retry-After`;
-- no retry occurs inside DAI-043;
-- output metadata does not echo the full prompt.
-
-The evidence intentionally records `liveProviderCallMade = false`.
-
-## Required validation
-
-Run from the Windows clone:
-
-```powershell
-git fetch origin; git switch feat/dai-043-cloud-intent-adapter; git pull --ff-only origin feat/dai-043-cloud-intent-adapter; powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-dai-043-validation.ps1
-```
-
-The runner:
-
-1. verifies the audited `package-lock.json` SHA-256;
-2. installs the exact reviewed dependency graph with scripts disabled;
-3. runs the complete production Node test suite, including cloud-intent tests;
-4. runs the deterministic adapter contract evidence scenario;
-5. writes `artifacts/cloud-intent/dai-043-cloud-intent-adapter.json`.
-
-## Completion gate
-
-Do not mark DAI-043 DONE until:
-
-- the complete production Node suite passes;
-- the adapter evidence reports `passed = true`;
-- generated evidence contains no secret/full prompt;
-- the generated JSON evidence is reviewed.
-
-A live API key is **not** a DAI-043 completion requirement. Live-provider evaluation is deliberately deferred to DAI-045 so model quality/cost evidence is collected under the same frozen prompt corpus rather than through an ad-hoc one-off call.
+The reviewed evidence confirms the completion gate. A live API key is **not** a DAI-043 completion requirement. Live-provider evaluation is deliberately deferred to DAI-045 so model quality/cost evidence is collected under the same frozen prompt corpus rather than through an ad-hoc one-off call.
 
 ## Explicit non-goals
 
