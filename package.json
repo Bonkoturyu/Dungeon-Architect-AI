@@ -17,6 +17,7 @@
     "smoke:door-openings": "node scripts/run-dai-022-door-smoke.mjs",
     "validate:route-constraints": "node scripts/run-dai-024-route-matrix.mjs",
     "validate:session-state": "node scripts/run-dai-030-session-state.mjs",
+    "validate:enemy-minimum": "node scripts/run-dai-031-enemy-minimum.mjs",
     "test": "npm run test:core && npm run test:generator && npm run test:intent && npm run test:editor && npm run test:play && npm run test:benchmark-fixture && npm run test:renderer-three"
   },
   "devDependencies": {
