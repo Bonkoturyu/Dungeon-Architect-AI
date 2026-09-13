@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS.**
+**DONE — production Node validation passed on 2026-09-13.**
 
 DAI-030 adds renderer-independent gameplay state to the existing detached Play execution snapshot.
 It establishes state containers and immutable transition boundaries needed by later Enemy, treasure/trap/recovery, and supported event-logic tasks without implementing those mechanics yet.
@@ -79,40 +79,54 @@ The Play Core tests cover:
 - state commands are rejected after the session has finished;
 - existing START → movement → Goal → Result behavior remains valid.
 
-## Required production validation
+## Production evidence
 
-Run from the Windows clone:
+Reviewed evidence:
 
-```powershell
-git fetch origin; git switch feat/dai-030-session-state; git pull --ff-only origin feat/dai-030-session-state; powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-dai-030-validation.ps1
-```
+- file: `dai-030-session-state.json`
+- generated at: `2026-09-13T05:20:42.227Z`
+- Node.js: `v24.15.0`
+- SHA-256: `5339ced8373ee09428ccf719efc44782d0429e6cb3c76c03165b002652623608`
+- `passed = true`
 
-The runner:
+All 14 evidence checks passed:
 
-1. verifies the audited `package-lock.json` SHA-256;
-2. installs the exact reviewed dependency graph with scripts disabled;
-3. runs the full production Node test suite;
-4. runs a deterministic session-state evidence scenario;
-5. writes `artifacts/session-state/dai-030-session-state.json`.
+- initial room-entry counter is one;
+- state containers initialize empty;
+- flag state is stored;
+- inventory state is stored;
+- entity runtime state is stored;
+- interaction and treasure counters update;
+- movement increments room-entry state;
+- the previous move session is preserved;
+- an unknown entity mutation is rejected;
+- authoring `DungeonSpec` remains unchanged;
+- execution snapshot remains unchanged;
+- state-command audit events are recorded;
+- move audit event is recorded.
 
-The evidence scenario verifies:
+The evidence scenario also applied five successive state commands and confirmed every transition changed only the returned session while preserving the previous session value and fixed execution snapshot.
 
-- initial state containers and room-entry count;
-- flag, inventory, entity-state, and counter transitions;
-- previous-session immutability;
-- execution-snapshot immutability;
-- authoring-spec immutability;
-- room-entry update after movement;
-- unknown entity rejection;
-- state-command/move audit events.
+Final evidence state included:
 
-## Completion gate
+- flag `gate-a-open = true`;
+- inventory `key-a = 1`;
+- `treasure-evidence.opened = true`;
+- `roomEntries = 2`;
+- `interactions = 1`;
+- `treasuresOpened = 1`;
+- six total audit events after one movement.
 
-Do not mark DAI-030 DONE until:
+## Completion gate result
 
-- the full production test suite passes;
-- the session-state evidence scenario reports `passed = true`;
-- the generated JSON evidence is reviewed.
+DAI-030 acceptance conditions are satisfied:
+
+- the production validation command completed successfully;
+- the deterministic session-state evidence reports `passed = true`;
+- authoring and snapshot immutability are preserved;
+- runtime state transitions are explicit and auditable;
+- the runtime state boundary remains renderer-independent;
+- no new dependency or creative asset was introduced.
 
 ## Explicit non-goals
 
