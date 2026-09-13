@@ -25,7 +25,7 @@ GitHub Issues are not created unless explicitly authorized.
 - DAI-021 Spatial room placement/corridors — DONE (abstract layout plus renderer corridor/passage geometry verified in production Chrome)
 - DAI-022 Walls/doors/Start/Goal — DONE (20-room / 22-corridor fixture rendered with deterministic cardinal/diagonal wall openings and complete endpoint coverage)
 - DAI-023 Structural reachability validation — DONE for corridor connectivity
-- DAI-024 Multiple-route constraints — PARTIAL
+- DAI-024 Multiple-route constraints — IN PROGRESS (exact/monotonic `routeChoice` alternate-edge constraints implemented; production route-matrix validation pending)
 - DAI-025 Seed reproducibility tests — DONE
 
 ## M3
