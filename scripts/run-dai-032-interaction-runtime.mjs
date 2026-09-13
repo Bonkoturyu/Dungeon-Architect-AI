@@ -31,6 +31,13 @@ function move(session, roomId, at, trace) {
   return next;
 }
 
+function applyInteraction(session, action, label, traceEntry, trace) {
+  const previous = JSON.stringify(session);
+  const next = requireOk(action(session), label);
+  trace.push({ ...traceEntry, previousPreserved: JSON.stringify(session) === previous });
+  return next;
+}
+
 const started = startPlaySession(spec, { startedAt: 3000 });
 if (!started.ok) throw new Error(`START failed: ${JSON.stringify(started)}`);
 let session = started.session;
@@ -40,38 +47,58 @@ const trace = [];
 session = move(session, 'room-01', 3010, trace);
 session = move(session, 'room-02', 3011, trace);
 session = move(session, 'room-03', 3012, trace);
-const chestPlainBefore = JSON.stringify(session);
-session = requireOk(openTreasure(session, 'chest-plain', { at: 3013 }), 'open chest-plain');
-trace.push({ type: 'treasure-opened', entityId: 'chest-plain', at: 3013, previousPreserved: JSON.stringify(JSON.parse(chestPlainBefore)) === chestPlainBefore });
+session = applyInteraction(
+  session,
+  (value) => openTreasure(value, 'chest-plain', { at: 3013 }),
+  'open chest-plain',
+  { type: 'treasure-opened', entityId: 'chest-plain', at: 3013 },
+  trace,
+);
 
 session = move(session, 'room-04', 3014, trace);
 session = move(session, 'room-13', 3015, trace);
 session = move(session, 'room-14', 3016, trace);
 const warningBefore = getTreasureState(session, 'chest-warning');
-const warningSessionBefore = JSON.stringify(session);
-session = requireOk(inspectTreasure(session, 'chest-warning', { at: 3017 }), 'inspect chest-warning');
-trace.push({ type: 'treasure-inspected', entityId: 'chest-warning', at: 3017, previousPreserved: JSON.stringify(JSON.parse(warningSessionBefore)) === warningSessionBefore });
+session = applyInteraction(
+  session,
+  (value) => inspectTreasure(value, 'chest-warning', { at: 3017 }),
+  'inspect chest-warning',
+  { type: 'treasure-inspected', entityId: 'chest-warning', at: 3017 },
+  trace,
+);
 const warningAfter = getTreasureState(session, 'chest-warning');
 
 session = move(session, 'room-13', 3018, trace);
 session = move(session, 'room-04', 3019, trace);
 session = move(session, 'room-05', 3020, trace);
 session = move(session, 'room-19', 3021, trace);
-const recoveryBeforeSession = JSON.stringify(session);
-session = requireOk(useRecovery(session, 'recovery-01', { at: 3022 }), 'use recovery-01');
-trace.push({ type: 'recovery-used', entityId: 'recovery-01', at: 3022, previousPreserved: JSON.stringify(JSON.parse(recoveryBeforeSession)) === recoveryBeforeSession });
+session = applyInteraction(
+  session,
+  (value) => useRecovery(value, 'recovery-01', { at: 3022 }),
+  'use recovery-01',
+  { type: 'recovery-used', entityId: 'recovery-01', at: 3022 },
+  trace,
+);
 
 session = move(session, 'room-05', 3023, trace);
 session = move(session, 'room-06', 3024, trace);
 session = move(session, 'room-15', 3025, trace);
 session = move(session, 'room-16', 3026, trace);
 const trapBefore = getTrapState(session, 'trap-01');
-const trapInspectPrevious = JSON.stringify(session);
-session = requireOk(inspectTrap(session, 'trap-01', { at: 3027 }), 'inspect trap-01');
-trace.push({ type: 'trap-inspected', entityId: 'trap-01', at: 3027, previousPreserved: JSON.stringify(JSON.parse(trapInspectPrevious)) === trapInspectPrevious });
-const trapAvoidPrevious = JSON.stringify(session);
-session = requireOk(avoidTrap(session, 'trap-01', { at: 3028 }), 'avoid trap-01');
-trace.push({ type: 'trap-avoided', entityId: 'trap-01', at: 3028, previousPreserved: JSON.stringify(JSON.parse(trapAvoidPrevious)) === trapAvoidPrevious });
+session = applyInteraction(
+  session,
+  (value) => inspectTrap(value, 'trap-01', { at: 3027 }),
+  'inspect trap-01',
+  { type: 'trap-inspected', entityId: 'trap-01', at: 3027 },
+  trace,
+);
+session = applyInteraction(
+  session,
+  (value) => avoidTrap(value, 'trap-01', { at: 3028 }),
+  'avoid trap-01',
+  { type: 'trap-avoided', entityId: 'trap-01', at: 3028 },
+  trace,
+);
 
 session = move(session, 'room-08', 3029, trace);
 session = move(session, 'room-09', 3030, trace);
@@ -85,7 +112,9 @@ for (const [roomId, at] of [
 ]) {
   triggerSession = requireOk(movePlaySession(triggerSession, roomId, { at }), `trigger-run move ${roomId}`);
 }
+const triggerPrevious = JSON.stringify(triggerSession);
 triggerSession = requireOk(triggerTrap(triggerSession, 'trap-01', { at: 4018 }), 'trigger trap-01');
+const triggerPreviousPreserved = JSON.stringify(startPlaySession(spec, { startedAt: 4000 }).session.snapshot) === JSON.stringify(triggerSession.snapshot) && triggerPrevious.length > 0;
 
 const checks = {
   pceTreasureCount: spec.entities.filter((entity) => entity.type === 'treasure').length === 2,
@@ -103,6 +132,7 @@ const checks = {
   avoidedTrapNotTriggered: session.gameplayState.counters.trapsTriggered === 0,
   triggeredTrapCounterOne: triggerSession.gameplayState.counters.trapsTriggered === 1,
   triggeredTrapState: getTrapState(triggerSession, 'trap-01')?.state.status === 'triggered',
+  triggerSnapshotStillFixed: triggerPreviousPreserved,
   resolvedEntitiesHiddenByDefault:
     listRoomInteractables(session, 'room-03').length === 0 &&
     listRoomInteractables(session, 'room-19').length === 0 &&
