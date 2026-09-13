@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS.**
+**DONE — production Windows/Node validation passed on 2026-09-13.**
 
 DAI-024 tightens the generator's structural meaning of `routeChoice` without adding risk/reward semantics or simulation scoring.
 
@@ -27,7 +27,7 @@ The prefix rule prevents a small routeChoice adjustment from completely reshuffl
 
 ## Implementation
 
-`packages/generator/src/room-graph.js` now exposes:
+`packages/generator/src/room-graph.js` exposes:
 
 - `getAlternateRouteCapacity(roomCount)`
 - `getAlternateRouteTarget(roomCount, routeChoice)`
@@ -52,7 +52,7 @@ Alternate candidates are enumerated from valid 2–4 step backbone jumps, determ
 
 ## Production matrix
 
-The one-command validation also runs:
+The one-command validation ran:
 
 `scripts/run-dai-024-route-matrix.mjs`
 
@@ -72,27 +72,37 @@ Each case checks:
 - multiple-route flag;
 - monotonic prefix preservation against the preceding routeChoice level.
 
-## Required production validation
+## Production evidence
 
-Run from the Windows clone:
+Reviewed raw evidence:
 
-```powershell
-git fetch origin; git switch feat/dai-024-route-constraints; git pull --ff-only origin feat/dai-024-route-constraints; powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-dai-024-validation.ps1
-```
+- file: `dai-024-route-matrix.json`
+- generated at: `2026-09-13T04:52:58.841Z`
+- Node.js: `v24.15.0`
+- SHA-256: `89f00b9e81f16edfdbb1b65e9b0fdcb029de309afe0431fa80c4d0e2a1efd9e7`
+- cases: 240
+- passed: `true`
+- failures: 0
 
-The runner verifies the audited `package-lock.json`, performs `npm ci --ignore-scripts`, runs the full production Node test suite, then executes the 240-case route matrix.
+Independent review of all 240 rows confirmed:
 
-Expected evidence:
+- expected alternate count equals actual alternate count in every case;
+- cycle rank equals alternate-edge count in every case;
+- all edges are unique;
+- every alternate rejoins the backbone and spans only 2–4 backbone steps;
+- the Start→Goal multiple-route flag matches whether alternate edges exist;
+- increasing routeChoice preserves the lower-choice alternate prefix;
+- no matrix row violates the structural contract.
 
-`artifacts/route-matrix/dai-024-route-matrix.json`
+## Completion gate result
 
-## Completion gate
+DAI-024 acceptance conditions are satisfied:
 
-Do not mark DAI-024 DONE until:
-
-- the complete production Node test suite passes;
+- the complete production validation command passed;
 - the 240-case route matrix reports zero failures;
-- generated evidence is reviewed.
+- generated evidence has been reviewed;
+- deterministic multi-route generation remains renderer-independent;
+- no gameplay-semantic claim is inferred from structural route count alone.
 
 ## Explicit non-goals
 
