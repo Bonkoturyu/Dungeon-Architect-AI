@@ -51,14 +51,28 @@
 - Automated/headless/browser-smoke checks may establish engineering readiness but cannot substitute for the frozen user-study denominator.
 - See `docs/testing/PCE-1.0_READINESS.md`.
 
+## 2026-09-13 — Initial cloud integration candidate
+
+- Status: Confirmed for DAI-043 implementation; permanent provider/model winner remains Pending Evidence.
+- DAI-042 rechecked OpenAI, Gemini Developer API Paid, and Claude API against current official provider documentation.
+- The first production cloud adapter candidate is OpenAI Responses API with `gpt-5.6-luna`.
+- Browser code must never receive provider credentials; the provider call lives behind a project-owned backend/proxy boundary.
+- OpenAI Responses requests must explicitly use `store: false`, Structured Outputs / JSON Schema, and the independent production `DesignIntent` validator.
+- `store: false` is not treated as Zero Data Retention; ZDR is not a launch prerequisite.
+- Provider retry remains bounded to at most one retry before deterministic fallback.
+- Provider/model remains server configuration and must not couple `DesignIntent`, `DungeonSpec`, Renderer, Editor, or Play Core to provider-specific types.
+- `gpt-5.6-terra` is only a future quality-escalation comparison candidate if Luna fails DAI-045 prompt-regression/intent-fit gates.
+- Permanent provider/model adoption requires DAI-045 evidence covering validity, intent-fit, latency, token/cost, 429/error, retry, and fallback rates.
+- See `docs/research/DAI-042_PRODUCTION_CLOUD_PROVIDER_REVIEW_2026-09-13.md`.
+
 ## Open decisions
 
 - Play perspective
 - Combat model
-- Cloud LLM provider
+- Permanent Cloud LLM provider/model winner (initial DAI-043 candidate is OpenAI Responses API + `gpt-5.6-luna`)
 - Browser local LLM runtime/model
 - Hosting
 - Mobile scope
 - Final focus category
 
-These remain Open until production evidence and an ADR/decision entry exist.
+These remain Open until their production evidence and final ADR/decision entry exist.
