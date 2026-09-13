@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>Dungeon Architect AI — Editor Slice</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: #101014; color: #f2f2f2; }
+    main { display: grid; grid-template-rows: auto auto 1fr; min-height: 100vh; }
+    header, .toolbar { display: flex; align-items: center; gap: 10px; padding: 9px 14px; background: #181820; }
+    .toolbar { border-top: 1px solid #2b2b36; background: #15151c; }
+    button { border: 1px solid #4d5262; background: #282b35; color: #f2f2f2; border-radius: 5px; padding: 6px 11px; cursor: pointer; }
+    button:disabled { opacity: 0.4; cursor: default; }
+    #status, #selected { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    #hint { opacity: 0.72; margin-left: auto; font-size: 0.9rem; }
+    canvas { width: 100%; height: calc(100vh - 94px); display: block; outline: none; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <strong>DAI Editor Slice</strong>
+      <span id="status">loading</span>
+      <span id="selected">selected: none</span>
+    </header>
+    <div class="toolbar">
+      <button id="undo" type="button" disabled>Undo</button>
+      <button id="redo" type="button" disabled>Redo</button>
+      <span id="hint">Click a room, then use arrow keys. Ctrl+Z / Ctrl+Y also work.</span>
+    </div>
+    <canvas id="renderCanvas" tabindex="0"></canvas>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
