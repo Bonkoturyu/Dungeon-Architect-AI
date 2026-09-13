@@ -22,8 +22,8 @@ GitHub Issues are not created unless explicitly authorized.
 
 ## M2
 - DAI-020 Deterministic room graph — DONE
-- DAI-021 Spatial room placement/corridors — DONE for abstract Spec layout; renderer geometry pending
-- DAI-022 Walls/doors/Start/Goal — PARTIAL
+- DAI-021 Spatial room placement/corridors — DONE for abstract Spec layout; renderer passage geometry is being validated under DAI-022
+- DAI-022 Walls/doors/Start/Goal — IN PROGRESS (deterministic corridor wall openings implemented for cardinal/diagonal corridors; production Chrome smoke pending)
 - DAI-023 Structural reachability validation — DONE for corridor connectivity
 - DAI-024 Multiple-route constraints — PARTIAL
 - DAI-025 Seed reproducibility tests — DONE
