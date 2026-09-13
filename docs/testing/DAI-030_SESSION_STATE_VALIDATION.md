@@ -64,7 +64,7 @@ Counters are restricted to the known DAI-030 counter keys and non-negative safe-
 - appends a `state-command` audit event;
 - returns `INVALID_STATE_COMMAND` for rejected runtime mutations.
 
-`movePlaySession()` now increments `roomEntries` through the same gameplay-state command boundary.
+`movePlaySession()` increments `roomEntries` through the same gameplay-state command boundary.
 
 ## Test coverage
 
@@ -105,7 +105,7 @@ All evidence checks passed:
 - state-command audit events are recorded;
 - move audit event is recorded.
 
-The evidence scenario also applied five successive state commands and confirmed every transition changed only the returned session while preserving the previous session value and fixed execution snapshot.
+The evidence scenario applied five successive state commands and confirmed every transition changed only the returned session while preserving the previous session value and fixed execution snapshot.
 
 Final evidence state included:
 
