@@ -7,7 +7,7 @@ GitHub Issues are not created unless explicitly authorized.
 - DAI-002 Clean production repository — DONE
 - DAI-003 Governance baseline — DONE on production branch
 - DAI-004 Knowledge-only migration — DONE
-- DAI-005 Verification baseline — IN PROGRESS (`npm test` active; stack-specific format/typecheck/build/browser pending)
+- DAI-005 Verification baseline — IN PROGRESS (`npm test` active; renderer browser smoke passed; stack-specific format/typecheck/build remain pending)
 - DAI-006 Decision Log / ADR baseline — DONE
 
 ## M1
@@ -15,7 +15,7 @@ GitHub Issues are not created unless explicitly authorized.
 - DAI-011 Select 3D stack via ADR — DONE (ADR-001 selects Three.js 0.185.1)
 - DAI-012 Clean-room DungeonSpec v1 — DONE
 - DAI-013 Fixed-spec parser/validator — DONE
-- DAI-014 Minimal renderer adapter — IN PROGRESS (Three.js adapter vertical slice)
+- DAI-014 Minimal renderer adapter — DONE (Three.js minimal renderer + production Chrome smoke passed)
 - DAI-015 Select/move/undo vertical slice — PARTIAL (renderer-independent move/undo core done; browser selection UI pending)
 - DAI-016 START→Goal→Result — PARTIAL (renderer-independent session/START/Result core done; browser vertical slice pending)
 - DAI-017 Perspective/combat evaluation — OPEN
