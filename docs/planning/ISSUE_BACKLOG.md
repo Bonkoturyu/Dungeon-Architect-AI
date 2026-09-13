@@ -18,7 +18,7 @@ GitHub Issues are not created unless explicitly authorized.
 - DAI-014 Minimal renderer adapter — DONE (Three.js minimal renderer + production Chrome smoke passed)
 - DAI-015 Select/move/undo vertical slice — DONE (canvas room selection + EditSession move + undo/redo production Chrome smoke passed)
 - DAI-016 START→Goal→Result — DONE (START snapshot + room-click movement + Goal/Result production Chrome smoke passed)
-- DAI-017 Perspective/combat evaluation — OPEN / blocked by PCE-1.0 production prerequisites
+- DAI-017 Perspective/combat evaluation — IN PROGRESS / BLOCKED (PCE-1.0 protocol, score sheet, and production-schema 20-room fixture migrated; full result requires 3 perspective candidates + task interactions + mobile target IDs + P01–P12 participant sessions)
 
 ## M2
 - DAI-020 Deterministic room graph — DONE
