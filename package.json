@@ -24,6 +24,7 @@
     "validate:clear-failure-result": "node scripts/run-dai-034-clear-failure-result.mjs",
     "validate:cloud-intent": "node scripts/run-dai-043-cloud-intent-adapter.mjs",
     "validate:intent-routing": "node scripts/run-dai-044-intent-routing.mjs",
+    "validate:prompt-regression": "node scripts/run-dai-045-live-prompt-regression.mjs",
     "test": "npm run test:core && npm run test:generator && npm run test:intent && npm run test:cloud-intent && npm run test:editor && npm run test:play && npm run test:benchmark-fixture && npm run test:renderer-three"
   },
   "devDependencies": {
