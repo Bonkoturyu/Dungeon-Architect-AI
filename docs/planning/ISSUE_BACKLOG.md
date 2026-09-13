@@ -29,7 +29,7 @@ GitHub Issues are not created unless explicitly authorized.
 - DAI-025 Seed reproducibility tests — DONE
 
 ## M3
-- DAI-030 Session state — IN PROGRESS (generic renderer-independent gameplay state + immutable PlaySession transition boundary implemented; production Node evidence pending)
+- DAI-030 Session state — DONE (generic renderer-independent gameplay state + immutable PlaySession transitions verified by production Node evidence)
 - DAI-031 Enemy minimum — OPEN
 - DAI-032 Treasure/trap/recovery runtime — OPEN
 - DAI-033 Supported event logic — OPEN
