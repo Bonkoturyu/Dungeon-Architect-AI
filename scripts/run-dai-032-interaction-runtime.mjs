@@ -112,9 +112,10 @@ for (const [roomId, at] of [
 ]) {
   triggerSession = requireOk(movePlaySession(triggerSession, roomId, { at }), `trigger-run move ${roomId}`);
 }
-const triggerPrevious = JSON.stringify(triggerSession);
-triggerSession = requireOk(triggerTrap(triggerSession, 'trap-01', { at: 4018 }), 'trigger trap-01');
-const triggerPreviousPreserved = JSON.stringify(startPlaySession(spec, { startedAt: 4000 }).session.snapshot) === JSON.stringify(triggerSession.snapshot) && triggerPrevious.length > 0;
+const triggerPreviousSession = triggerSession;
+const triggerPrevious = JSON.stringify(triggerPreviousSession);
+triggerSession = requireOk(triggerTrap(triggerPreviousSession, 'trap-01', { at: 4018 }), 'trigger trap-01');
+const triggerPreviousPreserved = JSON.stringify(triggerPreviousSession) === triggerPrevious;
 
 const checks = {
   pceTreasureCount: spec.entities.filter((entity) => entity.type === 'treasure').length === 2,
@@ -132,7 +133,7 @@ const checks = {
   avoidedTrapNotTriggered: session.gameplayState.counters.trapsTriggered === 0,
   triggeredTrapCounterOne: triggerSession.gameplayState.counters.trapsTriggered === 1,
   triggeredTrapState: getTrapState(triggerSession, 'trap-01')?.state.status === 'triggered',
-  triggerSnapshotStillFixed: triggerPreviousPreserved,
+  triggerPreviousPreserved,
   resolvedEntitiesHiddenByDefault:
     listRoomInteractables(session, 'room-03').length === 0 &&
     listRoomInteractables(session, 'room-19').length === 0 &&
