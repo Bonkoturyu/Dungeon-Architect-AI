@@ -53,12 +53,12 @@ try {
     failedRequests.push({ url: request.url(), failure: request.failure()?.errorText ?? 'unknown' });
   });
   page.on('response', (response) => {
-    if (response.status() >= 400 && !response.url().endsWith('/favicon.ico')) {
+    if (response.status() >= 400) {
       httpErrors.push({ url: response.url(), status: response.status() });
     }
   });
 
-  await page.goto(url, { waitUntil: 'load', timeout: 60_000 });
+  await page.goto(url, { waitUntil: 'networkidle', timeout: 60_000 });
   await page.waitForFunction(() => window.__DAI_RENDERER_SMOKE__?.ready === true, null, { timeout: 60_000 });
   const result = await page.evaluate(() => window.__DAI_RENDERER_SMOKE__);
 
@@ -74,11 +74,22 @@ try {
     failedRequests,
     httpErrors,
   };
-  fs.writeFileSync(path.join(outputDir, 'dai-014-renderer-smoke.json'), JSON.stringify(evidence, null, 2));
+  const evidencePath = path.join(outputDir, 'dai-014-renderer-smoke.json');
+  fs.writeFileSync(evidencePath, JSON.stringify(evidence, null, 2));
 
-  if (result.failed) throw new Error(result.message || 'renderer smoke reported failure');
+  if (result.failed) {
+    console.error('Renderer smoke reported failure:');
+    console.error(result.message || JSON.stringify(result, null, 2));
+    console.error(`Evidence: ${evidencePath}`);
+    throw new Error(result.message || 'renderer smoke reported failure');
+  }
+
   if (consoleErrors.length || pageErrors.length || failedRequests.length || httpErrors.length) {
-    throw new Error(`browser smoke emitted errors: ${JSON.stringify({ consoleErrors, pageErrors, failedRequests, httpErrors })}`);
+    const observed = { consoleErrors, pageErrors, failedRequests, httpErrors };
+    console.error('Renderer smoke reached ready state but emitted browser/network errors:');
+    console.error(JSON.stringify(observed, null, 2));
+    console.error(`Evidence: ${evidencePath}`);
+    throw new Error(`browser smoke emitted errors: ${JSON.stringify(observed)}`);
   }
 
   console.log(JSON.stringify(evidence, null, 2));
