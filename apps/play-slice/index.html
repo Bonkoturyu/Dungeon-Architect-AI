@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>Dungeon Architect AI — START to Result Slice</title>
+  <style>
+    html, body { margin: 0; min-height: 100%; background: #101014; color: #f2f2f2; font-family: system-ui, sans-serif; }
+    main { display: grid; grid-template-rows: auto auto 1fr; min-height: 100vh; }
+    header, nav { padding: 10px 14px; background: #181820; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+    nav { background: #14141a; border-top: 1px solid #2b2b36; border-bottom: 1px solid #2b2b36; }
+    button { background: #2a3344; color: #fff; border: 1px solid #48546b; border-radius: 5px; padding: 7px 14px; cursor: pointer; }
+    button:disabled { opacity: .45; cursor: default; }
+    #status, #room, #message { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    #message { color: #d3d7e3; }
+    #result { display: none; gap: 10px; align-items: center; }
+    #result.visible { display: flex; }
+    canvas { width: 100%; height: calc(100vh - 98px); display: block; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <strong>DAI START → Goal → Result</strong>
+      <span id="status">loading</span>
+      <span id="room">room: -</span>
+      <span id="message"></span>
+    </header>
+    <nav>
+      <button id="start" type="button">START</button>
+      <span>After START, click an adjacent room to move.</span>
+      <span id="result"></span>
+    </nav>
+    <canvas id="renderCanvas" tabindex="0"></canvas>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

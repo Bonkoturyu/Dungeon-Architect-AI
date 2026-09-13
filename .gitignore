@@ -19,6 +19,7 @@ coverage/
 artifacts/renderer-benchmark/
 artifacts/renderer-smoke/
 artifacts/editor-smoke/
+artifacts/play-smoke/
 
 # Unity candidates
 Library/
