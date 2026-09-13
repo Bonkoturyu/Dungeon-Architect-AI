@@ -1,4 +1,5 @@
 import { validateDungeonSpec } from "../../core/src/dungeon-spec.js";
+import { applyGameplayStateCommand, createGameplayState } from "./gameplay-state.js";
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -15,6 +16,10 @@ function buildAdjacency(spec) {
     adjacency.get(corridor.toRoomId)?.add(corridor.fromRoomId);
   }
   return adjacency;
+}
+
+function isPlaying(session) {
+  return session && session.status === "playing";
 }
 
 export function startPlaySession(authoringSpec, { startedAt = 0 } = {}) {
@@ -39,6 +44,7 @@ export function startPlaySession(authoringSpec, { startedAt = 0 } = {}) {
     goalRoomId: goal.roomId,
     visitedRoomIds: [start.roomId],
     moves: 0,
+    gameplayState: createGameplayState({ roomEntries: 1 }),
     events: []
   };
 
@@ -50,8 +56,8 @@ export function startPlaySession(authoringSpec, { startedAt = 0 } = {}) {
   return { ok: true, blocked: false, session };
 }
 
-export function movePlaySession(session, targetRoomId, { at = session.startedAt } = {}) {
-  if (!session || session.status !== "playing") {
+export function movePlaySession(session, targetRoomId, { at = session?.startedAt ?? 0 } = {}) {
+  if (!isPlaying(session)) {
     return { ok: false, error: { code: "SESSION_NOT_PLAYING", message: "Session is not in playing state." } };
   }
 
@@ -75,6 +81,11 @@ export function movePlaySession(session, targetRoomId, { at = session.startedAt 
   next.currentRoomId = targetRoomId;
   next.moves += 1;
   if (!next.visitedRoomIds.includes(targetRoomId)) next.visitedRoomIds.push(targetRoomId);
+  next.gameplayState = applyGameplayStateCommand(next.gameplayState, {
+    type: "increment-counter",
+    counter: "roomEntries",
+    delta: 1
+  });
   next.events.push({ type: "move", roomId: targetRoomId, at });
 
   if (targetRoomId === next.goalRoomId) {
@@ -83,6 +94,28 @@ export function movePlaySession(session, targetRoomId, { at = session.startedAt 
   }
 
   return { ok: true, session: next };
+}
+
+export function applyPlaySessionStateCommand(session, command, { at = session?.startedAt ?? 0 } = {}) {
+  if (!isPlaying(session)) {
+    return { ok: false, error: { code: "SESSION_NOT_PLAYING", message: "Session is not in playing state." } };
+  }
+
+  try {
+    const next = clone(session);
+    const entityIds = next.snapshot.entities.map((entity) => entity.id);
+    next.gameplayState = applyGameplayStateCommand(next.gameplayState, command, { entityIds });
+    next.events.push({ type: "state-command", command: clone(command), at });
+    return { ok: true, session: next };
+  } catch (error) {
+    return {
+      ok: false,
+      error: {
+        code: "INVALID_STATE_COMMAND",
+        message: error instanceof Error ? error.message : String(error)
+      }
+    };
+  }
 }
 
 export function createPlayResult(session) {
