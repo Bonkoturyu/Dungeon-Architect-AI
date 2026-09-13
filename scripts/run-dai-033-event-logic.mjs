@@ -78,9 +78,10 @@ function requireOk(result, label) {
 }
 
 function move(roomId, at) {
-  const previous = JSON.stringify(session);
-  session = requireOk(movePlaySession(session, roomId, { at }), `move ${roomId}`);
-  trace.push({ type: 'move', roomId, at, previousPreserved: JSON.stringify(JSON.parse(previous)) === previous });
+  const previousSession = session;
+  const previous = JSON.stringify(previousSession);
+  session = requireOk(movePlaySession(previousSession, roomId, { at }), `move ${roomId}`);
+  trace.push({ type: 'move', roomId, at, previousPreserved: JSON.stringify(previousSession) === previous });
 }
 
 function mutate(label, eventType, action, at) {
