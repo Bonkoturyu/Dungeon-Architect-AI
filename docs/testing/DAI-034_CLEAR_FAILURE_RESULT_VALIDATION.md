@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS.**
+**DONE. Production validation passed on 2026-09-13.**
 
 DAI-034 completes the renderer-independent terminal PlaySession boundary and expands Result from the earlier basic Goal summary into a stable route / gameplay-metrics projection.
 
@@ -119,6 +119,29 @@ Existing tests continue to cover Goal clear and all prior runtime mechanics.
 
 The scenario also verifies invalid failure rejection, unfinished Result rejection, route capture, authoring immutability, snapshot immutability, and previous-session preservation.
 
+## Reviewed production evidence
+
+Evidence file: `artifacts/result-runtime/dai-034-clear-failure-result.json`
+
+- generated at: `2026-09-13T12:19:58.101Z`
+- Node.js: `v24.15.0`
+- source fixture: `pce-perspective-combat-20-v1`
+- reviewed JSON SHA-256: `2a27412820d8b3d7dd67f399618d6b05501c24776d93d1bae35d938e6096b988`
+- `passed = true`
+- 24 / 24 checks passed
+
+Observed evidence includes:
+
+- clear session reached `room-10` and produced a valid Result with `failureReason = null`;
+- ordered clear route contains `room-00` through `room-10` and 11 unique visited rooms;
+- clear metrics projected `interactions = 4`, `enemiesCleared = 2`, `treasuresOpened = 1`, `trapsTriggered = 1`, `recoveryUsed = 1`, `damageTaken = 7`, `healingReceived = 3`, and `deaths = 0`;
+- timeout produced a terminal failed Result after `room-02`, `elapsed = 60`, `damageTaken = 12`, and `deaths = 0`;
+- movement and generic state mutation after timeout failure were rejected;
+- unsupported failure reason was rejected without mutating the source session;
+- `player-defeated` produced `deaths = 1`;
+- unfinished Result generation was rejected;
+- authoring data and execution snapshots remained unchanged.
+
 ## Required production validation
 
 Run from the Windows clone:
@@ -137,11 +160,12 @@ The runner:
 
 ## Completion gate
 
-Do not mark DAI-034 DONE until:
+DAI-034 completion conditions are satisfied:
 
-- the complete production Node test suite passes;
+- complete production Node test suite passed;
 - production evidence reports `passed = true`;
-- the generated JSON evidence is reviewed.
+- generated JSON evidence was reviewed;
+- clear, timeout failure, player-defeated failure, terminal behavior, route projection, metrics projection, and immutability gates passed.
 
 ## Explicit non-goals
 
