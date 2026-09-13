@@ -28,6 +28,7 @@ artifacts/interaction-runtime/
 artifacts/event-logic/
 artifacts/result-runtime/
 artifacts/cloud-intent/
+artifacts/intent-routing/
 
 # Unity candidates
 Library/
