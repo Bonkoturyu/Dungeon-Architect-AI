@@ -89,7 +89,7 @@ Reviewed evidence:
 - SHA-256: `5339ced8373ee09428ccf719efc44782d0429e6cb3c76c03165b002652623608`
 - `passed = true`
 
-All 14 evidence checks passed:
+All evidence checks passed:
 
 - initial room-entry counter is one;
 - state containers initialize empty;
