@@ -19,6 +19,15 @@ export const SUPPORTING_AXES = Object.freeze([
   "targetDifficulty"
 ]);
 
+const ALL_AXES = Object.freeze([...CORE_AXES, ...SUPPORTING_AXES]);
+const DESIGN_INTENT_FIELDS = Object.freeze([
+  "schemaVersion",
+  ...ALL_AXES,
+  "targetDuration",
+  "instantDeathAllowed"
+]);
+const DESIGN_INTENT_FIELD_SET = new Set(DESIGN_INTENT_FIELDS);
+
 export const DEFAULT_DESIGN_INTENT = Object.freeze({
   schemaVersion: DESIGN_INTENT_VERSION,
   fairness: 0.7,
@@ -38,6 +47,21 @@ export const DEFAULT_DESIGN_INTENT = Object.freeze({
   instantDeathAllowed: false
 });
 
+export const DESIGN_INTENT_JSON_SCHEMA = Object.freeze({
+  type: "object",
+  additionalProperties: false,
+  properties: Object.freeze({
+    schemaVersion: Object.freeze({ type: "string", enum: [DESIGN_INTENT_VERSION] }),
+    ...Object.fromEntries(ALL_AXES.map((key) => [
+      key,
+      Object.freeze({ type: "number", minimum: 0, maximum: 1 })
+    ])),
+    targetDuration: Object.freeze({ type: "integer", minimum: 120, maximum: 1800 }),
+    instantDeathAllowed: Object.freeze({ type: "boolean", enum: [false] })
+  }),
+  required: DESIGN_INTENT_FIELDS
+});
+
 function clamp01(value, fallback) {
   if (typeof value !== "number" || !Number.isFinite(value)) return fallback;
   return Math.min(1, Math.max(0, value));
@@ -55,7 +79,7 @@ export function normalizeDesignIntent(input = {}) {
     instantDeathAllowed: false
   };
 
-  for (const key of [...CORE_AXES, ...SUPPORTING_AXES]) {
+  for (const key of ALL_AXES) {
     normalized[key] = clamp01(source[key], DEFAULT_DESIGN_INTENT[key]);
   }
 
@@ -73,6 +97,16 @@ export function validateDesignIntent(intent) {
     };
   }
 
+  for (const key of Object.keys(intent)) {
+    if (!DESIGN_INTENT_FIELD_SET.has(key)) {
+      errors.push({
+        code: "INTENT_FIELD_UNSUPPORTED",
+        path: key,
+        message: `Unsupported DesignIntent field: ${key}.`
+      });
+    }
+  }
+
   if (intent.schemaVersion !== DESIGN_INTENT_VERSION) {
     errors.push({
       code: "INTENT_VERSION_UNSUPPORTED",
@@ -81,7 +115,7 @@ export function validateDesignIntent(intent) {
     });
   }
 
-  for (const key of [...CORE_AXES, ...SUPPORTING_AXES]) {
+  for (const key of ALL_AXES) {
     if (typeof intent[key] !== "number" || !Number.isFinite(intent[key]) || intent[key] < 0 || intent[key] > 1) {
       errors.push({ code: "INTENT_AXIS_INVALID", path: key, message: `${key} must be a finite number between 0 and 1.` });
     }
