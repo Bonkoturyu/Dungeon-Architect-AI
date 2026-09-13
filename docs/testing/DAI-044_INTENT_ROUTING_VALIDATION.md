@@ -2,11 +2,37 @@
 
 ## Status
 
-**IN PROGRESS.** Production implementation is ready for deterministic contract validation.
+**DONE.** Production deterministic routing evidence passed on 2026-09-13.
 
 DAI-044 completes the provider-neutral routing layer between the DAI-043 cloud adapter, an optional future browser-local intent source, and the deterministic fallback parser.
 
 This task does not make live OpenAI requests and does not approve a local LLM runtime/model. It fixes the retry, timeout, cancellation, fallback, and observability semantics that later live-provider and browser-local implementations must obey.
+
+## Reviewed production evidence
+
+- Generated at: `2026-09-13T15:13:48.809Z`
+- Node.js: `v24.15.0`
+- JSON SHA-256: `d1b67c2c1dc25fcf354ba2cac8b7c37dadba09acf3d6e16b98e9b5c372fd4245`
+- `passed = true`
+- `liveProviderCallMade = false`
+- `liveLocalModelCallMade = false`
+- 11 / 11 evidence checks passed
+
+Verified routing outcomes:
+
+- Cloud first-attempt success terminates immediately.
+- One Cloud retry after invalid output can succeed.
+- Two Cloud timeouts fall through to eligible Local.
+- No eligible LLM source falls directly to deterministic fallback.
+- Cancellation is terminal and does not fall through.
+- Cloud + Local invalid exhaustion converges to fallback.
+- Fallback failure is explicit.
+- `Retry-After` is observed when within retry budget.
+- Over-budget `Retry-After` suppresses retry and advances routing.
+- A non-cooperative source is bounded by the finite timeout.
+- Routing trace does not contain the full prompt.
+
+The reviewed default routing policy is Cloud → eligible Local → deterministic fallback, with at most 2 attempts per LLM source, 1 fallback attempt, 15,000 ms default per-attempt timeout, and 5,000 ms maximum retry-delay budget.
 
 ## Source contract
 
@@ -138,32 +164,16 @@ It does **not** store the full prompt, provider secret, raw provider response, o
 
 It exercises Cloud, optional Local, and fallback routes using injected deterministic fake attempts. It makes no provider call and loads no local model.
 
-## Required production validation
-
-Run from the Windows clone:
-
-```powershell
-git fetch origin; git switch feat/dai-044-intent-routing; git pull --ff-only origin feat/dai-044-intent-routing; powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-dai-044-validation.ps1
-```
-
-The runner:
-
-1. verifies the audited `package-lock.json` SHA-256;
-2. installs the exact reviewed dependency graph with scripts disabled;
-3. runs the complete production Node suite;
-4. runs deterministic routing evidence scenarios;
-5. writes `artifacts/intent-routing/dai-044-intent-routing.json`.
-
 ## Completion gate
 
-Do not mark DAI-044 DONE until:
+All DAI-044 completion gates are satisfied:
 
-- the full production Node suite passes;
+- full production Node suite passed;
 - evidence reports `passed = true`;
 - no scenario exceeds two attempts for an LLM source;
 - cancellation never falls through;
 - fallback is bounded to one attempt;
-- the generated JSON evidence is reviewed.
+- generated JSON evidence was reviewed.
 
 ## Explicit non-goals
 
