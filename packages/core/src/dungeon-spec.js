@@ -9,7 +9,34 @@ export const ENTITY_TYPES = Object.freeze([
   "recovery"
 ]);
 
+export const EVENT_TRIGGER_TYPES = Object.freeze([
+  "on_enter_room",
+  "on_interact_entity",
+  "on_open_treasure",
+  "on_enemy_group_cleared"
+]);
+
+export const EVENT_CONDITION_TYPES = Object.freeze([
+  "flag",
+  "item_owned",
+  "enemy_group_state",
+  "one_shot"
+]);
+
+export const EVENT_ACTION_TYPES = Object.freeze([
+  "spawn_enemy_group",
+  "unlock_open_door",
+  "enable_shortcut",
+  "give_reward",
+  "set_flag",
+  "reveal_hint"
+]);
+
 const ENTITY_TYPE_SET = new Set(ENTITY_TYPES);
+const EVENT_TRIGGER_TYPE_SET = new Set(EVENT_TRIGGER_TYPES);
+const EVENT_CONDITION_TYPE_SET = new Set(EVENT_CONDITION_TYPES);
+const EVENT_ACTION_TYPE_SET = new Set(EVENT_ACTION_TYPES);
+const RESERVED_RUNTIME_FLAG_PREFIX = "__dai:";
 
 function pushError(errors, code, path, message) {
   errors.push({ code, path, message });
@@ -23,9 +50,21 @@ function isFiniteNumber(value) {
   return typeof value === "number" && Number.isFinite(value);
 }
 
+function isJsonScalar(value) {
+  return value === null || typeof value === "boolean" || typeof value === "string" || isFiniteNumber(value);
+}
+
 function validateId(value, path, errors) {
   if (typeof value !== "string" || value.trim() === "") {
     pushError(errors, "ID_REQUIRED", path, "ID must be a non-empty string.");
+    return false;
+  }
+  return true;
+}
+
+function validateNonEmptyString(value, path, errors, code = "STRING_REQUIRED") {
+  if (typeof value !== "string" || value.trim() === "") {
+    pushError(errors, code, path, "Value must be a non-empty string.");
     return false;
   }
   return true;
@@ -70,7 +109,7 @@ function validateRooms(rooms, ids, roomIds, errors) {
   });
 }
 
-function validateCorridors(corridors, ids, roomIds, errors) {
+function validateCorridors(corridors, ids, roomIds, corridorIds, errors) {
   if (!Array.isArray(corridors)) {
     pushError(errors, "ARRAY_REQUIRED", "corridors", "corridors must be an array.");
     return;
@@ -84,6 +123,7 @@ function validateCorridors(corridors, ids, roomIds, errors) {
     }
 
     registerId(corridor.id, `${path}.id`, ids, errors);
+    if (typeof corridor.id === "string" && corridor.id.trim() !== "") corridorIds.add(corridor.id);
 
     for (const field of ["fromRoomId", "toRoomId"]) {
       const value = corridor[field];
@@ -99,10 +139,14 @@ function validateCorridors(corridors, ids, roomIds, errors) {
     if (!isFiniteNumber(corridor.width) || corridor.width <= 0) {
       pushError(errors, "CORRIDOR_WIDTH_INVALID", `${path}.width`, "Corridor width must be a finite number greater than zero.");
     }
+
+    if (corridor.initiallyEnabled !== undefined && typeof corridor.initiallyEnabled !== "boolean") {
+      pushError(errors, "BOOLEAN_REQUIRED", `${path}.initiallyEnabled`, "initiallyEnabled must be a boolean when provided.");
+    }
   });
 }
 
-function validateEntities(entities, ids, roomIds, errors) {
+function validateEntities(entities, ids, roomIds, entityIds, entityTypeById, errors) {
   if (!Array.isArray(entities)) {
     pushError(errors, "ARRAY_REQUIRED", "entities", "entities must be an array.");
     return;
@@ -119,6 +163,10 @@ function validateEntities(entities, ids, roomIds, errors) {
     }
 
     registerId(entity.id, `${path}.id`, ids, errors);
+    if (typeof entity.id === "string" && entity.id.trim() !== "") {
+      entityIds.add(entity.id);
+      entityTypeById.set(entity.id, entity.type);
+    }
 
     if (!ENTITY_TYPE_SET.has(entity.type)) {
       pushError(errors, "ENTITY_TYPE_UNSUPPORTED", `${path}.type`, `Unsupported entity type: ${String(entity.type)}`);
@@ -126,6 +174,10 @@ function validateEntities(entities, ids, roomIds, errors) {
 
     if (entity.type === "start") startCount += 1;
     if (entity.type === "goal") goalCount += 1;
+
+    if (entity.type === "enemy" && entity.initiallyActive !== undefined && typeof entity.initiallyActive !== "boolean") {
+      pushError(errors, "BOOLEAN_REQUIRED", `${path}.initiallyActive`, "initiallyActive must be a boolean when provided.");
+    }
 
     if (typeof entity.roomId !== "string" || !roomIds.has(entity.roomId)) {
       pushError(errors, "ROOM_REFERENCE_MISSING", `${path}.roomId`, `Unknown room reference: ${String(entity.roomId)}`);
@@ -170,7 +222,148 @@ function validateReachability(spec, roomIds, errors) {
   }
 }
 
-function validateEvents(events, ids, errors) {
+function validateEntityReference(entityId, path, entityIds, errors) {
+  if (typeof entityId !== "string" || !entityIds.has(entityId)) {
+    pushError(errors, "ENTITY_REFERENCE_MISSING", path, `Unknown entity reference: ${String(entityId)}`);
+    return false;
+  }
+  return true;
+}
+
+function validateEnemyIdArray(enemyIds, path, entityIds, entityTypeById, errors) {
+  if (!Array.isArray(enemyIds) || enemyIds.length === 0) {
+    pushError(errors, "ENEMY_GROUP_INVALID", path, "enemyIds must be a non-empty array.");
+    return false;
+  }
+
+  const seen = new Set();
+  let valid = true;
+  enemyIds.forEach((enemyId, index) => {
+    const itemPath = `${path}[${index}]`;
+    if (!validateEntityReference(enemyId, itemPath, entityIds, errors)) {
+      valid = false;
+      return;
+    }
+    if (entityTypeById.get(enemyId) !== "enemy") {
+      pushError(errors, "ENEMY_REFERENCE_REQUIRED", itemPath, `${enemyId} is not an enemy entity.`);
+      valid = false;
+    }
+    if (seen.has(enemyId)) {
+      pushError(errors, "DUPLICATE_REFERENCE", itemPath, `Duplicate enemy reference: ${enemyId}`);
+      valid = false;
+    }
+    seen.add(enemyId);
+  });
+  return valid;
+}
+
+function validateTrigger(trigger, path, roomIds, entityIds, entityTypeById, errors) {
+  if (!isRecord(trigger)) {
+    pushError(errors, "OBJECT_REQUIRED", path, "Event trigger must be an object.");
+    return;
+  }
+  if (!EVENT_TRIGGER_TYPE_SET.has(trigger.type)) {
+    pushError(errors, "EVENT_TRIGGER_UNSUPPORTED", `${path}.type`, `Unsupported event trigger: ${String(trigger.type)}`);
+    return;
+  }
+
+  switch (trigger.type) {
+    case "on_enter_room":
+      if (typeof trigger.roomId !== "string" || !roomIds.has(trigger.roomId)) {
+        pushError(errors, "ROOM_REFERENCE_MISSING", `${path}.roomId`, `Unknown room reference: ${String(trigger.roomId)}`);
+      }
+      break;
+    case "on_interact_entity":
+      validateEntityReference(trigger.entityId, `${path}.entityId`, entityIds, errors);
+      break;
+    case "on_open_treasure":
+      if (validateEntityReference(trigger.entityId, `${path}.entityId`, entityIds, errors) && entityTypeById.get(trigger.entityId) !== "treasure") {
+        pushError(errors, "TREASURE_REFERENCE_REQUIRED", `${path}.entityId`, `${trigger.entityId} is not a treasure entity.`);
+      }
+      break;
+    case "on_enemy_group_cleared":
+      validateEnemyIdArray(trigger.enemyIds, `${path}.enemyIds`, entityIds, entityTypeById, errors);
+      break;
+  }
+}
+
+function validateCondition(condition, path, entityIds, entityTypeById, errors) {
+  if (!isRecord(condition)) {
+    pushError(errors, "OBJECT_REQUIRED", path, "Event condition must be an object.");
+    return;
+  }
+  if (!EVENT_CONDITION_TYPE_SET.has(condition.type)) {
+    pushError(errors, "EVENT_CONDITION_UNSUPPORTED", `${path}.type`, `Unsupported event condition: ${String(condition.type)}`);
+    return;
+  }
+
+  switch (condition.type) {
+    case "flag":
+      validateNonEmptyString(condition.key, `${path}.key`, errors, "FLAG_KEY_REQUIRED");
+      if (!isJsonScalar(condition.value)) {
+        pushError(errors, "JSON_SCALAR_REQUIRED", `${path}.value`, "Flag condition value must be a JSON scalar.");
+      }
+      break;
+    case "item_owned":
+      validateNonEmptyString(condition.itemId, `${path}.itemId`, errors, "ITEM_ID_REQUIRED");
+      if (!Number.isSafeInteger(condition.minCount) || condition.minCount < 1) {
+        pushError(errors, "ITEM_COUNT_INVALID", `${path}.minCount`, "minCount must be a positive safe integer.");
+      }
+      break;
+    case "enemy_group_state":
+      validateEnemyIdArray(condition.enemyIds, `${path}.enemyIds`, entityIds, entityTypeById, errors);
+      if (!["cleared", "not_cleared"].includes(condition.state)) {
+        pushError(errors, "ENEMY_GROUP_STATE_INVALID", `${path}.state`, "enemy group state must be cleared or not_cleared.");
+      }
+      break;
+    case "one_shot":
+      break;
+  }
+}
+
+function validateAction(action, path, corridorIds, entityIds, entityTypeById, errors) {
+  if (!isRecord(action)) {
+    pushError(errors, "OBJECT_REQUIRED", path, "Event action must be an object.");
+    return;
+  }
+  if (!EVENT_ACTION_TYPE_SET.has(action.type)) {
+    pushError(errors, "EVENT_ACTION_UNSUPPORTED", `${path}.type`, `Unsupported event action: ${String(action.type)}`);
+    return;
+  }
+
+  switch (action.type) {
+    case "spawn_enemy_group":
+      validateEnemyIdArray(action.enemyIds, `${path}.enemyIds`, entityIds, entityTypeById, errors);
+      break;
+    case "unlock_open_door":
+      validateNonEmptyString(action.doorId, `${path}.doorId`, errors, "DOOR_ID_REQUIRED");
+      break;
+    case "enable_shortcut":
+      if (typeof action.corridorId !== "string" || !corridorIds.has(action.corridorId)) {
+        pushError(errors, "CORRIDOR_REFERENCE_MISSING", `${path}.corridorId`, `Unknown corridor reference: ${String(action.corridorId)}`);
+      }
+      break;
+    case "give_reward":
+      validateNonEmptyString(action.itemId, `${path}.itemId`, errors, "ITEM_ID_REQUIRED");
+      if (!Number.isSafeInteger(action.count) || action.count < 1) {
+        pushError(errors, "ITEM_COUNT_INVALID", `${path}.count`, "reward count must be a positive safe integer.");
+      }
+      break;
+    case "set_flag":
+      if (validateNonEmptyString(action.key, `${path}.key`, errors, "FLAG_KEY_REQUIRED") && action.key.startsWith(RESERVED_RUNTIME_FLAG_PREFIX)) {
+        pushError(errors, "FLAG_KEY_RESERVED", `${path}.key`, `${RESERVED_RUNTIME_FLAG_PREFIX} is reserved for runtime bookkeeping.`);
+      }
+      if (!isJsonScalar(action.value)) {
+        pushError(errors, "JSON_SCALAR_REQUIRED", `${path}.value`, "Flag action value must be a JSON scalar.");
+      }
+      break;
+    case "reveal_hint":
+      validateNonEmptyString(action.hintId, `${path}.hintId`, errors, "HINT_ID_REQUIRED");
+      break;
+  }
+}
+
+function validateEvents(events, ids, roomIds, corridorIds, entityIds, entityTypeById, errors) {
   if (!Array.isArray(events)) {
     pushError(errors, "ARRAY_REQUIRED", "events", "events must be an array.");
     return;
@@ -183,6 +376,23 @@ function validateEvents(events, ids, errors) {
       return;
     }
     registerId(event.id, `${path}.id`, ids, errors);
+    validateTrigger(event.trigger, `${path}.trigger`, roomIds, entityIds, entityTypeById, errors);
+
+    if (event.conditions !== undefined && !Array.isArray(event.conditions)) {
+      pushError(errors, "ARRAY_REQUIRED", `${path}.conditions`, "conditions must be an array when provided.");
+    } else {
+      (event.conditions ?? []).forEach((condition, conditionIndex) => {
+        validateCondition(condition, `${path}.conditions[${conditionIndex}]`, entityIds, entityTypeById, errors);
+      });
+    }
+
+    if (!Array.isArray(event.actions) || event.actions.length === 0) {
+      pushError(errors, "EVENT_ACTIONS_REQUIRED", `${path}.actions`, "actions must be a non-empty array.");
+    } else {
+      event.actions.forEach((action, actionIndex) => {
+        validateAction(action, `${path}.actions[${actionIndex}]`, corridorIds, entityIds, entityTypeById, errors);
+      });
+    }
   });
 }
 
@@ -206,11 +416,14 @@ export function validateDungeonSpec(spec) {
 
   const ids = new Set();
   const roomIds = new Set();
+  const corridorIds = new Set();
+  const entityIds = new Set();
+  const entityTypeById = new Map();
 
   validateRooms(spec.rooms, ids, roomIds, errors);
-  validateCorridors(spec.corridors, ids, roomIds, errors);
-  validateEntities(spec.entities, ids, roomIds, errors);
-  validateEvents(spec.events, ids, errors);
+  validateCorridors(spec.corridors, ids, roomIds, corridorIds, errors);
+  validateEntities(spec.entities, ids, roomIds, entityIds, entityTypeById, errors);
+  validateEvents(spec.events, ids, roomIds, corridorIds, entityIds, entityTypeById, errors);
   validateReachability(spec, roomIds, errors);
 
   return { valid: errors.length === 0, errors };

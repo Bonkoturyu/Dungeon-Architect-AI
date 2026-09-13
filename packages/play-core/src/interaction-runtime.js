@@ -1,4 +1,5 @@
 import { applyGameplayStateCommand } from "./gameplay-state.js";
+import { dispatchSupportedEvents } from "./event-runtime.js";
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -116,6 +117,16 @@ function entityView(session, type, entityId) {
   };
 }
 
+function dispatchEntityTriggers(session, entityId, triggerTypes, at) {
+  let current = session;
+  for (const type of triggerTypes) {
+    const dispatched = dispatchSupportedEvents(current, { type, entityId }, { at });
+    if (!dispatched.ok) return dispatched;
+    current = dispatched.session;
+  }
+  return { ok: true, session: current };
+}
+
 export function getTreasureState(session, treasureId) {
   return entityView(session, "treasure", treasureId);
 }
@@ -167,7 +178,7 @@ export function inspectTreasure(session, treasureId, { at = session?.startedAt ?
     warning: validation.entity.warning ?? null,
     at
   });
-  return { ok: true, session: next };
+  return dispatchEntityTriggers(next, treasureId, ["on_interact_entity"], at);
 }
 
 export function openTreasure(session, treasureId, { at = session?.startedAt ?? 0 } = {}) {
@@ -187,7 +198,7 @@ export function openTreasure(session, treasureId, { at = session?.startedAt ?? 0
   incrementCounter(next, "treasuresOpened", 1);
   incrementInteraction(next);
   next.events.push({ type: "treasure-opened", treasureId, roomId: validation.entity.roomId, at });
-  return { ok: true, session: next };
+  return dispatchEntityTriggers(next, treasureId, ["on_interact_entity", "on_open_treasure"], at);
 }
 
 export function inspectTrap(session, trapId, { at = session?.startedAt ?? 0 } = {}) {
@@ -209,7 +220,7 @@ export function inspectTrap(session, trapId, { at = session?.startedAt ?? 0 } = 
     warning: validation.entity.warning ?? null,
     at
   });
-  return { ok: true, session: next };
+  return dispatchEntityTriggers(next, trapId, ["on_interact_entity"], at);
 }
 
 function resolveTrap(session, trapId, resolution, { at = session?.startedAt ?? 0 } = {}) {
@@ -238,7 +249,7 @@ function resolveTrap(session, trapId, resolution, { at = session?.startedAt ?? 0
     warning: validation.entity.warning ?? null,
     at
   });
-  return { ok: true, session: next };
+  return dispatchEntityTriggers(next, trapId, ["on_interact_entity"], at);
 }
 
 export function avoidTrap(session, trapId, options = {}) {
@@ -266,5 +277,5 @@ export function useRecovery(session, recoveryId, { at = session?.startedAt ?? 0 
   incrementCounter(next, "recoveryUsed", 1);
   incrementInteraction(next);
   next.events.push({ type: "recovery-used", recoveryId, roomId: validation.entity.roomId, at });
-  return { ok: true, session: next };
+  return dispatchEntityTriggers(next, recoveryId, ["on_interact_entity"], at);
 }
