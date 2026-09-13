@@ -60,15 +60,15 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
   }
 
   function clearRenderedSpec() {
-    while (root.children.length > 0) {
-      const child = root.children.pop();
+    for (const child of [...root.children]) {
+      root.remove(child);
       disposeObjectTree(child);
     }
     runtimeBySpecId.clear();
     lastPlan = null;
   }
 
-  function addBoxGroup(definition, material) {
+  function addBoxGroup(targetRoot, targetMap, definition, material) {
     const group = makeSpecGroup(definition.specId, definition.kind);
     for (const box of definition.boxes) {
       const geometry = new THREE.BoxGeometry(1, 1, 1);
@@ -79,11 +79,11 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
       applyBoxTransform(mesh, box);
       group.add(mesh);
     }
-    root.add(group);
-    runtimeBySpecId.set(definition.specId, group);
+    targetRoot.add(group);
+    targetMap.set(definition.specId, group);
   }
 
-  function addMarker(marker) {
+  function addMarker(targetRoot, targetMap, marker) {
     const group = makeSpecGroup(marker.specId, marker.type);
     let geometry;
     let material;
@@ -102,8 +102,23 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     mesh.userData.roomId = marker.roomId;
     mesh.position.set(marker.position.x, marker.position.y, marker.position.z);
     group.add(mesh);
-    root.add(group);
-    runtimeBySpecId.set(marker.specId, group);
+    targetRoot.add(group);
+    targetMap.set(marker.specId, group);
+  }
+
+  function buildStagingScene(plan) {
+    const stagingRoot = new THREE.Group();
+    const stagingMap = new Map();
+
+    try {
+      for (const room of plan.roomGroups) addBoxGroup(stagingRoot, stagingMap, room, materials.room);
+      for (const corridor of plan.corridorGroups) addBoxGroup(stagingRoot, stagingMap, corridor, materials.corridor);
+      for (const marker of plan.markers) addMarker(stagingRoot, stagingMap, marker);
+      return { stagingRoot, stagingMap };
+    } catch (error) {
+      disposeObjectTree(stagingRoot);
+      throw error;
+    }
   }
 
   function fitCamera(bounds) {
@@ -120,11 +135,14 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
   function render(spec) {
     assertAlive();
     const plan = createDungeonScenePlan(spec);
-    clearRenderedSpec();
+    const { stagingRoot, stagingMap } = buildStagingScene(plan);
 
-    for (const room of plan.roomGroups) addBoxGroup(room, materials.room);
-    for (const corridor of plan.corridorGroups) addBoxGroup(corridor, materials.corridor);
-    for (const marker of plan.markers) addMarker(marker);
+    clearRenderedSpec();
+    for (const child of [...stagingRoot.children]) {
+      stagingRoot.remove(child);
+      root.add(child);
+    }
+    for (const [specId, object] of stagingMap) runtimeBySpecId.set(specId, object);
 
     fitCamera(plan.bounds);
     lastPlan = plan;
