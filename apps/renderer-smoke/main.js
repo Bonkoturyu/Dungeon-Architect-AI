@@ -19,6 +19,15 @@ async function run() {
 
     const first = adapter.render(spec);
     const firstMiddle = adapter.getObjectBySpecId('room-middle');
+
+    let invalidRejected = false;
+    try {
+      adapter.render({ ...structuredClone(spec), entities: [] });
+    } catch {
+      invalidRejected = true;
+    }
+    const preservedAfterInvalid = firstMiddle === adapter.getObjectBySpecId('room-middle');
+
     const second = adapter.render(structuredClone(spec));
     const secondMiddle = adapter.getObjectBySpecId('room-middle');
 
@@ -27,12 +36,20 @@ async function run() {
       failed: false,
       first,
       second,
+      invalidRejected,
+      preservedAfterInvalid,
       replacedOnRerender: Boolean(firstMiddle && secondMiddle && firstMiddle !== secondMiddle),
       startFound: Boolean(adapter.getObjectBySpecId('start-1')),
       goalFound: Boolean(adapter.getObjectBySpecId('goal-1')),
     };
 
-    if (!result.replacedOnRerender || !result.startFound || !result.goalFound) {
+    if (
+      !result.invalidRejected ||
+      !result.preservedAfterInvalid ||
+      !result.replacedOnRerender ||
+      !result.startFound ||
+      !result.goalFound
+    ) {
       throw new Error(`renderer smoke invariant failed: ${JSON.stringify(result)}`);
     }
 
