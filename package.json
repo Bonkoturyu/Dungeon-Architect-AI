@@ -14,6 +14,7 @@
     "smoke:renderer-three": "node scripts/run-dai-014-renderer-smoke.mjs",
     "smoke:editor-slice": "node scripts/run-dai-015-editor-smoke.mjs",
     "smoke:play-slice": "node scripts/run-dai-016-play-smoke.mjs",
+    "smoke:door-openings": "node scripts/run-dai-022-door-smoke.mjs",
     "test": "npm run test:core && npm run test:generator && npm run test:intent && npm run test:editor && npm run test:play && npm run test:benchmark-fixture && npm run test:renderer-three"
   },
   "devDependencies": {
