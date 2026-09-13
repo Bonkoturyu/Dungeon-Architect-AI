@@ -11,11 +11,11 @@ GitHub Issues are not created unless explicitly authorized.
 - DAI-006 Decision Log / ADR baseline — DONE
 
 ## M1
-- DAI-010 Re-measure 3D stack — IN PROGRESS (clean-room production benchmark harness ready; controlled Three.js/Babylon.js execution pending local npm/browser run; Unity handled separately)
-- DAI-011 Select 3D stack via ADR — OPEN / blocked by DAI-010 evidence
+- DAI-010 Re-measure 3D stack — DONE (Three.js/Babylon.js/Unity WebGL production comparison complete)
+- DAI-011 Select 3D stack via ADR — DONE (ADR-001 selects Three.js 0.185.1)
 - DAI-012 Clean-room DungeonSpec v1 — DONE
 - DAI-013 Fixed-spec parser/validator — DONE
-- DAI-014 Minimal renderer adapter — BLOCKED by DAI-010/011
+- DAI-014 Minimal renderer adapter — IN PROGRESS (Three.js adapter vertical slice)
 - DAI-015 Select/move/undo vertical slice — PARTIAL (renderer-independent move/undo core done; browser selection UI pending)
 - DAI-016 START→Goal→Result — PARTIAL (renderer-independent session/START/Result core done; browser vertical slice pending)
 - DAI-017 Perspective/combat evaluation — OPEN

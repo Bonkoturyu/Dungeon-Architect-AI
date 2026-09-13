@@ -1,67 +1,59 @@
-# M1 Renderer Benchmark Status — 2026-09-12
+# M1 Renderer Benchmark Status — 2026-09-13
 
 ## Status
 
-DAI-010: **IN PROGRESS** — production clean-room benchmark harness is prepared, but the controlled renderer measurements have not completed yet.
+DAI-010: **DONE** — controlled production measurements have been completed and reviewed for Three.js, Babylon.js, and Unity WebGL.
 
-## What is ready
+DAI-011: **DONE** — ADR-001 selects Three.js `0.185.1` for the browser MVP.
 
-Scoped production review approved exact candidate packages for benchmark use:
+## Candidates measured
 
 - `three@0.185.1`
 - `@babylonjs/core@9.18.0`
+- Unity WebGL `6000.3.23f1`
+
+Supporting tooling:
+
 - `vite@8.1.5`
 - `playwright-core@1.62.0`
 
-Production branch now contains a newly implemented benchmark harness under `benchmarks/renderers/` and `scripts/run-renderer-benchmark.mjs`.
-The fixture is independent from the pre-production benchmark implementation.
-
-Fixed production fixture:
+## Fixed production fixture
 
 - ID: `DAI-M1-RENDERER-20-v1`
 - 20 rooms / 19 corridors
-- 119 box meshes before renderer-specific batching
+- 119 box-equivalent rendered objects
+- 1428 active triangles
 - 960×540 canvas
-- no shadows / post-processing / physics / audio / AI
-- same camera and geometry rules for Three.js and Babylon.js
+- no shadows / post-processing / gameplay / audio / AI
+- same logical camera/geometry rules across candidates
+- five runs per candidate
 
-Static source checks performed while preparing the harness:
+## Reviewed result
 
-- all newly prepared JavaScript files parsed successfully with `node --check`
-- pure fixture verification returned `20 rooms / 19 corridors / 119 boxes`
+See:
 
-These checks are not renderer benchmark results.
+- `docs/testing/M1_RENDERER_BENCHMARK_RESULT_2026-09-12.md`
+- `docs/testing/M1_RENDERER_FINAL_COMPARISON_2026-09-13.md`
+- `docs/architecture/adr/ADR-001-PRODUCTION-RENDERER-THREEJS.md`
 
-## Current execution limitation
+Median results:
 
-The assistant execution environment still cannot install the reviewed npm packages because npm registry access times out / cannot resolve reliably.
-No production renderer measurement is therefore claimed from that environment.
+| Candidate | Navigation complete | Scene generation | First render | Median FPS |
+|---|---:|---:|---:|---:|
+| Three.js 0.185.1 | 5773.94 ms | 4.40 ms | 53.20 ms | 31.95 |
+| Babylon.js 9.18.0 | 6891.43 ms | 24.40 ms | 67.60 ms | 32.05 |
+| Unity WebGL 6000.3.23f1 | 8477.78 ms | 7.00 ms | 2115.00 ms | 32.26 |
 
-The Windows one-command runner is:
+Unity's final hardened benchmark completed 5/5 runs with zero runtime, console, page, request, and HTTP errors.
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-m1-renderer-benchmark.ps1
-```
+Three.js run 1 retains one unresolved 404/navigation outlier as a follow-up item. Runs 2–5 did not reproduce it, and it does not alter the five-run median.
 
-It will:
+## Decision
 
-1. locate Chrome or use `CHROME_PATH`
-2. install the exact reviewed benchmark dependencies with install scripts disabled
-3. print resolved top-level versions
-4. run the production test suite
-5. run five measurements per Three.js/Babylon.js candidate
-6. write raw JSON to `artifacts/renderer-benchmark/`
+Three.js `0.185.1` is the selected production renderer for the hackathon browser MVP.
 
-Raw output and `package-lock.json` must be reviewed before they become evidence/committed artifacts.
+The decision is project-specific and reversible only under the conditions recorded in ADR-001.
 
-## Unity candidate
+## Next task
 
-Unity 6000.3.20f1 remains a Candidate toolchain and is not selected/rejected by the browser harness.
-Unity must be handled according to the frozen production decision protocol; lack of measurement is not a rejection.
-
-## Rule
-
-- Do not substitute Pre benchmark results for production measurements.
-- Do not mark DAI-010 complete until production measurements are reviewed.
-- Do not mark DAI-011 complete until an ADR records the production evidence and decision.
-- Headless numbers alone are not treated as complete user-visible UX evidence.
+DAI-014: implement the minimal Three.js renderer adapter while keeping Core renderer-independent.
