@@ -21,6 +21,7 @@ artifacts/renderer-smoke/
 artifacts/editor-smoke/
 artifacts/play-smoke/
 artifacts/door-smoke/
+artifacts/route-matrix/
 
 # Unity candidates
 Library/
