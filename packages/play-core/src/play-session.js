@@ -2,6 +2,15 @@ import { validateDungeonSpec } from "../../core/src/dungeon-spec.js";
 import { applyGameplayStateCommand, createGameplayState } from "./gameplay-state.js";
 import { dispatchSupportedEvents, isRuntimeCorridorEnabled } from "./event-runtime.js";
 
+export const PLAY_FAILURE_REASONS = Object.freeze([
+  "player-defeated",
+  "timeout",
+  "progression-blocked",
+  "stopped"
+]);
+
+const PLAY_FAILURE_REASON_SET = new Set(PLAY_FAILURE_REASONS);
+
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
@@ -25,6 +34,31 @@ function isPlaying(session) {
   return session && session.status === "playing";
 }
 
+function resultRouteRoomIds(session) {
+  const startRoomId = findEntity(session.snapshot, "start")?.roomId ?? session.visitedRoomIds?.[0] ?? null;
+  const route = startRoomId ? [startRoomId] : [];
+  for (const event of session.events ?? []) {
+    if (event?.type === "move" && typeof event.roomId === "string") route.push(event.roomId);
+  }
+  return route;
+}
+
+function gameplayMetrics(session) {
+  const counters = session.gameplayState?.counters ?? {};
+  return {
+    roomsVisited: session.visitedRoomIds?.length ?? 0,
+    roomEntries: counters.roomEntries ?? 0,
+    interactions: counters.interactions ?? 0,
+    enemiesCleared: counters.enemiesCleared ?? 0,
+    treasuresOpened: counters.treasuresOpened ?? 0,
+    trapsTriggered: counters.trapsTriggered ?? 0,
+    recoveryUsed: counters.recoveryUsed ?? 0,
+    damageTaken: counters.damageTaken ?? 0,
+    healingReceived: counters.healingReceived ?? 0,
+    deaths: session.status === "failed" && session.failureReason === "player-defeated" ? 1 : 0
+  };
+}
+
 export function startPlaySession(authoringSpec, { startedAt = 0 } = {}) {
   const validation = validateDungeonSpec(authoringSpec);
   if (!validation.valid) {
@@ -41,6 +75,7 @@ export function startPlaySession(authoringSpec, { startedAt = 0 } = {}) {
     dungeonSeed: snapshot.seed,
     snapshot,
     status: "playing",
+    failureReason: null,
     startedAt,
     completedAt: null,
     currentRoomId: start.roomId,
@@ -112,9 +147,32 @@ export function movePlaySession(session, targetRoomId, { at = session?.startedAt
 
   if (targetRoomId === next.goalRoomId) {
     next.status = "cleared";
+    next.failureReason = null;
     next.completedAt = at;
   }
 
+  return { ok: true, session: next };
+}
+
+export function failPlaySession(session, reason, { at = session?.startedAt ?? 0 } = {}) {
+  if (!isPlaying(session)) {
+    return { ok: false, error: { code: "SESSION_NOT_PLAYING", message: "Session is not in playing state." } };
+  }
+  if (!PLAY_FAILURE_REASON_SET.has(reason)) {
+    return {
+      ok: false,
+      error: {
+        code: "FAILURE_REASON_UNSUPPORTED",
+        message: `Unsupported failure reason: ${String(reason)}`
+      }
+    };
+  }
+
+  const next = clone(session);
+  next.status = "failed";
+  next.failureReason = reason;
+  next.completedAt = at;
+  next.events.push({ type: "session-failed", reason, roomId: next.currentRoomId, at });
   return { ok: true, session: next };
 }
 
@@ -148,15 +206,19 @@ export function createPlayResult(session) {
   return {
     ok: true,
     result: {
+      schemaVersion: "1.0",
       dungeonId: session.dungeonId,
       status: session.status,
+      failureReason: session.status === "failed" ? session.failureReason ?? null : null,
       startedAt: session.startedAt,
       completedAt: session.completedAt,
       elapsed: session.completedAt - session.startedAt,
       moves: session.moves,
+      routeRoomIds: resultRouteRoomIds(session),
       visitedRoomIds: [...session.visitedRoomIds],
       finalRoomId: session.currentRoomId,
-      goalRoomId: session.goalRoomId
+      goalRoomId: session.goalRoomId,
+      metrics: gameplayMetrics(session)
     }
   };
 }

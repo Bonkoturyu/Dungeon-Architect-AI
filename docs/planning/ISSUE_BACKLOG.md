@@ -33,7 +33,7 @@ GitHub Issues are not created unless explicitly authorized.
 - DAI-031 Enemy minimum — DONE (policy-neutral enemy presence/encounter/defeat runtime verified against both PCE enemy entities; duplicate defeat and snapshot/authoring immutability gates passed)
 - DAI-032 Treasure/trap/recovery runtime — DONE (PCE fixture treasure inspect/open, trap inspect/avoid/trigger, one-shot recovery, immutable state, and Result compatibility verified by production Node evidence)
 - DAI-033 Supported event logic — DONE (fixed MVP trigger/condition/action vocabulary, immutable deterministic dispatch, one-shot behavior, shortcut enable, enemy-group clear, and dormant enemy activation verified by production Node evidence)
-- DAI-034 Clear/failure/Result — PARTIAL (clear/basic Result done; failure/gameplay metrics pending)
+- DAI-034 Clear/failure/Result — DONE (clear/failed terminal states, fixed failure vocabulary, route history, gameplay metrics, terminal death projection, and immutable production evidence passed)
 
 ## M4
 - DAI-040 DesignIntent schema — DONE
