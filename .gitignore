@@ -18,6 +18,7 @@ coverage/
 # Local benchmark / smoke artifacts
 artifacts/renderer-benchmark/
 artifacts/renderer-smoke/
+artifacts/editor-smoke/
 
 # Unity candidates
 Library/
