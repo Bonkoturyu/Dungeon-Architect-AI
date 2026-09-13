@@ -63,9 +63,25 @@ The production generator can create:
 
 - deterministic room graph from Seed
 - guaranteed backbone Start→Goal route
-- optional alternate edges based on `routeChoice`
+- deterministic alternate route choices based on `routeChoice`
 - deterministic serpentine grid layout
 - Start/Goal entities
+
+### Multiple-route constraints
+
+For the current generator revision:
+
+- `routeChoice` remains normalized to `[0, 1]`;
+- alternate-route capacity is `max(1, floor(roomCount / 3))`;
+- requested alternate count is `round(routeChoice * capacity)`;
+- the generator produces that exact alternate count for every supported room count (`3..64`);
+- every alternate edge reconnects two rooms already on the backbone rather than creating a disconnected/dead-end branch;
+- alternate edges skip at least one backbone room and span at most four backbone steps;
+- duplicate/self/adjacent alternate edges are not generated;
+- increasing `routeChoice` for the same Seed/roomCount preserves the lower-choice alternate set as a deterministic prefix;
+- each alternate edge adds one independent graph cycle, so a positive alternate count yields multiple Start→Goal route choices while retaining the guaranteed backbone.
+
+These constraints are structural. They do not yet assign risk, reward, safety, trap, combat, or semantic quality to one route versus another.
 
 The same inputs are byte-stable within the current schema/generator implementation.
 
@@ -74,6 +90,7 @@ The same inputs are byte-stable within the current schema/generator implementati
 - key/door dependency validation
 - event semantic validation
 - risk/safety semantics on alternate routes
+- route quality / intent-fit scoring
 - runtime state
 - renderer-specific objects
 - persistence migration
