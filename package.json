@@ -6,6 +6,7 @@
     "test:core": "node --test packages/core/test/*.test.js",
     "test:generator": "node --test packages/generator/test/*.test.js",
     "test:intent": "node --test packages/intent/test/*.test.js",
+    "test:cloud-intent": "node --test packages/cloud-intent/test/*.test.js",
     "test:editor": "node --test packages/editor-core/test/*.test.js",
     "test:play": "node --test packages/play-core/test/*.test.js",
     "test:benchmark-fixture": "node --test benchmarks/renderers/*.test.js",
@@ -21,7 +22,8 @@
     "validate:interaction-runtime": "node scripts/run-dai-032-interaction-runtime.mjs",
     "validate:event-logic": "node scripts/run-dai-033-event-logic.mjs",
     "validate:clear-failure-result": "node scripts/run-dai-034-clear-failure-result.mjs",
-    "test": "npm run test:core && npm run test:generator && npm run test:intent && npm run test:editor && npm run test:play && npm run test:benchmark-fixture && npm run test:renderer-three"
+    "validate:cloud-intent": "node scripts/run-dai-043-cloud-intent-adapter.mjs",
+    "test": "npm run test:core && npm run test:generator && npm run test:intent && npm run test:cloud-intent && npm run test:editor && npm run test:play && npm run test:benchmark-fixture && npm run test:renderer-three"
   },
   "devDependencies": {
     "@babylonjs/core": "9.18.0",
