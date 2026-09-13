@@ -1,4 +1,5 @@
 import { applyGameplayStateCommand } from "./gameplay-state.js";
+import { dispatchSupportedEvents } from "./event-runtime.js";
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -16,9 +17,9 @@ function findEnemy(session, enemyId) {
   return enemyEntities(session).find((entity) => entity.id === enemyId) ?? null;
 }
 
-function defaultEnemyState() {
+function defaultEnemyState(enemy) {
   return {
-    status: "active",
+    status: enemy?.initiallyActive === false ? "dormant" : "active",
     encounters: 0,
     lastEncounterAt: null,
     defeatedAt: null
@@ -26,8 +27,10 @@ function defaultEnemyState() {
 }
 
 function currentEnemyState(session, enemyId) {
+  const enemy = findEnemy(session, enemyId);
+  if (!enemy) return null;
   const stored = session?.gameplayState?.entityStates?.[enemyId];
-  return stored ? clone(stored) : defaultEnemyState();
+  return stored ? { ...defaultEnemyState(enemy), ...clone(stored) } : defaultEnemyState(enemy);
 }
 
 function validateEnemyAction(session, enemyId, { requireCurrentRoom = true } = {}) {
@@ -38,6 +41,11 @@ function validateEnemyAction(session, enemyId, { requireCurrentRoom = true } = {
   const enemy = findEnemy(session, enemyId);
   if (!enemy) {
     return { ok: false, error: { code: "ENEMY_NOT_FOUND", message: `Unknown enemy: ${enemyId}` } };
+  }
+
+  const state = currentEnemyState(session, enemyId);
+  if (state.status === "dormant") {
+    return { ok: false, error: { code: "ENEMY_NOT_ACTIVE", message: `${enemyId} is dormant.` } };
   }
 
   if (requireCurrentRoom && enemy.roomId !== session.currentRoomId) {
@@ -79,13 +87,14 @@ export function getEnemyState(session, enemyId) {
   };
 }
 
-export function listRoomEnemies(session, roomId = session?.currentRoomId, { includeDefeated = false } = {}) {
+export function listRoomEnemies(session, roomId = session?.currentRoomId, { includeDefeated = false, includeDormant = false } = {}) {
   if (!session?.snapshot || typeof roomId !== "string") return [];
 
   return enemyEntities(session)
     .filter((enemy) => enemy.roomId === roomId)
     .map((enemy) => ({ enemy: clone(enemy), state: currentEnemyState(session, enemy.id) }))
-    .filter((entry) => includeDefeated || entry.state.status !== "defeated");
+    .filter((entry) => (includeDefeated || entry.state.status !== "defeated") &&
+      (includeDormant || entry.state.status !== "dormant"));
 }
 
 export function recordEnemyEncounter(session, enemyId, { at = session?.startedAt ?? 0 } = {}) {
@@ -116,7 +125,7 @@ export function defeatEnemy(session, enemyId, { at = session?.startedAt ?? 0 } =
     return { ok: false, error: { code: "ENEMY_ALREADY_DEFEATED", message: `${enemyId} is already defeated.` } };
   }
 
-  const next = clone(session);
+  let next = clone(session);
   setEnemyState(next, enemyId, {
     ...previousState,
     status: "defeated",
@@ -124,5 +133,13 @@ export function defeatEnemy(session, enemyId, { at = session?.startedAt ?? 0 } =
   });
   incrementCounter(next, "enemiesCleared", 1);
   next.events.push({ type: "enemy-defeated", enemyId, roomId: validation.enemy.roomId, at });
+
+  const dispatched = dispatchSupportedEvents(next, {
+    type: "on_enemy_group_cleared",
+    enemyId
+  }, { at });
+  if (!dispatched.ok) return dispatched;
+  next = dispatched.session;
+
   return { ok: true, session: next };
 }
