@@ -26,6 +26,7 @@ artifacts/session-state/
 artifacts/enemy-runtime/
 artifacts/interaction-runtime/
 artifacts/event-logic/
+artifacts/result-runtime/
 
 # Unity candidates
 Library/
