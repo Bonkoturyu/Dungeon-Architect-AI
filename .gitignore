@@ -15,8 +15,9 @@ coverage/
 .tmp/
 .cache/
 
-# Local benchmark artifacts
+# Local benchmark / smoke artifacts
 artifacts/renderer-benchmark/
+artifacts/renderer-smoke/
 
 # Unity candidates
 Library/
