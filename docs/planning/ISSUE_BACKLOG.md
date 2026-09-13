@@ -30,7 +30,7 @@ GitHub Issues are not created unless explicitly authorized.
 
 ## M3
 - DAI-030 Session state — DONE (generic renderer-independent gameplay state + immutable PlaySession transitions verified by production Node evidence)
-- DAI-031 Enemy minimum — OPEN
+- DAI-031 Enemy minimum — DONE (policy-neutral enemy presence/encounter/defeat runtime verified against both PCE enemy entities; duplicate defeat and snapshot/authoring immutability gates passed)
 - DAI-032 Treasure/trap/recovery runtime — OPEN
 - DAI-033 Supported event logic — OPEN
 - DAI-034 Clear/failure/Result — PARTIAL (clear/basic Result done; failure/gameplay metrics pending)
