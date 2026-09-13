@@ -24,6 +24,7 @@ artifacts/door-smoke/
 artifacts/route-matrix/
 artifacts/session-state/
 artifacts/enemy-runtime/
+artifacts/interaction-runtime/
 
 # Unity candidates
 Library/
