@@ -136,12 +136,19 @@ function defaultWait(ms, { signal } = {}) {
       reject(abortError);
       return;
     }
-    const timer = setTimeout(resolve, ms);
+    let settled = false;
+    const finish = (callback) => {
+      if (settled) return;
+      settled = true;
+      signal?.removeEventListener("abort", onAbort);
+      callback();
+    };
+    const timer = setTimeout(() => finish(resolve), ms);
     const onAbort = () => {
       clearTimeout(timer);
       const abortError = new Error("wait aborted");
       abortError.name = "AbortError";
-      reject(abortError);
+      finish(() => reject(abortError));
     };
     signal?.addEventListener("abort", onAbort, { once: true });
   });
@@ -155,41 +162,65 @@ async function invokeAttempt(attemptFn, prompt, {
   now
 }) {
   const controller = new AbortController();
-  let timedOut = false;
-  let externalAbort = false;
   const startedAt = now();
+  let timer = null;
+  let onParentAbort = null;
 
-  const onParentAbort = () => {
-    externalAbort = true;
-    controller.abort(parentSignal?.reason);
-  };
-  if (parentSignal?.aborted) onParentAbort();
-  else parentSignal?.addEventListener("abort", onParentAbort, { once: true });
+  const attemptPromise = Promise.resolve()
+    .then(() => attemptFn(prompt, { attempt, signal: controller.signal }))
+    .then(
+      (raw) => ({ kind: "result", raw }),
+      (cause) => ({ kind: "throw", cause })
+    );
 
-  const timer = setTimeout(() => {
-    timedOut = true;
-    controller.abort(new Error(`${provider} attempt timed out`));
-  }, timeoutMs);
+  const timeoutPromise = new Promise((resolve) => {
+    timer = setTimeout(() => {
+      controller.abort(new Error(`${provider} attempt timed out`));
+      resolve({ kind: "timeout" });
+    }, timeoutMs);
+  });
+
+  const cancelPromise = parentSignal
+    ? new Promise((resolve) => {
+        onParentAbort = () => {
+          controller.abort(parentSignal.reason);
+          resolve({ kind: "cancel" });
+        };
+        if (parentSignal.aborted) onParentAbort();
+        else parentSignal.addEventListener("abort", onParentAbort, { once: true });
+      })
+    : new Promise(() => {});
+
+  const winner = await Promise.race([attemptPromise, timeoutPromise, cancelPromise]);
+  if (timer) clearTimeout(timer);
+  if (onParentAbort) parentSignal?.removeEventListener("abort", onParentAbort);
 
   let raw;
-  try {
-    raw = await attemptFn(prompt, { attempt, signal: controller.signal });
-  } catch (cause) {
+  let timedOut = false;
+  let externallyCancelled = false;
+
+  if (winner.kind === "timeout") {
+    timedOut = true;
+    raw = errorResult("ROUTER_TIMEOUT", "Intent attempt exceeded the routing timeout.", { category: "timeout" });
+  } else if (winner.kind === "cancel") {
+    externallyCancelled = true;
+    raw = errorResult("ROUTER_CANCELLED", "Intent routing was cancelled.", { category: "cancelled" });
+  } else if (winner.kind === "throw") {
+    const aborted = winner.cause?.name === "AbortError";
     raw = errorResult(
-      cause?.name === "AbortError" ? "PROVIDER_ABORTED" : "ROUTER_ATTEMPT_THROWN",
-      cause?.name === "AbortError" ? "Intent attempt aborted." : "Intent attempt threw.",
-      { category: cause?.name === "AbortError" ? undefined : "unavailable" }
+      aborted ? "PROVIDER_ABORTED" : "ROUTER_ATTEMPT_THROWN",
+      aborted ? "Intent attempt aborted." : "Intent attempt threw.",
+      aborted ? {} : { category: "unavailable" }
     );
-  } finally {
-    clearTimeout(timer);
-    parentSignal?.removeEventListener("abort", onParentAbort);
+  } else {
+    raw = winner.raw;
   }
 
   const result = normalizeSuccessfulResult(raw);
   return {
     result,
     timedOut,
-    externallyCancelled: externalAbort || parentSignal?.aborted === true,
+    externallyCancelled,
     durationMs: Math.max(0, now() - startedAt)
   };
 }
