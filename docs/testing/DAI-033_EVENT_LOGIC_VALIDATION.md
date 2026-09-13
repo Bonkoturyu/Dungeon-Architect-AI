@@ -2,7 +2,24 @@
 
 ## Status
 
-**IN PROGRESS.**
+**DONE.** Production validation completed successfully on 2026-09-13.
+
+Reviewed evidence:
+
+- generated at: `2026-09-13T12:02:28.763Z`
+- Node.js: `v24.15.0`
+- source fixture: `pce-perspective-combat-20-v1`
+- JSON SHA-256: `2a71c375c3d1fb9b35c11c4e6ea68fdbb89fa9dceb733d038bd66b19f17ef063`
+- `passed = true`
+- 23 / 23 evidence checks passed
+- all four supported trigger categories were observed
+- all six supported action categories were observed
+- one-shot behavior prevented duplicate reward
+- disabled shortcut became traversable only after the treasure-open event
+- enemy-group event did not fire early and fired after the second referenced enemy was defeated
+- dormant predeclared enemy activation succeeded
+- authoring data, execution snapshot, and previous sessions remained unchanged
+- Goal clear and existing Result generation remained valid
 
 DAI-033 implements the MVP working-logic vocabulary as a fixed, schema-validated, renderer-independent runtime. It does not execute arbitrary JavaScript or generated code.
 
@@ -100,39 +117,24 @@ Play Core tests verify:
 
 `scripts/run-dai-033-event-logic.mjs` derives an event-enabled scenario from the production PCE 20-room fixture without modifying the committed fixture.
 
-The scenario exercises all four trigger types, all four condition types, and all six action types. It also verifies:
+The successful evidence run exercised all four trigger types, all four condition types, and all six action types. It also verified:
 
-- `corridor-10` is unavailable before a treasure-open event and traversable after `enable_shortcut`;
-- re-entering `room-02` does not duplicate its one-shot reward;
-- warning-chest inspection satisfies a flag-conditioned interaction event;
-- the enemy-group event does not fire after only `enemy-01`, then fires after `enemy-02`;
-- a dormant enemy in `room-09` is activated only after the item-owned and enemy-group-cleared conditions are true;
-- prior sessions, authoring data, and the fixed execution snapshot remain unchanged;
-- Goal clear and existing Result generation remain valid.
+- `corridor-10` was unavailable before a treasure-open event and traversable after `enable_shortcut`;
+- re-entering `room-02` did not duplicate its one-shot reward;
+- warning-chest inspection satisfied a flag-conditioned interaction event;
+- the enemy-group event did not fire after only `enemy-01`, then fired after `enemy-02`;
+- a dormant enemy in `room-09` was activated only after the item-owned and enemy-group-cleared conditions were true;
+- prior sessions, authoring data, and the fixed execution snapshot remained unchanged;
+- Goal clear and existing Result generation remained valid.
 
-## Required production validation
+## Completion gate result
 
-Run from the Windows clone:
+DAI-033 acceptance conditions are satisfied:
 
-```powershell
-git fetch origin; git switch feat/dai-033-event-logic; git pull --ff-only origin feat/dai-033-event-logic; powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-dai-033-validation.ps1
-```
-
-The runner:
-
-1. verifies the audited `package-lock.json` SHA-256;
-2. installs the exact reviewed dependency graph with scripts disabled;
-3. runs the complete production Node test suite;
-4. runs the deterministic DAI-033 event-logic evidence scenario;
-5. writes `artifacts/event-logic/dai-033-event-logic.json`.
-
-## Completion gate
-
-Do not mark DAI-033 DONE until:
-
-- the complete production Node test suite passes;
-- the event-logic evidence reports `passed = true`;
-- the generated JSON evidence is reviewed.
+- complete production Node test suite passed;
+- event-logic evidence reported `passed = true`;
+- generated JSON evidence was reviewed;
+- no contract relaxation was required.
 
 ## Explicit non-goals
 
