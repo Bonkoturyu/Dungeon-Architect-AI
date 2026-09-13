@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { createDungeonScenePlan } from './scene-plan.js';
 
 const DEFAULT_CLEAR_COLOR = 0x101014;
+const DEFAULT_SELECTION_COLOR = 0x66ccff;
 
 function applyBoxTransform(mesh, box) {
   mesh.position.set(box.position.x, box.position.y, box.position.z);
@@ -46,8 +47,14 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
   };
 
   const runtimeBySpecId = new Map();
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+  const boundsBox = new THREE.Box3();
+  const boundsCenter = new THREE.Vector3();
   let disposed = false;
   let lastPlan = null;
+  let selectedSpecId = null;
+  let selectionHelper = null;
 
   function assertAlive() {
     if (disposed) throw new Error('Three renderer adapter has been disposed.');
@@ -59,7 +66,17 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     });
   }
 
+  function clearSelectionHelper() {
+    if (!selectionHelper) return;
+    scene.remove(selectionHelper);
+    selectionHelper.geometry?.dispose();
+    selectionHelper.material?.dispose();
+    selectionHelper = null;
+  }
+
   function clearRenderedSpec() {
+    clearSelectionHelper();
+    selectedSpecId = null;
     for (const child of [...root.children]) {
       root.remove(child);
       disposeObjectTree(child);
@@ -75,6 +92,7 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
       const mesh = new THREE.Mesh(geometry, material);
       mesh.name = `${definition.specId}:${box.part}`;
       mesh.userData.specId = definition.specId;
+      mesh.userData.kind = definition.kind;
       mesh.userData.part = box.part;
       applyBoxTransform(mesh, box);
       group.add(mesh);
@@ -85,6 +103,7 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
 
   function addMarker(targetRoot, targetMap, marker) {
     const group = makeSpecGroup(marker.specId, marker.type);
+    group.userData.roomId = marker.roomId;
     let geometry;
     let material;
 
@@ -99,6 +118,7 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     const mesh = new THREE.Mesh(geometry, material);
     mesh.name = `${marker.type}:${marker.specId}`;
     mesh.userData.specId = marker.specId;
+    mesh.userData.kind = marker.type;
     mesh.userData.roomId = marker.roomId;
     mesh.position.set(marker.position.x, marker.position.y, marker.position.z);
     group.add(mesh);
@@ -173,6 +193,77 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     return runtimeBySpecId.get(id) ?? null;
   }
 
+  function findSpecMetadata(object) {
+    let current = object;
+    while (current && current !== root) {
+      if (current.userData?.specId) {
+        return {
+          specId: current.userData.specId,
+          kind: current.userData.kind ?? null,
+          roomId: current.userData.roomId ?? null,
+        };
+      }
+      current = current.parent;
+    }
+    return null;
+  }
+
+  function pickSpecAt(clientX, clientY) {
+    assertAlive();
+    if (!Number.isFinite(clientX) || !Number.isFinite(clientY)) return null;
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return null;
+
+    pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(pointer, camera);
+
+    const intersections = raycaster.intersectObjects(root.children, true);
+    for (const intersection of intersections) {
+      const metadata = findSpecMetadata(intersection.object);
+      if (metadata) return metadata;
+    }
+    return null;
+  }
+
+  function setSelectedSpecId(id) {
+    assertAlive();
+    clearSelectionHelper();
+    selectedSpecId = null;
+
+    if (id == null) {
+      draw();
+      return;
+    }
+
+    const target = runtimeBySpecId.get(id);
+    if (!target) throw new Error(`Unknown rendered Spec ID: ${id}`);
+    selectionHelper = new THREE.BoxHelper(target, DEFAULT_SELECTION_COLOR);
+    selectionHelper.name = `selection:${id}`;
+    scene.add(selectionHelper);
+    selectedSpecId = id;
+    draw();
+  }
+
+  function getScreenPositionForSpecId(id) {
+    assertAlive();
+    const target = runtimeBySpecId.get(id);
+    if (!target) return null;
+
+    target.updateWorldMatrix(true, true);
+    camera.updateWorldMatrix(true, false);
+    boundsBox.setFromObject(target);
+    if (boundsBox.isEmpty()) return null;
+    boundsBox.getCenter(boundsCenter);
+    boundsCenter.project(camera);
+
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: rect.left + ((boundsCenter.x + 1) / 2) * rect.width,
+      y: rect.top + ((1 - boundsCenter.y) / 2) * rect.height,
+    };
+  }
+
   function dispose() {
     if (disposed) return;
     clearRenderedSpec();
@@ -185,7 +276,13 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     render,
     resize,
     getObjectBySpecId,
+    pickSpecAt,
+    setSelectedSpecId,
+    getScreenPositionForSpecId,
     dispose,
+    get selectedSpecId() {
+      return selectedSpecId;
+    },
     get plan() {
       return lastPlan;
     },

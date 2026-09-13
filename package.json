@@ -12,6 +12,7 @@
     "test:renderer-three": "node --test packages/renderer-three/test/*.test.js",
     "bench:renderers": "node scripts/run-renderer-benchmark.mjs",
     "smoke:renderer-three": "node scripts/run-dai-014-renderer-smoke.mjs",
+    "smoke:editor-slice": "node scripts/run-dai-015-editor-smoke.mjs",
     "test": "npm run test:core && npm run test:generator && npm run test:intent && npm run test:editor && npm run test:play && npm run test:benchmark-fixture && npm run test:renderer-three"
   },
   "devDependencies": {
