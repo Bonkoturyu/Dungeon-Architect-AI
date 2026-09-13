@@ -40,7 +40,7 @@ GitHub Issues are not created unless explicitly authorized.
 - DAI-041 Deterministic fallback parser — DONE
 - DAI-042 Production cloud-provider review — DONE (2026-09-13 official recheck; OpenAI Responses API + `gpt-5.6-luna` selected as initial integration candidate behind a provider-neutral backend boundary; permanent provider/model winner remains gated by DAI-045 evidence)
 - DAI-043 Cloud intent adapter — DONE (strict DesignIntent JSON Schema, backend-only OpenAI Responses transport, explicit `store:false`, independent validation, sanitized metadata/error normalization, single-attempt boundary, and no-live-call production contract evidence passed)
-- DAI-044 Normalization/retry — PARTIAL
+- DAI-044 Normalization/retry — IN PROGRESS (provider-neutral Cloud → eligible Local → deterministic fallback routing, maximum one retry per LLM source, finite timeout/cancel boundary, Retry-After handling, and sanitized routing trace implemented; production evidence pending)
 - DAI-045 Prompt regression — OPEN
 
 ## M5
