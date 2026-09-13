@@ -7,9 +7,21 @@ import {
   movePlaySession,
   startPlaySession
 } from "../src/play-session.js";
+import {
+  defeatEnemy,
+  getEnemyState,
+  listRoomEnemies,
+  recordEnemyEncounter
+} from "../src/enemy-runtime.js";
 
 function fixture() {
   return generateDungeonSpec({ seed: 909, roomCount: 5, routeChoice: 0, id: "play-fixture" });
+}
+
+function enemyFixture({ roomId = "room-002", enemyId = "enemy-test" } = {}) {
+  const spec = fixture();
+  spec.entities.push({ id: enemyId, type: "enemy", roomId });
+  return spec;
 }
 
 test("START rejects an invalid authoring spec", () => {
@@ -112,6 +124,76 @@ test("entity state accepts snapshot entities and rejects unknown entity IDs", ()
   });
   assert.equal(rejected.ok, false);
   assert.equal(rejected.error.code, "INVALID_STATE_COMMAND");
+});
+
+test("enemy presence is derived from the fixed snapshot without mutating gameplay state", () => {
+  const session = startPlaySession(enemyFixture()).session;
+  const beforeState = JSON.stringify(session.gameplayState);
+  const enemies = listRoomEnemies(session, "room-002");
+  assert.equal(enemies.length, 1);
+  assert.equal(enemies[0].enemy.id, "enemy-test");
+  assert.deepEqual(enemies[0].state, {
+    status: "active",
+    encounters: 0,
+    lastEncounterAt: null,
+    defeatedAt: null
+  });
+  assert.equal(JSON.stringify(session.gameplayState), beforeState);
+});
+
+test("enemy encounter requires the current room and records immutable runtime state", () => {
+  const started = startPlaySession(enemyFixture(), { startedAt: 100 }).session;
+  const remote = recordEnemyEncounter(started, "enemy-test", { at: 101 });
+  assert.equal(remote.ok, false);
+  assert.equal(remote.error.code, "ENEMY_NOT_IN_CURRENT_ROOM");
+
+  const moved = movePlaySession(started, "room-002", { at: 102 }).session;
+  const snapshotBefore = JSON.stringify(moved.snapshot);
+  const encountered = recordEnemyEncounter(moved, "enemy-test", { at: 103 });
+  assert.equal(encountered.ok, true);
+  assert.equal(getEnemyState(moved, "enemy-test").state.encounters, 0);
+  assert.equal(getEnemyState(encountered.session, "enemy-test").state.encounters, 1);
+  assert.equal(getEnemyState(encountered.session, "enemy-test").state.lastEncounterAt, 103);
+  assert.equal(encountered.session.events.at(-1).type, "enemy-encounter");
+  assert.equal(JSON.stringify(encountered.session.snapshot), snapshotBefore);
+});
+
+test("enemy defeat marks only the runtime entity and increments enemiesCleared exactly once", () => {
+  const started = startPlaySession(enemyFixture(), { startedAt: 200 }).session;
+  const moved = movePlaySession(started, "room-002", { at: 201 }).session;
+  const encountered = recordEnemyEncounter(moved, "enemy-test", { at: 202 }).session;
+  const beforeDefeat = JSON.stringify(encountered);
+
+  const defeated = defeatEnemy(encountered, "enemy-test", { at: 203 });
+  assert.equal(defeated.ok, true);
+  assert.equal(JSON.stringify(encountered), beforeDefeat);
+  assert.equal(getEnemyState(defeated.session, "enemy-test").state.status, "defeated");
+  assert.equal(getEnemyState(defeated.session, "enemy-test").state.encounters, 1);
+  assert.equal(getEnemyState(defeated.session, "enemy-test").state.defeatedAt, 203);
+  assert.equal(defeated.session.gameplayState.counters.enemiesCleared, 1);
+  assert.equal(listRoomEnemies(defeated.session, "room-002").length, 0);
+  assert.equal(listRoomEnemies(defeated.session, "room-002", { includeDefeated: true }).length, 1);
+  assert.equal(defeated.session.events.at(-1).type, "enemy-defeated");
+
+  const repeated = defeatEnemy(defeated.session, "enemy-test", { at: 204 });
+  assert.equal(repeated.ok, false);
+  assert.equal(repeated.error.code, "ENEMY_ALREADY_DEFEATED");
+  assert.equal(defeated.session.gameplayState.counters.enemiesCleared, 1);
+});
+
+test("enemy runtime rejects unknown enemies and actions after session completion", () => {
+  let session = startPlaySession(enemyFixture({ roomId: "room-005" })).session;
+  const unknown = recordEnemyEncounter(session, "missing-enemy");
+  assert.equal(unknown.ok, false);
+  assert.equal(unknown.error.code, "ENEMY_NOT_FOUND");
+
+  for (const roomId of ["room-002", "room-003", "room-004", "room-005"]) {
+    session = movePlaySession(session, roomId).session;
+  }
+  assert.equal(session.status, "cleared");
+  const afterClear = defeatEnemy(session, "enemy-test");
+  assert.equal(afterClear.ok, false);
+  assert.equal(afterClear.error.code, "SESSION_NOT_PLAYING");
 });
 
 test("backbone path can be played from Start to Goal", () => {
