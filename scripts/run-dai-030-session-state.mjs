@@ -32,13 +32,16 @@ const operations = [];
 
 function stateCommand(command, at) {
   const previous = current;
+  const previousSerialized = JSON.stringify(previous);
+  const previousGameplaySerialized = JSON.stringify(previous.gameplayState);
   const result = applyPlaySessionStateCommand(previous, command, { at });
   if (!result.ok) throw new Error(`state command failed: ${JSON.stringify(result)}`);
   current = result.session;
   operations.push({
     kind: 'state-command',
     command,
-    previousUnchanged: JSON.stringify(previous) !== JSON.stringify(current),
+    previousPreserved: JSON.stringify(previous) === previousSerialized,
+    stateChanged: JSON.stringify(current.gameplayState) !== previousGameplaySerialized,
     snapshotStillFixed: JSON.stringify(current.snapshot) === snapshotBefore,
   });
 }
@@ -54,6 +57,7 @@ stateCommand({ type: 'increment-counter', counter: 'interactions', delta: 1 }, 1
 stateCommand({ type: 'increment-counter', counter: 'treasuresOpened', delta: 1 }, 1005);
 
 const beforeMove = current;
+const beforeMoveSerialized = JSON.stringify(beforeMove);
 const moved = movePlaySession(beforeMove, 'room-002', { at: 1006 });
 if (!moved.ok) throw new Error(`move failed: ${JSON.stringify(moved)}`);
 current = moved.session;
@@ -76,7 +80,7 @@ const checks = {
   interactionCounter: current.gameplayState.counters.interactions === 1,
   treasureCounter: current.gameplayState.counters.treasuresOpened === 1,
   moveIncrementedRoomEntries: current.gameplayState.counters.roomEntries === 2,
-  previousMoveSessionUnchanged: beforeMove.gameplayState.counters.roomEntries === 1,
+  previousMoveSessionPreserved: JSON.stringify(beforeMove) === beforeMoveSerialized,
   invalidEntityRejected:
     invalidEntity.ok === false && invalidEntity.error?.code === 'INVALID_STATE_COMMAND',
   authoringUnchanged: JSON.stringify(spec) === authoringBefore,
@@ -86,7 +90,7 @@ const checks = {
 };
 
 const passed = Object.values(checks).every(Boolean) && operations.every(
-  (operation) => operation.previousUnchanged && operation.snapshotStillFixed,
+  (operation) => operation.previousPreserved && operation.stateChanged && operation.snapshotStillFixed,
 );
 
 fs.mkdirSync(outputDir, { recursive: true });
