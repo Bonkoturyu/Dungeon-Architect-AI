@@ -38,7 +38,7 @@ GitHub Issues are not created unless explicitly authorized.
 ## M4
 - DAI-040 DesignIntent schema — DONE
 - DAI-041 Deterministic fallback parser — DONE
-- DAI-042 Production cloud-provider review — OPEN
+- DAI-042 Production cloud-provider review — DONE (2026-09-13 official recheck; OpenAI Responses API + `gpt-5.6-luna` selected as initial integration candidate behind a provider-neutral backend boundary; permanent provider/model winner remains gated by DAI-045 evidence)
 - DAI-043 Cloud intent adapter — OPEN
 - DAI-044 Normalization/retry — PARTIAL
 - DAI-045 Prompt regression — OPEN
