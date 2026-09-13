@@ -41,7 +41,7 @@ GitHub Issues are not created unless explicitly authorized.
 - DAI-042 Production cloud-provider review — DONE (2026-09-13 official recheck; OpenAI Responses API + `gpt-5.6-luna` selected as initial integration candidate behind a provider-neutral backend boundary; permanent provider/model winner remains gated by DAI-045 evidence)
 - DAI-043 Cloud intent adapter — DONE (strict DesignIntent JSON Schema, backend-only OpenAI Responses transport, explicit `store:false`, independent validation, sanitized metadata/error normalization, single-attempt boundary, and no-live-call production contract evidence passed)
 - DAI-044 Normalization/retry — DONE (Cloud → eligible Local → deterministic fallback routing, maximum one retry per LLM source, finite timeout/cancel boundary, bounded `Retry-After`, sanitized trace, and deterministic no-live-call production evidence passed)
-- DAI-045 Prompt regression — OPEN
+- DAI-045 Prompt regression — IN PROGRESS (frozen 10-prompt production corpus, directional intent-fit gates, live OpenAI/Luna runner, bounded DAI-044 routing, latency/token/cost/error/fallback evidence, and secure process-local API-key handling implemented; live billable evidence pending)
 
 ## M5
 - DAI-050 EditCommand contract — DONE for renderer-independent v1 commands
