@@ -2,7 +2,7 @@
 
 ## Status
 
-IN PROGRESS.
+**DONE — production validation passed on Windows/Chrome.**
 
 The Three.js renderer adapter, renderer-independent scene planner, browser smoke page, and validation runner are implemented on `feat/dai-014-three-renderer`.
 
@@ -26,33 +26,50 @@ The Three.js renderer adapter, renderer-independent scene planner, browser smoke
 - repeated `render(spec)` clears/disposes previous geometry before creating replacement runtime objects;
 - `getObjectBySpecId()` maps rooms/corridors/Start/Goal marker groups back to source Spec IDs.
 
-## Local static preparation checks
+## Production validation result
 
-Before repository write, the newly authored JavaScript modules were parsed with `node --check` in the assistant execution environment.
-A representative pure scene-plan fixture exercised deterministic planning, corridor geometry, and invalid-spec rejection successfully.
+Executed on 2026-09-13 using the repository one-command validation flow.
 
-These preparation checks are not a substitute for the repository's production test suite because the assistant environment did not execute against the installed reviewed npm graph.
+Reviewed raw evidence:
 
-## Required production validation
+- JSON file: `dai-014-renderer-smoke.json`
+- JSON SHA-256: `71109720ccc9e7b97cd5e7bcaf4151d98f372b626e0385d156fe7abedd59e84d`
+- screenshot: `dai-014-renderer-smoke.png`
+- screenshot SHA-256: `30eb56a8755a6976d9ce5618c25b04c45fb66b12c740d04f545f346ace27174f`
+- Chrome executable: `C:\Program Files\Google\Chrome\Application\chrome.exe`
+- smoke URL: `http://127.0.0.1:4173/apps/renderer-smoke/index.html`
 
-Run from the existing Windows clone:
+Observed result:
 
-```powershell
-git fetch origin; git switch feat/dai-014-three-renderer; git pull --ff-only origin feat/dai-014-three-renderer; powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-dai-014-validation.ps1
-```
+- `ready = true`
+- `failed = false`
+- first render summary: 3 rooms / 2 corridors / 2 markers / 7 runtime object groups
+- second render summary: 3 rooms / 2 corridors / 2 markers / 7 runtime object groups
+- invalid spec rejected: true
+- previous valid scene preserved after invalid render attempt: true
+- runtime objects replaced on valid re-render: true
+- Start marker lookup: true
+- Goal marker lookup: true
+- `consoleErrors = []`
+- `pageErrors = []`
+- `failedRequests = []`
+- `httpErrors = []`
 
-The runner:
+The screenshot visually confirms the three-room low-poly fixture, corridor connections, and distinct Start/Goal markers with the smoke status shown as `ready`.
 
-1. verifies the previously audited `package-lock.json` SHA-256;
-2. performs `npm ci --ignore-scripts`;
-3. runs the complete `npm test` suite including `test:renderer-three`;
-4. starts Vite locally;
-5. opens the smoke page in visible Chrome through `playwright-core`;
-6. renders the existing `minimal-valid-v1` fixture twice;
-7. verifies runtime object replacement plus Start/Goal lookup;
-8. fails on browser console/page errors;
-9. writes JSON evidence and a screenshot under `artifacts/renderer-smoke/`.
+## Verification gate result
 
-## DAI-014 completion gate
+DAI-014 acceptance conditions are satisfied for the minimal renderer slice:
 
-Do not mark DAI-014 DONE until the production validation command completes successfully and its JSON evidence is reviewed.
+- valid DungeonSpec renders in Chrome;
+- rooms/corridors are generated deterministically from the Spec;
+- Start and Goal are visually distinguishable;
+- runtime objects are traceable to Spec IDs;
+- invalid DungeonSpec is rejected before destructive runtime mutation;
+- dispose/re-render path is exercised through object replacement;
+- Core remains free of Three.js imports;
+- browser smoke completes without console/page/network errors.
+
+## Follow-up scope
+
+DAI-014 does not include editor selection/drag behavior, gameplay runtime, final art direction, external assets, batching/instancing optimization, or final performance/mobile validation. Those remain in later tasks.
