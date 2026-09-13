@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS.**
+**DONE — production validation passed on Windows/Chrome.**
 
 DAI-016 connects the existing renderer-independent `play-core` session logic to the Three.js browser slice.
 
@@ -32,46 +32,54 @@ The browser slice does not replace those Core tests; it verifies the actual brow
 
 The browser UI does not directly mutate the play session or `DungeonSpec`.
 
-## Visible Chrome smoke sequence
+## Production validation result
 
-The production smoke runner must:
+Executed on 2026-09-13 through the one-command production validation flow.
 
-1. load the minimal 3-room fixture in authoring mode;
-2. click the real START button;
-3. verify the play snapshot is detached from the authoring object;
-4. verify current room is `room-start`;
-5. click rendered `room-middle` and reach it in one move;
-6. click rendered `room-goal` and clear in the second move;
-7. verify visited route is `room-start → room-middle → room-goal`;
-8. verify Result reports `cleared`, two moves, and `room-goal` as the final room;
-9. finish with no console/page/request/HTTP errors.
+Reviewed raw evidence:
 
-## Required production validation
+- JSON file: `dai-016-play-smoke.json`
+- JSON SHA-256: `4b05ab0e17c20b12ef3f8250fc659ecc4750f97a0ce6e9b3a4da13eb4edac6e2`
+- screenshot: `dai-016-play-smoke.png`
+- screenshot SHA-256: `a2750ceee30a72fd4d04f3af58de98136652ff8244e46edc5b1615d628df1f1d`
+- Chrome executable: `C:\Program Files\Google\Chrome\Application\chrome.exe`
+- smoke URL: `http://127.0.0.1:4175/apps/play-slice/index.html`
 
-Run from the Windows clone:
+Observed result:
 
-```powershell
-git fetch origin; git switch feat/dai-016-play-slice; git pull --ff-only origin feat/dai-016-play-slice; powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-dai-016-validation.ps1
-```
+- `passed = true`
+- initial mode: `authoring`
+- START succeeded
+- execution snapshot detached from authoring object: true
+- authoring object unchanged after START: true
+- start room: `room-start`
+- `room-middle` reached: true
+- `room-goal` reached: true
+- final mode: `result`
+- final status: `cleared`
+- moves: 2
+- visited route: `room-start → room-middle → room-goal`
+- Result final room: `room-goal`
+- Result goal room: `room-goal`
+- `consoleErrors = []`
+- `pageErrors = []`
+- `failedRequests = []`
+- `httpErrors = []`
 
-The runner:
+The screenshot visually confirms the Goal room highlighted in the final Result state and the UI reporting `cleared · moves 2 · visited 3`.
 
-- verifies the audited `package-lock.json` SHA-256;
-- performs `npm ci --ignore-scripts`;
-- runs the full production Node test suite;
-- starts Vite locally;
-- drives the play slice in visible Chrome through `playwright-core`;
-- writes JSON evidence and a screenshot under `artifacts/play-smoke/`.
+## Verification gate result
 
-Expected evidence:
+DAI-016 acceptance conditions are satisfied for the minimal browser vertical slice:
 
-- `artifacts/play-smoke/dai-016-play-smoke.json`
-- `artifacts/play-smoke/dai-016-play-smoke.png`
+- START occurs through play-core rather than direct UI state mutation;
+- execution uses a detached snapshot;
+- adjacent room clicks drive play-core movement;
+- Goal is reached after the expected two moves;
+- Result is produced by `createPlayResult`;
+- the expected visited route is preserved;
+- browser smoke completes without console/page/network errors.
 
-## Completion gate
-
-Do not mark DAI-016 DONE until the one-command production validation passes and the JSON/screenshot evidence is reviewed.
-
-## Explicit non-goals
+## Follow-up scope
 
 This slice does not yet implement enemy combat, treasure/trap/recovery runtime, supported event logic, fog-of-war, failure states, Result analytics beyond the current basic play-core Result, final Play camera choice, or final art direction.
