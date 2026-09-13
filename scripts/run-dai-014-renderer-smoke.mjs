@@ -42,13 +42,23 @@ try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
   const consoleErrors = [];
   const pageErrors = [];
+  const failedRequests = [];
+  const httpErrors = [];
 
   page.on('console', (message) => {
     if (message.type() === 'error') consoleErrors.push(message.text());
   });
   page.on('pageerror', (error) => pageErrors.push(String(error)));
+  page.on('requestfailed', (request) => {
+    failedRequests.push({ url: request.url(), failure: request.failure()?.errorText ?? 'unknown' });
+  });
+  page.on('response', (response) => {
+    if (response.status() >= 400 && !response.url().endsWith('/favicon.ico')) {
+      httpErrors.push({ url: response.url(), status: response.status() });
+    }
+  });
 
-  await page.goto(url, { waitUntil: 'networkidle', timeout: 60_000 });
+  await page.goto(url, { waitUntil: 'load', timeout: 60_000 });
   await page.waitForFunction(() => window.__DAI_RENDERER_SMOKE__?.ready === true, null, { timeout: 60_000 });
   const result = await page.evaluate(() => window.__DAI_RENDERER_SMOKE__);
 
@@ -61,12 +71,14 @@ try {
     result,
     consoleErrors,
     pageErrors,
+    failedRequests,
+    httpErrors,
   };
   fs.writeFileSync(path.join(outputDir, 'dai-014-renderer-smoke.json'), JSON.stringify(evidence, null, 2));
 
   if (result.failed) throw new Error(result.message || 'renderer smoke reported failure');
-  if (consoleErrors.length || pageErrors.length) {
-    throw new Error(`browser smoke emitted errors: ${JSON.stringify({ consoleErrors, pageErrors })}`);
+  if (consoleErrors.length || pageErrors.length || failedRequests.length || httpErrors.length) {
+    throw new Error(`browser smoke emitted errors: ${JSON.stringify({ consoleErrors, pageErrors, failedRequests, httpErrors })}`);
   }
 
   console.log(JSON.stringify(evidence, null, 2));
