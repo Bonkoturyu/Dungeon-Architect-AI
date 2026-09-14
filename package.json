@@ -14,6 +14,7 @@
     "bench:renderers": "node scripts/run-renderer-benchmark.mjs",
     "smoke:renderer-three": "node scripts/run-dai-014-renderer-smoke.mjs",
     "smoke:editor-slice": "node scripts/run-dai-015-editor-smoke.mjs",
+    "smoke:manual-editor": "node scripts/run-dai-051-manual-editor-smoke.mjs",
     "smoke:play-slice": "node scripts/run-dai-016-play-smoke.mjs",
     "smoke:door-openings": "node scripts/run-dai-022-door-smoke.mjs",
     "validate:route-constraints": "node scripts/run-dai-024-route-matrix.mjs",
