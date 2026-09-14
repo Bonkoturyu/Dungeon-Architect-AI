@@ -19,6 +19,7 @@ coverage/
 artifacts/renderer-benchmark/
 artifacts/renderer-smoke/
 artifacts/editor-smoke/
+artifacts/manual-editor/
 artifacts/play-smoke/
 artifacts/door-smoke/
 artifacts/route-matrix/

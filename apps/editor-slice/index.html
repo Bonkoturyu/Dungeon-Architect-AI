@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
-  <title>Dungeon Architect AI — Editor Slice</title>
+  <title>Dungeon Architect AI — Manual Editor</title>
   <style>
     :root { color-scheme: dark; font-family: system-ui, sans-serif; }
     * { box-sizing: border-box; }
@@ -12,26 +12,75 @@
     main { display: grid; grid-template-rows: auto auto 1fr; min-height: 100vh; }
     header, .toolbar { display: flex; align-items: center; gap: 10px; padding: 9px 14px; background: #181820; }
     .toolbar { border-top: 1px solid #2b2b36; background: #15151c; }
-    button { border: 1px solid #4d5262; background: #282b35; color: #f2f2f2; border-radius: 5px; padding: 6px 11px; cursor: pointer; }
+    button, select { border: 1px solid #4d5262; background: #282b35; color: #f2f2f2; border-radius: 5px; padding: 6px 9px; }
+    button { cursor: pointer; }
     button:disabled { opacity: 0.4; cursor: default; }
-    #status, #selected { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    #status, #selected, #entitySelected, #editStatus { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
     #hint { opacity: 0.72; margin-left: auto; font-size: 0.9rem; }
+    .workspace { min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 320px; }
     canvas { width: 100%; height: calc(100vh - 94px); display: block; outline: none; }
+    aside { border-left: 1px solid #2b2b36; background: #14141b; padding: 14px; overflow: auto; }
+    fieldset { border: 1px solid #343744; border-radius: 7px; padding: 10px; margin: 0 0 12px; }
+    legend { padding: 0 6px; opacity: 0.82; }
+    label { display: grid; gap: 5px; margin: 0 0 9px; font-size: 0.9rem; }
+    #entitySelect { width: 100%; min-height: 190px; }
+    .button-row { display: flex; gap: 7px; flex-wrap: wrap; }
+    .muted { opacity: 0.7; font-size: 0.85rem; line-height: 1.35; }
+    @media (max-width: 800px) {
+      .workspace { grid-template-columns: 1fr; grid-template-rows: minmax(360px, 60vh) auto; }
+      aside { border-left: 0; border-top: 1px solid #2b2b36; }
+      canvas { height: 60vh; }
+    }
   </style>
 </head>
 <body>
   <main>
     <header>
-      <strong>DAI Editor Slice</strong>
+      <strong>DAI Manual Editor</strong>
       <span id="status">loading</span>
-      <span id="selected">selected: none</span>
+      <span id="selected">room: none</span>
+      <span id="entitySelected">entity: none</span>
     </header>
     <div class="toolbar">
       <button id="undo" type="button" disabled>Undo</button>
       <button id="redo" type="button" disabled>Redo</button>
-      <span id="hint">Click a room, then use arrow keys. Ctrl+Z / Ctrl+Y also work.</span>
+      <span id="editStatus">ready</span>
+      <span id="hint">Click a room, use arrow keys to move it. Ctrl+Z / Ctrl+Y undo/redo.</span>
     </div>
-    <canvas id="renderCanvas" tabindex="0"></canvas>
+    <div class="workspace">
+      <canvas id="renderCanvas" tabindex="0"></canvas>
+      <aside>
+        <fieldset>
+          <legend>Entity inspector</legend>
+          <label>
+            Existing entities
+            <select id="entitySelect" size="9" aria-label="Existing entities"></select>
+          </label>
+          <label>
+            Target room
+            <select id="entityRoom" aria-label="Target room"></select>
+          </label>
+          <div class="button-row">
+            <button id="moveEntity" type="button" disabled>Move to room</button>
+            <button id="removeEntity" type="button" disabled>Remove</button>
+          </div>
+          <p class="muted">Start and Goal can be moved, but generic removal is intentionally blocked.</p>
+        </fieldset>
+        <fieldset>
+          <legend>Add entity</legend>
+          <label>
+            Type
+            <select id="entityType" aria-label="New entity type">
+              <option value="enemy">Enemy</option>
+              <option value="treasure">Treasure</option>
+              <option value="trap">Trap</option>
+              <option value="recovery">Recovery</option>
+            </select>
+          </label>
+          <button id="addEntity" type="button">Add to target room</button>
+        </fieldset>
+      </aside>
+    </div>
   </main>
   <script type="module" src="./main.js"></script>
 </body>

@@ -45,8 +45,8 @@ GitHub Issues are not created unless explicitly authorized.
 
 ## M5
 - DAI-050 EditCommand contract — DONE for renderer-independent v1 commands
-- DAI-051 Manual editor — OPEN
-- DAI-052 Undo/redo — DONE at core layer
+- DAI-051 Manual editor — DONE (visible-Chrome inspector verified `move-entity`, add/remove, Undo/Redo, protected Start/Goal removal guard, and 3D room-selection → inspector synchronization with zero browser/network errors)
+- DAI-052 Undo/redo — DONE at core layer and exercised through room/entity browser authoring slices
 - DAI-053 Natural-language edit — OPEN
 - DAI-054 Validation/START gate — PARTIAL (core START gate done; UI/editor integration pending)
 
