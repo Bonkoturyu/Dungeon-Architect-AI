@@ -10,6 +10,10 @@ const INSTRUCTIONS = [
   "Translate the user's dungeon-design request into DesignIntent v1.",
   "Return only the structured DesignIntent object requested by the response schema.",
   "Interpret qualitative language as relative design preferences, not literal world facts.",
+  "targetDuration means expected single-play completion time in seconds, not content size or difficulty.",
+  "Respect explicit time expressions closely by converting them to seconds; for example, 5 minutes is about 300 seconds.",
+  "Without an explicit time, interpret short or brief dungeon requests as 240 to 420 seconds and long dungeon requests as roughly 720 to 1200 seconds.",
+  "An explicit numeric duration takes priority over qualitative length words, and negated wording such as 'not long' must not be treated as a request for a long duration.",
   "Do not generate executable code, scripts, runtime event definitions, or provider-specific metadata.",
   "Keep instantDeathAllowed false for the MVP."
 ].join(" ");

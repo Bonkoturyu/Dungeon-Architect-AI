@@ -53,23 +53,36 @@
 
 ## 2026-09-13 — Initial cloud integration candidate
 
-- Status: Confirmed for DAI-043 implementation; permanent provider/model winner remains Pending Evidence.
+- Status: Confirmed for DAI-043 implementation; final MVP promotion remained Pending Evidence at this point.
 - DAI-042 rechecked OpenAI, Gemini Developer API Paid, and Claude API against current official provider documentation.
-- The first production cloud adapter candidate is OpenAI Responses API with `gpt-5.6-luna`.
+- The first production cloud adapter candidate was OpenAI Responses API with `gpt-5.6-luna`.
 - Browser code must never receive provider credentials; the provider call lives behind a project-owned backend/proxy boundary.
 - OpenAI Responses requests must explicitly use `store: false`, Structured Outputs / JSON Schema, and the independent production `DesignIntent` validator.
 - `store: false` is not treated as Zero Data Retention; ZDR is not a launch prerequisite.
 - Provider retry remains bounded to at most one retry before deterministic fallback.
 - Provider/model remains server configuration and must not couple `DesignIntent`, `DungeonSpec`, Renderer, Editor, or Play Core to provider-specific types.
-- `gpt-5.6-terra` is only a future quality-escalation comparison candidate if Luna fails DAI-045 prompt-regression/intent-fit gates.
-- Permanent provider/model adoption requires DAI-045 evidence covering validity, intent-fit, latency, token/cost, 429/error, retry, and fallback rates.
+- DAI-045 live evidence was required before MVP promotion.
 - See `docs/research/DAI-042_PRODUCTION_CLOUD_PROVIDER_REVIEW_2026-09-13.md`.
+
+## 2026-09-14 — MVP cloud intent path selected after DAI-045
+
+- Status: Confirmed for the current MVP; reversible by later evidence.
+- OpenAI Responses API with `gpt-5.6-luna`, `reasoning.effort = low`, is accepted for the current production cloud `DesignIntent` path.
+- DAI-045 used the same frozen ten-prompt corpus before and after clarifying `targetDuration` semantics; the corpus and thresholds were not weakened.
+- First live run: 10/10 valid, Cloud 100%, fallback/retry/errors 0, Cloud intent-fit `90.625%`; all three misses were `targetDuration`.
+- Product semantics were clarified so explicit durations map directly to seconds, `5 minutes` means ~300 seconds, qualitative `short` without a number targets ~240..420 seconds, and negated `not long` is not treated as long.
+- Same-corpus rerun: 10/10 valid, Cloud 100%, fallback/retry/rate-limit/HTTP errors 0, Cloud intent-fit `100%`, fallback baseline `78.125%`.
+- Previously failing duration cases all returned `300 s` and passed their unchanged `<= 420 s` constraints.
+- Rerun usage: 6,076 tokens total; estimated total cost `$0.0035502` under the frozen 2026-09-13 Luna pricing snapshot.
+- Rerun latency: average `4576.104 ms`, p50 `4524.251 ms`, p95/max `5374.432 ms`.
+- Evidence safety checks found no API-key or full-prompt leak.
+- This selection is not an architectural lock-in: provider/model stays backend-configurable, DAI-044 deterministic fallback remains active, and a different provider/model can be evaluated later if latency, cost, quality, availability, policy, or product requirements justify reopening the decision.
+- See `docs/testing/DAI-045_PROMPT_REGRESSION.md`.
 
 ## Open decisions
 
 - Play perspective
 - Combat model
-- Permanent Cloud LLM provider/model winner (initial DAI-043 candidate is OpenAI Responses API + `gpt-5.6-luna`)
 - Browser local LLM runtime/model
 - Hosting
 - Mobile scope

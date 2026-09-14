@@ -21,7 +21,20 @@ All values are normalized to `0..1`.
 - `backtracking`
 - `targetDifficulty`
 
-`targetDuration` is stored as seconds and normalized to 120..1800.
+## Target duration
+
+`targetDuration` is the expected completion time for one normal playthrough, stored in seconds and validated to `120..1800`.
+
+Interpretation rules:
+
+- an explicit user duration takes priority over qualitative length words and is converted directly to seconds;
+- for example, `5 minutes` means approximately `300` seconds rather than a generic medium-length dungeon;
+- without an explicit duration, `short` / `brief` requests target approximately `240..420` seconds;
+- without an explicit duration, `long` requests target approximately `720..1200` seconds;
+- difficulty, content density, or room complexity must not silently redefine the requested duration;
+- negation matters: wording such as `not long` must not be interpreted as a request for a long duration.
+
+These are intent-translation semantics. Later generation/simulation may report that a generated dungeon misses the requested target; that must be surfaced as validation or intent-fit evidence rather than changing the requested `targetDuration`.
 
 ## MVP safety invariant
 

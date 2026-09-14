@@ -63,6 +63,10 @@ test("OpenAI request is stateless structured output and contains no tools", () =
   assert.equal(request.text.format.schema.additionalProperties, false);
   assert.equal(request.reasoning.effort, "low");
   assert.equal("tools" in request, false);
+  assert.match(request.instructions, /targetDuration means expected single-play completion time in seconds/);
+  assert.match(request.instructions, /5 minutes is about 300 seconds/);
+  assert.match(request.instructions, /short or brief dungeon requests as 240 to 420 seconds/);
+  assert.match(request.instructions, /not long.*must not be treated as a request for a long duration/);
 });
 
 test("valid provider structured output passes independent validation", async () => {
