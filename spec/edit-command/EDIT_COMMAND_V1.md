@@ -26,6 +26,23 @@ Generic add supports non-protected entity types. Start/Goal cannot be created th
 
 Generic remove cannot remove Start/Goal.
 
+## Natural-language translation boundary
+
+Natural-language authoring does not bypass `EditCommand`.
+
+The first DAI-053 MVP path translates one natural-language request into exactly one existing `move-entity` command. The provider receives a bounded context containing only current room IDs and entity ID/type/location triples. Structured output is constrained to exact current IDs, independently validated, and then passed to the normal `EditSession.apply()` boundary.
+
+The natural-language translator:
+
+- cannot emit arbitrary code;
+- cannot mutate DungeonSpec directly;
+- cannot invent entity or room IDs;
+- cannot emit multiple commands in the first MVP path;
+- rejects no-op moves;
+- remains behind the backend/provider boundary so browser code never receives the provider secret.
+
+The browser edit stays undoable/redoable because the translated result is an ordinary `move-entity` command.
+
 ## Invariants
 
 - source Spec is not mutated
@@ -34,6 +51,7 @@ Generic remove cannot remove Start/Goal.
 - failed commands return an error and no new Spec
 - undo/redo uses the same command boundary
 - a new edit clears the redo stack
+- natural-language edits must become supported explicit commands before application
 
 ## Not yet supported
 
@@ -43,4 +61,4 @@ Generic remove cannot remove Start/Goal.
 - door/shortcut commands
 - event logic edits
 - batch transactions
-- natural-language command parsing
+- natural-language translation for commands other than the first `move-entity` path
