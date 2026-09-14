@@ -2,13 +2,11 @@
 
 ## Status
 
-**IN PROGRESS — same-corpus rerun required.**
-
-The first live run passed the frozen automated promotion gates, but review found a systematic `targetDuration` interpretation weakness. The frozen ten-prompt corpus and its gates remain unchanged. The production intent instructions now clarify the existing `targetDuration` product semantics, and the same corpus must be rerun before DAI-045 is marked DONE or the current cloud candidate is promoted.
+**DONE.** The same frozen ten-prompt corpus was rerun after clarifying the production `targetDuration` semantics. The rerun passed every frozen promotion gate and every directional intent-fit constraint. The current MVP cloud intent path may use OpenAI Responses API with `gpt-5.6-luna`, while provider/model selection remains server-configurable and reversible.
 
 DAI-045 evaluates the DAI-042 initial cloud candidate through the real DAI-043 adapter and DAI-044 bounded routing policy. Unlike DAI-043/044 contract evidence, this phase makes live, billable provider calls.
 
-## Candidate under test
+## Candidate evaluated
 
 - Provider: OpenAI Responses API
 - Model: `gpt-5.6-luna`
@@ -16,10 +14,8 @@ DAI-045 evaluates the DAI-042 initial cloud candidate through the real DAI-043 a
 - Structured output: strict `DesignIntent` JSON Schema
 - `store: false`
 - Max output tokens: 4096
-- Local model path: disabled for this first live cloud regression
+- Local model path: disabled for this live cloud regression
 - Deterministic fallback: enabled through the production DAI-044 router
-
-The candidate is not permanently promoted merely because a live run passes.
 
 ## Pricing snapshot
 
@@ -29,7 +25,7 @@ Checked 2026-09-13 against the official model page:
 - output: $1.20 / 1M tokens
 - source: <https://developers.openai.com/api/docs/models/gpt-5.6-luna>
 
-The evidence runner uses this frozen snapshot to estimate cost from observed token usage. The estimate is intentionally conservative and does not apply cached-input discounts.
+The evidence runner uses this frozen snapshot to estimate cost from observed token usage. The estimate intentionally does not apply cached-input discounts.
 
 ## Frozen prompt corpus
 
@@ -50,19 +46,17 @@ The corpus is synthetic project test data and contains no personal information, 
 
 Each case has directional `DesignIntent` expectations. These are regression constraints, not claims that one exact numeric intent is the only valid design interpretation.
 
-The corpus and thresholds are frozen during the duration-semantics refinement. The fix must not weaken or rewrite the failing expectations.
+The corpus and thresholds were not changed between the first live run and the duration-semantics rerun.
 
-## Candidate promotion gates
+## Frozen candidate promotion gates
 
-The frozen production gate is:
+- at least 90% of cases finish with the Cloud candidate selected;
+- Cloud-selected intent-fit constraint rate is at least 80%;
+- fallback rate is at most 10%;
+- all ten cases end with a valid `DesignIntent` through bounded routing;
+- evidence contains neither the API key nor full prompt strings.
 
-- at least 90% of cases must finish with the Cloud candidate selected;
-- Cloud-selected intent-fit constraint rate must be at least 80%;
-- fallback rate must be at most 10%;
-- all ten cases must still end with a valid `DesignIntent` through bounded routing;
-- evidence must contain neither the API key nor full prompt strings.
-
-Latency, usage, estimated cost, retry count, HTTP/rate-limit errors, and deterministic-fallback baseline fit are always recorded for review even when the automated gate passes.
+Latency, usage, estimated cost, retry count, HTTP/rate-limit errors, and deterministic-fallback baseline fit are also reviewed.
 
 ## First reviewed live run — 2026-09-14
 
@@ -70,46 +64,95 @@ Evidence generated at `2026-09-14T02:28:23.862Z` on Node.js `v24.15.0`.
 
 Aggregate result:
 
-- 10 / 10 cases produced a valid `DesignIntent`;
+- 10 / 10 valid `DesignIntent` results;
 - Cloud selected: 10 / 10 (`100%`);
-- deterministic fallback selected: 0 / 10 (`0%`);
-- retry cases: 0;
-- rate-limited calls: 0;
-- HTTP error calls: 0;
+- fallback selected: 0 / 10 (`0%`);
+- retry / rate-limit / HTTP errors: 0;
 - Cloud intent-fit constraint rate: `90.625%`;
-- deterministic fallback baseline fit constraint rate: `78.125%`;
-- total usage: 2,691 input + 2,412 output = 5,103 tokens;
+- deterministic fallback baseline fit: `78.125%`;
+- total usage: 5,103 tokens;
 - estimated total cost: `$0.0034326`;
-- average estimated cost/case: `$0.00034326`;
 - latency average: `3424.404 ms`;
 - latency p50: `3236.191 ms`;
 - latency p95/max: `4337.212 ms`;
-- API-key leak check: false;
-- full-prompt leak check: false.
+- API-key leak: false;
+- full-prompt leak: false.
 
-The frozen automated gates therefore passed. However, manual review found all three failed directional constraints were the same field:
+Manual review found all three failed directional constraints were `targetDuration`:
 
-| Case | Expected | Actual | Review |
-|---|---:|---:|---|
-| `beginner-short` | `targetDuration <= 420` | `509` | explicit ~5-minute request drifted long |
-| `short-dangerous` | `targetDuration <= 420` | `1509` | qualitative short / not-long request was interpreted as ~25 minutes |
-| `mixed-language-format` | `targetDuration <= 420` | `546` | explicit `5 min` drifted long |
+| Case | Expected | First-run actual |
+|---|---:|---:|
+| `beginner-short` | `targetDuration <= 420` | `509` |
+| `short-dangerous` | `targetDuration <= 420` | `1509` |
+| `mixed-language-format` | `targetDuration <= 420` | `546` |
 
-This is treated as a systematic translation weakness rather than three unrelated misses.
+This was treated as a systematic translation weakness rather than three unrelated misses.
 
 ## Duration-semantics refinement
 
-The production `DesignIntent` contract already stores `targetDuration` as seconds. The refinement makes its intended meaning explicit without altering the frozen regression corpus:
+The production `DesignIntent` contract stores `targetDuration` as seconds. The clarification fixes its intended semantics without weakening the regression corpus:
 
 - `targetDuration` is expected completion time for one normal playthrough;
-- an explicit duration is converted directly to seconds and takes priority over qualitative length language;
+- explicit durations are converted directly to seconds and take priority over qualitative length language;
 - `5 minutes` means approximately `300` seconds;
 - without an explicit duration, `short` / `brief` targets approximately `240..420` seconds;
 - without an explicit duration, `long` targets approximately `720..1200` seconds;
-- difficulty/content density must not silently inflate the requested duration;
+- difficulty/content density must not silently inflate requested duration;
 - negation such as `not long` must not be interpreted as a request for a long duration.
 
-This rule belongs to the product intent contract and provider instruction boundary, not to the test harness. The same frozen prompts and expectations are rerun after the clarification.
+This rule belongs to the production intent contract and provider instruction boundary, not to the test harness.
+
+## Reviewed rerun — 2026-09-14
+
+Evidence generated at `2026-09-14T05:19:54.705Z` on Node.js `v24.15.0`.
+
+Evidence SHA-256:
+
+`6cd665167bdd21e1ee4e752e714e44d98b66e7ae171cfdd2a68b3c4cf3330f87`
+
+Aggregate result:
+
+- `passed = true`;
+- all four frozen automated gates passed;
+- 10 / 10 cases produced a valid `DesignIntent`;
+- Cloud selected: 10 / 10 (`100%`);
+- fallback selected: 0 / 10 (`0%`);
+- retry cases: 0;
+- rate-limited calls: 0;
+- HTTP error calls: 0;
+- Cloud intent-fit constraint rate: `100%`;
+- deterministic fallback baseline fit constraint rate: `78.125%`;
+- total usage: 3,741 input + 2,335 output = 6,076 tokens;
+- estimated total cost: `$0.0035502`;
+- average estimated cost/case: `$0.00035502`;
+- latency average: `4576.104 ms`;
+- latency p50: `4524.251 ms`;
+- latency p95/max: `5374.432 ms`;
+- API-key leak: false;
+- full-prompt leak: false.
+
+The three duration cases that failed in the first run now all satisfy the unchanged constraints:
+
+| Case | Expected | First run | Rerun |
+|---|---:|---:|---:|
+| `beginner-short` | `<= 420 s` | `509 s` | `300 s` |
+| `short-dangerous` | `<= 420 s` | `1509 s` | `300 s` |
+| `mixed-language-format` | `<= 420 s` | `546 s` | `300 s` |
+
+The intent-fit rate improved from `90.625%` to `100%`. The rerun used 973 more total tokens and the estimated total cost increased only from `$0.0034326` to `$0.0035502`. Latency increased versus the first run, but remained finite with no retry, fallback, rate-limit, HTTP error, or invalid-output event in the ten-case corpus.
+
+## Decision
+
+The current production MVP cloud intent path is accepted as:
+
+- OpenAI Responses API;
+- `gpt-5.6-luna`;
+- `reasoning.effort = low`;
+- strict `DesignIntent` structured output;
+- DAI-044 bounded retry/fallback policy;
+- deterministic fallback retained as the resilience path.
+
+This is a project selection, not an irreversible architecture coupling. Provider/model remains backend configuration, and `DesignIntent`, `DungeonSpec`, Renderer, Editor, and Play Core remain provider-neutral. A future provider/model comparison is only required if later regression, cost, latency, availability, policy, or product requirements justify reopening the decision.
 
 ## Live runner
 
@@ -127,7 +170,7 @@ This rule belongs to the product intent contract and provider instruction bounda
 - compares semantic-fit constraints with the deterministic fallback baseline;
 - checks the serialized evidence for API-key or full-prompt leakage before writing it.
 
-The resulting file is:
+The generated local evidence path is:
 
 `artifacts/prompt-regression/dai-045-live-prompt-regression.json`
 
@@ -135,35 +178,22 @@ The resulting file is:
 
 `scripts/run-dai-045-validation.ps1` accepts an existing process-local `OPENAI_API_KEY`. If none is present, it requests the key with hidden PowerShell input, exposes it only to the validation process, and removes that environment variable before exit.
 
-Do not paste the API key into chat, GitHub, a command-line argument, a committed `.env`, screenshots, or evidence files.
+Do not paste the API key into chat, GitHub, command-line arguments, a committed `.env`, screenshots, or evidence files.
 
-## Required production rerun
+## Completion gate result
 
-Run from the Windows clone after pulling the duration-semantics refinement:
+DAI-045 completion gates are satisfied:
 
-```powershell
-git fetch origin; git switch feat/dai-045-prompt-regression; git pull --ff-only origin feat/dai-045-prompt-regression; powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-dai-045-validation.ps1
-```
-
-The runner first executes the complete production Node test suite. It then warns that the next step makes live billable API calls and securely prompts for the API key when needed.
-
-The frozen corpus contains ten prompts. A normal run uses ten provider calls; bounded retry can raise this to at most twenty provider calls.
-
-## Completion gate
-
-Do not mark DAI-045 DONE or permanently promote the provider/model until:
-
-- the complete production Node suite passes after the duration-semantics change;
-- the same frozen live prompt-regression corpus is rerun and reviewed;
-- the frozen automated gates pass;
-- the three previously observed duration misses are explicitly reviewed in the rerun;
-- latency, token usage, estimated cost, retry/error/fallback rate, and per-case intent fit are reviewed;
-- the evidence safety checks show no API-key or full-prompt leak;
-- if the systematic duration weakness remains material, a separate model/provider comparison is considered instead of weakening the corpus.
+- complete production Node suite passed before the live rerun;
+- same frozen live corpus rerun completed successfully;
+- all frozen automated gates passed;
+- all three previously observed duration misses were resolved without changing the corpus;
+- latency, token usage, estimated cost, retry/error/fallback rates, and per-case fit were reviewed;
+- evidence safety checks detected no API-key or full-prompt leak.
 
 ## Explicit non-goals
 
-This phase does not:
+DAI-045 does not:
 
 - deploy the public backend/hosting environment;
 - select or package a browser-local LLM;
