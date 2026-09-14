@@ -45,7 +45,7 @@ GitHub Issues are not created unless explicitly authorized.
 
 ## M5
 - DAI-050 EditCommand contract — DONE for renderer-independent v1 commands
-- DAI-051 Manual editor — OPEN
+- DAI-051 Manual editor — IN PROGRESS (browser inspector now supports `move-entity`, generic add/remove, protected Start/Goal removal guard, and shared EditSession undo/redo; production Chrome evidence pending)
 - DAI-052 Undo/redo — DONE at core layer
 - DAI-053 Natural-language edit — OPEN
 - DAI-054 Validation/START gate — PARTIAL (core START gate done; UI/editor integration pending)
