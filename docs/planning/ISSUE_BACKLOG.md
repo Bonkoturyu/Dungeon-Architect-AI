@@ -38,10 +38,10 @@ GitHub Issues are not created unless explicitly authorized.
 ## M4
 - DAI-040 DesignIntent schema — DONE
 - DAI-041 Deterministic fallback parser — DONE
-- DAI-042 Production cloud-provider review — DONE (2026-09-13 official recheck; OpenAI Responses API + `gpt-5.6-luna` selected as initial integration candidate behind a provider-neutral backend boundary; permanent provider/model winner remains gated by DAI-045 evidence)
+- DAI-042 Production cloud-provider review — DONE (2026-09-13 official recheck; OpenAI Responses API + `gpt-5.6-luna` selected as initial integration candidate behind a provider-neutral backend boundary)
 - DAI-043 Cloud intent adapter — DONE (strict DesignIntent JSON Schema, backend-only OpenAI Responses transport, explicit `store:false`, independent validation, sanitized metadata/error normalization, single-attempt boundary, and no-live-call production contract evidence passed)
 - DAI-044 Normalization/retry — DONE (Cloud → eligible Local → deterministic fallback routing, maximum one retry per LLM source, finite timeout/cancel boundary, bounded `Retry-After`, sanitized trace, and deterministic no-live-call production evidence passed)
-- DAI-045 Prompt regression — IN PROGRESS (first live 10-prompt run passed frozen automated gates at 90.625% Cloud intent-fit with zero fallback/retry/errors, but all three constraint misses were `targetDuration`; production duration semantics clarified and same frozen-corpus rerun pending)
+- DAI-045 Prompt regression — DONE (same frozen 10-prompt corpus rerun after production duration-semantics clarification: 10/10 valid, Cloud 100%, fallback/retry/errors 0, Cloud intent-fit 100%, duration misses resolved to 300 s, no secret/full-prompt leak; current MVP cloud intent path accepts OpenAI Responses API + `gpt-5.6-luna` while keeping provider/model backend-configurable)
 
 ## M5
 - DAI-050 EditCommand contract — DONE for renderer-independent v1 commands
