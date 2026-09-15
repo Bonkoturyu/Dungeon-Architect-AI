@@ -1,4 +1,6 @@
 import { EditSession } from '../../packages/editor-core/src/edit-session.js';
+import { evaluateStartGate } from '../../packages/editor-core/src/start-gate.js';
+import { startPlaySession, movePlaySession, createPlayResult } from '../../packages/play-core/src/play-session.js';
 import { createThreeRendererAdapter } from '../../packages/renderer-three/src/index.js';
 
 const canvas = document.querySelector('#renderCanvas');
@@ -6,8 +8,13 @@ const status = document.querySelector('#status');
 const selectedLabel = document.querySelector('#selected');
 const entitySelectedLabel = document.querySelector('#entitySelected');
 const editStatus = document.querySelector('#editStatus');
+const validationStatus = document.querySelector('#validationStatus');
+const playStatus = document.querySelector('#playStatus');
+const resultStatus = document.querySelector('#resultStatus');
 const undoButton = document.querySelector('#undo');
 const redoButton = document.querySelector('#redo');
+const startButton = document.querySelector('#start');
+const returnEditButton = document.querySelector('#returnEdit');
 const entitySelect = document.querySelector('#entitySelect');
 const entityRoom = document.querySelector('#entityRoom');
 const entityType = document.querySelector('#entityType');
@@ -24,6 +31,14 @@ let selectedRoomId = null;
 let selectedEntityId = null;
 let naturalEditBusy = false;
 let lastNaturalEditCommand = null;
+let mode = 'edit';
+let gate = { allowed: false, criticalCount: 0, errors: [] };
+let playSession = null;
+let lastPlayResult = null;
+
+function clone(value) {
+  return JSON.parse(JSON.stringify(value));
+}
 
 function resize() {
   if (!adapter) return;
@@ -31,24 +46,50 @@ function resize() {
   adapter.resize(Math.max(1, Math.floor(rect.width)), Math.max(1, Math.floor(rect.height)));
 }
 
+function authoringSpec() {
+  return session.spec;
+}
+
+function activeRenderSpec() {
+  return mode === 'edit' || !playSession ? authoringSpec() : playSession.snapshot;
+}
+
 function selectedRoom() {
-  return selectedRoomId ? session.spec.rooms.find((room) => room.id === selectedRoomId) ?? null : null;
+  return selectedRoomId ? authoringSpec().rooms.find((room) => room.id === selectedRoomId) ?? null : null;
 }
 
 function selectedEntity() {
-  return selectedEntityId ? session.spec.entities.find((entity) => entity.id === selectedEntityId) ?? null : null;
+  return selectedEntityId ? authoringSpec().entities.find((entity) => entity.id === selectedEntityId) ?? null : null;
+}
+
+function currentPlayState() {
+  if (!playSession) return null;
+  return {
+    status: playSession.status,
+    currentRoomId: playSession.currentRoomId,
+    goalRoomId: playSession.goalRoomId,
+    moves: playSession.moves,
+    visitedRoomIds: [...playSession.visitedRoomIds],
+    snapshot: clone(playSession.snapshot),
+  };
 }
 
 function snapshotState() {
   const spec = session?.spec ?? null;
   return {
+    mode,
     selectedRoomId,
     selectedEntityId,
     targetRoomId: entityRoom?.value || null,
     canUndo: Boolean(session?.canUndo),
     canRedo: Boolean(session?.canRedo),
+    startAllowed: gate.allowed,
+    validationCriticalCount: gate.criticalCount,
+    validationErrors: gate.errors.map((entry) => ({ ...entry })),
     naturalEditBusy,
     lastNaturalEditCommand: lastNaturalEditCommand ? { ...lastNaturalEditCommand } : null,
+    play: currentPlayState(),
+    result: lastPlayResult ? clone(lastPlayResult) : null,
     rooms: spec?.rooms.map((room) => ({ id: room.id, x: room.x, z: room.z })) ?? [],
     entities: spec?.entities.map((entity) => ({ id: entity.id, type: entity.type, roomId: entity.roomId })) ?? [],
   };
@@ -62,9 +103,21 @@ function setNaturalEditStatus(message) {
   naturalEditStatus.textContent = message;
 }
 
+function refreshGate() {
+  gate = evaluateStartGate(authoringSpec());
+  if (gate.allowed) {
+    validationStatus.dataset.state = 'pass';
+    validationStatus.textContent = 'Validation: PASS · Critical 0';
+  } else {
+    validationStatus.dataset.state = 'blocked';
+    const codes = gate.errors.slice(0, 3).map((entry) => entry.code).join(', ');
+    validationStatus.textContent = `Validation: BLOCKED · Critical ${gate.criticalCount}${codes ? ` · ${codes}` : ''}`;
+  }
+}
+
 function ensureRoomOptions() {
   const current = entityRoom.value;
-  const rooms = session.spec.rooms;
+  const rooms = authoringSpec().rooms;
   entityRoom.replaceChildren(...rooms.map((room) => {
     const option = document.createElement('option');
     option.value = room.id;
@@ -80,7 +133,7 @@ function ensureRoomOptions() {
 }
 
 function ensureEntityOptions() {
-  const entities = session.spec.entities;
+  const entities = authoringSpec().entities;
   entitySelect.replaceChildren(...entities.map((entity) => {
     const option = document.createElement('option');
     option.value = entity.id;
@@ -99,6 +152,7 @@ function ensureEntityOptions() {
 function updateUi() {
   const room = selectedRoom();
   const entity = selectedEntity();
+  const editing = mode === 'edit';
 
   selectedLabel.textContent = room
     ? `room: ${room.id} @ (${room.x.toFixed(1)}, ${room.z.toFixed(1)})`
@@ -107,30 +161,39 @@ function updateUi() {
     ? `entity: ${entity.id} [${entity.type}] @ ${entity.roomId}`
     : 'entity: none';
 
-  undoButton.disabled = !session?.canUndo;
-  redoButton.disabled = !session?.canRedo;
-  moveEntityButton.disabled = !entity || !entityRoom.value;
-  removeEntityButton.disabled = !entity || entity.type === 'start' || entity.type === 'goal';
-  addEntityButton.disabled = !entityRoom.value;
-  applyNaturalEditButton.disabled = naturalEditBusy || !naturalEditInput.value.trim();
+  undoButton.disabled = !editing || !session?.canUndo;
+  redoButton.disabled = !editing || !session?.canRedo;
+  entitySelect.disabled = !editing;
+  entityRoom.disabled = !editing;
+  entityType.disabled = !editing;
+  moveEntityButton.disabled = !editing || !entity || !entityRoom.value;
+  removeEntityButton.disabled = !editing || !entity || entity.type === 'start' || entity.type === 'goal';
+  addEntityButton.disabled = !editing || !entityRoom.value;
+  naturalEditInput.disabled = !editing || naturalEditBusy;
+  applyNaturalEditButton.disabled = !editing || naturalEditBusy || !naturalEditInput.value.trim();
+  startButton.disabled = !editing || !gate.allowed;
+  returnEditButton.disabled = editing;
 }
 
-function renderCurrentSpec() {
-  const spec = session.spec;
+function renderActiveSpec() {
+  const spec = activeRenderSpec();
   adapter.render(spec);
   ensureRoomOptions();
   ensureEntityOptions();
 
-  if (selectedRoomId && spec.rooms.some((room) => room.id === selectedRoomId)) {
-    adapter.setSelectedSpecId(selectedRoomId);
+  const highlightId = mode === 'edit' ? selectedRoomId : playSession?.currentRoomId ?? null;
+  if (highlightId && spec.rooms.some((room) => room.id === highlightId)) {
+    adapter.setSelectedSpecId(highlightId);
   } else {
-    selectedRoomId = null;
     adapter.setSelectedSpecId(null);
   }
+
+  refreshGate();
   updateUi();
 }
 
 function selectRoom(roomId) {
+  if (mode !== 'edit') return false;
   if (roomId == null) {
     selectedRoomId = null;
     adapter.setSelectedSpecId(null);
@@ -138,7 +201,7 @@ function selectRoom(roomId) {
     return false;
   }
 
-  if (!session.spec.rooms.some((room) => room.id === roomId)) return false;
+  if (!authoringSpec().rooms.some((room) => room.id === roomId)) return false;
   selectedRoomId = roomId;
   entityRoom.value = roomId;
   adapter.setSelectedSpecId(roomId);
@@ -147,7 +210,8 @@ function selectRoom(roomId) {
 }
 
 function selectEntity(entityId) {
-  const entity = entityId ? session.spec.entities.find((item) => item.id === entityId) : null;
+  if (mode !== 'edit') return false;
+  const entity = entityId ? authoringSpec().entities.find((item) => item.id === entityId) : null;
   if (!entity) {
     selectedEntityId = null;
     entitySelect.selectedIndex = -1;
@@ -162,19 +226,20 @@ function selectEntity(entityId) {
 }
 
 function applyCommand(command, successMessage) {
+  if (mode !== 'edit') return false;
   const result = session.apply(command);
   if (!result.ok) {
     setEditStatus(`error: ${result.error.code}`);
     return false;
   }
-  renderCurrentSpec();
+  renderActiveSpec();
   setEditStatus(successMessage);
   return true;
 }
 
 function moveSelected(dx, dz) {
   const room = selectedRoom();
-  if (!room) return false;
+  if (!room || mode !== 'edit') return false;
   return applyCommand({
     type: 'move-room',
     roomId: room.id,
@@ -184,7 +249,7 @@ function moveSelected(dx, dz) {
 }
 
 function nextEntityId(type) {
-  const used = new Set(session.spec.entities.map((entity) => entity.id));
+  const used = new Set(authoringSpec().entities.map((entity) => entity.id));
   for (let index = 1; index < 10_000; index += 1) {
     const candidate = `${type}-editor-${index}`;
     if (!used.has(candidate)) return candidate;
@@ -193,6 +258,7 @@ function nextEntityId(type) {
 }
 
 function addEntity() {
+  if (mode !== 'edit') return false;
   const roomId = entityRoom.value;
   const type = entityType.value;
   if (!roomId || !['enemy', 'treasure', 'trap', 'recovery'].includes(type)) return false;
@@ -204,12 +270,13 @@ function addEntity() {
     return false;
   }
   selectedEntityId = id;
-  renderCurrentSpec();
+  renderActiveSpec();
   setEditStatus(`added ${id}`);
   return true;
 }
 
 function moveEntityToTargetRoom() {
+  if (mode !== 'edit') return false;
   const entity = selectedEntity();
   const roomId = entityRoom.value;
   if (!entity || !roomId) return false;
@@ -217,6 +284,7 @@ function moveEntityToTargetRoom() {
 }
 
 function removeEntity() {
+  if (mode !== 'edit') return false;
   const entity = selectedEntity();
   if (!entity || entity.type === 'start' || entity.type === 'goal') return false;
 
@@ -227,21 +295,21 @@ function removeEntity() {
     return false;
   }
   selectedEntityId = null;
-  renderCurrentSpec();
+  renderActiveSpec();
   setEditStatus(`removed ${removedId}`);
   return true;
 }
 
 function naturalEditContext() {
   return {
-    rooms: session.spec.rooms.map((room) => ({ id: room.id })),
-    entities: session.spec.entities.map((entity) => ({ id: entity.id, type: entity.type, roomId: entity.roomId })),
+    rooms: authoringSpec().rooms.map((room) => ({ id: room.id })),
+    entities: authoringSpec().entities.map((entity) => ({ id: entity.id, type: entity.type, roomId: entity.roomId })),
   };
 }
 
 async function applyNaturalEdit() {
   const prompt = naturalEditInput.value.trim();
-  if (!prompt || naturalEditBusy) return false;
+  if (!prompt || naturalEditBusy || mode !== 'edit') return false;
 
   naturalEditBusy = true;
   lastNaturalEditCommand = null;
@@ -282,7 +350,7 @@ async function applyNaturalEdit() {
       selectedRoomId = command.roomId;
     }
     naturalEditInput.value = '';
-    renderCurrentSpec();
+    renderActiveSpec();
     setNaturalEditStatus(`applied: ${command.type}`);
     setEditStatus(`natural edit: ${command.type}`);
     return true;
@@ -296,36 +364,106 @@ async function applyNaturalEdit() {
 }
 
 function undo() {
-  if (!session.canUndo) return false;
+  if (!session.canUndo || mode !== 'edit') return false;
   const result = session.undo();
   if (!result.ok) throw new Error(`undo failed: ${JSON.stringify(result.error)}`);
-  renderCurrentSpec();
+  renderActiveSpec();
   setEditStatus('undo');
   return true;
 }
 
 function redo() {
-  if (!session.canRedo) return false;
+  if (!session.canRedo || mode !== 'edit') return false;
   const result = session.redo();
   if (!result.ok) throw new Error(`redo failed: ${JSON.stringify(result.error)}`);
-  renderCurrentSpec();
+  renderActiveSpec();
   setEditStatus('redo');
+  return true;
+}
+
+function finalizePlayIfNeeded() {
+  if (!playSession || !['cleared', 'failed'].includes(playSession.status)) return false;
+  const result = createPlayResult(playSession);
+  if (!result.ok) throw new Error(`createPlayResult failed: ${JSON.stringify(result.error)}`);
+  lastPlayResult = result.result;
+  mode = 'result';
+  playStatus.textContent = `${playSession.status}: room ${playSession.currentRoomId}`;
+  resultStatus.textContent = `RESULT: ${lastPlayResult.status} · moves ${lastPlayResult.moves} · visited ${lastPlayResult.visitedRoomIds.length}`;
+  renderActiveSpec();
+  return true;
+}
+
+function startDungeon() {
+  if (mode !== 'edit') return false;
+  refreshGate();
+  if (!gate.allowed) {
+    setEditStatus(`START blocked: ${gate.criticalCount} Critical`);
+    updateUi();
+    return false;
+  }
+
+  const result = startPlaySession(authoringSpec(), { startedAt: 0 });
+  if (!result.ok) {
+    setEditStatus(`START blocked: ${result.errors?.[0]?.code ?? 'VALIDATION'}`);
+    return false;
+  }
+
+  playSession = result.session;
+  lastPlayResult = null;
+  mode = playSession.status === 'playing' ? 'play' : 'result';
+  selectedRoomId = playSession.currentRoomId;
+  selectedEntityId = null;
+  playStatus.textContent = `playing: ${playSession.currentRoomId} → ${playSession.goalRoomId}`;
+  resultStatus.textContent = 'No result yet.';
+  setEditStatus('START snapshot created');
+  renderActiveSpec();
+  finalizePlayIfNeeded();
+  return true;
+}
+
+function movePlayToRoom(roomId) {
+  if (mode !== 'play' || !playSession) return false;
+  const result = movePlaySession(playSession, roomId, { at: playSession.moves + 1 });
+  if (!result.ok) {
+    playStatus.textContent = `blocked: ${result.error.code}`;
+    return false;
+  }
+
+  playSession = result.session;
+  selectedRoomId = playSession.currentRoomId;
+  playStatus.textContent = `playing: ${playSession.currentRoomId} → ${playSession.goalRoomId} · moves ${playSession.moves}`;
+  renderActiveSpec();
+  finalizePlayIfNeeded();
+  return true;
+}
+
+function returnToEdit() {
+  if (mode === 'edit') return false;
+  mode = 'edit';
+  playSession = null;
+  selectedRoomId = null;
+  selectedEntityId = null;
+  playStatus.textContent = 'Not started.';
+  setEditStatus('returned to edit');
+  renderActiveSpec();
+  canvas.focus();
   return true;
 }
 
 function handleCanvasPointer(event) {
   const hit = adapter.pickSpecAt(event.clientX, event.clientY);
   if (!hit) {
-    selectRoom(null);
+    if (mode === 'edit') selectRoom(null);
     return;
   }
 
-  if (hit.kind === 'room') {
-    selectRoom(hit.specId);
+  const roomId = hit.kind === 'room' ? hit.specId : hit.roomId;
+  if (!roomId) return;
+  if (mode === 'play') {
+    movePlayToRoom(roomId);
     return;
   }
-
-  if (hit.roomId) selectRoom(hit.roomId);
+  if (mode === 'edit') selectRoom(roomId);
 }
 
 function isFormControl(target) {
@@ -333,6 +471,7 @@ function isFormControl(target) {
 }
 
 function handleKeyboard(event) {
+  if (mode !== 'edit') return;
   const commandKey = event.ctrlKey || event.metaKey;
   const key = event.key.toLowerCase();
 
@@ -369,13 +508,15 @@ async function run() {
     session = new EditSession(await response.json());
     adapter = createThreeRendererAdapter({ canvas });
     resize();
-    renderCurrentSpec();
+    renderActiveSpec();
 
     canvas.addEventListener('pointerdown', handleCanvasPointer);
     window.addEventListener('resize', resize);
     window.addEventListener('keydown', handleKeyboard);
     undoButton.addEventListener('click', undo);
     redoButton.addEventListener('click', redo);
+    startButton.addEventListener('click', startDungeon);
+    returnEditButton.addEventListener('click', returnToEdit);
     entitySelect.addEventListener('change', () => selectEntity(entitySelect.value));
     entityRoom.addEventListener('change', updateUi);
     entityType.addEventListener('change', updateUi);
@@ -393,6 +534,10 @@ async function run() {
       selectRoom,
       selectEntity,
       applyNaturalEdit,
+      evaluateStartGateForSpec: (spec) => evaluateStartGate(spec),
+      startDungeon,
+      movePlayToRoom,
+      returnToEdit,
     };
     status.textContent = 'ready';
     canvas.focus();
