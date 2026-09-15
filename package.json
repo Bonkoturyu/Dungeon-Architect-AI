@@ -16,6 +16,7 @@
     "smoke:editor-slice": "node scripts/run-dai-015-editor-smoke.mjs",
     "smoke:manual-editor": "node scripts/run-dai-051-manual-editor-smoke.mjs",
     "smoke:natural-edit": "node scripts/run-dai-053-natural-edit-smoke.mjs",
+    "smoke:start-gate": "node scripts/run-dai-054-start-gate-smoke.mjs",
     "smoke:play-slice": "node scripts/run-dai-016-play-smoke.mjs",
     "smoke:door-openings": "node scripts/run-dai-022-door-smoke.mjs",
     "validate:route-constraints": "node scripts/run-dai-024-route-matrix.mjs",
