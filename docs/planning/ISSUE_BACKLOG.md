@@ -48,7 +48,7 @@ GitHub Issues are not created unless explicitly authorized.
 - DAI-051 Manual editor — DONE (visible-Chrome inspector verified `move-entity`, add/remove, Undo/Redo, protected Start/Goal removal guard, and 3D room-selection → inspector synchronization with zero browser/network errors)
 - DAI-052 Undo/redo — DONE at core layer and exercised through room/entity browser authoring slices
 - DAI-053 Natural-language edit — DONE (one live `gpt-5.6-luna` call translated the browser request into `move-entity / treasure-1 / room-goal`; EditSession application, selection sync, Undo/Redo, secret/full-prompt safety, and zero browser/network errors verified)
-- DAI-054 Validation/START gate — PARTIAL (core START gate done; UI/editor integration pending)
+- DAI-054 Validation/START gate — IN PROGRESS (explicit Critical gate helper added; editor now shows validation state, blocks START on invalid specs, creates immutable PlaySession snapshot, disables authoring during Play, reaches Result in the same browser surface, and returns to Edit; production Chrome evidence pending)
 
 ## M6
 DAI-060 simulator; DAI-061 agents; DAI-062 metrics; DAI-063 intent-fit scoring; DAI-064 explainable summary.
