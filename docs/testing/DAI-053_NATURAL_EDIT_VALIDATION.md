@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS.** The first AI-backed natural-language authoring path is implemented and awaits live visible-Chrome production evidence.
+**DONE.** The first AI-backed natural-language authoring path passed live visible-Chrome production validation on 2026-09-15.
 
 DAI-053 connects the browser editor to a backend-only OpenAI edit translator while preserving the existing renderer-independent `EditCommand` / `EditSession` boundary.
 
@@ -37,7 +37,7 @@ The provider context contains only current room IDs plus entity ID/type/location
 
 ## Browser integration
 
-The DAI-051 editor now has a Natural-language edit panel. It posts the request plus bounded authoring context to a configurable backend endpoint and applies a successful returned command through the existing `EditSession`.
+The DAI-051 editor has a Natural-language edit panel. It posts the request plus bounded authoring context to a configurable backend endpoint and applies a successful returned command through the existing `EditSession`.
 
 Successful AI edits therefore inherit the same:
 
@@ -48,65 +48,47 @@ Successful AI edits therefore inherit the same:
 
 If the backend is unavailable or rejects the request, the current Spec is not changed.
 
-## Live smoke scenario
+## Reviewed production evidence
 
-`scripts/run-dai-053-natural-edit-smoke.mjs` starts:
+Evidence file: `artifacts/natural-edit/dai-053-natural-edit.json`
 
-- the production editor through Vite;
-- a local project-owned backend test boundary on a separate localhost port;
-- visible Chrome through Playwright.
+- generated: `2026-09-15T14:48:43.232Z`
+- JSON SHA-256: `38f178ca25f6c73d6b06930bc089fb0950602aee05787468aed675c32fc4aec8`
+- model: `gpt-5.6-luna`
+- live provider call made: true
+- result: `passed = true`
+- initial treasure room: `room-middle`
+- translated command: `{ type: "move-entity", entityId: "treasure-1", roomId: "room-goal" }`
+- treasure moved to `room-goal`: true
+- edited entity selected after edit: true
+- destination room selected after edit: true
+- Undo returned treasure to `room-middle`: true
+- Redo returned treasure to `room-goal`: true
+- provider call count: 1
+- provider latency: `2892.5666 ms`
+- usage: 295 input + 34 output = 329 tokens
+- API-key leak: false
+- full-prompt leak: false
+- console errors: 0
+- page errors: 0
+- failed requests: 0
+- HTTP errors: 0
 
-The backend uses the real OpenAI Responses transport and one live provider call.
+The reviewed screenshot also shows `treasure-1` selected in `room-goal`, the natural-language request in the editor panel, and `applied: move-entity` after Redo.
 
-The browser smoke verifies:
+## Completion gate result
 
-1. `treasure-1` begins in `room-middle`;
-2. a natural-language request asks to move the treasure to the room containing the goal;
-3. the backend translator returns exactly `{ type: "move-entity", entityId: "treasure-1", roomId: "room-goal" }`;
-4. the browser applies that command through `EditSession`;
-5. `treasure-1` moves to `room-goal`;
-6. the edited entity and destination room become selected;
-7. Undo returns the treasure to `room-middle`;
-8. Redo moves it back to `room-goal`;
-9. exactly one live provider call is made;
-10. evidence contains neither the API key nor the full natural-language test prompt;
-11. Chrome emits no console/page/request/HTTP errors.
+All DAI-053 completion gates passed:
 
-## Required production validation
-
-Run from the Windows clone:
-
-```powershell
-git fetch origin; git switch feat/dai-053-natural-edit; git pull --ff-only origin feat/dai-053-natural-edit; powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-dai-053-validation.ps1
-```
-
-The runner:
-
-1. verifies the audited `package-lock.json` SHA-256;
-2. installs the exact reviewed dependency graph with scripts disabled;
-3. runs the complete production Node suite;
-4. securely asks for `OPENAI_API_KEY` if it is not already process-local;
-5. performs one live billable natural-edit provider call;
-6. launches visible Chrome and exercises the browser path;
-7. writes:
-   - `artifacts/natural-edit/dai-053-natural-edit.json`
-   - `artifacts/natural-edit/dai-053-natural-edit.png`
-
-Do not paste the API key into chat, GitHub, screenshots, command-line arguments, or committed files.
-
-## Completion gate
-
-Do not mark DAI-053 DONE until:
-
-- complete production Node tests pass;
+- complete production Node tests passed before the browser run;
 - live browser evidence reports `passed = true`;
-- exactly one provider call produces the expected constrained `move-entity` command;
-- browser application of the command succeeds;
-- Undo/Redo succeeds after the natural-language edit;
-- no invented IDs or unsupported fields pass the adapter tests;
+- exactly one provider call produced the expected constrained `move-entity` command;
+- browser application of the command succeeded;
+- Undo/Redo succeeded after the natural-language edit;
+- adapter tests reject invented IDs, extra fields, unsupported commands, and no-op moves;
 - evidence safety checks show no API-key/full-prompt leak;
 - browser/network error arrays are empty;
-- generated JSON evidence and screenshot are reviewed.
+- JSON evidence and screenshot were reviewed.
 
 ## Explicit non-goals
 
@@ -118,4 +100,4 @@ This first DAI-053 slice does not yet:
 - deploy the final public backend;
 - provide final mobile natural-language editing UX.
 
-Those can expand after the single-command path is proven end-to-end.
+Those can expand later without weakening the proven single-command boundary.
