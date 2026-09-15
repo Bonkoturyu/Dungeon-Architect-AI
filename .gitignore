@@ -20,6 +20,7 @@ artifacts/renderer-benchmark/
 artifacts/renderer-smoke/
 artifacts/editor-smoke/
 artifacts/manual-editor/
+artifacts/natural-edit/
 artifacts/play-smoke/
 artifacts/door-smoke/
 artifacts/route-matrix/

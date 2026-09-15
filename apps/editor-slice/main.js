@@ -14,11 +14,16 @@ const entityType = document.querySelector('#entityType');
 const addEntityButton = document.querySelector('#addEntity');
 const moveEntityButton = document.querySelector('#moveEntity');
 const removeEntityButton = document.querySelector('#removeEntity');
+const naturalEditInput = document.querySelector('#naturalEditInput');
+const applyNaturalEditButton = document.querySelector('#applyNaturalEdit');
+const naturalEditStatus = document.querySelector('#naturalEditStatus');
 
 let adapter;
 let session;
 let selectedRoomId = null;
 let selectedEntityId = null;
+let naturalEditBusy = false;
+let lastNaturalEditCommand = null;
 
 function resize() {
   if (!adapter) return;
@@ -42,6 +47,8 @@ function snapshotState() {
     targetRoomId: entityRoom?.value || null,
     canUndo: Boolean(session?.canUndo),
     canRedo: Boolean(session?.canRedo),
+    naturalEditBusy,
+    lastNaturalEditCommand: lastNaturalEditCommand ? { ...lastNaturalEditCommand } : null,
     rooms: spec?.rooms.map((room) => ({ id: room.id, x: room.x, z: room.z })) ?? [],
     entities: spec?.entities.map((entity) => ({ id: entity.id, type: entity.type, roomId: entity.roomId })) ?? [],
   };
@@ -49,6 +56,10 @@ function snapshotState() {
 
 function setEditStatus(message) {
   editStatus.textContent = message;
+}
+
+function setNaturalEditStatus(message) {
+  naturalEditStatus.textContent = message;
 }
 
 function ensureRoomOptions() {
@@ -101,6 +112,7 @@ function updateUi() {
   moveEntityButton.disabled = !entity || !entityRoom.value;
   removeEntityButton.disabled = !entity || entity.type === 'start' || entity.type === 'goal';
   addEntityButton.disabled = !entityRoom.value;
+  applyNaturalEditButton.disabled = naturalEditBusy || !naturalEditInput.value.trim();
 }
 
 function renderCurrentSpec() {
@@ -220,6 +232,69 @@ function removeEntity() {
   return true;
 }
 
+function naturalEditContext() {
+  return {
+    rooms: session.spec.rooms.map((room) => ({ id: room.id })),
+    entities: session.spec.entities.map((entity) => ({ id: entity.id, type: entity.type, roomId: entity.roomId })),
+  };
+}
+
+async function applyNaturalEdit() {
+  const prompt = naturalEditInput.value.trim();
+  if (!prompt || naturalEditBusy) return false;
+
+  naturalEditBusy = true;
+  lastNaturalEditCommand = null;
+  setNaturalEditStatus('translating…');
+  updateUi();
+
+  try {
+    const endpoint = window.__DAI_NATURAL_EDIT_ENDPOINT__ || '/api/natural-edit';
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ prompt, context: naturalEditContext() }),
+    });
+
+    let payload = null;
+    try {
+      payload = await response.json();
+    } catch {
+      payload = null;
+    }
+
+    if (!response.ok || payload?.ok !== true || !payload.command) {
+      const code = payload?.error?.code || `HTTP_${response.status}`;
+      setNaturalEditStatus(`error: ${code}`);
+      return false;
+    }
+
+    const command = payload.command;
+    const result = session.apply(command);
+    if (!result.ok) {
+      setNaturalEditStatus(`rejected: ${result.error.code}`);
+      return false;
+    }
+
+    lastNaturalEditCommand = { ...command };
+    if (command.type === 'move-entity') {
+      selectedEntityId = command.entityId;
+      selectedRoomId = command.roomId;
+    }
+    naturalEditInput.value = '';
+    renderCurrentSpec();
+    setNaturalEditStatus(`applied: ${command.type}`);
+    setEditStatus(`natural edit: ${command.type}`);
+    return true;
+  } catch {
+    setNaturalEditStatus('error: NATURAL_EDIT_UNAVAILABLE');
+    return false;
+  } finally {
+    naturalEditBusy = false;
+    updateUi();
+  }
+}
+
 function undo() {
   if (!session.canUndo) return false;
   const result = session.undo();
@@ -303,9 +378,12 @@ async function run() {
     redoButton.addEventListener('click', redo);
     entitySelect.addEventListener('change', () => selectEntity(entitySelect.value));
     entityRoom.addEventListener('change', updateUi);
+    entityType.addEventListener('change', updateUi);
     addEntityButton.addEventListener('click', addEntity);
     moveEntityButton.addEventListener('click', moveEntityToTargetRoom);
     removeEntityButton.addEventListener('click', removeEntity);
+    naturalEditInput.addEventListener('input', updateUi);
+    applyNaturalEditButton.addEventListener('click', applyNaturalEdit);
 
     window.__DAI_EDITOR_SLICE__ = {
       ready: true,
@@ -314,6 +392,7 @@ async function run() {
       getScreenPositionForSpecId: (id) => adapter.getScreenPositionForSpecId(id),
       selectRoom,
       selectEntity,
+      applyNaturalEdit,
     };
     status.textContent = 'ready';
     canvas.focus();
