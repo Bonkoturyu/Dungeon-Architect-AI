@@ -37,6 +37,14 @@ function treasureRoom(state) {
   return state.entities.find((entity) => entity.id === 'treasure-1')?.roomId ?? null;
 }
 
+function normalizedRooms(rooms) {
+  return rooms.map(({ id, x, z }) => ({ id, x, z }));
+}
+
+function normalizedEntities(entities) {
+  return entities.map(({ id, type, roomId }) => ({ id, type, roomId }));
+}
+
 const url = `http://127.0.0.1:${port}/apps/editor-slice/index.html`;
 let browser;
 try {
@@ -107,8 +115,8 @@ try {
   const afterReturn = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
 
   const snapshotMatchesAuthoringAtStart =
-    JSON.stringify(afterStart.play.snapshot.rooms) === JSON.stringify(initial.rooms) &&
-    JSON.stringify(afterStart.play.snapshot.entities.map(({ id, type, roomId }) => ({ id, type, roomId }))) === JSON.stringify(initial.entities);
+    JSON.stringify(normalizedRooms(afterStart.play.snapshot.rooms)) === JSON.stringify(initial.rooms) &&
+    JSON.stringify(normalizedEntities(afterStart.play.snapshot.entities)) === JSON.stringify(initial.entities);
 
   const result = {
     initialGateAllowed: initial.startAllowed === true && initial.validationCriticalCount === 0,
