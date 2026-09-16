@@ -2,7 +2,9 @@
 
 ## Status
 
-**IN PROGRESS.** The editor now exposes live validation state and a START gate that bridges the authoring surface into the existing PlaySession runtime. Production visible-Chrome evidence is required before DAI-054 is marked DONE.
+**DONE.** Production visible-Chrome validation passed on 2026-09-16 after correcting the smoke-test snapshot comparison to normalize both sides to the same authoring-room projection before comparison.
+
+DAI-054 integrates live validation state, a Critical START gate, immutable PlaySession snapshot creation, in-browser Play/Result, and Return to Edit into the authoring surface.
 
 ## Product rule
 
@@ -18,7 +20,7 @@ The gate does not repair or weaken an invalid spec.
 
 ## Editor integration
 
-The DAI editor now includes:
+The DAI editor includes:
 
 - a visible validation status (`PASS` or `BLOCKED`);
 - a START button enabled only when the current authoring Spec has zero Critical errors;
@@ -44,9 +46,30 @@ This joins the existing DAI-051/053 authoring surface and DAI-016 play runtime i
 8. Return to Edit preserves the original authoring state and re-enables START;
 9. browser console/page/request/HTTP errors remain empty.
 
-## Required production validation
+## Reviewed production evidence
 
-Run from the Windows clone:
+Evidence file: `artifacts/start-gate/dai-054-start-gate.json`
+
+- generated: `2026-09-16T13:08:13.480Z`
+- SHA-256: `98d06f537a028cb0d08d64c66a8b78da7a8ce6b0d07dd9e8ac8376783e7d8b39`
+- `passed = true`
+- valid fixture: START allowed; Critical count `0`
+- invalid fixture: START blocked; Critical count `1`; error `GOAL_UNREACHABLE`
+- PlaySession starts in `room-start`
+- execution snapshot matches the authoring room/entity state at START
+- authoring controls are disabled during Play
+- route: `room-start -> room-middle -> room-goal`
+- Result: `cleared`, `moves = 2`, `roomsVisited = 3`
+- Return to Edit preserves the original authoring state
+- START is enabled again after returning to Edit
+- console errors: `0`
+- page errors: `0`
+- failed requests: `0`
+- HTTP errors: `0`
+
+The earlier failed smoke attempt was a test-harness comparison defect, not a product snapshot defect: the Play snapshot's full room objects were compared directly with the editor state's `{id,x,z}` room projection. The corrected smoke test normalizes both sides to the same projection and the production rerun passes.
+
+## Production validation command
 
 ```powershell
 git fetch origin; git switch feat/dai-054-validation-start-gate; git pull --ff-only origin feat/dai-054-validation-start-gate; powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-dai-054-validation.ps1
@@ -64,9 +87,9 @@ The runner:
 
 ## Completion gate
 
-Do not mark DAI-054 DONE until:
+All DAI-054 completion conditions are satisfied:
 
-- complete production Node tests pass;
+- complete production Node tests passed;
 - valid authoring state enables START;
 - invalid/unreachable Spec is blocked as Critical;
 - START creates a fixed execution snapshot;
@@ -74,7 +97,7 @@ Do not mark DAI-054 DONE until:
 - the integrated browser flow reaches Goal and creates a cleared Result;
 - Return to Edit preserves authoring state;
 - browser/network error arrays are empty;
-- generated JSON evidence and screenshot are reviewed.
+- generated JSON evidence and screenshot were reviewed.
 
 ## Explicit non-goals
 
