@@ -13,9 +13,9 @@ Reviewed evidence:
 - `passed = true`;
 - all three agents cleared;
 - deterministic immediate reruns matched;
-- shortest-path used the minimum-hop hazardous route;
-- treasure-greedy collected the side treasure;
-- cautious avoided the hazardous room;
+- shortest-path used `room-start -> room-hazard -> room-goal` in 2 steps;
+- treasure-greedy used `room-start -> room-treasure -> room-safe-2 -> room-goal`, opened `treasure-side`, and cleared in 4 steps;
+- cautious used `room-start -> room-safe-1 -> room-safe-2 -> room-goal` in 3 steps and avoided `room-hazard`;
 - all three routes were behaviorally distinct;
 - source DungeonSpec remained unchanged.
 
@@ -37,9 +37,9 @@ The policies are deterministic probes, not claims about human behavior.
 
 Observed policy behavior:
 
-- shortest-path: `room-start -> room-hazard -> room-goal` in 2 steps;
-- treasure-greedy: `room-start -> room-treasure -> room-safe-2 -> room-goal`, opening `treasure-side`, in 4 steps;
-- cautious: `room-start -> room-safe-1 -> room-safe-2 -> room-goal` in 3 steps, avoiding `room-hazard`.
+- shortest-path: `room-start -> room-hazard -> room-goal`;
+- treasure-greedy: `room-start -> room-treasure -> room-safe-2 -> room-goal`, opening `treasure-side`;
+- cautious: `room-start -> room-safe-1 -> room-safe-2 -> room-goal`, avoiding `room-hazard`.
 
 ## Production validation
 
