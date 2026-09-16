@@ -4,22 +4,26 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
-  <title>Dungeon Architect AI — Manual Editor</title>
+  <title>Dungeon Architect AI — Editor / Play Gate</title>
   <style>
     :root { color-scheme: dark; font-family: system-ui, sans-serif; }
     * { box-sizing: border-box; }
     html, body { margin: 0; min-height: 100%; background: #101014; color: #f2f2f2; }
     main { display: grid; grid-template-rows: auto auto 1fr; min-height: 100vh; }
     header, .toolbar { display: flex; align-items: center; gap: 10px; padding: 9px 14px; background: #181820; }
-    .toolbar { border-top: 1px solid #2b2b36; background: #15151c; }
+    .toolbar { border-top: 1px solid #2b2b36; background: #15151c; flex-wrap: wrap; }
     button, select, textarea { border: 1px solid #4d5262; background: #282b35; color: #f2f2f2; border-radius: 5px; padding: 6px 9px; }
     button { cursor: pointer; }
     button:disabled { opacity: 0.4; cursor: default; }
+    #start { border-color: #568a67; }
+    #returnEdit { border-color: #716c91; }
     textarea { width: 100%; min-height: 84px; resize: vertical; font: inherit; line-height: 1.35; }
-    #status, #selected, #entitySelected, #editStatus, #naturalEditStatus { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    #status, #selected, #entitySelected, #editStatus, #validationStatus, #playStatus, #resultStatus, #naturalEditStatus { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    #validationStatus[data-state="blocked"] { color: #ffb2b2; }
+    #validationStatus[data-state="pass"] { color: #b9f7c8; }
     #hint { opacity: 0.72; margin-left: auto; font-size: 0.9rem; }
     .workspace { min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 340px; }
-    canvas { width: 100%; height: calc(100vh - 94px); display: block; outline: none; }
+    canvas { width: 100%; height: calc(100vh - 100px); display: block; outline: none; }
     aside { border-left: 1px solid #2b2b36; background: #14141b; padding: 14px; overflow: auto; }
     fieldset { border: 1px solid #343744; border-radius: 7px; padding: 10px; margin: 0 0 12px; }
     legend { padding: 0 6px; opacity: 0.82; }
@@ -37,7 +41,7 @@
 <body>
   <main>
     <header>
-      <strong>DAI Manual Editor</strong>
+      <strong>DAI Editor / Play Gate</strong>
       <span id="status">loading</span>
       <span id="selected">room: none</span>
       <span id="entitySelected">entity: none</span>
@@ -45,12 +49,20 @@
     <div class="toolbar">
       <button id="undo" type="button" disabled>Undo</button>
       <button id="redo" type="button" disabled>Redo</button>
+      <button id="start" type="button" disabled>START</button>
+      <button id="returnEdit" type="button" disabled>Return to Edit</button>
+      <span id="validationStatus" data-state="blocked">Validation: checking…</span>
       <span id="editStatus">ready</span>
-      <span id="hint">Click a room, use arrow keys to move it. Ctrl+Z / Ctrl+Y undo/redo.</span>
+      <span id="hint">Edit mode: click rooms / use inspector. Play mode: click an adjacent room.</span>
     </div>
     <div class="workspace">
       <canvas id="renderCanvas" tabindex="0"></canvas>
       <aside>
+        <fieldset>
+          <legend>Validation / Play</legend>
+          <p id="playStatus" class="muted">Not started.</p>
+          <p id="resultStatus" class="muted">No result yet.</p>
+        </fieldset>
         <fieldset>
           <legend>Entity inspector</legend>
           <label>
