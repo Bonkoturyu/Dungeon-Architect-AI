@@ -2,7 +2,18 @@
 
 ## Status
 
-**IN PROGRESS.** The renderer-independent simulation core is implemented and awaits production Node evidence.
+**DONE.** Production Node evidence passed on 2026-09-16.
+
+Reviewed evidence:
+
+- generated: `2026-09-16T15:09:55.695Z`;
+- JSON SHA-256: `423ea8117f1d7eb90efa7ccf7022ade56c2606482b552a8167ecb36c76ceb6c4`;
+- `passed = true`;
+- cleared scripted run: 7 steps;
+- deterministic repeat: passed;
+- step-limit bounding: passed;
+- unsupported action rejection: passed;
+- source authoring Spec unchanged.
 
 M6 requires a simulation core before the shortest/greedy/cautious agent policies and intent-fit metrics are added.
 
@@ -41,29 +52,13 @@ The simulator contains no RNG. Same Spec + same deterministic policy + same opti
 
 `maxSteps` defaults to `256` and is hard-limited to `10000`. A policy loop that reaches the step limit terminates with simulation reason `step-limit` and the fixed Play failure reason `stopped`.
 
-## Production validation
+## Production evidence
 
-Run from the Windows clone:
-
-```powershell
-git fetch origin; git switch feat/dai-060-simulator-core; git pull --ff-only origin feat/dai-060-simulator-core; powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-dai-060-validation.ps1
-```
-
-The runner:
-
-1. verifies the audited `package-lock.json` hash;
-2. installs the exact reviewed dependency graph with scripts disabled;
-3. runs the complete production Node test suite, including simulation-core tests;
-4. runs deterministic DAI-060 evidence scenarios;
-5. writes `artifacts/simulator/dai-060-simulator.json`.
-
-## Evidence scenario
-
-The primary scripted policy uses a three-room fixture and drives the real runtime through:
+The primary scripted policy used a three-room fixture and drove the real runtime through:
 
 `Start -> Middle -> encounter enemy -> defeat enemy -> open treasure -> avoid trap -> use recovery -> Goal`
 
-Expected terminal evidence includes:
+Observed terminal evidence:
 
 - cleared status;
 - exactly two room moves;
@@ -74,28 +69,16 @@ Expected terminal evidence includes:
 - one recovery used;
 - three interactions.
 
-The evidence runner also verifies:
+The evidence runner also verified:
 
-- an identical rerun produces an identical simulation object;
-- a looping policy is bounded by `maxSteps`;
-- an unsupported action is rejected;
-- the source authoring Spec remains unchanged.
-
-## Completion gate
-
-Do not mark DAI-060 DONE until:
-
-- complete production Node tests pass;
-- the primary simulation reaches the expected cleared Result through real Play Core actions;
-- deterministic repeat evidence matches exactly;
-- the loop scenario terminates at the step limit;
-- invalid actions fail closed;
-- source authoring state is unchanged;
-- generated JSON evidence is reviewed.
+- an identical rerun produced an identical simulation object;
+- a looping policy was bounded by `maxSteps = 5`;
+- unsupported `teleport` was rejected as `SIM_ACTION_UNSUPPORTED`;
+- the source authoring Spec remained unchanged.
 
 ## Explicit non-goals
 
-DAI-060 does not yet add:
+DAI-060 does not add:
 
 - shortest/greedy/cautious policy implementations (DAI-061);
 - cross-agent metrics aggregation (DAI-062);
