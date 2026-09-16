@@ -34,6 +34,7 @@ artifacts/cloud-intent/
 artifacts/intent-routing/
 artifacts/prompt-regression/
 artifacts/simulator/
+artifacts/agents/
 
 # Unity candidates
 Library/

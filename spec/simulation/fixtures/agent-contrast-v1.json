@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "1.0",
+  "id": "dai-061-agent-contrast-v1",
+  "seed": 61061,
+  "rooms": [
+    { "id": "room-start", "x": 0, "z": 0, "width": 8, "depth": 8 },
+    { "id": "room-hazard", "x": 12, "z": -8, "width": 8, "depth": 8 },
+    { "id": "room-safe-1", "x": 12, "z": 8, "width": 8, "depth": 8 },
+    { "id": "room-treasure", "x": 12, "z": 20, "width": 8, "depth": 8 },
+    { "id": "room-safe-2", "x": 24, "z": 8, "width": 8, "depth": 8 },
+    { "id": "room-goal", "x": 36, "z": 0, "width": 8, "depth": 8 }
+  ],
+  "corridors": [
+    { "id": "corridor-start-hazard", "fromRoomId": "room-start", "toRoomId": "room-hazard", "width": 3 },
+    { "id": "corridor-hazard-goal", "fromRoomId": "room-hazard", "toRoomId": "room-goal", "width": 3 },
+    { "id": "corridor-start-safe-1", "fromRoomId": "room-start", "toRoomId": "room-safe-1", "width": 3 },
+    { "id": "corridor-safe-1-safe-2", "fromRoomId": "room-safe-1", "toRoomId": "room-safe-2", "width": 3 },
+    { "id": "corridor-safe-2-goal", "fromRoomId": "room-safe-2", "toRoomId": "room-goal", "width": 3 },
+    { "id": "corridor-start-treasure", "fromRoomId": "room-start", "toRoomId": "room-treasure", "width": 3 },
+    { "id": "corridor-treasure-safe-2", "fromRoomId": "room-treasure", "toRoomId": "room-safe-2", "width": 3 }
+  ],
+  "entities": [
+    { "id": "start-1", "type": "start", "roomId": "room-start" },
+    { "id": "enemy-hazard", "type": "enemy", "roomId": "room-hazard" },
+    { "id": "trap-hazard", "type": "trap", "roomId": "room-hazard", "warning": "unstable floor" },
+    { "id": "recovery-safe", "type": "recovery", "roomId": "room-safe-1" },
+    { "id": "treasure-side", "type": "treasure", "roomId": "room-treasure" },
+    { "id": "goal-1", "type": "goal", "roomId": "room-goal" }
+  ],
+  "events": []
+}

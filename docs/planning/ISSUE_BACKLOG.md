@@ -51,8 +51,8 @@ GitHub Issues are not created unless explicitly authorized.
 - DAI-054 Validation/START gate — DONE (visible-Chrome integrated authoring→START→Play→Result→Return flow passed; valid state enables START, unreachable state is blocked as Critical `GOAL_UNREACHABLE`, execution snapshot matches authoring state, editing is disabled during Play, cleared Result is produced, Return to Edit preserves authoring state, and browser/network errors are zero)
 
 ## M6
-- DAI-060 Simulator — IN PROGRESS (renderer-independent deterministic policy loop implemented on top of the real Play Core with bounded steps, runtime observations, atomic simulation actions, deterministic trace, and production Node evidence runner; validation pending)
-- DAI-061 Agents — OPEN
+- DAI-060 Simulator — DONE (production Node evidence passed: real Play Core run cleared in 7 scripted steps; deterministic rerun, step-limit bounding, unsupported-action rejection, interaction counters, and source-Spec immutability all verified)
+- DAI-061 Agents — DONE (production Node evidence passed for deterministic `shortest-path`, `treasure-greedy`, and `cautious` policies; all cleared, immediate reruns matched, shortest used the 2-hop hazardous route, greedy collected the side treasure, cautious avoided the hazard, all routes were distinct, and source Spec remained unchanged)
 - DAI-062 Metrics — OPEN
 - DAI-063 Intent-fit scoring — OPEN
 - DAI-064 Explainable summary — OPEN
