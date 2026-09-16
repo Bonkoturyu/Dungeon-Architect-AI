@@ -48,10 +48,14 @@ GitHub Issues are not created unless explicitly authorized.
 - DAI-051 Manual editor — DONE (visible-Chrome inspector verified `move-entity`, add/remove, Undo/Redo, protected Start/Goal removal guard, and 3D room-selection → inspector synchronization with zero browser/network errors)
 - DAI-052 Undo/redo — DONE at core layer and exercised through room/entity browser authoring slices
 - DAI-053 Natural-language edit — DONE (one live `gpt-5.6-luna` call translated the browser request into `move-entity / treasure-1 / room-goal`; EditSession application, selection sync, Undo/Redo, secret/full-prompt safety, and zero browser/network errors verified)
-- DAI-054 Validation/START gate — IN PROGRESS (explicit Critical gate helper added; editor now shows validation state, blocks START on invalid specs, creates immutable PlaySession snapshot, disables authoring during Play, reaches Result in the same browser surface, and returns to Edit; production Chrome evidence pending)
+- DAI-054 Validation/START gate — DONE (visible-Chrome integrated authoring→START→Play→Result→Return flow passed; valid state enables START, unreachable state is blocked as Critical `GOAL_UNREACHABLE`, execution snapshot matches authoring state, editing is disabled during Play, cleared Result is produced, Return to Edit preserves authoring state, and browser/network errors are zero)
 
 ## M6
-DAI-060 simulator; DAI-061 agents; DAI-062 metrics; DAI-063 intent-fit scoring; DAI-064 explainable summary.
+- DAI-060 Simulator — OPEN
+- DAI-061 Agents — OPEN
+- DAI-062 Metrics — OPEN
+- DAI-063 Intent-fit scoring — OPEN
+- DAI-064 Explainable summary — OPEN
 
 ## M7
 DAI-070 onboarding; DAI-071 performance/browser; DAI-072 hosting; DAI-073 legal registers; DAI-074 secret/privacy audit; DAI-075 mobile scope.
