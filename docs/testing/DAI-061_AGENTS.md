@@ -2,9 +2,22 @@
 
 ## Status
 
-**IN PROGRESS.** The first three deterministic simulation agents are implemented and await production Node evidence.
+**DONE.** Production Node evidence passed on the fixed contrast fixture.
 
 DAI-061 runs on the DAI-060 simulation core and intentionally keeps behavior policy separate from gameplay/runtime implementation.
+
+Reviewed evidence:
+
+- generated: `2026-09-16T23:50:42.618Z`;
+- JSON SHA-256: `557a669e863dfc40498921afe8ebafbd4bafcdf74fe5f050ac930f8b4afb0ab4`;
+- `passed = true`;
+- all three agents cleared;
+- deterministic immediate reruns matched;
+- shortest-path used the minimum-hop hazardous route;
+- treasure-greedy collected the side treasure;
+- cautious avoided the hazardous room;
+- all three routes were behaviorally distinct;
+- source DungeonSpec remained unchanged.
 
 ## Implemented policies
 
@@ -22,15 +35,15 @@ The policies are deterministic probes, not claims about human behavior.
 - a three-move safe route;
 - a three-move treasure route.
 
-Expected policy behavior:
+Observed policy behavior:
 
-- shortest-path: `room-start -> room-hazard -> room-goal`;
-- treasure-greedy: `room-start -> room-treasure -> room-safe-2 -> room-goal`, opening `treasure-side`;
-- cautious: `room-start -> room-safe-1 -> room-safe-2 -> room-goal`, avoiding `room-hazard`.
+- shortest-path: `room-start -> room-hazard -> room-goal` in 2 steps;
+- treasure-greedy: `room-start -> room-treasure -> room-safe-2 -> room-goal`, opening `treasure-side`, in 4 steps;
+- cautious: `room-start -> room-safe-1 -> room-safe-2 -> room-goal` in 3 steps, avoiding `room-hazard`.
 
 ## Production validation
 
-Run from the Windows clone:
+The Windows validation command is:
 
 ```powershell
 git fetch origin; git switch feat/dai-061-agents; git pull --ff-only origin feat/dai-061-agents; powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-dai-061-validation.ps1
@@ -45,9 +58,9 @@ The runner:
 5. verifies deterministic equality and expected behavioral contrast;
 6. writes `artifacts/agents/dai-061-agents.json`.
 
-## Completion gate
+## Completion gate result
 
-Do not mark DAI-061 DONE until:
+All completion requirements passed:
 
 - complete production Node tests pass;
 - all three agents clear the contrast fixture without step-limit termination;
@@ -57,7 +70,7 @@ Do not mark DAI-061 DONE until:
 - all three agents reproduce identical results on an immediate rerun;
 - all three routes are behaviorally distinct on the contrast fixture;
 - source DungeonSpec remains unchanged;
-- generated JSON evidence is reviewed.
+- generated JSON evidence was reviewed.
 
 ## Explicit non-goals
 
