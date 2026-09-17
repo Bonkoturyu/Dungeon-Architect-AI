@@ -39,6 +39,7 @@ artifacts/metrics/
 artifacts/intent-fit/
 artifacts/explainable-summary/
 artifacts/onboarding/
+artifacts/browser-performance/
 
 # Unity candidates
 Library/
