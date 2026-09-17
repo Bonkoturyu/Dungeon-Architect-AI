@@ -55,7 +55,7 @@ GitHub Issues are not created unless explicitly authorized.
 - DAI-061 Agents — DONE (production Node evidence passed for deterministic `shortest-path`, `treasure-greedy`, and `cautious` policies; all cleared, immediate reruns matched, shortest used the 2-hop hazardous route, greedy collected the side treasure, cautious avoided the hazard, all routes were distinct, and source Spec remained unchanged)
 - DAI-062 Metrics — DONE (production Node evidence passed for deterministic per-run and cross-agent metrics: 3/3 built-in clears, mean steps 3, mean moves 2.666667, three distinct routes with mean edge-Jaccard distance 0.933333, full union room coverage, expected hazard/treasure contrast, zero built-in backtracking/dead-end cost, deterministic recomputation, stopped-failure concentration probe, and source Spec immutability)
 - DAI-063 Intent-fit scoring — DONE (production Node evidence passed: all 10 checks true, frozen observable profile matched, exact matched intent scored 1.0, opposed intent scored 0.240124, coverage remained explicit at 9/13 normalized axes, unsupported axes/duration remained unscored, invalid intent failed closed, deterministic recomputation passed, and source Spec remained unchanged)
-- DAI-064 Explainable summary — OPEN
+- DAI-064 Explainable summary — IN PROGRESS (deterministic structured and plain-text explanation implemented on top of DAI-063; exposes score coverage, per-axis target/observed/delta/fit/confidence/basis, closest matches, largest non-zero gaps, explicit unscored reasons and duration boundary; unit tests and production evidence runner added; validation pending)
 
 ## M7
 DAI-070 onboarding; DAI-071 performance/browser; DAI-072 hosting; DAI-073 legal registers; DAI-074 secret/privacy audit; DAI-075 mobile scope.
