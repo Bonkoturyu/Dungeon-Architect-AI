@@ -37,6 +37,7 @@ artifacts/simulator/
 artifacts/agents/
 artifacts/metrics/
 artifacts/intent-fit/
+artifacts/explainable-summary/
 
 # Unity candidates
 Library/
