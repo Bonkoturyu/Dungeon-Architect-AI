@@ -8,6 +8,7 @@ const port = Number(process.env.DAI_BROWSER_PERF_PORT || '4184');
 const outputDir = path.resolve('artifacts/browser-performance');
 const viteBin = path.resolve('node_modules/vite/bin/vite.js');
 const viewport = { width: 1440, height: 900 };
+const clientReadyBudgetMs = 2_000;
 
 if (!fs.existsSync(chromePath)) throw new Error(`Chrome not found: ${chromePath}`);
 if (!fs.existsSync(viteBin)) throw new Error('Vite is not installed. Run npm ci using the reviewed dependency graph first.');
@@ -47,6 +48,20 @@ function round(value, digits = 3) {
   return Math.round((value + Number.EPSILON) * factor) / factor;
 }
 
+function readinessTimingScript() {
+  const now = performance.now();
+  const resources = performance.getEntriesByType('resource');
+  const lastResourceResponseEndMs = resources.length
+    ? Math.max(...resources.map((entry) => entry.responseEnd || 0))
+    : 0;
+  return {
+    navigationElapsedMs: now,
+    lastResourceResponseEndMs,
+    clientReadyAfterLastResourceMs: Math.max(0, now - lastResourceResponseEndMs),
+    resourceCount: resources.length,
+  };
+}
+
 const url = `http://127.0.0.1:${port}/apps/editor-slice/index.html`;
 let browser;
 try {
@@ -72,16 +87,38 @@ try {
 
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60_000 });
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__?.ready === true, null, { timeout: 60_000 });
-  const editorReady = await page.evaluate(() => ({
-    elapsedMs: performance.now(),
-    failed: window.__DAI_EDITOR_SLICE__.failed,
-    message: window.__DAI_EDITOR_SLICE__.message ?? null,
-    state: window.__DAI_EDITOR_SLICE__.getState?.() ?? null,
-  }));
+  const editorReady = await page.evaluate(() => {
+    const now = performance.now();
+    const resources = performance.getEntriesByType('resource');
+    const lastResourceResponseEndMs = resources.length
+      ? Math.max(...resources.map((entry) => entry.responseEnd || 0))
+      : 0;
+    return {
+      navigationElapsedMs: now,
+      lastResourceResponseEndMs,
+      clientReadyAfterLastResourceMs: Math.max(0, now - lastResourceResponseEndMs),
+      resourceCount: resources.length,
+      failed: window.__DAI_EDITOR_SLICE__.failed,
+      message: window.__DAI_EDITOR_SLICE__.message ?? null,
+      state: window.__DAI_EDITOR_SLICE__.getState?.() ?? null,
+    };
+  });
   if (editorReady.failed) throw new Error(editorReady.message || 'editor startup failed');
 
   await page.waitForFunction(() => window.__DAI_ONBOARDING__?.ready === true, null, { timeout: 60_000 });
-  const onboardingReadyElapsedMs = await page.evaluate(() => performance.now());
+  const onboardingReady = await page.evaluate(() => {
+    const now = performance.now();
+    const resources = performance.getEntriesByType('resource');
+    const lastResourceResponseEndMs = resources.length
+      ? Math.max(...resources.map((entry) => entry.responseEnd || 0))
+      : 0;
+    return {
+      navigationElapsedMs: now,
+      lastResourceResponseEndMs,
+      clientReadyAfterLastResourceMs: Math.max(0, now - lastResourceResponseEndMs),
+      resourceCount: resources.length,
+    };
+  });
   await page.evaluate(() => window.__DAI_ONBOARDING__.close());
   await page.waitForFunction(() => window.__DAI_ONBOARDING__.getState().open === false);
 
@@ -89,12 +126,18 @@ try {
     const canvas = document.querySelector('#renderCanvas');
     const rect = canvas.getBoundingClientRect();
     const memory = performance.memory;
+    const navigation = performance.getEntriesByType('navigation')[0];
     return {
       userAgent: navigator.userAgent,
       hardwareConcurrency: navigator.hardwareConcurrency ?? null,
       deviceMemoryGiB: navigator.deviceMemory ?? null,
       devicePixelRatio: window.devicePixelRatio,
       domNodeCount: document.querySelectorAll('*').length,
+      navigation: navigation ? {
+        responseEndMs: navigation.responseEnd,
+        domContentLoadedMs: navigation.domContentLoadedEventEnd,
+        loadEventEndMs: navigation.loadEventEnd,
+      } : null,
       canvas: {
         cssWidth: rect.width,
         cssHeight: rect.height,
@@ -170,8 +213,8 @@ try {
   const maxInteractionMs = Math.max(...interactions.measurements.map((entry) => entry.elapsedMs));
   const finalState = interactions.afterReturn;
   const result = {
-    editorReadyWithinBudget: editorReady.elapsedMs <= 10_000,
-    onboardingReadyWithinBudget: onboardingReadyElapsedMs <= 10_000,
+    editorClientReadyWithinBudget: editorReady.clientReadyAfterLastResourceMs <= clientReadyBudgetMs,
+    onboardingClientReadyWithinBudget: onboardingReady.clientReadyAfterLastResourceMs <= clientReadyBudgetMs,
     editorValidAndStartEligible: browserSurface.editorState.startAllowed === true && browserSurface.editorState.validationCriticalCount === 0,
     cadenceFrameCountExpected: cadenceMetrics.frameCount === 120,
     cadenceCompletesWithinBudget: cadenceMetrics.durationMs <= 5_000,
@@ -198,8 +241,20 @@ try {
     passed,
     result,
     startup: {
-      editorReadyElapsedMs: round(editorReady.elapsedMs),
-      onboardingReadyElapsedMs: round(onboardingReadyElapsedMs),
+      measurementBoundary: 'cold local Vite navigation is recorded but not gated; client-ready gate starts after the last observed resource responseEnd',
+      clientReadyBudgetMs,
+      editor: {
+        navigationElapsedMs: round(editorReady.navigationElapsedMs),
+        lastResourceResponseEndMs: round(editorReady.lastResourceResponseEndMs),
+        clientReadyAfterLastResourceMs: round(editorReady.clientReadyAfterLastResourceMs),
+        resourceCount: editorReady.resourceCount,
+      },
+      onboarding: {
+        navigationElapsedMs: round(onboardingReady.navigationElapsedMs),
+        lastResourceResponseEndMs: round(onboardingReady.lastResourceResponseEndMs),
+        clientReadyAfterLastResourceMs: round(onboardingReady.clientReadyAfterLastResourceMs),
+        resourceCount: onboardingReady.resourceCount,
+      },
     },
     browserSurface,
     cadence: cadenceMetrics,
