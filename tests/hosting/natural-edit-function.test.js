@@ -24,6 +24,12 @@ test('fails closed when OPENAI_API_KEY is not configured', async () => {
   assert.deepEqual(await response.json(), { ok: false, error: { code: 'PROVIDER_NOT_CONFIGURED' } });
 });
 
+test('treats a whitespace-only OPENAI_API_KEY as not configured', async () => {
+  const response = await handleNaturalEditRequest(request({ prompt: 'move treasure', context }), { OPENAI_API_KEY: '   ' });
+  assert.equal(response.status, 503);
+  assert.equal((await response.json()).error.code, 'PROVIDER_NOT_CONFIGURED');
+});
+
 test('rejects invalid JSON without invoking provider dependencies', async () => {
   let called = false;
   const response = await handleNaturalEditRequest(request('{'), { OPENAI_API_KEY: 'test-secret' }, {
@@ -42,7 +48,7 @@ test('returns one sanitized command and never echoes the secret or full prompt',
   let observedPrompt = null;
   let observedContext = null;
 
-  const response = await handleNaturalEditRequest(request({ prompt, context }), { OPENAI_API_KEY: secret }, {
+  const response = await handleNaturalEditRequest(request({ prompt, context }), { OPENAI_API_KEY: `  ${secret}  ` }, {
     createTransport: ({ apiKey }) => {
       transportApiKey = apiKey;
       return async () => ({ ok: true });
@@ -66,6 +72,25 @@ test('returns one sanitized command and never echoes the secret or full prompt',
   assert.equal(text.includes(secret), false);
   assert.equal(text.includes(prompt), false);
   assert.deepEqual(JSON.parse(text).command, { type: 'move-entity', entityId: 'treasure-1', roomId: 'room-goal' });
+});
+
+test('maps provider transport failure to a sanitized 502 response', async () => {
+  const response = await handleNaturalEditRequest(request({ prompt: 'move treasure', context }), { OPENAI_API_KEY: 'test-secret' }, {
+    createTransport: () => async () => ({}),
+    generate: async () => ({ ok: false, error: { code: 'PROVIDER_TRANSPORT_ERROR', message: 'private detail' } }),
+  });
+  assert.equal(response.status, 502);
+  assert.deepEqual(await response.json(), { ok: false, error: { code: 'PROVIDER_TRANSPORT_ERROR' } });
+});
+
+test('catches unexpected backend exceptions without leaking details', async () => {
+  const response = await handleNaturalEditRequest(request({ prompt: 'move treasure', context }), { OPENAI_API_KEY: 'test-secret' }, {
+    createTransport: () => { throw new Error('sensitive backend detail'); },
+  });
+  assert.equal(response.status, 502);
+  const text = await response.text();
+  assert.equal(text.includes('sensitive backend detail'), false);
+  assert.deepEqual(JSON.parse(text), { ok: false, error: { code: 'NATURAL_EDIT_BACKEND_ERROR' } });
 });
 
 test('non-POST fallback is method-not-allowed', async () => {
