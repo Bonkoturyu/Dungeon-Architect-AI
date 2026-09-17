@@ -2,7 +2,24 @@
 
 ## Status
 
-**IN PROGRESS.** Deterministic partial DesignIntent scoring is implemented and awaits production Node evidence.
+**DONE.** Production Node evidence passed on 2026-09-17.
+
+Reviewed evidence:
+
+- generated: `2026-09-17T08:29:03.314Z`;
+- Node.js: `v24.15.0`;
+- JSON SHA-256: `550ac94890700410f55e4d6ea68408199db66892b5f7973f553c40aa3e101621`;
+- `passed = true`;
+- all 10 evidence checks passed;
+- observable profile matched the frozen expected values;
+- exact matched observable intent scored `1.0`;
+- coverage = 9/13 normalized axes, 5/6 core axes, 4/7 supporting axes;
+- opposed observable intent scored `0.240124`;
+- unsupported axes remained explicitly unscored with stable reason codes;
+- `targetDuration` remained unscored and was not inferred from abstract simulation steps;
+- invalid DesignIntent failed closed as `INTENT_FIT_INVALID_INTENT`;
+- fresh recomputation matched deterministically;
+- source DungeonSpec remained unchanged.
 
 ## Boundary
 
@@ -44,7 +61,7 @@ For every scored normalized axis:
 
 The runner uses the DAI-061 contrast fixture and DAI-062 aggregate metrics.
 
-Expected observable profile:
+Observed profile:
 
 - fairness = `1`
 - tension = `0.125`
@@ -56,31 +73,17 @@ Expected observable profile:
 - rewardDensity = `0.166667`
 - backtracking = `0`
 
-A matched intent uses those exact scored-axis values and must produce `observableFitScore = 1`.
+A matched intent using those exact scored-axis values produced `observableFitScore = 1`.
 
-An opposed intent mirrors those values around `0.5` and must score materially lower (`< 0.4`).
+An opposed intent mirrored those values around `0.5` and produced `observableFitScore = 0.240124`, below the frozen `< 0.4` gate.
 
-Validation also verifies:
+Validation also verified:
 
 - unscored axes carry explicit reason codes;
 - target duration remains unscored rather than converting abstract steps into seconds;
 - invalid DesignIntent is rejected before scoring;
 - fresh recomputation is deterministic;
 - source Spec, aggregate metrics, and intent inputs remain unchanged.
-
-## Required production validation
-
-```powershell
-git fetch origin; git switch feat/dai-063-intent-fit; git pull --ff-only origin feat/dai-063-intent-fit; powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-dai-063-validation.ps1
-```
-
-Expected evidence:
-
-`artifacts/intent-fit/dai-063-intent-fit.json`
-
-## Completion gate
-
-Do not mark DAI-063 DONE until the complete production Node suite passes and the generated evidence satisfies every invariant above.
 
 ## Explicit non-goals
 
