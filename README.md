@@ -47,6 +47,8 @@ The MVP must allow a judge to:
 5. Press `START` and play the generated dungeon in the same browser experience.
 6. Reach a Result / Reveal screen that explains the outcome and generated design intent.
 
+The current editor/play demo opens with a valid sample dungeon and includes a four-step first-run guide through Edit → Validate → START/Play. It does not yet claim to expose the initial full-dungeon natural-language generation surface in that same screen.
+
 ## Repository rules
 
 - Original project code: Apache-2.0.

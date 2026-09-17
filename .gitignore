@@ -38,6 +38,7 @@ artifacts/agents/
 artifacts/metrics/
 artifacts/intent-fit/
 artifacts/explainable-summary/
+artifacts/onboarding/
 
 # Unity candidates
 Library/
