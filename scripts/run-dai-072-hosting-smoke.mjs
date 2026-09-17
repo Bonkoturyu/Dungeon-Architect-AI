@@ -21,9 +21,11 @@ function sha256(filePath) {
 
 const indexPath = path.join(distDir, 'index.html');
 const headersPath = path.join(distDir, '_headers');
+const routesPath = path.join(distDir, '_routes.json');
 const fixturePath = path.join(distDir, 'spec', 'dungeon', 'fixtures', 'minimal-valid-v1.json');
 const indexHtml = fs.readFileSync(indexPath, 'utf8');
 const headers = fs.readFileSync(headersPath, 'utf8');
+const routes = JSON.parse(fs.readFileSync(routesPath, 'utf8'));
 const fixture = JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
 const assetFiles = fs.readdirSync(path.join(distDir, 'assets')).sort();
 
@@ -83,6 +85,11 @@ try {
     fixtureCopied: fixture.id === 'fixture-minimal-valid-v1',
     securityHeadersPresent: headers.includes('Content-Security-Policy:') && headers.includes('X-Content-Type-Options: nosniff'),
     indexNoStoreConfigured: headers.includes('/index.html') && headers.includes('Cache-Control: no-store'),
+    functionsRestrictedToApiRoutes:
+      routes.version === 1 &&
+      JSON.stringify(routes.include) === JSON.stringify(['/api/*']) &&
+      Array.isArray(routes.exclude) && routes.exclude.length === 0,
+    functionSourceNotInStaticDist: !fs.existsSync(path.join(distDir, 'functions')),
     editorReadyAndValid: beforeClose.editor.startAllowed === true && beforeClose.editor.validationCriticalCount === 0,
     onboardingReady: beforeClose.onboarding.open === true && beforeClose.onboarding.step?.id === 'welcome',
     onboardingCloseWorks: afterClose.onboarding.open === false,
@@ -104,8 +111,10 @@ try {
     build: {
       indexSha256: sha256(indexPath),
       headersSha256: sha256(headersPath),
+      routesSha256: sha256(routesPath),
       fixtureSha256: sha256(fixturePath),
       assets: assetFiles,
+      routes,
     },
     consoleErrors,
     pageErrors,
