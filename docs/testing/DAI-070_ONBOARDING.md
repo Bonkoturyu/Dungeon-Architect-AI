@@ -2,7 +2,25 @@
 
 ## Status
 
-**IN PROGRESS.** The deterministic first-run guide and visible-Chrome smoke harness are implemented; production validation is pending.
+**DONE.** Production Node and visible-Chrome validation passed on 2026-09-17.
+
+Reviewed evidence:
+
+- generated: `2026-09-17T12:19:23.843Z`;
+- Node.js / browser harness: production validation completed with installed Google Chrome;
+- JSON SHA-256: `ea3eaaf67cd78c4aafaba6ec2a5199e05fff62ae4909061b9ab6ce7f60ad09b2`;
+- PNG SHA-256: `c05733b61495b77d0bf6382c9757a09026f5c0d0b81136840af55cca6607cf3d`;
+- `passed = true`;
+- editor ready and START-eligible;
+- onboarding opened automatically at `welcome`;
+- Back was disabled on the first step;
+- Next reached `edit` and `validate` in order;
+- Back returned to `edit`;
+- Close hid the guide;
+- `Guide` reopened at `welcome`;
+- final step was `play` and `Done` closed the guide;
+- START remained available after onboarding closed;
+- console, page, request, and HTTP error collections were all empty.
 
 ## Purpose
 
@@ -31,9 +49,9 @@ The editor adds:
 - a persistent `Guide` button that reopens at the welcome step;
 - no persistence that could accidentally hide the guide from a judge on a fresh page load.
 
-## Production evidence contract
+## Production evidence result
 
-The visible-Chrome smoke must verify:
+The visible-Chrome smoke verified:
 
 - the editor itself is ready, valid, and START-eligible;
 - onboarding opens automatically at `welcome`;
@@ -47,20 +65,12 @@ The visible-Chrome smoke must verify:
 - after closing onboarding, START remains enabled;
 - console, page, request, and HTTP error collections remain empty.
 
-Expected evidence:
+The screenshot evidence shows the first-run welcome dialog over the live editor surface with `1 / 4`, disabled Back, Next, and the current-demo boundary text visible.
+
+Evidence files are generated locally under:
 
 - `artifacts/onboarding/dai-070-onboarding.json`
 - `artifacts/onboarding/dai-070-onboarding.png`
-
-## Required production validation
-
-```powershell
-git fetch origin; git switch feat/dai-070-onboarding; git pull --ff-only origin feat/dai-070-onboarding; powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-dai-070-validation.ps1
-```
-
-## Completion gate
-
-Do not mark DAI-070 DONE until the full Node suite and the visible-Chrome onboarding smoke both pass.
 
 ## Explicit non-goals
 
