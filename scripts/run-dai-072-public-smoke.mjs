@@ -1,4 +1,3 @@
-import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { chromium } from 'playwright-core';
@@ -15,10 +14,6 @@ fs.mkdirSync(outputDir, { recursive: true });
 
 const baseUrl = rawBaseUrl.replace(/\/+$/, '');
 const editorUrl = `${baseUrl}/`;
-
-function sha256(filePath) {
-  return crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('hex');
-}
 
 function entityRoom(state, id) {
   return state.entities.find((entity) => entity.id === id)?.roomId ?? null;
@@ -115,9 +110,6 @@ try {
   };
 
   const evidencePath = path.join(outputDir, 'dai-072-public.json');
-  fs.writeFileSync(evidencePath, `${JSON.stringify(evidence, null, 2)}\n`);
-  evidence.evidenceSha256 = sha256(evidencePath);
-  evidence.screenshotSha256 = sha256(screenshotPath);
   fs.writeFileSync(evidencePath, `${JSON.stringify(evidence, null, 2)}\n`);
 
   console.log(JSON.stringify(evidence, null, 2));
