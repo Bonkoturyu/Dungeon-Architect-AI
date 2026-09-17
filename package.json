@@ -20,6 +20,7 @@
     "smoke:natural-edit": "node scripts/run-dai-053-natural-edit-smoke.mjs",
     "smoke:start-gate": "node scripts/run-dai-054-start-gate-smoke.mjs",
     "smoke:onboarding": "node scripts/run-dai-070-onboarding-smoke.mjs",
+    "smoke:browser-performance": "node scripts/run-dai-071-browser-performance.mjs",
     "smoke:play-slice": "node scripts/run-dai-016-play-smoke.mjs",
     "smoke:door-openings": "node scripts/run-dai-022-door-smoke.mjs",
     "validate:route-constraints": "node scripts/run-dai-024-route-matrix.mjs",
