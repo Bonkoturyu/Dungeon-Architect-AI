@@ -37,6 +37,8 @@ test('aggregate metrics capture deterministic contrast across the three built-in
   assert.equal(aggregate.means.steps, 3);
   assert.equal(aggregate.means.moves, 2.666667);
   assert.equal(aggregate.means.detourMoves, 0.666667);
+  assert.equal(aggregate.means.backtrackMoves, 0);
+  assert.equal(aggregate.means.deadEndCostMoves, 0);
   assert.equal(aggregate.means.hazardRoomEntries, 0.333333);
   assert.equal(aggregate.means.treasureCaptureRate, 0.333333);
   assert.equal(aggregate.routeDiversity.uniqueRouteCount, 3);
@@ -91,6 +93,7 @@ test('per-run metrics detect revisit/backtracking and structural detour', () => 
   assert.equal(metrics.detourMoves, 2);
   assert.equal(metrics.routeStretch, 2);
   assert.equal(metrics.backtrackMoves, 1);
+  assert.equal(metrics.deadEndCostMoves, 2);
   assert.equal(metrics.revisitRate, 0.25);
   assert.equal(metrics.hazardRoomEntries, 1);
 });
