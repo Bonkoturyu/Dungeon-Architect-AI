@@ -2,9 +2,9 @@
 
 ## Status
 
-**Pending production validation**
+**Confirmed**
 
-Decision work started: 2026-09-17
+Decision date: 2026-09-18
 
 ## Context
 
@@ -15,15 +15,17 @@ Dungeon Architect AI is a browser-first MVP with two deployment concerns:
 
 The browser must never receive `OPENAI_API_KEY`. The hosting target should also keep deployment overhead low for a hackathon submission and support preview deployments from Git branches.
 
-## Candidate shape selected for validation
+## Decision
 
-Use **Cloudflare Pages + Pages Functions**:
+Use **Cloudflare Pages + Pages Functions** as the production hosting target for the browser MVP.
 
 - Pages serves the Vite-built `dist/` static application;
 - `functions/api/natural-edit.js` exposes the same-origin server route;
 - the Function reuses the existing production `createOpenAIHttpTransport()` and `generateOpenAIEditCommand()` boundaries;
 - `OPENAI_API_KEY` is injected as a Cloudflare Secret/runtime binding;
 - GitHub integration provides automatic production/preview deployments.
+
+Final public `pages.dev` URL acceptance remains DAI-081. This ADR confirms the hosting architecture and deployment target; it does not claim that a final judge URL has already passed public end-to-end validation.
 
 ## Why this fits the current architecture
 
@@ -52,6 +54,35 @@ Cloudflare official documentation reviewed on 2026-09-17 confirms:
 
 See `docs/deployment/CLOUDFLARE_PAGES.md` for the exact deployment settings and source links.
 
+## Production validation evidence
+
+Repository-side DAI-072 validation passed on 2026-09-18 using Node.js `v24.15.0` and Chrome `152.0.7977.83`.
+
+Reviewed external evidence:
+
+- generated: `2026-09-17T15:14:12.396Z`;
+- JSON SHA-256: `71d6969f14c11acbea3c6b5d2ea30cc691ba41aef5d416d140a178bd2795e290`;
+- PNG SHA-256: `55fd7fcae2e19e8bdd461b1222c115bbf78577abae011b4a94ab0ec06d959622`;
+- `passed = true`;
+- all 12 DAI-072 repository-side gates passed;
+- production HTML and hashed JS asset were generated;
+- frozen demo fixture was copied;
+- CSP and `X-Content-Type-Options` were emitted;
+- index `no-store` caching was configured;
+- `_routes.json` restricted Functions invocation to `/api/*`;
+- Function source was absent from static `dist/`;
+- built editor was valid / START-eligible;
+- onboarding loaded and closed successfully;
+- built browser surface used production assets rather than source modules;
+- console/page/request/HTTP error collections were empty.
+
+Reviewed build artifact hashes:
+
+- `dist/index.html`: `a9999eb3b237cd0726a2a128db968f77191b10c951dd0449969f92b8f8af37c3`;
+- `dist/_headers`: `3f8e8e5b1233cdc43719ac9085b8c3c4c23b599ae420a5c3b6b2b591b15ebae0`;
+- `dist/_routes.json`: `9ac04b0b988b70aa7a8aeef820ca5653cab83721b0df8013e54a4450f1d22040`;
+- demo fixture: `fe1924ddcda87bfc8ede99f9aa6663e3f78339bdc92ab3963ba3a0d905807818`.
+
 ## Repository implementation
 
 DAI-072 adds:
@@ -59,6 +90,7 @@ DAI-072 adds:
 - `.node-version` pinned to the production-tested Node version;
 - `scripts/build-hosting.mjs` to produce the deployable `dist/` tree;
 - security/cache rules in `dist/_headers`;
+- API-only Function routing in `dist/_routes.json`;
 - `functions/api/natural-edit.js` for the same-origin provider proxy;
 - server-function contract tests outside `/functions` so tests cannot become deployed routes;
 - built-output visible-Chrome smoke evidence;
@@ -90,9 +122,9 @@ Rejected because it would force the provider key into the browser or remove the 
 
 Not rejected as generally unsuitable. They remain reversal options if Cloudflare deployment, compatibility, policy, or reliability evidence fails. DAI-072 is selecting a project-specific target rather than ranking hosting providers generally.
 
-## Completion gate
+## Completion boundary
 
-Do not mark this ADR Confirmed until the DAI-072 repository-side production validation passes. Actual public URL deployment and end-to-end hosted smoke are intentionally owned by DAI-081, which may reopen this ADR if the Pages deployment itself fails.
+ADR-002 is Confirmed by the repository-side DAI-072 production evidence above. Actual public URL deployment, secret configuration, and end-to-end hosted smoke remain DAI-081 acceptance work.
 
 ## Reversal conditions
 
