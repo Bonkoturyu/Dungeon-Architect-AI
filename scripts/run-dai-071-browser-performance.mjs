@@ -48,20 +48,6 @@ function round(value, digits = 3) {
   return Math.round((value + Number.EPSILON) * factor) / factor;
 }
 
-function readinessTimingScript() {
-  const now = performance.now();
-  const resources = performance.getEntriesByType('resource');
-  const lastResourceResponseEndMs = resources.length
-    ? Math.max(...resources.map((entry) => entry.responseEnd || 0))
-    : 0;
-  return {
-    navigationElapsedMs: now,
-    lastResourceResponseEndMs,
-    clientReadyAfterLastResourceMs: Math.max(0, now - lastResourceResponseEndMs),
-    resourceCount: resources.length,
-  };
-}
-
 const url = `http://127.0.0.1:${port}/apps/editor-slice/index.html`;
 let browser;
 try {
