@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS.** Integrated editor/play performance and Chrome browser evidence are implemented for validation; production evidence is pending.
+**IN PROGRESS.** Integrated editor/play performance and Chrome browser evidence are implemented for validation; corrected production evidence is pending.
 
 ## Purpose
 
@@ -21,7 +21,9 @@ This is intentionally different from the earlier M1 renderer-selection benchmark
 
 ## Startup measurement boundary
 
-The first production attempt exposed a harness-boundary defect: the original `10,000 ms` startup gate used `performance.now()` from navigation start while the page was served by the Vite development server. That value includes cold dev-server module transformation and delivery, so it is not a clean measurement of the integrated browser application's client-side initialization.
+The first production attempt exposed a harness-boundary defect: the original `10,000 ms` startup gate used `performance.now()` from navigation start while the page was served by the Vite development server. The two navigation-to-ready gates failed, while cadence, local interactions, Result/Return flow, DOM/canvas bounds, and browser-error gates all passed.
+
+That original value includes cold dev-server module transformation and delivery, so it is not a clean measurement of the integrated browser application's client-side initialization.
 
 The revised protocol does **not** hide that time. Cold local navigation-to-ready remains recorded as diagnostic evidence. The hard readiness gate instead starts at the last observed browser resource `responseEnd` and measures the remaining client-side time until the editor/onboarding ready boundary.
 
