@@ -59,6 +59,18 @@ function routeBacktrackMoves(routeRoomIds) {
   return count;
 }
 
+function routeDeadEndCostMoves(routeRoomIds) {
+  if (!Array.isArray(routeRoomIds) || routeRoomIds.length < 2) return 0;
+  const lastIndex = new Map([[routeRoomIds[0], 0]]);
+  let cost = 0;
+  for (let index = 1; index < routeRoomIds.length; index += 1) {
+    const roomId = routeRoomIds[index];
+    if (lastIndex.has(roomId)) cost += index - lastIndex.get(roomId);
+    lastIndex.set(roomId, index);
+  }
+  return cost;
+}
+
 function routeEdgeSet(routeRoomIds) {
   const edges = new Set();
   for (let index = 1; index < (routeRoomIds?.length ?? 0); index += 1) {
@@ -143,6 +155,7 @@ export function projectSimulationMetrics(authoringSpec, simulation) {
     ? metrics.roomsVisited
     : new Set(routeRoomIds).size;
   const backtrackMoves = routeBacktrackMoves(routeRoomIds);
+  const deadEndCostMoves = routeDeadEndCostMoves(routeRoomIds);
 
   return {
     policyId: simulation.policyId,
@@ -171,6 +184,7 @@ export function projectSimulationMetrics(authoringSpec, simulation) {
         ? (moves === 0 ? 1 : null)
         : round(moves / baselineShortestMoves),
     backtrackMoves,
+    deadEndCostMoves,
     revisitRate: moves > 0 ? round(backtrackMoves / moves) : 0,
     visitedRoomFraction: authoringSpec.rooms?.length
       ? round(roomsVisited / authoringSpec.rooms.length)
@@ -218,6 +232,7 @@ export function aggregateSimulationMetrics(authoringSpec, simulations) {
       detourMoves: mean(runs.map((run) => run.detourMoves)),
       routeStretch: mean(runs.map((run) => run.routeStretch)),
       backtrackMoves: mean(runs.map((run) => run.backtrackMoves)),
+      deadEndCostMoves: mean(runs.map((run) => run.deadEndCostMoves)),
       revisitRate: mean(runs.map((run) => run.revisitRate)),
       hazardRoomEntries: mean(runs.map((run) => run.hazardRoomEntries)),
       treasureCaptureRate: mean(runs.map((run) => run.treasureCaptureRate)),
