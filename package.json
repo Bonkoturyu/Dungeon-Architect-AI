@@ -24,6 +24,7 @@
     "smoke:onboarding": "node scripts/run-dai-070-onboarding-smoke.mjs",
     "smoke:browser-performance": "node scripts/run-dai-071-browser-performance.mjs",
     "smoke:hosting": "node scripts/run-dai-072-hosting-smoke.mjs",
+    "smoke:hosting-public": "node scripts/run-dai-072-public-smoke.mjs",
     "smoke:play-slice": "node scripts/run-dai-016-play-smoke.mjs",
     "smoke:door-openings": "node scripts/run-dai-022-door-smoke.mjs",
     "validate:route-constraints": "node scripts/run-dai-024-route-matrix.mjs",
