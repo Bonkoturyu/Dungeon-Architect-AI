@@ -4,16 +4,32 @@ Pre-production approvals do not automatically authorize production use. Producti
 
 | ID | Dependency | Version/Commit | Source | License | Provenance | NOTICE duties | Usage | Status | Review date | Notes |
 |---|---|---|---|---|---|---|---|---|---|---|
-| PROD-DEP-001 | three | 0.185.1 / r185 | official three.js tag + npm publication | MIT | live upstream/package metadata rechecked; exact package identity/integrity recorded in reviewed lockfile | preserve MIT copyright/license | production browser renderer/runtime, DAI-014, later Edit/Play rendering, hosted demo | Approved | 2026-09-13 | ADR-001 selected renderer; exact version remains pinned |
-| PROD-DEP-002 | @babylonjs/core | 9.18.0 | official Babylon.js tag + npm publication | Apache-2.0 | live upstream/version rechecked; Pre evidence retained | preserve Apache-2.0 and applicable NOTICE | M1 rendering benchmark only | Approved | 2026-09-12 | evaluated but not selected by ADR-001; new use requires scope review |
-| PROD-DEP-003 | vite | 8.1.5 | official Vite tag + npm publication | MIT + bundled dependency notices | exact version and integrity recorded in reviewed lockfile | preserve Vite/bundled notices as applicable | production benchmark/build/preview tooling | Approved | 2026-09-12 | tooling scope; final distribution bundle audit still required |
-| PROD-DEP-004 | playwright-core | 1.62.0 | official Playwright tag + npm publication | Apache-2.0 | exact version and integrity recorded in reviewed lockfile | preserve Apache-2.0 + Playwright/Puppeteer NOTICE | production benchmark/smoke automation | Approved | 2026-09-12 | automation scope; no bundled browser package |
-| PROD-DEP-005 | lightningcss + platform bindings | 1.33.0 | npm packages resolved through Vite 8.1.5 | MPL-2.0 | reviewed lockfile records exact versions/integrity; transitive through Vite | MPL source/notice obligations if covered executable/library material is redistributed | build/dev tooling only | Approved | 2026-09-12 | no direct runtime/vendored/redistributed use without re-review |
-| PROD-CAND-005 | Unity Editor / WebGL | 6000.3.23f1 | official Unity toolchain | proprietary toolchain terms | user-executed production benchmark completed with 5/5 clean runs | per current Unity terms | DAI-010 renderer benchmark candidate only | Rejected | 2026-09-13 | not selected for browser MVP by ADR-001; no claim that Unity is generally unsuitable |
+| PROD-DEP-001 | three | 0.185.1 / r185 | official three.js tag + npm publication | MIT | live upstream/package metadata rechecked; exact package identity/integrity recorded in reviewed lockfile | preserve MIT copyright/license | production browser renderer/runtime, DAI-014+, hosted demo bundle | Approved | 2026-09-18 | ADR-001 selected renderer; exact version pinned; official r185 MIT text copied to root `THIRD_PARTY_NOTICES.txt` and production build |
+| PROD-DEP-002 | @babylonjs/core | 9.18.0 | official Babylon.js tag + npm publication | Apache-2.0 | live upstream/version rechecked; Pre evidence retained | preserve Apache-2.0 and applicable NOTICE if redistributed | M1 rendering benchmark only | Approved | 2026-09-12 | evaluated but not selected by ADR-001; not part of production browser distribution; new use requires scope review |
+| PROD-DEP-003 | vite | 8.1.5 | official Vite tag + npm publication | MIT + bundled dependency notices | exact version and integrity recorded in reviewed lockfile | preserve Vite/bundled notices if Vite itself or covered bundled material is redistributed | production build/preview tooling and benchmark tooling | Approved | 2026-09-18 | build tool; not shipped as a browser runtime package; DAI-073 distribution audit confirms runtime notice obligation is handled separately for bundled Three.js |
+| PROD-DEP-004 | playwright-core | 1.62.0 | official Playwright tag + npm publication | Apache-2.0 | exact version and integrity recorded in reviewed lockfile | preserve Apache-2.0 + applicable NOTICE if redistributed | production benchmark/smoke automation | Approved | 2026-09-12 | automation only; not included in production browser distribution; no bundled browser package |
+| PROD-DEP-005 | lightningcss + platform bindings | 1.33.0 | npm packages resolved through Vite 8.1.5 | MPL-2.0 | reviewed lockfile records exact versions/integrity; transitive through Vite | MPL source/notice obligations if covered executable/library material is redistributed | build/dev tooling only | Approved | 2026-09-18 | no direct runtime/vendored use; DAI-073 final distribution audit records it as build-only rather than browser runtime material |
+| PROD-CAND-005 | Unity Editor / WebGL | 6000.3.23f1 | official Unity toolchain | proprietary toolchain terms | user-executed production benchmark completed with 5/5 clean runs | per current Unity terms | DAI-010 renderer benchmark candidate only | Rejected | 2026-09-13 | not selected for browser MVP by ADR-001; no Unity runtime/build is part of final browser distribution |
 
 Allowed status values: Candidate / Pending Evidence / Approved / Rejected / Removed / Replaced.
 
 Only `Approved` dependencies may be installed or used in production. A `Rejected` candidate may remain as historical evidence but is not authorized for new production scope.
+
+## Current public distribution composition
+
+DAI-073 treats package installation and public redistribution as separate questions.
+
+For the current Vite production browser build:
+
+- project-authored application/core/editor/play/onboarding code is bundled;
+- `three@0.185.1` is the external runtime library included in the browser bundle;
+- Vite is the build tool and is not the browser runtime;
+- Playwright is smoke/benchmark automation and is not shipped;
+- Babylon.js is retained for renderer benchmark history and is not shipped in the selected browser runtime;
+- Lightning CSS packages are transitive build tooling and are not directly shipped as application runtime dependencies;
+- Unity benchmark sources/toolchain are not part of the production browser build.
+
+The distribution notice for Three.js is maintained at root `THIRD_PARTY_NOTICES.txt` and copied into `dist/` by the production hosting build.
 
 ## Approval scope rule
 
