@@ -37,10 +37,18 @@ const headers = [
 ].join('\n');
 await fs.writeFile(path.join(distDir, '_headers'), headers, 'utf8');
 
+const routes = {
+  version: 1,
+  include: ['/api/*'],
+  exclude: [],
+};
+await fs.writeFile(path.join(distDir, '_routes.json'), `${JSON.stringify(routes, null, 2)}\n`, 'utf8');
+
 const required = [
   path.join(distDir, 'index.html'),
   fixtureTarget,
   path.join(distDir, '_headers'),
+  path.join(distDir, '_routes.json'),
 ];
 for (const target of required) {
   await fs.access(target);
@@ -51,5 +59,6 @@ console.log(JSON.stringify({
   appRoot,
   distDir,
   fixtureTarget,
+  routes,
   required: required.map((target) => path.relative(repoRoot, target).replaceAll('\\', '/')),
 }, null, 2));
