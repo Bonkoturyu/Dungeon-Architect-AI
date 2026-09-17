@@ -32,6 +32,7 @@
     "validate:simulator": "node scripts/run-dai-060-simulator.mjs",
     "validate:agents": "node scripts/run-dai-061-agents.mjs",
     "validate:simulation-metrics": "node scripts/run-dai-062-metrics.mjs",
+    "validate:intent-fit": "node scripts/run-dai-063-intent-fit.mjs",
     "test": "npm run test:core && npm run test:generator && npm run test:intent && npm run test:cloud-intent && npm run test:editor && npm run test:play && npm run test:simulation && npm run test:benchmark-fixture && npm run test:renderer-three"
   },
   "devDependencies": {
