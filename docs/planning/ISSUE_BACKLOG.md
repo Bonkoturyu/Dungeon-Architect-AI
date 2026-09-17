@@ -53,7 +53,7 @@ GitHub Issues are not created unless explicitly authorized.
 ## M6
 - DAI-060 Simulator — DONE (production Node evidence passed: real Play Core run cleared in 7 scripted steps; deterministic rerun, step-limit bounding, unsupported-action rejection, interaction counters, and source-Spec immutability all verified)
 - DAI-061 Agents — DONE (production Node evidence passed for deterministic `shortest-path`, `treasure-greedy`, and `cautious` policies; all cleared, immediate reruns matched, shortest used the 2-hop hazardous route, greedy collected the side treasure, cautious avoided the hazard, all routes were distinct, and source Spec remained unchanged)
-- DAI-062 Metrics — IN PROGRESS (deterministic per-run and cross-agent metrics implemented for success/failure, route length/stretch/diversity, coverage, interactions, backtracking/dead-end cost, hazards, treasure/trap/enemy rates, damage/healing/deaths, and failure concentration; production Node evidence pending)
+- DAI-062 Metrics — DONE (production Node evidence passed for deterministic per-run and cross-agent metrics: 3/3 built-in clears, mean steps 3, mean moves 2.666667, three distinct routes with mean edge-Jaccard distance 0.933333, full union room coverage, expected hazard/treasure contrast, zero built-in backtracking/dead-end cost, deterministic recomputation, stopped-failure concentration probe, and source Spec immutability)
 - DAI-063 Intent-fit scoring — OPEN
 - DAI-064 Explainable summary — OPEN
 
