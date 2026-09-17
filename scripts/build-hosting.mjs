@@ -8,6 +8,8 @@ const appRoot = path.join(repoRoot, 'apps', 'editor-slice');
 const distDir = path.join(repoRoot, 'dist');
 const fixtureSource = path.join(repoRoot, 'spec', 'dungeon', 'fixtures', 'minimal-valid-v1.json');
 const fixtureTarget = path.join(distDir, 'spec', 'dungeon', 'fixtures', 'minimal-valid-v1.json');
+const noticesSource = path.join(repoRoot, 'THIRD_PARTY_NOTICES.txt');
+const noticesTarget = path.join(distDir, 'THIRD_PARTY_NOTICES.txt');
 
 await build({
   root: appRoot,
@@ -20,6 +22,7 @@ await build({
 
 await fs.mkdir(path.dirname(fixtureTarget), { recursive: true });
 await fs.copyFile(fixtureSource, fixtureTarget);
+await fs.copyFile(noticesSource, noticesTarget);
 
 const headers = [
   '/*',
@@ -32,6 +35,9 @@ const headers = [
   '  Cache-Control: no-store',
   '',
   '/spec/*',
+  '  Cache-Control: public, max-age=300',
+  '',
+  '/THIRD_PARTY_NOTICES.txt',
   '  Cache-Control: public, max-age=300',
   '',
 ].join('\n');
@@ -47,6 +53,7 @@ await fs.writeFile(path.join(distDir, '_routes.json'), `${JSON.stringify(routes,
 const required = [
   path.join(distDir, 'index.html'),
   fixtureTarget,
+  noticesTarget,
   path.join(distDir, '_headers'),
   path.join(distDir, '_routes.json'),
 ];
@@ -59,6 +66,7 @@ console.log(JSON.stringify({
   appRoot,
   distDir,
   fixtureTarget,
+  noticesTarget,
   routes,
   required: required.map((target) => path.relative(repoRoot, target).replaceAll('\\', '/')),
 }, null, 2));
