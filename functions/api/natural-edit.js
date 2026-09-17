@@ -29,11 +29,18 @@ async function readJsonBody(request) {
   return JSON.parse(text);
 }
 
+function providerFailureStatus(code) {
+  if (code === 'PROVIDER_RATE_LIMITED') return 429;
+  if (code === 'PROVIDER_TRANSPORT_ERROR' || code === 'PROVIDER_HTTP_ERROR' || code === 'PROVIDER_TRANSPORT_INVALID') return 502;
+  return 422;
+}
+
 export async function handleNaturalEditRequest(request, env, {
   createTransport = createOpenAIHttpTransport,
   generate = generateOpenAIEditCommand,
 } = {}) {
-  if (!env?.OPENAI_API_KEY || typeof env.OPENAI_API_KEY !== 'string') {
+  const apiKey = typeof env?.OPENAI_API_KEY === 'string' ? env.OPENAI_API_KEY.trim() : '';
+  if (!apiKey) {
     return jsonResponse(503, { ok: false, error: { code: 'PROVIDER_NOT_CONFIGURED' } });
   }
 
@@ -46,17 +53,23 @@ export async function handleNaturalEditRequest(request, env, {
 
   const prompt = typeof body?.prompt === 'string' ? body.prompt : '';
   const context = body?.context;
-  const transport = createTransport({ apiKey: env.OPENAI_API_KEY });
-  const result = await generate(prompt, context, {
-    transport,
-    model: DEFAULT_CLOUD_EDIT_MODEL,
-    reasoningEffort: 'low',
-    maxOutputTokens: 512,
-  });
+
+  let result;
+  try {
+    const transport = createTransport({ apiKey });
+    result = await generate(prompt, context, {
+      transport,
+      model: DEFAULT_CLOUD_EDIT_MODEL,
+      reasoningEffort: 'low',
+      maxOutputTokens: 512,
+    });
+  } catch {
+    return jsonResponse(502, { ok: false, error: { code: 'NATURAL_EDIT_BACKEND_ERROR' } });
+  }
 
   if (!result.ok) {
-    const status = result.error?.code === 'PROVIDER_RATE_LIMITED' ? 429 : 422;
-    return jsonResponse(status, { ok: false, error: { code: result.error?.code ?? 'NATURAL_EDIT_FAILED' } });
+    const code = result.error?.code ?? 'NATURAL_EDIT_FAILED';
+    return jsonResponse(providerFailureStatus(code), { ok: false, error: { code } });
   }
 
   return jsonResponse(200, {
