@@ -58,7 +58,7 @@ GitHub Issues are not created unless explicitly authorized.
 - DAI-064 Explainable summary — DONE (production Node evidence passed: all 13 checks true; matched score 1.0 and opposed score 0.240124 preserved, 9/13 coverage and unsupported-axis/duration boundaries stayed explicit, opposed largest gaps were fairness/learnability/backtracking at absolute delta 1.0, evidence basis/confidence and boundary text were preserved, malformed input failed closed, deterministic recomputation passed, input score objects remained unchanged; reviewed JSON SHA-256 `8c4f2e94b5f24f55da069d412ed468611481dbe54441a917f572af61a8b0e1b8`)
 
 ## M7
-- DAI-070 Onboarding — IN PROGRESS (four-step first-run guide implemented for the verified editor/play workflow; auto-open, Back/Next/Done, close/Escape, reopenable Guide control, DOM-independent state tests, visible-Chrome production smoke runner, and one-command validation added; production evidence pending)
+- DAI-070 Onboarding — DONE (production Node + visible-Chrome evidence passed: editor was ready/valid/START-eligible; four-step `welcome → edit → validate → play` guide auto-opened, Back/Next/Done and Close/Guide flows behaved deterministically, START remained available after dismissal, and console/page/request/HTTP error collections were empty; reviewed JSON SHA-256 `ea3eaaf67cd78c4aafaba6ec2a5199e05fff62ae4909061b9ab6ce7f60ad09b2`, PNG SHA-256 `c05733b61495b77d0bf6382c9757a09026f5c0d0b81136840af55cca6607cf3d`)
 - DAI-071 Performance/browser — OPEN
 - DAI-072 Hosting — OPEN
 - DAI-073 Legal registers — OPEN
