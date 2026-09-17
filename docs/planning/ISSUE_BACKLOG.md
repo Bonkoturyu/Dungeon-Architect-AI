@@ -59,7 +59,7 @@ GitHub Issues are not created unless explicitly authorized.
 
 ## M7
 - DAI-070 Onboarding — DONE (production Node + visible-Chrome evidence passed: editor was ready/valid/START-eligible; four-step `welcome → edit → validate → play` guide auto-opened, Back/Next/Done and Close/Guide flows behaved deterministically, START remained available after dismissal, and console/page/request/HTTP error collections were empty; reviewed JSON SHA-256 `ea3eaaf67cd78c4aafaba6ec2a5199e05fff62ae4909061b9ab6ce7f60ad09b2`, PNG SHA-256 `c05733b61495b77d0bf6382c9757a09026f5c0d0b81136840af55cca6607cf3d`)
-- DAI-071 Performance/browser — OPEN
+- DAI-071 Performance/browser — IN PROGRESS (integrated desktop-Chrome performance smoke added for current editor/play surface; records startup readiness, DOM/canvas/heap bounds, 120-frame browser cadence, local interaction latency, Result completion, Return to Edit, and browser/network errors; one-command production validation added; evidence pending)
 - DAI-072 Hosting — OPEN
 - DAI-073 Legal registers — OPEN
 - DAI-074 Secret/privacy audit — OPEN
