@@ -24,6 +24,8 @@ Reviewed evidence:
 - fresh summary generation matched deterministically;
 - input DAI-063 score objects remained unchanged.
 
+The evidence JSON is intentionally local-only under `artifacts/explainable-summary/`; the reviewed timestamp, SHA-256, and invariant results above are the repository record.
+
 ## Boundary
 
 DAI-064 explains a successful DAI-063 Intent Fit v1 score without inventing new measurements or upgrading proxy confidence.
