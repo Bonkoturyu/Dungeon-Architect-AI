@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+.dev.vars*
 *.pem
 *.key
 *.p12
@@ -40,6 +41,8 @@ artifacts/intent-fit/
 artifacts/explainable-summary/
 artifacts/onboarding/
 artifacts/browser-performance/
+artifacts/hosting/
+artifacts/hosting-public/
 
 # Unity candidates
 Library/

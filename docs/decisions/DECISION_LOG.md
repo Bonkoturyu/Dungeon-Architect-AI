@@ -79,12 +79,26 @@
 - This selection is not an architectural lock-in: provider/model stays backend-configurable, DAI-044 deterministic fallback remains active, and a different provider/model can be evaluated later if latency, cost, quality, availability, policy, or product requirements justify reopening the decision.
 - See `docs/testing/DAI-045_PROMPT_REGRESSION.md`.
 
+## 2026-09-18 — Production hosting target confirmed
+
+- Status: Confirmed.
+- DAI-072 repository-side production validation passed all 12 gates.
+- Cloudflare Pages + Pages Functions is the selected browser-MVP hosting target.
+- Static editor/play output is built into `dist/`; `/api/natural-edit` remains a same-origin Pages Function.
+- `OPENAI_API_KEY` remains server-side as a Cloudflare runtime Secret and is not bundled into browser output.
+- `_routes.json` restricts Function invocation to `/api/*`; Function source is not copied into static `dist/`.
+- Security output includes CSP, `X-Content-Type-Options`, and index `Cache-Control: no-store`.
+- Visible-Chrome built-output smoke passed with valid START state, onboarding ready/close behavior, production assets only, and zero console/page/request/HTTP errors.
+- Reviewed evidence JSON SHA-256: `71d6969f14c11acbea3c6b5d2ea30cc691ba41aef5d416d140a178bd2795e290`.
+- Reviewed screenshot SHA-256: `55fd7fcae2e19e8bdd461b1222c115bbf78577abae011b4a94ab0ec06d959622`.
+- Final public `pages.dev` URL deployment, secret configuration, and end-to-end hosted smoke remain DAI-081 acceptance work.
+- See `docs/architecture/adr/ADR-002-HOSTING-CLOUDFLARE-PAGES.md`, `docs/testing/DAI-072_HOSTING.md`, and `docs/deployment/CLOUDFLARE_PAGES.md`.
+
 ## Open decisions
 
 - Play perspective
 - Combat model
 - Browser local LLM runtime/model
-- Hosting
 - Mobile scope
 - Final focus category
 
