@@ -35,6 +35,7 @@ artifacts/intent-routing/
 artifacts/prompt-regression/
 artifacts/simulator/
 artifacts/agents/
+artifacts/metrics/
 
 # Unity candidates
 Library/
