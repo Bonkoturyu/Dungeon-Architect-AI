@@ -34,8 +34,9 @@ test('aggregate metrics capture deterministic contrast across the three built-in
   assert.equal(aggregate.successRate, 1);
   assert.equal(aggregate.failureCount, 0);
   assert.equal(aggregate.failureConcentration, null);
-  assert.equal(aggregate.means.moves, 3);
-  assert.equal(aggregate.means.detourMoves, 1);
+  assert.equal(aggregate.means.steps, 3);
+  assert.equal(aggregate.means.moves, 2.666667);
+  assert.equal(aggregate.means.detourMoves, 0.666667);
   assert.equal(aggregate.means.hazardRoomEntries, 0.333333);
   assert.equal(aggregate.means.treasureCaptureRate, 0.333333);
   assert.equal(aggregate.routeDiversity.uniqueRouteCount, 3);
