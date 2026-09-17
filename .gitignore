@@ -42,6 +42,7 @@ artifacts/explainable-summary/
 artifacts/onboarding/
 artifacts/browser-performance/
 artifacts/hosting/
+artifacts/hosting-public/
 
 # Unity candidates
 Library/
