@@ -8,7 +8,7 @@
 
 DAI-071 verifies the current production browser surface after the editor, validation gate, natural-language edit UI, play loop, explainability work, and DAI-070 onboarding have been integrated.
 
-This is intentionally different from the earlier M1 renderer-selection benchmark. M1 compared renderer candidates; DAI-071 checks the actual current editor/play application for startup responsiveness, interaction latency, browser errors, and basic resource bounds.
+This is intentionally different from the earlier M1 renderer-selection benchmark. M1 compared renderer candidates; DAI-071 checks the actual current editor/play application for client-side readiness, interaction latency, browser errors, and basic resource bounds.
 
 ## Frozen production target
 
@@ -19,12 +19,22 @@ This is intentionally different from the earlier M1 renderer-selection benchmark
 - onboarding dismissed before interaction measurements;
 - no network/provider call required for the core performance probe.
 
+## Startup measurement boundary
+
+The first production attempt exposed a harness-boundary defect: the original `10,000 ms` startup gate used `performance.now()` from navigation start while the page was served by the Vite development server. That value includes cold dev-server module transformation and delivery, so it is not a clean measurement of the integrated browser application's client-side initialization.
+
+The revised protocol does **not** hide that time. Cold local navigation-to-ready remains recorded as diagnostic evidence. The hard readiness gate instead starts at the last observed browser resource `responseEnd` and measures the remaining client-side time until the editor/onboarding ready boundary.
+
+This preserves the relevant DAI-071 question—whether the loaded integrated browser surface initializes and responds acceptably—without pretending that local Vite cold-transform overhead is hosted production startup latency. Hosted end-to-end load behavior belongs to DAI-072/DAI-081 once the deployment target exists.
+
 ## Evidence metrics
 
 The visible-Chrome runner records:
 
-- page navigation-to-editor-ready elapsed time;
-- navigation-to-onboarding-ready elapsed time;
+- cold local navigation-to-editor-ready elapsed time as a diagnostic value;
+- cold local navigation-to-onboarding-ready elapsed time as a diagnostic value;
+- last observed resource `responseEnd` and client-ready latency after that boundary;
+- navigation timing metadata;
 - DOM node count;
 - canvas CSS and backing dimensions;
 - Chrome JS heap usage when `performance.memory` is available;
@@ -36,7 +46,8 @@ The visible-Chrome runner records:
 
 The production smoke must satisfy all of the following:
 
-- editor and onboarding become ready within `10,000 ms`;
+- editor client readiness after the last observed resource response completes within `2,000 ms`;
+- onboarding client readiness after the last observed resource response completes within `2,000 ms`;
 - editor remains valid and START-eligible;
 - 120-frame cadence sample completes within `5,000 ms`;
 - cadence p95 is below `100 ms`;
@@ -62,6 +73,7 @@ git fetch origin; git switch feat/dai-071-browser-performance; git pull --ff-onl
 
 ## Explicit non-goals
 
+- no hosted end-to-end startup claim before DAI-072/DAI-081;
 - no cross-device performance claim;
 - no mobile acceptance decision (DAI-075);
 - no Safari/Firefox support claim without executed evidence;
