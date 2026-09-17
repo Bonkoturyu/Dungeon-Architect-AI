@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS.** Cloudflare Pages + Pages Functions is the selected hosting target for validation. Repository-side build, Function, security, and smoke infrastructure are implemented; production validation evidence is pending.
+**DONE.** Cloudflare Pages + Pages Functions is confirmed as the production hosting target after repository-side production validation passed.
 
 ## Scope
 
@@ -23,23 +23,38 @@ See:
 - `docs/architecture/adr/ADR-002-HOSTING-CLOUDFLARE-PAGES.md`
 - `docs/deployment/CLOUDFLARE_PAGES.md`
 
-## Repository-side production evidence contract
+## Reviewed production evidence
 
-The one-command validation must verify:
+Repository-side validation passed on 2026-09-18.
 
-1. audited `package-lock.json` is unchanged;
-2. complete production Node suite passes, including Pages Function contract tests;
-3. `npm run build:hosting` creates `dist/index.html`, production assets, the demo fixture, and `_headers`;
-4. the built HTML references bundled `/assets/` files rather than source `/apps/` or `/packages/` modules;
-5. the built surface starts in visible Chrome with valid START state and onboarding;
-6. security headers include CSP and `X-Content-Type-Options`;
-7. index caching is configured as `no-store`;
-8. browser console/page/request/HTTP error collections are empty.
+- generated: `2026-09-17T15:14:12.396Z`;
+- Node.js: `v24.15.0`;
+- Chrome: `152.0.7977.83`;
+- JSON SHA-256: `71d6969f14c11acbea3c6b5d2ea30cc691ba41aef5d416d140a178bd2795e290`;
+- PNG SHA-256: `55fd7fcae2e19e8bdd461b1222c115bbf78577abae011b4a94ab0ec06d959622`;
+- `passed = true`;
+- all 12 acceptance checks passed.
 
-Expected local evidence:
+Observed build hashes:
 
-- `artifacts/hosting/dai-072-hosting.json`
-- `artifacts/hosting/dai-072-hosting.png`
+- `dist/index.html`: `a9999eb3b237cd0726a2a128db968f77191b10c951dd0449969f92b8f8af37c3`;
+- `dist/_headers`: `3f8e8e5b1233cdc43719ac9085b8c3c4c23b599ae420a5c3b6b2b591b15ebae0`;
+- `dist/_routes.json`: `9ac04b0b988b70aa7a8aeef820ca5653cab83721b0df8013e54a4450f1d22040`;
+- demo fixture: `fe1924ddcda87bfc8ede99f9aa6663e3f78339bdc92ab3963ba3a0d905807818`;
+- emitted JS asset: `index-DuDz9imf.js`.
+
+The evidence verifies:
+
+1. production `dist/index.html` and hashed assets exist;
+2. the frozen demo fixture is copied;
+3. CSP and `X-Content-Type-Options` are emitted;
+4. index caching is configured as `no-store`;
+5. `_routes.json` restricts Functions invocation to `/api/*`;
+6. Function source is not copied into static `dist/`;
+7. the built editor starts valid and START-eligible;
+8. onboarding initializes and closes successfully;
+9. only production assets are requested rather than source `/apps/` or `/packages/` modules;
+10. console/page/request/HTTP error collections are empty.
 
 ## Pages Function contract
 
@@ -66,20 +81,11 @@ node scripts/run-dai-072-public-smoke.mjs
 
 That smoke exercises the deployed same-origin `/api/natural-edit` path through the public browser UI and verifies Undo/Redo and network/browser cleanliness.
 
-## Required repository-side validation
-
-```powershell
-git fetch origin
-git switch feat/dai-072-cloudflare-hosting
-git pull --ff-only origin feat/dai-072-cloudflare-hosting
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-dai-072-validation.ps1
-```
-
 ## Completion boundary
 
-DAI-072 may be marked DONE when repository-side production validation passes and ADR-002 is updated from Pending production validation to Confirmed as the deployment target.
+DAI-072 is complete because the deployable hosting shape, production build, Function boundary, routing restrictions, security headers, and built-surface browser behavior passed production validation.
 
-The absence of a final `pages.dev` URL at DAI-072 completion is intentional; that URL and deployed end-to-end acceptance belong to DAI-081.
+The absence of a final `pages.dev` URL at DAI-072 completion is intentional; that URL, runtime secret setup, and deployed end-to-end acceptance belong to DAI-081.
 
 ## Explicit non-goals
 
