@@ -36,6 +36,7 @@ artifacts/prompt-regression/
 artifacts/simulator/
 artifacts/agents/
 artifacts/metrics/
+artifacts/intent-fit/
 
 # Unity candidates
 Library/
