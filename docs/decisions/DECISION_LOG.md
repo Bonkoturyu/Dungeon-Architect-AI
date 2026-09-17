@@ -79,6 +79,18 @@
 - This selection is not an architectural lock-in: provider/model stays backend-configurable, DAI-044 deterministic fallback remains active, and a different provider/model can be evaluated later if latency, cost, quality, availability, policy, or product requirements justify reopening the decision.
 - See `docs/testing/DAI-045_PROMPT_REGRESSION.md`.
 
+## 2026-09-17 — Hosting target candidate
+
+- Status: Pending Evidence.
+- DAI-072 selected Cloudflare Pages + Pages Functions as the production hosting target for repository-side validation.
+- Static editor/play assets will be built to `dist/`; `/api/natural-edit` will remain a same-origin Pages Function.
+- `OPENAI_API_KEY` remains server-side as a Cloudflare runtime Secret and must never enter the browser bundle.
+- Official Cloudflare documentation reviewed on 2026-09-17 confirms GitHub integration, preview deployments, file-based Functions routing, runtime bindings/secrets, explicit Node version pinning, and current Pages/Workers Free-plan limits relevant to the MVP.
+- Repository implementation adds no new npm dependency and reuses the existing OpenAI transport + constrained natural-edit adapter.
+- The decision remains Open until the DAI-072 production validation passes and ADR-002 is promoted to Confirmed.
+- Final public `pages.dev` URL acceptance remains DAI-081 rather than DAI-072.
+- See `docs/architecture/adr/ADR-002-HOSTING-CLOUDFLARE-PAGES.md` and `docs/deployment/CLOUDFLARE_PAGES.md`.
+
 ## Open decisions
 
 - Play perspective
