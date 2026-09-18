@@ -72,3 +72,4 @@ docs/registration/private/
 models/
 model-cache/
 .browser-cache/
+artifacts/video/
