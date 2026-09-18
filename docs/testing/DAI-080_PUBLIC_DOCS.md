@@ -2,7 +2,7 @@
 
 ## Status
 
-**DONE.** Public submission documentation passed deterministic production validation on 2026-09-18.
+**DONE for the pre-DAI-081 snapshot / REVALIDATION PENDING.** The original public-doc audit passed, but DAI-081 changed the public feature surface and hosted-demo claims; the audit contract has been updated and must be rerun before PR #35 merges.
 
 ## Purpose
 
@@ -24,16 +24,17 @@ The documentation must distinguish:
 - `docs/submission/CHECKLIST.md`;
 - `docs/submission/DEMO_STORYBOARD.md`.
 
-## Required truthfulness boundary
+## Current truthfulness boundary after DAI-081
 
-The current editor/play surface must **not** claim that initial full-dungeon DESCRIBE → GENERATE is already exposed.
+The public docs may now claim the verified hosted flow:
 
-The docs must instead state that:
+`DESCRIBE → GENERATE → EDIT → VALIDATE → START → PLAY → RESULT`.
 
-- DesignIntent and procedural generator layers exist and are tested;
-- current integrated browser flow starts from a valid sample;
-- manual editing, constrained natural-language edit, validation, START, Play, Result are integrated;
-- full first-generation UI wiring remains a submission blocker.
+They must still state the bounded DesignIntent→DungeonSpec semantics, constrained natural-language edit vocabulary, desktop-only support scope, pending PCE Perspective/Combat decision, no persistence/accounts, and remaining submission packaging tasks.
+
+## DAI-081-triggered re-audit
+
+DAI-081 added the hosted Generate surface and live public URL, so the deterministic public-doc audit was updated. A fresh evidence JSON is required before the hosted-demo PR merges.
 
 ## DAI-080 audit gates
 
