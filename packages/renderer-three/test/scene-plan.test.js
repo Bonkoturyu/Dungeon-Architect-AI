@@ -96,9 +96,20 @@ test('diagonal logical edge is rendered as an orthogonal path with one doorway p
   assert.ok(corridor.boxes.length >= 2);
   assert.equal(openings(roomGroup(plan, 'a'), 'diag').length, 1);
   assert.equal(openings(roomGroup(plan, 'b'), 'diag').length, 1);
-  assert.ok(corridor.boxes.every((box) =>
-    box.rotationY === 0 || box.rotationY === -Math.PI / 2));
   assert.ok(corridor.route.length >= 3);
+  const segmentBoxes = corridor.boxes.filter((box) => box.part.startsWith('corridor-floor-'));
+  const junctionBoxes = corridor.boxes.filter((box) => box.part.startsWith('corridor-junction-'));
+  assert.ok(segmentBoxes.every((box) =>
+    box.rotationY === 0 || box.rotationY === -Math.PI / 2));
+  assert.equal(junctionBoxes.length, corridor.route.length - 2);
+  for (let index = 1; index < corridor.route.length - 1; index += 1) {
+    const point = corridor.route[index];
+    const junction = junctionBoxes[index - 1];
+    assert.equal(junction.position.x, point.x);
+    assert.equal(junction.position.z, point.z);
+    assert.equal(junction.size.x, 3);
+    assert.equal(junction.size.z, 3);
+  }
 });
 
 test('multiple corridors incident to one room prefer separate doorway sides', () => {
@@ -128,6 +139,42 @@ test('multiple corridors incident to one room prefer separate doorway sides', ()
   const sides = a.doorOpenings.map((opening) => opening.side);
   assert.equal(new Set(sides).size, sides.length);
   assert.equal(sides.length, 2);
+});
+
+test('every orthogonal bend has an explicit square junction floor', () => {
+  const multi = {
+    schemaVersion: '1.0',
+    id: 'bend-junction-fixture',
+    seed: 4,
+    rooms: [
+      { id: 'a', x: 0, z: 0, width: 8, depth: 8 },
+      { id: 'b', x: 12, z: 12, width: 8, depth: 8 },
+      { id: 'c', x: 24, z: 12, width: 8, depth: 8 },
+    ],
+    corridors: [
+      { id: 'ab', fromRoomId: 'a', toRoomId: 'b', width: 3, kind: 'alternate' },
+      { id: 'bc', fromRoomId: 'b', toRoomId: 'c', width: 3, kind: 'backbone' },
+    ],
+    entities: [
+      { id: 'start', type: 'start', roomId: 'a' },
+      { id: 'goal', type: 'goal', roomId: 'c' },
+    ],
+    events: [],
+  };
+
+  const plan = createDungeonScenePlan(multi);
+  for (const corridor of plan.corridorGroups) {
+    const junctions = corridor.boxes.filter((box) => box.part.startsWith('corridor-junction-'));
+    assert.equal(junctions.length, Math.max(0, corridor.route.length - 2));
+    for (let index = 1; index < corridor.route.length - 1; index += 1) {
+      const point = corridor.route[index];
+      const junction = junctions[index - 1];
+      assert.equal(junction.position.x, point.x);
+      assert.equal(junction.position.z, point.z);
+      assert.ok(junction.size.x > 0);
+      assert.ok(junction.size.z > 0);
+    }
+  }
 });
 
 test('rejects invalid DungeonSpec before planning', () => {
