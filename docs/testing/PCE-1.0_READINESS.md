@@ -67,10 +67,10 @@ The pre-production protocol defined four prerequisites. Current production statu
 |---|---|---|
 | Production start gate passed | PASS | M0 production start gate is Confirmed |
 | 3 Perspective candidates render the same fixture and Play tasks 1–10 interactions work | BLOCKED | DAI-016 proves only the current minimal top-down 3-room START→Goal slice; treasure/trap/recovery/landmark task interactions and first/third-person candidate controls are not implemented |
-| 10 mobile tap target IDs fixed in production UI | PENDING DAI-075 | PCE-1.0 makes mobile tasks conditional; DAI-075 is validating desktop-only submission scope, which would make this prerequisite N/A rather than Blocked |
+| 10 mobile tap target IDs fixed in production UI | N/A | DAI-075 / ADR-003 confirms mobile is outside the current desktop-only submission acceptance scope; PCE-1.0 already defines a Mobile-N/A path |
 | `P01`–`P12` participant/device/input/viewport conditions available | BLOCKED | participant sessions have not been run or recorded |
 
-Therefore **PCE-1.0 cannot produce a valid Perspective or Combat selection yet**.
+DAI-075 removes the mobile-target prerequisite for this submission, but **PCE-1.0 still cannot produce a valid Perspective or Combat selection yet** because the remaining candidate/task and participant prerequisites are blocked.
 
 ## Evidence that does not substitute for PCE-1.0
 
@@ -110,7 +110,7 @@ Before participant evaluation can begin, production still needs:
 6. the three frozen Play-camera candidates with candidate-equivalent task controls;
 7. Combat candidate policies `none`, `avoidant optional`, and `mandatory encounter`;
 8. the five frozen non-combat edit operations used during Combat trials;
-9. 10 mobile target IDs and mobile gate instrumentation where mobile is in scope (N/A if DAI-075 desktop-only submission scope is confirmed);
+9. mobile target IDs and mobile gate instrumentation — N/A for the current submission because DAI-075 / ADR-003 confirms desktop-only scope;
 10. 12 pseudonymous participant sessions under the frozen ordering and shared controls.
 
 ## Decision boundary
