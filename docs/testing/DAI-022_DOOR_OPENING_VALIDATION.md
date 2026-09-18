@@ -15,12 +15,12 @@ The implementation carves deterministic wall openings from the corridor rectangl
 - intersects that rectangle with each endpoint room's four wall segments;
 - records plain-data `doorOpenings` on the corresponding room scene-plan group;
 - carves wall boxes around the resulting opening intervals rather than drawing a continuous wall through the corridor;
-- supports cardinal and diagonal corridors;
-- supports a corridor crossing a room corner by opening both affected walls;
+- historical DAI-022 evidence supported direct cardinal/diagonal corridor slabs; DAI-026 supersedes the diagonal presentation with orthogonal routed corridor segments;
+- DAI-026 owns the newer requirement that a logical diagonal edge must use one explicit doorway per endpoint and right-angle bends rather than cut diagonally through room corners;
 - merges overlapping opening intervals on the same wall before generating wall segments;
 - leaves corridor floor, Start marker, Goal marker, Core contracts, and serialized `DungeonSpec` unchanged.
 
-These are structural passage openings. Lock/unlock door-state logic remains a later event/runtime concern.
+These are structural passage openings. The direct-diagonal visual behavior described by the original DAI-022 screenshot is superseded by DAI-026; lock/unlock door-state logic remains a separate event/runtime concern.
 
 ## Geometry rules
 
