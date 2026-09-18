@@ -74,15 +74,18 @@ Free-form runtime code generation is not part of MVP.
 - complex action combat
 - large enemy roster
 
+## Confirmed production scope decisions
+
+- 3D stack: Three.js 0.185.1 (ADR-001)
+- Cloud LLM provider path: OpenAI Responses API with `gpt-5.6-luna` for the current MVP
+- Hosting: Cloudflare Pages + Pages Functions (ADR-002)
+- Mobile scope: desktop Chrome supported; mobile/narrow best-effort only (ADR-003)
+
 ## Unresolved by design
 
-These require production evidence before confirmation:
+These still require production evidence before confirmation:
 
-- 3D stack
 - Play perspective
 - Combat model
-- Cloud LLM provider
 - Browser local LLM runtime/model
-- Hosting
-- Mobile scope
 - Final focus category

@@ -48,10 +48,9 @@ The following remain evidence-gated until production measurements are complete:
 - Cloud LLM provider
 - Browser local LLM runtime/model
 - Hosting
-- Mobile scope
 - Final focus category
 
-Do not mark an Open/Pending decision as Confirmed without direct production evidence and an ADR/Decision Log entry.
+Do not mark an Open/Pending decision as Confirmed without direct production evidence and an ADR/Decision Log entry. Confirmed decisions, including the DAI-075 desktop-only mobile scope, must be treated as current production constraints until explicitly reopened.
 
 ## Legal and supply-chain rules
 
