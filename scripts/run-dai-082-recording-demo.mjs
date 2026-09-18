@@ -12,8 +12,11 @@ const generationPrompt = 'Create a fair but tense 5-minute dungeon with explorat
 const editPrompt = 'Move the treasure to the room that contains the goal.';
 const auto = process.env.DAI_RECORDING_AUTOCLOSE === '1';
 const ffmpegPath = process.env.FFMPEG_PATH || 'ffmpeg';
+const ffprobePath = process.env.FFPROBE_PATH || 'ffprobe';
 const ffmpegProbe = spawnSync(ffmpegPath, ['-version'], { windowsHide: true, encoding: 'utf8' });
+const ffprobeProbe = spawnSync(ffprobePath, ['-version'], { windowsHide: true, encoding: 'utf8' });
 const ffmpegAvailable = !ffmpegProbe.error && ffmpegProbe.status === 0;
+const ffprobeAvailable = !ffprobeProbe.error && ffprobeProbe.status === 0;
 const useFfmpeg = process.env.DAI_RECORD_WITH_FFMPEG !== '0' && ffmpegAvailable;
 const capturePath = path.join(outputDir, 'dai-082-demo-capture.mp4');
 let ffmpegProcess = null;
@@ -24,10 +27,10 @@ fs.mkdirSync(outputDir, { recursive: true });
 
 const rl = readline.createInterface({ input, output });
 const marks = [];
-const startedAt = performance.now();
+let startedAt = null;
 
 function elapsedMs() {
-  return Math.round(performance.now() - startedAt);
+  return startedAt === null ? 0 : Math.round(performance.now() - startedAt);
 }
 
 function mark(stage, extra = {}) {
@@ -95,6 +98,32 @@ async function stopFfmpegCapture() {
   if (processToStop.exitCode === null) processToStop.kill('SIGTERM');
 }
 
+
+function probeCapture(filePath) {
+  if (!ffprobeAvailable || !fs.existsSync(filePath)) return null;
+  const result = spawnSync(ffprobePath, [
+    '-v', 'error',
+    '-show_entries', 'format=duration,size',
+    '-show_entries', 'stream=codec_type,width,height,r_frame_rate',
+    '-of', 'json',
+    filePath,
+  ], {
+    windowsHide: true,
+    encoding: 'utf8',
+  });
+  if (result.status !== 0) return null;
+  try {
+    const parsed = JSON.parse(result.stdout);
+    return {
+      durationSeconds: Number(parsed.format?.duration ?? 0),
+      sizeBytes: Number(parsed.format?.size ?? 0),
+      streams: parsed.streams ?? [],
+    };
+  } catch {
+    return null;
+  }
+}
+
 let browser;
 try {
   browser = await chromium.launch({
@@ -123,11 +152,15 @@ try {
     console.log(`ffmpeg detected. Recording will be written automatically to: ${capturePath}`);
     startFfmpegCapture();
     await wait(1200);
+    if (ffmpegProcess?.exitCode !== null) {
+      throw new Error(`ffmpeg exited before recording started. ${ffmpegStderr.slice(-2000)}`);
+    }
   } else {
     console.log('ffmpeg automatic capture is unavailable or disabled.');
     console.log('Start any screen recorder now, then continue.');
     if (!auto) await rl.question('Press Enter to begin the scripted demo... ');
   }
+  startedAt = performance.now();
   mark('recording-begin');
   mark('live-demo-ready');
   await wait(3500);
@@ -269,8 +302,19 @@ try {
 
   if (useFfmpeg) {
     await stopFfmpegCapture();
+    const captureProbe = probeCapture(capturePath);
     evidence.recordingBoundary.actualVideoFileCreated = fs.existsSync(capturePath);
     evidence.recordingBoundary.capturePath = capturePath;
+    evidence.recordingBoundary.ffprobeAvailable = ffprobeAvailable;
+    evidence.recordingBoundary.captureProbe = captureProbe;
+    evidence.checks.actualCaptureCreated = evidence.recordingBoundary.actualVideoFileCreated === true;
+    if (captureProbe) {
+      evidence.checks.actualCaptureUnder180Seconds =
+        Number.isFinite(captureProbe.durationSeconds) &&
+        captureProbe.durationSeconds > 0 &&
+        captureProbe.durationSeconds < 180;
+    }
+    evidence.passed = Object.values(evidence.checks).every(Boolean);
     fs.writeFileSync(
       path.join(outputDir, 'dai-082-recording-run.json'),
       JSON.stringify(evidence, null, 2) + '\n',
@@ -291,6 +335,7 @@ try {
     throw new Error(`DAI-082 recording run failed: ${JSON.stringify(checks)}`);
   }
 } finally {
+  await stopFfmpegCapture();
   rl.close();
   if (browser) await browser.close();
 }
