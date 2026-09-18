@@ -1,24 +1,20 @@
 # Demo Storyboard
 
-**Status: BLOCKED FOR FINAL RECORDING.**
+**Status: READY FOR DAI-082 RECORDING after the DAI-081 privacy/public-doc re-audit closes.**
 
-Target duration remains under 3 minutes, but do not record the final submission video until the judge-facing initial **DESCRIBE → GENERATE** surface exists and DAI-081 hosted-demo acceptance passes.
+Target: under 3 minutes.
 
-## Target final storyboard
+## Recommended final storyboard
 
 1. Problem statement.
-2. Enter a prompt describing the desired dungeon.
-3. Generate the low-poly dungeon and show its validation/intent summary.
-4. Make one manual edit.
-5. Make one constrained natural-language edit.
-6. Show validation/simulation/intent-fit feedback.
+2. Open the live Cloudflare Pages demo.
+3. Enter a dungeon generation prompt.
+4. Generate the low-poly dungeon; briefly show Validation PASS.
+5. Make one manual edit.
+6. Make the verified natural-language treasure relocation edit.
 7. Press START.
-8. Play a short route from Start toward Goal.
-9. Show Result / reveal / explanation.
+8. Play a short route to Goal.
+9. Show cleared Result and Return to Edit.
 10. End card: **Dungeon Architect AI — Describe. Edit. Play.**
 
-## Current captureable subset
-
-The current integrated browser build can already demonstrate steps 4, 5, 7, 8 and the basic Result part of step 9 using the valid sample fixture.
-
-Do not splice separately tested backend generation into the final video in a way that implies the current judge-facing UI performs steps 2–3 when it does not.
+Keep the recording on the actual public candidate. Do not substitute isolated test harnesses for judge-facing behavior.

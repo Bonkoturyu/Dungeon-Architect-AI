@@ -2,12 +2,12 @@
 
 ## Status
 
-**IN PROGRESS — Gate 1 DONE.** DAI-081 is split into two evidence gates.
+**DONE.** Both hosted-demo functional gates and the required DAI-074/080 post-integration re-audits passed.
 
 1. integrate the missing DESCRIBE → GENERATE surface into the production browser build and validate it locally;
 2. deploy the merged candidate to Cloudflare Pages, configure the production secret, and validate the real public HTTPS URL end-to-end.
 
-This document covers gate 1. DAI-081 remains open until gate 2 passes.
+Gate 1 and Gate 2 are complete; this document records the final hosted-demo evidence.
 
 ## Generation path
 
@@ -115,13 +115,68 @@ After gate 1 merges to `main`:
 3. output: `dist/`;
 4. add `OPENAI_API_KEY` as a production Secret;
 5. deploy `main`;
-6. run a public smoke against the resulting `https://*.pages.dev` URL.
+6. run `scripts/run-dai-081-public-validation.ps1` against the resulting `https://*.pages.dev` URL.
 
-DAI-081 is **not DONE** until the public HTTPS smoke passes.
+DAI-081 functional acceptance is complete because the public HTTPS smoke passed, and the required post-integration privacy/public-doc re-audits also passed.
+
+The Gate-2 public smoke requires:
+
+- HTTPS deployment;
+- five-step onboarding including Describe;
+- live DesignIntent generation selecting `cloud` rather than fallback;
+- generated START-eligible 5..20 room DungeonSpec;
+- generated Start/Goal/enemy/treasure/trap and supported event;
+- live natural-language edit against the generated spec;
+- both `/api/design-intent` and `/api/natural-edit` returning HTTP 200;
+- generated dungeon clearing to Goal;
+- Return to Edit preserving the generated spec;
+- zero browser/page/request/HTTP errors.
+
+Run:
+
+```powershell
+$env:DAI_PUBLIC_URL = 'https://<project>.pages.dev'
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-dai-081-public-validation.ps1
+```
+
+Expected evidence:
+
+- `artifacts/hosting-public/dai-081-public.json`;
+- `artifacts/hosting-public/dai-081-public.png`.
+
+## Gate-2 public production evidence
+
+Reviewed public evidence generated at `2026-09-18T15:58:08.818Z` with Node.js `v24.15.0` and Chrome `153.0.8010.50`.
+
+- public URL: `https://dungeon-architect-ai.pages.dev/`;
+- evidence JSON SHA-256: `2fdd088c8de25be64169ce0dd617e40c04467d9303e1ca686a312d55b817a8b1`;
+- screenshot PNG SHA-256: `6d35333cf4e21f0766ca0c0e6477803b2a35f7cde37754b5d8dcb47566dee3fb`;
+- navigation ready: ~1787.257 ms;
+- `passed = true`;
+- all 13 public gates passed;
+- live generation selected `cloud`;
+- generated 5 rooms, routeChoice 0.55, 8 entities and 1 event;
+- generated entity types included enemy / goal / recovery / start / trap / treasure;
+- live natural-language edit produced `move-entity / treasure-1 / room-005`;
+- `/api/design-intent` returned 200;
+- `/api/natural-edit` returned 200;
+- generated dungeon cleared in 4 moves, visiting all 5 rooms;
+- Return to Edit preserved the generated spec;
+- console/page/request/HTTP errors were empty;
+- local API key was not required and full prompts were excluded from evidence.
+
+## Governance finalization
+
+The required DAI-074 and DAI-080 re-audits passed after the hosted generation endpoint and public claims were added.
+
+- DAI-074 re-audit JSON SHA-256: `087af17acc04f4a46b7522e18e97d45de503ea9a9ba74bdcb9eeff726cfb2d18`;
+- DAI-080 re-audit JSON SHA-256: `ff1f8fbeee18ea8143ffc07bb7594461eaad1c90ebaa7cb0e125755fdee5bc1e`.
+
+DAI-081 is complete.
 
 ## Boundaries
 
 - local gate-1 smoke mocks provider HTTP responses; it proves browser integration, not live provider availability;
 - cloud intent quality remains backed by DAI-045 live regression;
-- final live public generation/natural-edit calls are required in gate 2;
+- live public generation/natural-edit calls passed Gate 2;
 - this task does not select Perspective/Combat or add mobile support.

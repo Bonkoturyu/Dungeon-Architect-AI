@@ -2,7 +2,7 @@
 
 ## Status
 
-**DONE.** Public submission documentation passed deterministic production validation on 2026-09-18.
+**DONE.** The DAI-081 post-integration public-document revalidation passed on 2026-09-19.
 
 ## Purpose
 
@@ -24,16 +24,17 @@ The documentation must distinguish:
 - `docs/submission/CHECKLIST.md`;
 - `docs/submission/DEMO_STORYBOARD.md`.
 
-## Required truthfulness boundary
+## Current truthfulness boundary after DAI-081
 
-The current editor/play surface must **not** claim that initial full-dungeon DESCRIBE → GENERATE is already exposed.
+The public docs may now claim the verified hosted flow:
 
-The docs must instead state that:
+`DESCRIBE → GENERATE → EDIT → VALIDATE → START → PLAY → RESULT`.
 
-- DesignIntent and procedural generator layers exist and are tested;
-- current integrated browser flow starts from a valid sample;
-- manual editing, constrained natural-language edit, validation, START, Play, Result are integrated;
-- full first-generation UI wiring remains a submission blocker.
+They must still state the bounded DesignIntent→DungeonSpec semantics, constrained natural-language edit vocabulary, desktop-only support scope, pending PCE Perspective/Combat decision, no persistence/accounts, and remaining submission packaging tasks.
+
+## DAI-081-triggered re-audit
+
+DAI-081 added the hosted Generate surface and live public URL, so the deterministic public-doc audit was updated. A fresh evidence JSON is required before the hosted-demo PR merges.
 
 ## DAI-080 audit gates
 
@@ -77,6 +78,25 @@ Reviewed evidence generated at `2026-09-18T10:07:02.794Z` with Node.js `v24.15.0
 - local Markdown links all resolve;
 - no TODO/TBD placeholders remain in the public-doc set;
 - DAI-080 did not change repository visibility, claim a hosted URL, or claim the generation UI is complete.
+
+## DAI-081 post-integration evidence
+
+Reviewed evidence generated at `2026-09-18T16:08:18.166Z` with Node.js `v24.15.0`.
+
+- evidence JSON SHA-256: `ff1f8fbeee18ea8143ffc07bb7594461eaad1c90ebaa7cb0e125755fdee5bc1e`;
+- `passed = true`;
+- all 12 updated public-document checks passed;
+- public docs exist;
+- README truthfully claims the verified full hosted flow;
+- desktop support scope and remaining submission tasks are explicit;
+- Judge Quick Start matches the public Generate/Edit/Play flow;
+- Known Limitations cover bounded generation, edit vocabulary, PCE, locomotion, mobile, persistence and packaging;
+- sample prompts reflect the public E2E;
+- checklist tracks the current candidate;
+- storyboard is ready for DAI-082 after governance closure;
+- all local Markdown links resolve;
+- no TODO/TBD placeholders remain;
+- hosted URL and generation UI may now be claimed complete, while repository visibility remains unchanged.
 
 ## Completion boundary
 

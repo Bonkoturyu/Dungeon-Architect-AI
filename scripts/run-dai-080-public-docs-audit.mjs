@@ -60,15 +60,16 @@ for (const [file, text] of Object.entries(texts)) {
 
 const checks = {
   requiredPublicDocsExist: publicDocs.every((file) => fs.existsSync(file)),
-  readmeDistinguishesCurrentAndTargetFlow:
-    readme.includes('Current verified browser build') &&
-    readme.includes('Not yet submission-complete') &&
-    readme.includes('VALID SAMPLE') &&
-    readme.includes('DESCRIBE → GENERATE → EDIT → VALIDATE → START → PLAY → RESULT / REVEAL'),
-  readmeDoesNotClaimInitialGenerationIntegrated:
-    readme.includes('initial full-dungeon') &&
-    readme.includes('not exposed') &&
-    readme.includes('required integration before final submission'),
+  readmeClaimsVerifiedFullFlow:
+    readme.includes('https://dungeon-architect-ai.pages.dev/') &&
+    readme.includes('DESCRIBE') &&
+    readme.includes('GENERATE') &&
+    readme.includes('EDIT') &&
+    readme.includes('VALIDATE') &&
+    readme.includes('START') &&
+    readme.includes('PLAY') &&
+    readme.includes('RESULT') &&
+    readme.includes('production public E2E'),
   readmeLinksRequiredPublicDocs:
     allIncludes(readme, [
       'docs/submission/JUDGE_QUICKSTART.md',
@@ -84,48 +85,47 @@ const checks = {
     ]),
   readmeDesktopScopeExplicit:
     readme.includes('desktop Google Chrome on Windows') &&
-    readme.includes('Mobile/narrow layouts are best-effort only'),
+    readme.includes('mobile/narrow layouts are best-effort only'),
   readmePendingSubmissionItemsExplicit:
-    readme.includes('DAI-081') &&
     readme.includes('DAI-082') &&
     readme.includes('DAI-083') &&
     readme.includes('DAI-084') &&
-    readme.includes('public-repository visibility switch is also still pending'),
+    readme.includes('GitHub repository is still private'),
   judgeGuideCurrentFlowTruthful:
-    quick.includes('does **not yet expose the initial full-dungeon DESCRIBE → GENERATE prompt surface**') &&
+    quick.includes('https://dungeon-architect-ai.pages.dev/') &&
+    quick.includes('Create a fair but tense 5-minute dungeon with exploration and a few dangerous rewards.') &&
     quick.includes('Move the treasure to the room that contains the goal.') &&
     quick.includes('desktop Google Chrome on Windows'),
   knownLimitationsComplete:
     allIncludes(limits, [
-      'Initial full-dungeon generation UI is not integrated yet',
+      'DesignIntent → DungeonSpec mapping is deliberately bounded',
       'Natural-language edit vocabulary is narrow',
-      'Perspective and combat selection are still Pending Evidence',
+      'Perspective and combat selection are Pending Evidence',
+      'Player locomotion is room-graph based',
       'Mobile is outside the supported submission scope',
       'No persistence/accounts',
-      'Public deployment is not final yet',
+      'Submission packaging is still open',
     ]),
-  samplePromptsSeparateIntegratedAndBackend:
-    prompts.includes('Current verified judge-facing prompt') &&
-    prompts.includes('Move the treasure to the room that contains the goal.') &&
-    prompts.includes('Backend DesignIntent regression prompts') &&
-    prompts.includes('not yet the current editor-screen generation workflow'),
-  checklistCompletedDocsAndCompliance:
+  samplePromptsReflectPublicE2E:
+    prompts.includes('Verified public generation prompt') &&
+    prompts.includes('Create a fair but tense 5-minute dungeon with exploration and a few dangerous rewards.') &&
+    prompts.includes('Verified public natural-language edit') &&
+    prompts.includes('Move the treasure to the room that contains the goal.'),
+  checklistTracksCurrentCandidate:
+    checklist.includes('- [x] Hosted browser demo') &&
+    checklist.includes('- [x] Fresh-browser public demo pass') &&
     checklist.includes('- [x] Third-party disclosure complete') &&
     checklist.includes('- [x] AI usage disclosure complete') &&
     checklist.includes('- [x] LICENSE / NOTICE complete') &&
-    checklist.includes('- [x] Secret/privacy audit pass') &&
-    checklist.includes('- [x] Known limitations documented') &&
-    checklist.includes('- [x] Sample prompts documented'),
-  checklistDoesNotPrematurelyCloseSubmission:
     checklist.includes('- [ ] Public repository') &&
-    checklist.includes('- [ ] Hosted browser demo') &&
     checklist.includes('- [ ] Demo video under 3 minutes') &&
     checklist.includes('- [ ] Short description') &&
-    checklist.includes('- [ ] Focus category'),
-  storyboardBlocksMisleadingFinalCapture:
-    storyboard.includes('BLOCKED FOR FINAL RECORDING') &&
-    storyboard.includes('DESCRIBE → GENERATE') &&
-    storyboard.includes('Do not splice separately tested backend generation'),
+    checklist.includes('- [ ] Focus category') &&
+    checklist.includes('- [ ] DAI-081 privacy/public-doc re-audit after generation endpoint integration'),
+  storyboardReadyAfterGovernanceReaudit:
+    storyboard.includes('READY FOR DAI-082 RECORDING') &&
+    storyboard.includes('privacy/public-doc re-audit closes') &&
+    storyboard.includes('actual public candidate'),
   localMarkdownLinksResolve: missingLocalLinks.length === 0,
   noTodoOrTbdPlaceholders: placeholderFindings.length === 0,
 };
@@ -141,8 +141,8 @@ const evidence = {
   placeholderFindings,
   boundaries: {
     repositoryVisibilityChangedByDAI080: false,
-    hostedUrlClaimedComplete: false,
-    generationUiClaimedComplete: false,
+    hostedUrlClaimedComplete: true,
+    generationUiClaimedComplete: true,
   },
 };
 

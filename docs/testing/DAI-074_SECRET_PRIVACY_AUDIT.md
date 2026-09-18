@@ -2,7 +2,7 @@
 
 ## Status
 
-**DONE.** Production secret/privacy validation passed on 2026-09-18.
+**DONE.** The DAI-081 post-integration secret/privacy re-audit passed on 2026-09-19.
 
 ## Purpose
 
@@ -40,7 +40,11 @@ The audit must verify:
 - the Pages Function returns `Cache-Control: no-store`;
 - the Pages Function source has no console logging;
 - the browser production surface does not use localStorage/sessionStorage/IndexedDB/cookies;
-- the browser natural-edit request uses the documented bounded context.
+- the browser natural-edit request uses the documented bounded context;
+- the browser generation request sends prompt only;
+- the hosted DesignIntent Function does not echo the generation prompt or secret;
+- the hosted DesignIntent Function returns `Cache-Control: no-store`;
+- both Pages Function sources contain no console logging.
 
 ## First production attempt finding
 
@@ -77,6 +81,35 @@ Reviewed evidence generated at `2026-09-18T08:09:11.864Z` with Node.js `v24.15.0
 - Function response echoed neither full prompt nor secret and used `Cache-Control: no-store`;
 - evidence itself contained neither full prompt nor secret.
 
+## DAI-081 re-audit scope
+
+DAI-081 added the public `/api/design-intent` endpoint and live DESCRIBE → GENERATE flow. The audit has been extended to verify that endpoint in addition to the existing natural-edit path.
+
+The 2026-09-18 evidence below remains valid for the earlier candidate snapshot, but it does not close the DAI-081 change. A new evidence JSON is required before PR #35 merges.
+
+## DAI-081 post-integration evidence
+
+Reviewed evidence generated at `2026-09-18T16:08:17.667Z` with Node.js `v24.15.0`.
+
+- evidence JSON SHA-256: `087af17acc04f4a46b7522e18e97d45de503ea9a9ba74bdcb9eeff726cfb2d18`;
+- `passed = true`;
+- all 18 checks passed;
+- forbidden tracked secret paths: none;
+- current high-confidence secret findings: none;
+- Git patch-history high-confidence secret findings: none;
+- production `dist/` provider-secret findings: none;
+- persistent browser-storage findings: none;
+- both OpenAI request paths kept `store: false`;
+- natural-edit outbound context remained bounded to request + room IDs + entity ID/type/roomId;
+- hosted DesignIntent response echoed neither generation prompt nor secret and used `Cache-Control: no-store`;
+- natural-edit response echoed neither prompt nor secret and used `Cache-Control: no-store`;
+- both Pages Function sources had no console logging;
+- browser generation request sent prompt only;
+- browser natural-edit request used the bounded context;
+- evidence contained neither full prompt nor secret.
+
+This closes the DAI-081 new-endpoint re-audit condition.
+
 ## Build boundary
 
 DAI-074 runs after `npm run build:hosting` so the actual production `dist/` output is scanned rather than assuming source boundaries imply bundle safety.
@@ -85,8 +118,8 @@ DAI-074 runs after `npm run build:hosting` so the actual production `dist/` outp
 
 ```powershell
 git fetch origin
-git switch feat/dai-074-secret-privacy-audit
-git pull --ff-only origin feat/dai-074-secret-privacy-audit
+git switch feat/dai-081-public-gate
+git pull --ff-only origin feat/dai-081-public-gate
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-dai-074-validation.ps1
 ```
 

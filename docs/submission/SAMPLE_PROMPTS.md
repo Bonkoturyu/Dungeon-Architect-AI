@@ -1,8 +1,20 @@
 # Sample Prompts
 
-## Current verified judge-facing prompt
+## Verified public generation prompt
 
-The integrated browser UI currently has one production-verified natural-language edit example:
+The live public candidate has end-to-end evidence for:
+
+```text
+Create a fair but tense 5-minute dungeon with exploration and a few dangerous rewards.
+```
+
+Verified path:
+
+`DESCRIBE → cloud DesignIntent → deterministic DungeonSpec → START → Goal → Result`
+
+The public run generated a valid five-room dungeon and completed it in four moves.
+
+## Verified public natural-language edit
 
 ```text
 Move the treasure to the room that contains the goal.
@@ -10,19 +22,16 @@ Move the treasure to the room that contains the goal.
 
 Verified behavior:
 
-- one live `gpt-5.6-luna` call;
-- translated command: `move-entity / treasure-1 / room-goal`;
-- applied through the same EditSession boundary as manual edits;
-- Undo/Redo verified;
-- API key and full prompt excluded from evidence.
+- translated into one constrained `move-entity` command;
+- applied to the generated authoring spec;
+- START remained valid;
+- public `/api/natural-edit` returned HTTP 200.
 
-Other semantically similar relocation requests may work, but they are not claimed as the frozen judge acceptance prompt.
+## DesignIntent regression corpus
 
-## Backend DesignIntent regression prompts
+The cloud DesignIntent pipeline also retains a frozen ten-case regression corpus with beginner/short, danger, greed, low-combat, learnability, fairness, exploration, contradictory, unsupported-code and mixed-language cases.
 
-The production cloud DesignIntent pipeline has a separate ten-case regression corpus. These prompts validate intent translation semantics and are **not yet the current editor-screen generation workflow**.
-
-Representative examples from the frozen corpus:
+Representative examples:
 
 ### Beginner / short
 
@@ -54,10 +63,8 @@ Representative examples from the frozen corpus:
 ⚔️🏰 5 min / beginner OK / scary / low combat pls。寄り道は少し欲しい。
 ```
 
-The complete frozen corpus is in:
+Complete corpus:
 
 `spec/design-intent/fixtures/dai-045-prompt-regression-v1.json`
 
-## Unsupported / safety regression
-
-The corpus also contains contradictory and arbitrary-code requests. The DesignIntent path must remain schema-constrained and must not turn prompt text into executable runtime code.
+The corpus also includes contradictory and arbitrary-code requests. The DesignIntent path remains schema-constrained and does not convert prompt text into executable runtime code.
