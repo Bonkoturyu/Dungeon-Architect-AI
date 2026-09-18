@@ -2,7 +2,7 @@
 
 ## Status
 
-**DONE for the pre-DAI-081 snapshot / REVALIDATION PENDING.** The original public-doc audit passed, but DAI-081 changed the public feature surface and hosted-demo claims; the audit contract has been updated and must be rerun before PR #35 merges.
+**DONE.** The DAI-081 post-integration public-document revalidation passed on 2026-09-19.
 
 ## Purpose
 
@@ -78,6 +78,25 @@ Reviewed evidence generated at `2026-09-18T10:07:02.794Z` with Node.js `v24.15.0
 - local Markdown links all resolve;
 - no TODO/TBD placeholders remain in the public-doc set;
 - DAI-080 did not change repository visibility, claim a hosted URL, or claim the generation UI is complete.
+
+## DAI-081 post-integration evidence
+
+Reviewed evidence generated at `2026-09-18T16:08:18.166Z` with Node.js `v24.15.0`.
+
+- evidence JSON SHA-256: `ff1f8fbeee18ea8143ffc07bb7594461eaad1c90ebaa7cb0e125755fdee5bc1e`;
+- `passed = true`;
+- all 12 updated public-document checks passed;
+- public docs exist;
+- README truthfully claims the verified full hosted flow;
+- desktop support scope and remaining submission tasks are explicit;
+- Judge Quick Start matches the public Generate/Edit/Play flow;
+- Known Limitations cover bounded generation, edit vocabulary, PCE, locomotion, mobile, persistence and packaging;
+- sample prompts reflect the public E2E;
+- checklist tracks the current candidate;
+- storyboard is ready for DAI-082 after governance closure;
+- all local Markdown links resolve;
+- no TODO/TBD placeholders remain;
+- hosted URL and generation UI may now be claimed complete, while repository visibility remains unchanged.
 
 ## Completion boundary
 
