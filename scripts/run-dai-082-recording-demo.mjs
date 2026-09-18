@@ -231,11 +231,29 @@ try {
 
   const routeRoomIds = await page.evaluate(({ startRoomId, goalRoomId }) => {
     const state = window.__DAI_EDITOR_SLICE__.getState();
-    const adjacency = new Map(state.rooms.map((room) => [room.id, []]));
-    for (const corridor of state.corridors) {
-      adjacency.get(corridor.fromRoomId)?.push(corridor.toRoomId);
-      adjacency.get(corridor.toRoomId)?.push(corridor.fromRoomId);
+    const snapshot = state.play?.snapshot ?? null;
+
+    if (!snapshot || !Array.isArray(snapshot.rooms) || !Array.isArray(snapshot.corridors)) {
+      return {
+        route: [],
+        error: 'PLAY_SNAPSHOT_MISSING_GRAPH',
+        debug: {
+          stateKeys: Object.keys(state ?? {}),
+          playKeys: state?.play ? Object.keys(state.play) : [],
+          snapshotKeys: snapshot ? Object.keys(snapshot) : [],
+        },
+      };
     }
+
+    const adjacency = new Map(snapshot.rooms.map((room) => [room.id, []]));
+    for (const corridor of snapshot.corridors) {
+      if (!adjacency.has(corridor.fromRoomId) || !adjacency.has(corridor.toRoomId)) continue;
+      adjacency.get(corridor.fromRoomId).push(corridor.toRoomId);
+      adjacency.get(corridor.toRoomId).push(corridor.fromRoomId);
+    }
+
+    for (const neighbors of adjacency.values()) neighbors.sort();
+
     const queue = [startRoomId];
     const previous = new Map([[startRoomId, null]]);
     while (queue.length) {
@@ -247,21 +265,39 @@ try {
         queue.push(next);
       }
     }
-    if (!previous.has(goalRoomId)) return [];
+
+    if (!previous.has(goalRoomId)) {
+      return {
+        route: [],
+        error: 'GOAL_ROUTE_NOT_FOUND',
+        debug: {
+          startRoomId,
+          goalRoomId,
+          adjacency: Object.fromEntries([...adjacency.entries()]),
+        },
+      };
+    }
+
     const route = [];
     for (let current = goalRoomId; current != null; current = previous.get(current)) {
       route.push(current);
     }
-    return route.reverse();
+    return { route: route.reverse(), error: null, debug: null };
   }, { startRoomId, goalRoomId });
 
-  if (routeRoomIds.length < 2) {
+  if (routeRoomIds.error) {
+    throw new Error(`Unable to resolve Play route: ${routeRoomIds.error} ${JSON.stringify(routeRoomIds.debug)}`);
+  }
+
+  const resolvedRouteRoomIds = routeRoomIds.route;
+
+  if (resolvedRouteRoomIds.length < 2) {
     throw new Error(`No visible Play route found from ${startRoomId} to ${goalRoomId}`);
   }
 
-  mark('play-route-resolved', { routeRoomIds });
+  mark('play-route-resolved', { routeRoomIds: resolvedRouteRoomIds });
 
-  for (const roomId of routeRoomIds.slice(1)) {
+  for (const roomId of resolvedRouteRoomIds.slice(1)) {
     await clickSpec(page, roomId);
     await page.waitForFunction(
       (expectedRoomId) => {
