@@ -2,13 +2,13 @@
 
 ## Scope
 
-This document describes the current Dungeon Architect AI browser submission candidate and its production AI boundary.
+This document describes the current Dungeon Architect AI public browser candidate and its production AI boundary.
 
 ## Browser-local data
 
-The current editor keeps authoring/play state in memory for the active page session.
+The editor keeps authoring/play state in memory for the active page session.
 
-The production editor does not intentionally persist project state, prompts, credentials, or user identifiers through:
+It does not intentionally persist project state, prompts, credentials, or user identifiers through:
 
 - `localStorage`;
 - `sessionStorage`;
@@ -17,34 +17,46 @@ The production editor does not intentionally persist project state, prompts, cre
 
 There is no account, profile, analytics, advertising, telemetry, or database feature in the current MVP.
 
+## Initial generation data flow
+
+When the user presses **Generate dungeon**, the browser sends a same-origin `POST /api/design-intent` request containing only:
+
+- the natural-language generation request.
+
+The Pages Function routes the request through the production Cloud → deterministic fallback intent router.
+
+When cloud is configured, the server-side OpenAI path transforms the prompt into schema-constrained `DesignIntent`. OpenAI requests explicitly use `store: false`.
+
+The browser receives validated DesignIntent plus bounded provider/model/usage metadata. It then performs deterministic `DesignIntent → DungeonSpec` generation locally.
+
+The Function does not intentionally echo the full prompt or provider credential and uses `Cache-Control: no-store`.
+
 ## Natural-language edit data flow
 
-When the user presses **Apply AI edit**, the browser sends a same-origin `POST /api/natural-edit` request containing:
+When the user presses **Apply AI edit**, the browser sends same-origin `POST /api/natural-edit` containing:
 
-1. the natural-language edit request;
-2. a bounded authoring context:
+1. the edit request;
+2. bounded authoring context:
    - room IDs only;
    - entity ID, type, and room ID only.
 
 The browser does not send renderer objects, full runtime state, credentials, account data, or arbitrary files.
 
-The Cloudflare Pages Function forwards the normalized request to the configured OpenAI Responses API model through the existing backend transport.
-
-The OpenAI request explicitly uses `store: false`. This is a response-storage control and is **not** represented as Zero Data Retention.
-
-Provider processing and any provider-side retention remain governed by the provider's applicable API terms and controls.
+The Pages Function forwards the normalized request through the production OpenAI edit adapter. The OpenAI request explicitly uses `store: false`.
 
 ## Response boundary
 
-The browser receives only:
+The generation endpoint returns validated DesignIntent and bounded provider/model/usage metadata.
+
+The edit endpoint returns:
 
 - one validated supported `EditCommand`;
 - provider/model identifiers;
 - bounded token-usage metadata when available.
 
-The Pages Function does not intentionally echo the full prompt or provider credential in its response.
+Both APIs use `Cache-Control: no-store` and must not intentionally echo provider credentials.
 
-API responses use `Cache-Control: no-store`.
+`store: false` is a response-storage control and is **not** represented as Zero Data Retention. Provider processing/retention remains governed by applicable API terms and controls.
 
 ## Secrets
 
@@ -58,15 +70,9 @@ It must not be placed in:
 - command-line arguments;
 - documentation examples containing a real value.
 
-## Cloud DesignIntent adapter
-
-The repository also contains the production cloud DesignIntent adapter. Its OpenAI request likewise sets `store: false`.
-
-The currently verified hosted editor surface exposes the natural-language edit path; any future browser surface that enables initial cloud DesignIntent generation must preserve the same server-side credential and privacy boundary.
-
 ## Re-audit conditions
 
-DAI-074 must be reopened if the submission candidate adds any of the following:
+DAI-074 must be reopened if the candidate adds:
 
 - accounts or persistent user identifiers;
 - analytics/telemetry;
@@ -76,3 +82,5 @@ DAI-074 must be reopened if the submission candidate adds any of the following:
 - a new AI/provider endpoint;
 - cookies or browser storage;
 - file upload.
+
+DAI-081 added `/api/design-intent`, so the privacy audit is explicitly rerun before the hosted-demo PR merges.
