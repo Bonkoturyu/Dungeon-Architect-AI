@@ -68,7 +68,7 @@ GitHub Issues are not created unless explicitly authorized.
 ## M8
 - DAI-080 Public docs — DONE after DAI-081 revalidation (12/12 updated checks passed for live hosted Generate claims, Judge Guide, Known Limitations, public sample prompts, checklist/storyboard, link resolution, and no TODO/TBD placeholders. Reviewed JSON SHA-256 `ff1f8fbeee18ea8143ffc07bb7594461eaad1c90ebaa7cb0e125755fdee5bc1e`.)
 - DAI-081 Hosted demo — DONE (Gate 1 local integration 12/12; Gate 2 public HTTPS 13/13 at `https://dungeon-architect-ai.pages.dev/`; live cloud Generate, live AI edit, both API routes HTTP 200, valid generated dungeon, START→Goal clear in 4 moves, Return to Edit, zero browser/network errors. Public JSON SHA-256 `2fdd088c8de25be64169ce0dd617e40c04467d9303e1ca686a312d55b817a8b1`, PNG `6d35333cf4e21f0766ca0c0e6477803b2a35f7cde37754b5d8dcb47566dee3fb`; post-integration DAI-074/080 re-audits also passed.)
-- DAI-082 Video — OPEN
+- DAI-082 Video — IN PROGRESS (under-3-minute requirement confirmed; 2:00–2:30 timed storyboard, narration draft, public-candidate recording runner, recording-run evidence, and deterministic video-plan audit added. DAI-082 remains open until an actual recorded video file is verified <180 seconds and reviewed for truthful coverage.)
 - DAI-083 Description/category — OPEN
 - DAI-084 Candidate hash/rollback — OPEN
 
