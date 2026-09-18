@@ -67,7 +67,7 @@ GitHub Issues are not created unless explicitly authorized.
 
 ## M8
 - DAI-080 Public docs — DONE (all 14 documentation audit checks passed: README distinguishes current sample-based integrated flow from the final DESCRIBE→GENERATE target, generation UI incompleteness is explicit, judge guide/limitations/prompts/checklist/storyboard are consistent, all local Markdown links resolve, and no TODO/TBD placeholders remain. Repository visibility and hosted URL remain intentionally unclaimed. Reviewed JSON SHA-256 `2b5cd4665b7b222d7ded9e7fb077cc64ee835603218c7354acf7862a666feb50`.)
-- DAI-081 Hosted demo — OPEN
+- DAI-081 Hosted demo — IN PROGRESS (gate 1 adds the missing DESCRIBE→GENERATE browser surface: same-origin `/api/design-intent` routes Cloud→deterministic fallback, validated DesignIntent maps deterministically into DungeonSpec with Start/Goal/enemy/treasure/trap + supported event, onboarding gains Describe, and an integrated Generate→AI edit→START→Goal smoke is ready. DAI-081 remains open until gate 1 evidence passes, merges to main, then the real Cloudflare HTTPS deployment with production secret passes public E2E.)
 - DAI-082 Video — OPEN
 - DAI-083 Description/category — OPEN
 - DAI-084 Candidate hash/rollback — OPEN
