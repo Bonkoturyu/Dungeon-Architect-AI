@@ -115,9 +115,34 @@ After gate 1 merges to `main`:
 3. output: `dist/`;
 4. add `OPENAI_API_KEY` as a production Secret;
 5. deploy `main`;
-6. run a public smoke against the resulting `https://*.pages.dev` URL.
+6. run `scripts/run-dai-081-public-validation.ps1` against the resulting `https://*.pages.dev` URL.
 
 DAI-081 is **not DONE** until the public HTTPS smoke passes.
+
+The Gate-2 public smoke requires:
+
+- HTTPS deployment;
+- five-step onboarding including Describe;
+- live DesignIntent generation selecting `cloud` rather than fallback;
+- generated START-eligible 5..20 room DungeonSpec;
+- generated Start/Goal/enemy/treasure/trap and supported event;
+- live natural-language edit against the generated spec;
+- both `/api/design-intent` and `/api/natural-edit` returning HTTP 200;
+- generated dungeon clearing to Goal;
+- Return to Edit preserving the generated spec;
+- zero browser/page/request/HTTP errors.
+
+Run:
+
+```powershell
+$env:DAI_PUBLIC_URL = 'https://<project>.pages.dev'
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-dai-081-public-validation.ps1
+```
+
+Expected evidence:
+
+- `artifacts/hosting-public/dai-081-public.json`;
+- `artifacts/hosting-public/dai-081-public.png`.
 
 ## Boundaries
 
