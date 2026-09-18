@@ -48,7 +48,9 @@
     "smoke:mobile-scope": "node scripts/run-dai-075-mobile-scope-smoke.mjs",
     "validate:public-docs": "node scripts/run-dai-080-public-docs-audit.mjs",
     "smoke:generation-surface": "node scripts/run-dai-081-generation-surface-smoke.mjs",
-    "smoke:hosted-demo-public": "node scripts/run-dai-081-public-smoke.mjs"
+    "smoke:hosted-demo-public": "node scripts/run-dai-081-public-smoke.mjs",
+    "demo:video": "node scripts/run-dai-082-recording-demo.mjs",
+    "validate:video-plan": "node scripts/run-dai-082-video-plan-audit.mjs"
   },
   "devDependencies": {
     "@babylonjs/core": "9.18.0",
