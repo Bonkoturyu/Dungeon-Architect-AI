@@ -94,15 +94,17 @@
 - Final public `pages.dev` URL deployment, secret configuration, and end-to-end hosted smoke remain DAI-081 acceptance work.
 - See `docs/architecture/adr/ADR-002-HOSTING-CLOUDFLARE-PAGES.md`, `docs/testing/DAI-072_HOSTING.md`, and `docs/deployment/CLOUDFLARE_PAGES.md`.
 
-## 2026-09-18 — Mobile scope candidate
+## 2026-09-18 — Mobile scope confirmed
 
-- Status: Pending Evidence.
-- DAI-075 proposes desktop Google Chrome on Windows as the supported judging target for the current hackathon submission.
+- Status: Confirmed.
+- DAI-075 confirms desktop Google Chrome on Windows as the supported judging target for the current hackathon submission.
 - Reference acceptance viewport remains 1440 × 900 from the DAI-071 production browser evidence.
 - Mobile/narrow layouts are best-effort only and are not advertised as supported submission targets.
 - A narrow-screen UI notice discloses the limitation and directs judges to desktop Chrome.
-- Production validation must preserve desktop readiness and show graceful narrow-view limitation disclosure without horizontal overflow or browser/network errors.
-- PCE-1.0 already defines mobile tasks as conditional and a Mobile-N/A scoring path; if DAI-075 is confirmed, the ten mobile tap target IDs are N/A for this submission.
+- Production validation passed all 13 desktop/narrow scope checks: both viewports initialized valid/START-eligible, horizontal overflow was 0, narrow limitation disclosure was visible, and browser/network error collections were empty.
+- PCE-1.0 already defines mobile tasks as conditional and a Mobile-N/A scoring path; the ten mobile tap target IDs are therefore N/A for this submission.
+- Reviewed evidence JSON SHA-256: `041f1d964ab342bf49d5972af9dfed73fa6575780178635487525da2c0a0616b`.
+- Reviewed desktop/narrow screenshots: `22fd5b67df8493bdd3764c1cd5d24960e1550b5b7a7108f1e957f3995fd1d392` / `d9ac4a543d7d1fbb571041169a995ea8419505e81470ced832d689eae46a2796`.
 - This does not select Perspective/Combat or satisfy the remaining PCE participant/task prerequisites.
 - See `docs/architecture/adr/ADR-003-MOBILE-SCOPE-DESKTOP-ONLY.md` and `docs/testing/DAI-075_MOBILE_SCOPE.md`.
 
@@ -111,7 +113,6 @@
 - Play perspective
 - Combat model
 - Browser local LLM runtime/model
-- Mobile scope
 - Final focus category
 
 These remain Open until their production evidence and final ADR/decision entry exist.
