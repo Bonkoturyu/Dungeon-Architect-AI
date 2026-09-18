@@ -58,6 +58,7 @@ try {
     allRoutesConflictFree: result.allRoutesConflictFree === true,
     distinctDoorSidesWherePossible: result.distinctDoorSidesWherePossible === true,
     logicalDiagonalsHaveBends: result.logicalDiagonalsHaveBends === true,
+    allBendsHaveJunctionFloor: result.allBendsHaveJunctionFloor === true,
     publicDemoHasAlternateRoute: result.logicalDiagonalCorridorCount >= 1,
     browserErrorsAbsent:
       consoleErrors.length === 0 &&
@@ -84,6 +85,7 @@ try {
     diagonalSegments: result.diagonalSegments,
     routeConflicts: result.routeConflicts,
     duplicateDoorSides: result.duplicateDoorSides,
+    missingBendJunctions: result.missingBendJunctions,
     consoleErrors,
     pageErrors,
     failedRequests,
