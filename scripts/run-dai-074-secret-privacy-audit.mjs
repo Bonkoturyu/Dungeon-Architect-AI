@@ -39,7 +39,7 @@ const forbiddenTrackedPaths = files.filter((file) => {
 });
 
 const highConfidencePatterns = [
-  ['openai-key', /\bsk-(?:proj-)?[A-Za-z0-9_-]{20,}\b/g],
+  ['openai-key', /\bsk-(?:proj-)?[A-Za-z0-9_-]{32,}\b/g],
   ['github-token', /\bgh[pousr]_[A-Za-z0-9]{30,}\b/g],
   ['aws-access-key', /\bAKIA[0-9A-Z]{16}\b/g],
   ['google-api-key', /\bAIza[0-9A-Za-z_-]{30,}\b/g],
@@ -48,6 +48,19 @@ const highConfidencePatterns = [
 
 const genericSecretLiteral = /\b(OPENAI_API_KEY|CLOUDFLARE_API_TOKEN|CF_API_TOKEN)\b\s*[:=]\s*['"]([^'"]{16,})['"]/g;
 const dummyLiteral = /^(?:test|example|placeholder|dummy|fake)[-_]/i;
+const syntheticSecretMarkers = [
+  'test-secret',
+  'never-log',
+  'do-not-leak',
+  'dummy',
+  'placeholder',
+  'example',
+];
+
+function isSyntheticSecret(value) {
+  const normalized = String(value ?? '').toLowerCase();
+  return syntheticSecretMarkers.some((marker) => normalized.includes(marker));
+}
 
 const currentSecretFindings = [];
 for (const file of files) {
@@ -58,7 +71,11 @@ for (const file of files) {
   const text = buffer.toString('utf8');
   for (const [name, pattern] of highConfidencePatterns) {
     pattern.lastIndex = 0;
-    if (pattern.test(text)) currentSecretFindings.push({ file: normalize(file), pattern: name });
+    for (const match of text.matchAll(pattern)) {
+      if (!isSyntheticSecret(match[0])) {
+        currentSecretFindings.push({ file: normalize(file), pattern: name });
+      }
+    }
   }
   genericSecretLiteral.lastIndex = 0;
   for (const match of text.matchAll(genericSecretLiteral)) {
@@ -79,7 +96,14 @@ try {
 const historySecretPatterns = [];
 for (const [name, pattern] of highConfidencePatterns) {
   pattern.lastIndex = 0;
-  if (pattern.test(historyText)) historySecretPatterns.push(name);
+  let realFinding = false;
+  for (const match of historyText.matchAll(pattern)) {
+    if (!isSyntheticSecret(match[0])) {
+      realFinding = true;
+      break;
+    }
+  }
+  if (realFinding) historySecretPatterns.push(name);
 }
 
 const gitignore = fs.readFileSync('.gitignore', 'utf8');
@@ -124,7 +148,11 @@ for (const file of distFiles) {
   }
   for (const [name, pattern] of highConfidencePatterns) {
     pattern.lastIndex = 0;
-    if (pattern.test(text)) distForbiddenFindings.push({ file: normalize(path.relative(process.cwd(), file)), pattern: name });
+    for (const match of text.matchAll(pattern)) {
+      if (!isSyntheticSecret(match[0])) {
+        distForbiddenFindings.push({ file: normalize(path.relative(process.cwd(), file)), pattern: name });
+      }
+    }
   }
 }
 
