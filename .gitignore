@@ -47,6 +47,7 @@ artifacts/legal/
 artifacts/privacy/
 artifacts/mobile-scope/
 artifacts/public-docs/
+artifacts/generation-surface/
 
 # Unity candidates
 Library/
