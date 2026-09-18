@@ -73,20 +73,24 @@ npm run demo:video
 The runner:
 
 1. opens the public HTTPS candidate in visible Chrome;
-2. waits for the operator to start OBS / Windows capture;
-3. performs Generate;
-4. demonstrates one manual room edit and Undo;
-5. performs the verified natural-language edit;
-6. STARTs the generated dungeon and clicks through rooms to Goal;
-7. shows the cleared Result and Return to Edit;
-8. waits for the operator to stop recording.
+2. detects `ffmpeg` / `ffprobe` from PATH;
+3. when ffmpeg is available, automatically records the primary Windows desktop with `gdigrab` at 30 fps;
+4. performs Generate;
+5. demonstrates one manual room edit and Undo;
+6. performs the verified natural-language edit;
+7. STARTs the generated dungeon and clicks through rooms to Goal;
+8. shows the cleared Result and Return to Edit;
+9. stops ffmpeg cleanly and probes the resulting MP4 duration.
+
+If ffmpeg is unavailable or `DAI_RECORD_WITH_FFMPEG=0`, the runner falls back to manual OBS / Windows capture.
 
 It writes:
 
+- `artifacts/video/dai-082-demo-capture.mp4` when ffmpeg is available;
 - `artifacts/video/dai-082-recording-run.json`;
 - `artifacts/video/dai-082-recording-end.png`.
 
-The JSON validates the scripted run, **not the actual recorded video file**.
+The JSON records scripted-run checks and ffprobe duration metadata when available. Final visual/content approval still requires reviewing the MP4 itself.
 
 ## Recording recommendations
 
@@ -96,7 +100,7 @@ Use the supported judging environment already accepted for the project:
 - desktop Google Chrome;
 - 1440 × 900 or comparable desktop presentation.
 
-Recommended capture settings for a compact submission file:
+Automatic ffmpeg capture uses H.264 (`libx264`), 30 fps, CRF 20, `yuv420p`, and `faststart`. Recommended capture settings for any manual alternative are:
 
 - 1080p or native window resolution;
 - 30 fps;
