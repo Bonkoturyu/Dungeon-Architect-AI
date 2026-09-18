@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS.** Production legal registers, distribution notices, and deterministic audit gates are implemented; production evidence is pending.
+**DONE.** Production legal registers, distribution notices, and deterministic audit gates passed production validation on 2026-09-18.
 
 ## Purpose
 
@@ -74,9 +74,25 @@ Expected evidence:
 
 The validation also regenerates DAI-072 built-surface smoke evidence as a regression guard after adding the distributed notice file.
 
+## Production evidence
+
+Reviewed evidence generated at `2026-09-18T04:24:51.531Z` with Node.js `v24.15.0`.
+
+- evidence JSON SHA-256: `547c436bdf4991c2ce08e2589a97ebc8dd376afadac8afd455e31e3a376ed745`;
+- `passed = true`;
+- all 13 deterministic legal-register checks passed;
+- audited package-lock SHA-256 remained `ce94a9ee4241ee798c0c32c0fda55f00cb4462fb6ba6244acdd3d53589d261cc`;
+- exact top-level reviewed package versions remained pinned;
+- production import closure resolved exactly one external runtime package: `three`;
+- creative-asset candidate scan returned an empty set;
+- development AI usage and runtime AI usage were both recorded;
+- dependency/tooling scopes and production services were recorded;
+- root and distribution third-party notice SHA-256 values matched at `4b0ff0f15ee4eb5bfbc56f1ebafcd6197c2bf96739109a6329c2a10f7f126ecc`;
+- official Three.js r185 MIT notice and distribution copy gates passed.
+
 ## Completion gate
 
-Do not mark DAI-073 DONE until the full production Node suite, hosting production build/smoke, and every deterministic legal audit invariant pass.
+DAI-073 is complete because the full production Node suite, hosting production build/smoke, and every deterministic legal audit invariant passed.
 
 ## Boundaries
 
