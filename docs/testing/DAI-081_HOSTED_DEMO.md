@@ -2,12 +2,12 @@
 
 ## Status
 
-**DONE pending only the required DAI-074/080 post-integration re-audit before PR merge.** Both hosted-demo functional gates have passed.
+**DONE.** Both hosted-demo functional gates and the required DAI-074/080 post-integration re-audits passed.
 
 1. integrate the missing DESCRIBE → GENERATE surface into the production browser build and validate it locally;
 2. deploy the merged candidate to Cloudflare Pages, configure the production secret, and validate the real public HTTPS URL end-to-end.
 
-This document covers gate 1. DAI-081 remains open until gate 2 passes.
+Gate 1 and Gate 2 are complete; this document records the final hosted-demo evidence.
 
 ## Generation path
 
@@ -117,7 +117,7 @@ After gate 1 merges to `main`:
 5. deploy `main`;
 6. run `scripts/run-dai-081-public-validation.ps1` against the resulting `https://*.pages.dev` URL.
 
-DAI-081 functional acceptance is complete because the public HTTPS smoke passed. PR merge is held only for the post-integration privacy/public-doc re-audit required by project governance.
+DAI-081 functional acceptance is complete because the public HTTPS smoke passed, and the required post-integration privacy/public-doc re-audits also passed.
 
 The Gate-2 public smoke requires:
 
@@ -164,6 +164,15 @@ Reviewed public evidence generated at `2026-09-18T15:58:08.818Z` with Node.js `v
 - Return to Edit preserved the generated spec;
 - console/page/request/HTTP errors were empty;
 - local API key was not required and full prompts were excluded from evidence.
+
+## Governance finalization
+
+The required DAI-074 and DAI-080 re-audits passed after the hosted generation endpoint and public claims were added.
+
+- DAI-074 re-audit JSON SHA-256: `087af17acc04f4a46b7522e18e97d45de503ea9a9ba74bdcb9eeff726cfb2d18`;
+- DAI-080 re-audit JSON SHA-256: `ff1f8fbeee18ea8143ffc07bb7594461eaad1c90ebaa7cb0e125755fdee5bc1e`.
+
+DAI-081 is complete.
 
 ## Boundaries
 
