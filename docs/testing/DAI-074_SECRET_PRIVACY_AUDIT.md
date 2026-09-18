@@ -42,6 +42,24 @@ The audit must verify:
 - the browser production surface does not use localStorage/sessionStorage/IndexedDB/cookies;
 - the browser natural-edit request uses the documented bounded context.
 
+## First production attempt finding
+
+The first DAI-074 run failed only:
+
+- `noHighConfidenceCurrentSecrets`;
+- `noHighConfidenceSecretsInGitPatchHistory`.
+
+Review identified a synthetic DAI-043 leakage-test sentinel, `sk-dai-043-test-secret-never-log`, as the cause. It is intentionally committed test data used to prove that evidence sanitization detects/avoids secret-like material; it is not a provider credential.
+
+The scanner was corrected rather than disabling history scanning:
+
+- obvious synthetic markers such as `test-secret`, `never-log`, and `do-not-leak` are excluded from credential findings;
+- the generic literal-assignment scanner still rejects non-placeholder secret values;
+- current tracked files, Git patch history, and production `dist/` remain scanned;
+- matched credential values are still never written to evidence.
+
+A corrected production rerun is required before DAI-074 can be marked DONE.
+
 ## Build boundary
 
 DAI-074 runs after `npm run build:hosting` so the actual production `dist/` output is scanned rather than assuming source boundaries imply bundle safety.
