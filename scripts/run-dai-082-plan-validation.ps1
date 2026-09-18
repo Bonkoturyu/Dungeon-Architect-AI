@@ -28,4 +28,4 @@ Write-Host ''
 Write-Host 'DAI-082 plan validation completed successfully.' -ForegroundColor Green
 Write-Host 'Plan evidence: artifacts/video/dai-082-video-plan.json'
 Write-Host ''
-Write-Host 'Next: start your recorder, then run npm run demo:video to capture the public candidate.'
+Write-Host 'Next: after Cloudflare has deployed corrected main cde9449e, run npm run demo:video. ffmpeg auto-captures when available.'
