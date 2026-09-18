@@ -1,53 +1,56 @@
 # Judge Quick Start
 
-## Current verified browser surface
+## Live demo
 
-The current verified editor/play build opens a valid sample dungeon. It does **not yet expose the initial full-dungeon DESCRIBE → GENERATE prompt surface** in the same screen.
-
-Use this guide to evaluate only the features that are currently production-backed.
+https://dungeon-architect-ai.pages.dev/
 
 ## Supported judging environment
 
 - desktop Google Chrome on Windows;
-- 1440 × 900 or a comparable desktop viewport;
+- 1440 × 900 or comparable desktop viewport;
 - mobile/narrow is best-effort only and is not a supported submission target.
 
 ## Walkthrough
 
-1. Open the editor/play surface.
-2. The four-step Guide opens automatically. Read it or close it.
-3. Confirm the toolbar reports `Validation: PASS · Critical 0`.
-4. Click a room in the 3D view.
-5. Use the Entity inspector to select or move an entity, or add a supported entity.
-6. Try the verified natural-language edit:
+1. Open the live demo. The five-step Guide opens at Welcome and includes Describe, Edit, Validate and Play.
+2. In **Describe / Generate**, enter:
+   ```text
+   Create a fair but tense 5-minute dungeon with exploration and a few dangerous rewards.
+   ```
+3. Click **Generate dungeon**. The production cloud path returns validated DesignIntent and the browser builds a deterministic DungeonSpec.
+4. Confirm `Validation: PASS · Critical 0`.
+5. Use the Entity inspector for a manual authoring change if desired.
+6. In **Natural-language edit**, enter:
    ```text
    Move the treasure to the room that contains the goal.
    ```
-7. The AI path should return one constrained `move-entity` command; the treasure moves to the Goal room.
-8. Undo and Redo are available in Edit mode.
-9. Press `START`.
-10. In Play mode, click an adjacent room, then the Goal room.
-11. Confirm the Result reports a clear.
-12. Use **Return to Edit** to restore the authoring view.
+7. Confirm the AI edit applies one constrained `move-entity` command.
+8. Press `START`.
+9. In Play mode, click connected rooms until Goal.
+10. Confirm Result reports `cleared`.
+11. Use **Return to Edit**; the generated authoring spec remains available.
 
-## What the current AI edit sends
+## AI/data boundary
 
-The browser sends only:
+Generation sends the generation request text to same-origin `/api/design-intent`.
 
-- the natural-language edit request;
+Natural-language edit sends:
+
+- request text;
 - room IDs;
 - entity ID / type / room ID.
 
-The server-side Function holds the provider credential. The browser never receives `OPENAI_API_KEY`.
+The server-side Pages Functions hold `OPENAI_API_KEY`; the browser never receives it.
 
-## What not to infer from this build
+## Current boundaries
 
-This walkthrough does not demonstrate:
+This demo does not claim:
 
-- initial natural-language full-dungeon generation in the current editor UI;
+- arbitrary free-form runtime code generation;
+- general multi-command natural-language editing;
 - mobile support;
 - a final Perspective or Combat selection;
-- persistent save/accounts;
+- persistent saves/accounts;
 - Safari or Firefox acceptance.
 
 See [Known Limitations](KNOWN_LIMITATIONS.md).
