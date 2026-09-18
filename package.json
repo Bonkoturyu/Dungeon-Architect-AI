@@ -48,7 +48,8 @@
     "smoke:mobile-scope": "node scripts/run-dai-075-mobile-scope-smoke.mjs",
     "validate:public-docs": "node scripts/run-dai-080-public-docs-audit.mjs",
     "smoke:generation-surface": "node scripts/run-dai-081-generation-surface-smoke.mjs",
-    "smoke:hosted-demo-public": "node scripts/run-dai-081-public-smoke.mjs"
+    "smoke:hosted-demo-public": "node scripts/run-dai-081-public-smoke.mjs",
+    "smoke:orthogonal-corridors": "node scripts/run-dai-026-orthogonal-corridor-smoke.mjs"
   },
   "devDependencies": {
     "@babylonjs/core": "9.18.0",
