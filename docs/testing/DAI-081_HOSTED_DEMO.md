@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS.** DAI-081 is split into two evidence gates.
+**IN PROGRESS — Gate 1 DONE.** DAI-081 is split into two evidence gates.
 
 1. integrate the missing DESCRIBE → GENERATE surface into the production browser build and validate it locally;
 2. deploy the merged candidate to Cloudflare Pages, configure the production secret, and validate the real public HTTPS URL end-to-end.
@@ -84,6 +84,27 @@ Expected gate-1 evidence:
 
 - `artifacts/generation-surface/dai-081-generation-surface.json`;
 - `artifacts/generation-surface/dai-081-generation-surface.png`.
+
+## Gate-1 production evidence
+
+Reviewed evidence generated at `2026-09-18T14:03:18.185Z` with Node.js `v24.15.0` and Chrome `153.0.8010.50`.
+
+- evidence JSON SHA-256: `43c527c79c65ffe29dfb0a9fed33bb31881a5f5f93932627353d11ad7c353f56`;
+- screenshot PNG SHA-256: `045965983d2c45655968b540670ae98acd99453c13490b99ef4802e92aefa66f`;
+- `passed = true`;
+- all 12 integration checks passed;
+- onboarding order: `welcome → describe → edit → validate → play`;
+- one DesignIntent request was emitted;
+- generated profile: provider `cloud`, seed `4171513421`, 5 rooms, routeChoice `0.6`, 9 entities, 1 event;
+- generated entity types included enemy / goal / recovery / start / trap / treasure;
+- generated authoring state was valid and START-eligible;
+- natural-language edit continued to work against the generated spec;
+- generated dungeon cleared Goal in 4 moves across all 5 rooms;
+- Return to Edit preserved the generated authoring spec;
+- console/page/request/HTTP error collections were empty;
+- evidence stored neither the full generation prompt nor a provider secret.
+
+Gate 1 is complete. DAI-081 remains open only because the real public HTTPS deployment and live provider E2E gate has not run yet.
 
 ## Gate 2 — public deployment
 
