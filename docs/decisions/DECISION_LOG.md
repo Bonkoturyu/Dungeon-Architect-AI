@@ -94,6 +94,18 @@
 - Final public `pages.dev` URL deployment, secret configuration, and end-to-end hosted smoke remain DAI-081 acceptance work.
 - See `docs/architecture/adr/ADR-002-HOSTING-CLOUDFLARE-PAGES.md`, `docs/testing/DAI-072_HOSTING.md`, and `docs/deployment/CLOUDFLARE_PAGES.md`.
 
+## 2026-09-18 — Mobile scope candidate
+
+- Status: Pending Evidence.
+- DAI-075 proposes desktop Google Chrome on Windows as the supported judging target for the current hackathon submission.
+- Reference acceptance viewport remains 1440 × 900 from the DAI-071 production browser evidence.
+- Mobile/narrow layouts are best-effort only and are not advertised as supported submission targets.
+- A narrow-screen UI notice discloses the limitation and directs judges to desktop Chrome.
+- Production validation must preserve desktop readiness and show graceful narrow-view limitation disclosure without horizontal overflow or browser/network errors.
+- PCE-1.0 already defines mobile tasks as conditional and a Mobile-N/A scoring path; if DAI-075 is confirmed, the ten mobile tap target IDs are N/A for this submission.
+- This does not select Perspective/Combat or satisfy the remaining PCE participant/task prerequisites.
+- See `docs/architecture/adr/ADR-003-MOBILE-SCOPE-DESKTOP-ONLY.md` and `docs/testing/DAI-075_MOBILE_SCOPE.md`.
+
 ## Open decisions
 
 - Play perspective
