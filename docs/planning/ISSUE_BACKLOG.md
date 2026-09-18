@@ -27,7 +27,7 @@ GitHub Issues are not created unless explicitly authorized.
 - DAI-023 Structural reachability validation — DONE for corridor connectivity
 - DAI-024 Multiple-route constraints — DONE (exact/monotonic `routeChoice` mapping verified by 240-case production matrix with zero failures)
 - DAI-025 Seed reproducibility tests — DONE
-- DAI-026 Orthogonal corridor presentation — IN PROGRESS (submission-video review exposed a visual-generation defect: alternate graph edges were rendered as center-to-center diagonal corridor slabs, producing overlapping/crossing paths and ambiguous shared room exits. Renderer routing is being replaced with deterministic axis-aligned paths, separate endpoint door sides where possible, collision-free route planning around rooms/existing corridors, and a visible-Chrome regression using the exact public-demo 5-room seed.)
+- DAI-026 Orthogonal corridor presentation — DONE (rejected DAI-082 capture drove two fixes: diagonal/overlapping alternate corridor slabs were replaced with deterministic orthogonal non-conflicting routing, then a follow-up visible bend-floor gap was fixed with explicit junction tiles. Final exact public-demo regression passed orthogonal/overlap/door-side/bend/junction/browser gates with empty finding arrays. Reviewed JSON SHA-256 `128d78b9d855260a9253d105e86460bd9834216fc41c6bfbd226c4b58513d94d`, PNG `ee9cd2e2728a0a144c45cebad59e3c67f3dac05797c766a9ba170c8275508f8d`.)
 
 ## M3
 - DAI-030 Session state — DONE (generic renderer-independent gameplay state + immutable PlaySession transitions verified by production Node evidence)
