@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import readline from 'node:readline/promises';
+import { spawn, spawnSync } from 'node:child_process';
 import { stdin as input, stdout as output } from 'node:process';
 import { chromium } from 'playwright-core';
 
@@ -10,6 +11,13 @@ const outputDir = path.resolve('artifacts/video');
 const generationPrompt = 'Create a fair but tense 5-minute dungeon with exploration and a few dangerous rewards.';
 const editPrompt = 'Move the treasure to the room that contains the goal.';
 const auto = process.env.DAI_RECORDING_AUTOCLOSE === '1';
+const ffmpegPath = process.env.FFMPEG_PATH || 'ffmpeg';
+const ffmpegProbe = spawnSync(ffmpegPath, ['-version'], { windowsHide: true, encoding: 'utf8' });
+const ffmpegAvailable = !ffmpegProbe.error && ffmpegProbe.status === 0;
+const useFfmpeg = process.env.DAI_RECORD_WITH_FFMPEG !== '0' && ffmpegAvailable;
+const capturePath = path.join(outputDir, 'dai-082-demo-capture.mp4');
+let ffmpegProcess = null;
+let ffmpegStderr = '';
 
 if (!fs.existsSync(chromePath)) throw new Error(`Chrome not found: ${chromePath}`);
 fs.mkdirSync(outputDir, { recursive: true });
@@ -46,6 +54,47 @@ async function gate(page) {
   return page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
 }
 
+function startFfmpegCapture() {
+  if (!useFfmpeg) return false;
+  ffmpegProcess = spawn(ffmpegPath, [
+    '-y',
+    '-f', 'gdigrab',
+    '-framerate', '30',
+    '-draw_mouse', '1',
+    '-i', 'desktop',
+    '-c:v', 'libx264',
+    '-preset', 'veryfast',
+    '-crf', '20',
+    '-pix_fmt', 'yuv420p',
+    '-movflags', '+faststart',
+    capturePath,
+  ], {
+    windowsHide: true,
+    stdio: ['pipe', 'ignore', 'pipe'],
+  });
+  ffmpegProcess.stderr.on('data', (chunk) => {
+    ffmpegStderr += chunk.toString();
+    if (ffmpegStderr.length > 20000) ffmpegStderr = ffmpegStderr.slice(-20000);
+  });
+  return true;
+}
+
+async function stopFfmpegCapture() {
+  if (!ffmpegProcess) return;
+  const processToStop = ffmpegProcess;
+  ffmpegProcess = null;
+  const stopped = new Promise((resolve) => {
+    processToStop.once('exit', resolve);
+  });
+  try {
+    processToStop.stdin.write('q\n');
+  } catch {
+    processToStop.kill('SIGTERM');
+  }
+  await Promise.race([stopped, wait(8000)]);
+  if (processToStop.exitCode === null) processToStop.kill('SIGTERM');
+}
+
 let browser;
 try {
   browser = await chromium.launch({
@@ -65,15 +114,21 @@ try {
   page.on('requestfailed', (request) => failedRequests.push({ url: request.url(), failure: request.failure()?.errorText ?? 'unknown' }));
   page.on('response', (response) => { if (response.status() >= 400) httpErrors.push({ url: response.url(), status: response.status() }); });
 
-  await page.goto('about:blank');
-  console.log('');
-  console.log('DAI-082 recording runner ready.');
-  console.log('Frame the Chrome window, start OBS / Windows recording, then begin.');
-  if (!auto) await rl.question('Press Enter to begin the scripted demo... ');
-  mark('recording-begin');
-
   await page.goto(baseUrl, { waitUntil: 'networkidle', timeout: 90_000 });
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__?.ready === true && window.__DAI_ONBOARDING__?.ready === true, null, { timeout: 60_000 });
+
+  console.log('');
+  console.log('DAI-082 recording runner ready.');
+  if (useFfmpeg) {
+    console.log(`ffmpeg detected. Recording will be written automatically to: ${capturePath}`);
+    startFfmpegCapture();
+    await wait(1200);
+  } else {
+    console.log('ffmpeg automatic capture is unavailable or disabled.');
+    console.log('Start any screen recorder now, then continue.');
+    if (!auto) await rl.question('Press Enter to begin the scripted demo... ');
+  }
+  mark('recording-begin');
   mark('live-demo-ready');
   await wait(3500);
 
@@ -212,11 +267,25 @@ try {
     JSON.stringify(evidence, null, 2) + '\n',
   );
 
+  if (useFfmpeg) {
+    await stopFfmpegCapture();
+    evidence.recordingBoundary.actualVideoFileCreated = fs.existsSync(capturePath);
+    evidence.recordingBoundary.capturePath = capturePath;
+    fs.writeFileSync(
+      path.join(outputDir, 'dai-082-recording-run.json'),
+      JSON.stringify(evidence, null, 2) + '\n',
+    );
+  }
+
   console.log('');
   console.log(`Scripted demo complete in ${evidence.scriptedDemoDurationSeconds}s.`);
-  console.log('Stop the screen recording now.');
-  console.log('Then upload the recorded video so its real duration and contents can be checked.');
-  if (!auto) await rl.question('Press Enter to close Chrome... ');
+  if (useFfmpeg) {
+    console.log(`ffmpeg capture complete: ${capturePath}`);
+  } else {
+    console.log('Stop the screen recording now.');
+  }
+  console.log('Upload the recorded video so its real duration and contents can be checked.');
+  if (!auto && !useFfmpeg) await rl.question('Press Enter to close Chrome... ');
 
   if (!evidence.passed) {
     throw new Error(`DAI-082 recording run failed: ${JSON.stringify(checks)}`);
