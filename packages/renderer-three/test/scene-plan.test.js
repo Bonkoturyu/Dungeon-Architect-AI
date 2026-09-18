@@ -45,13 +45,13 @@ test('corridor geometry follows room centers', () => {
   const horizontal = plan.corridorGroups[0].boxes[0];
   assert.equal(horizontal.position.x, 6);
   assert.equal(horizontal.position.z, 0);
-  assert.equal(horizontal.size.x, 12);
+  assert.equal(horizontal.size.x, 4);
   assert.equal(horizontal.rotationY, 0);
 
   const vertical = plan.corridorGroups[1].boxes[0];
   assert.equal(vertical.position.x, 12);
   assert.equal(vertical.position.z, 6);
-  assert.equal(vertical.size.x, 12);
+  assert.equal(vertical.size.x, 4);
   assert.equal(vertical.rotationY, -Math.PI / 2);
 });
 
@@ -72,17 +72,17 @@ test('cardinal corridors carve matching wall openings at both endpoints', () => 
   assert.equal(b.boxes.filter((box) => box.part.startsWith('wall-south-')).length, 2);
 });
 
-test('diagonal corridor carves both walls when its width crosses a room corner', () => {
+test('diagonal logical edge is rendered as an orthogonal path with one doorway per endpoint', () => {
   const diagonal = {
     schemaVersion: '1.0',
-    id: 'diagonal-door-fixture',
+    id: 'orthogonal-diagonal-fixture',
     seed: 2,
     rooms: [
       { id: 'a', x: 0, z: 0, width: 8, depth: 8 },
       { id: 'b', x: 12, z: 12, width: 8, depth: 8 },
     ],
     corridors: [
-      { id: 'diag', fromRoomId: 'a', toRoomId: 'b', width: 3 },
+      { id: 'diag', fromRoomId: 'a', toRoomId: 'b', width: 3, kind: 'alternate' },
     ],
     entities: [
       { id: 'start', type: 'start', roomId: 'a' },
@@ -92,24 +92,29 @@ test('diagonal corridor carves both walls when its width crosses a room corner',
   };
 
   const plan = createDungeonScenePlan(diagonal);
-  assert.deepEqual(openings(roomGroup(plan, 'a'), 'diag').map((opening) => opening.side).sort(), ['east', 'south']);
-  assert.deepEqual(openings(roomGroup(plan, 'b'), 'diag').map((opening) => opening.side).sort(), ['north', 'west']);
+  const corridor = plan.corridorGroups[0];
+  assert.ok(corridor.boxes.length >= 2);
+  assert.equal(openings(roomGroup(plan, 'a'), 'diag').length, 1);
+  assert.equal(openings(roomGroup(plan, 'b'), 'diag').length, 1);
+  assert.ok(corridor.boxes.every((box) =>
+    box.rotationY === 0 || box.rotationY === -Math.PI / 2));
+  assert.ok(corridor.route.length >= 3);
 });
 
-test('overlapping openings on the same wall are merged for wall segmentation', () => {
+test('multiple corridors incident to one room prefer separate doorway sides', () => {
   const multi = {
     schemaVersion: '1.0',
-    id: 'overlap-door-fixture',
+    id: 'multiple-door-fixture',
     seed: 3,
     rooms: [
       { id: 'a', x: 0, z: 0, width: 8, depth: 8 },
       { id: 'b', x: 12, z: 0, width: 8, depth: 8 },
-      { id: 'c', x: 12, z: 2, width: 8, depth: 8 },
+      { id: 'c', x: 12, z: 12, width: 8, depth: 8 },
     ],
     corridors: [
-      { id: 'ab', fromRoomId: 'a', toRoomId: 'b', width: 3 },
-      { id: 'ac', fromRoomId: 'a', toRoomId: 'c', width: 3 },
-      { id: 'bc', fromRoomId: 'b', toRoomId: 'c', width: 1 },
+      { id: 'ab', fromRoomId: 'a', toRoomId: 'b', width: 3, kind: 'backbone' },
+      { id: 'ac', fromRoomId: 'a', toRoomId: 'c', width: 3, kind: 'alternate' },
+      { id: 'bc', fromRoomId: 'b', toRoomId: 'c', width: 3, kind: 'backbone' },
     ],
     entities: [
       { id: 'start', type: 'start', roomId: 'a' },
@@ -120,8 +125,9 @@ test('overlapping openings on the same wall are merged for wall segmentation', (
 
   const plan = createDungeonScenePlan(multi);
   const a = roomGroup(plan, 'a');
-  assert.equal(a.doorOpenings.filter((opening) => opening.side === 'east').length, 2);
-  assert.equal(a.boxes.filter((box) => box.part.startsWith('wall-east-')).length, 2);
+  const sides = a.doorOpenings.map((opening) => opening.side);
+  assert.equal(new Set(sides).size, sides.length);
+  assert.equal(sides.length, 2);
 });
 
 test('rejects invalid DungeonSpec before planning', () => {
