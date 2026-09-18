@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS.** Desktop-only submission scope, narrow-view limitation disclosure, and validation harness are implemented; production evidence is pending.
+**DONE.** Desktop-only submission scope is confirmed by production desktop/narrow evidence.
 
 ## Scope decision under validation
 
@@ -74,6 +74,21 @@ git switch feat/dai-075-mobile-scope
 git pull --ff-only origin feat/dai-075-mobile-scope
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-dai-075-validation.ps1
 ```
+
+## Production evidence
+
+Reviewed evidence:
+
+- generated: `2026-09-18T08:29:19.869Z`;
+- Node.js: `v24.15.0`;
+- Chrome: `153.0.8010.50`;
+- JSON SHA-256: `041f1d964ab342bf49d5972af9dfed73fa6575780178635487525da2c0a0616b`;
+- desktop PNG SHA-256: `22fd5b67df8493bdd3764c1cd5d24960e1550b5b7a7108f1e957f3995fd1d392`;
+- narrow PNG SHA-256: `d9ac4a543d7d1fbb571041169a995ea8419505e81470ced832d689eae46a2796`;
+- all 13 checks passed;
+- both desktop and narrow browser/page/request/HTTP error collections were empty.
+
+The 390 × 844 run is retained only as graceful-limitation evidence. It is not mobile acceptance.
 
 ## Boundaries
 
