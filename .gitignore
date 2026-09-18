@@ -44,6 +44,7 @@ artifacts/browser-performance/
 artifacts/hosting/
 artifacts/hosting-public/
 artifacts/legal/
+artifacts/privacy/
 
 # Unity candidates
 Library/
