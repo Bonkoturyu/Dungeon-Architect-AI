@@ -293,21 +293,69 @@ export function createDungeonScenePlan(spec, style = {}) {
 
   for (const corridor of spec.corridors) {
     const route = corridorRoutes.get(corridor.id);
-    const boxes = corridorRouteSegments(route).map((segment, index) => {
-      const length = Math.abs(segment.to.x - segment.from.x) + Math.abs(segment.to.z - segment.from.z);
+    const segments = corridorRouteSegments(route);
+    const boxes = segments.map((segment, index) => {
+      const isFirst = index === 0;
+      const isLast = index === segments.length - 1;
+      const halfWidth = corridor.width / 2;
+
+      let from = { ...segment.from };
+      let to = { ...segment.to };
+
+      if (!isFirst) {
+        if (segment.axis === 'x') {
+          from.x += Math.sign(to.x - from.x) * halfWidth;
+        } else {
+          from.z += Math.sign(to.z - from.z) * halfWidth;
+        }
+      }
+
+      if (!isLast) {
+        if (segment.axis === 'x') {
+          to.x -= Math.sign(to.x - from.x) * halfWidth;
+        } else {
+          to.z -= Math.sign(to.z - from.z) * halfWidth;
+        }
+      }
+
+      const length = Math.abs(to.x - from.x) + Math.abs(to.z - from.z);
+      if (length <= EPSILON) {
+        throw new Error(`Corridor ${corridor.id} segment ${index} is too short for a clean bend junction.`);
+      }
+
       const rotationY = segment.axis === 'x' ? 0 : -Math.PI / 2;
       return makeBox(
         corridor.id,
         `corridor-floor-${index}`,
         {
-          x: (segment.from.x + segment.to.x) / 2,
+          x: (from.x + to.x) / 2,
           y: -config.floorThickness / 2,
-          z: (segment.from.z + segment.to.z) / 2,
+          z: (from.z + to.z) / 2,
         },
         { x: length, y: config.floorThickness, z: corridor.width },
         rotationY,
       );
     });
+
+    for (let index = 1; index < route.points.length - 1; index += 1) {
+      const point = route.points[index];
+      boxes.push(makeBox(
+        corridor.id,
+        `corridor-junction-${index - 1}`,
+        {
+          x: point.x,
+          y: -config.floorThickness / 2,
+          z: point.z,
+        },
+        {
+          x: corridor.width,
+          y: config.floorThickness,
+          z: corridor.width,
+        },
+        0,
+      ));
+    }
+
     corridorGroups.push({
       specId: corridor.id,
       kind: 'corridor',
