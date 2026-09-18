@@ -3,7 +3,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createOpenAIIntentRequest } from '../packages/cloud-intent/src/cloud-intent-adapter.js';
 import { createOpenAIEditCommandRequest } from '../packages/cloud-intent/src/openai-edit-command-adapter.js';
+import { DEFAULT_DESIGN_INTENT } from '../packages/intent/src/design-intent.js';
 import { handleNaturalEditRequest } from '../functions/api/natural-edit.js';
+import { handleDesignIntentRequest } from '../functions/api/design-intent.js';
 
 const outputDir = path.resolve('artifacts/privacy');
 const evidencePath = path.join(outputDir, 'dai-074-secret-privacy.json');
@@ -187,7 +189,25 @@ const functionResponse = await handleNaturalEditRequest(functionRequest, { OPENA
 });
 const functionResponseText = await functionResponse.text();
 
+const generationPrompt = 'DAI074 private generation sentinel: fair exploratory dungeon.';
+const designFunctionRequest = new Request('https://example.pages.dev/api/design-intent', {
+  method: 'POST',
+  headers: { 'content-type': 'application/json' },
+  body: JSON.stringify({ prompt: generationPrompt }),
+});
+const designFunctionResponse = await handleDesignIntentRequest(designFunctionRequest, { OPENAI_API_KEY: secret }, {
+  route: async () => ({
+    status: 'success',
+    selectedProvider: 'cloud',
+    intent: { ...DEFAULT_DESIGN_INTENT, exploration: 0.8 },
+    meta: { provider: 'openai', model: 'test-model', usage: null },
+    attempts: [],
+  }),
+});
+const designFunctionResponseText = await designFunctionResponse.text();
+
 const functionSource = fs.readFileSync('functions/api/natural-edit.js', 'utf8');
+const designFunctionSource = fs.readFileSync('functions/api/design-intent.js', 'utf8');
 const editorSource = fs.readFileSync('apps/editor-slice/main.js', 'utf8');
 
 const persistenceTerms = ['localStorage', 'sessionStorage', 'indexedDB', 'document.cookie'];
@@ -223,8 +243,16 @@ const checks = {
   functionResponseDoesNotEchoPrompt: !functionResponseText.includes(prompt),
   functionResponseDoesNotEchoSecret: !functionResponseText.includes(secret),
   functionResponseNoStore: functionResponse.headers.get('cache-control') === 'no-store',
-  functionSourceHasNoConsoleLogging: !/\bconsole\.(?:log|error|warn|info)\b/.test(functionSource),
+  designIntentFunctionResponseDoesNotEchoPrompt: !designFunctionResponseText.includes(generationPrompt),
+  designIntentFunctionResponseDoesNotEchoSecret: !designFunctionResponseText.includes(secret),
+  designIntentFunctionResponseNoStore: designFunctionResponse.headers.get('cache-control') === 'no-store',
+  functionSourceHasNoConsoleLogging:
+    !/\bconsole\.(?:log|error|warn|info)\b/.test(functionSource) &&
+    !/\bconsole\.(?:log|error|warn|info)\b/.test(designFunctionSource),
   browserHasNoPersistentStorageUse: persistenceFindings.length === 0,
+  browserGenerationUsesPromptOnly:
+    editorSource.includes("window.__DAI_DESIGN_INTENT_ENDPOINT__ || '/api/design-intent'") &&
+    editorSource.includes('body: JSON.stringify({ prompt })'),
   browserNaturalEditUsesBoundedContext:
     editorSource.includes('body: JSON.stringify({ prompt, context: naturalEditContext() })') &&
     editorSource.includes("rooms: authoringSpec().rooms.map((room) => ({ id: room.id }))") &&
@@ -253,13 +281,14 @@ const evidence = {
     designIntentStore: intentRequest.store,
     naturalEditStore: editRequest.store,
     functionResponseCacheControl: functionResponse.headers.get('cache-control'),
+    designIntentFunctionResponseCacheControl: designFunctionResponse.headers.get('cache-control'),
     fullPromptIncludedInEvidence: false,
     secretIncludedInEvidence: false,
   },
 };
 
 const serialized = JSON.stringify(evidence, null, 2);
-if (serialized.includes(prompt) || serialized.includes(secret)) {
+if (serialized.includes(prompt) || serialized.includes(generationPrompt) || serialized.includes(secret)) {
   throw new Error('DAI-074 evidence unexpectedly contains private sentinel data.');
 }
 fs.writeFileSync(evidencePath, serialized + '\n');
