@@ -2,7 +2,7 @@
 
 ## Status
 
-**Pending production validation**
+**Confirmed**
 
 Decision work started: 2026-09-18
 
@@ -71,6 +71,23 @@ At 390 × 844 with touch emulation:
 
 The narrow-view probe demonstrates graceful limitation disclosure only. It must not be described as mobile acceptance.
 
+## Production evidence
+
+DAI-075 production validation passed on 2026-09-18.
+
+- generated: `2026-09-18T08:29:19.869Z`;
+- Node.js: `v24.15.0`;
+- Chrome: `153.0.8010.50`;
+- evidence JSON SHA-256: `041f1d964ab342bf49d5972af9dfed73fa6575780178635487525da2c0a0616b`;
+- desktop screenshot SHA-256: `22fd5b67df8493bdd3764c1cd5d24960e1550b5b7a7108f1e957f3995fd1d392`;
+- narrow screenshot SHA-256: `d9ac4a543d7d1fbb571041169a995ea8419505e81470ced832d689eae46a2796`;
+- `passed = true`;
+- all 13 desktop/narrow scope checks passed;
+- desktop 1440 × 900: valid/START-eligible, onboarding ready, scope notice hidden, horizontal overflow 0, browser/network errors 0;
+- narrow 390 × 844 with touch emulation: valid/START-eligible, explicit best-effort limitation visible, horizontal overflow 0, onboarding close passed, START visible/enabled, browser/network errors 0.
+
+This evidence confirms the **scope boundary**, not mobile product support.
+
 ## Reversal conditions
 
 Re-open this ADR if:
@@ -83,4 +100,4 @@ Re-open this ADR if:
 
 ## Completion gate
 
-Promote to **Confirmed** only after DAI-075 production validation passes and the limitation remains visible in the production bundle.
+DAI-075 is complete because production validation passed and the limitation remains visible in the production bundle at narrow width.
