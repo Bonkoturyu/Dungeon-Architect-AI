@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS.** Public README, judge guide, known limitations, sample prompts, and deterministic documentation audit are implemented; production documentation evidence is pending.
+**DONE.** Public submission documentation passed deterministic production validation on 2026-09-18.
 
 ## Purpose
 
@@ -61,6 +61,22 @@ Expected evidence:
 GitHub repository visibility is still private during candidate assembly. DAI-080 does not silently change repository visibility.
 
 The Public repository submission checklist item remains open until the user explicitly performs/authorizes that publication step.
+
+## Production evidence
+
+Reviewed evidence generated at `2026-09-18T10:07:02.794Z` with Node.js `v24.15.0`.
+
+- evidence JSON SHA-256: `2b5cd4665b7b222d7ded9e7fb077cc64ee835603218c7354acf7862a666feb50`;
+- `passed = true`;
+- all 14 public-document checks passed;
+- all required public documents exist;
+- README truthfully separates the current integrated sample-based flow from the final DESCRIBE → GENERATE target;
+- README does not claim the initial generation UI is integrated;
+- Judge Quick Start / Known Limitations / Sample Prompts are consistent with current verified behavior;
+- completed compliance/docs checklist items are checked while Public repo / Hosted demo / Video / Description / Focus category remain open;
+- local Markdown links all resolve;
+- no TODO/TBD placeholders remain in the public-doc set;
+- DAI-080 did not change repository visibility, claim a hosted URL, or claim the generation UI is complete.
 
 ## Completion boundary
 
