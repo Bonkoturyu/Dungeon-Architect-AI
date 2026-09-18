@@ -4,6 +4,7 @@ import path from 'node:path';
 const videoDoc = fs.readFileSync('docs/testing/DAI-082_VIDEO.md', 'utf8');
 const storyboard = fs.readFileSync('docs/submission/DEMO_STORYBOARD.md', 'utf8');
 const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+const recordingRunner = fs.readFileSync('scripts/run-dai-082-recording-demo.mjs', 'utf8');
 
 const checks = {
   requirementUnderThreeMinutes:
@@ -25,6 +26,10 @@ const checks = {
     videoDoc.includes('DAI-082 may be marked DONE only after the final video file is available') &&
     videoDoc.includes('actual duration is strictly below 180 seconds'),
   recordingRunnerRegistered: packageJson.scripts?.['demo:video'] === 'node scripts/run-dai-082-recording-demo.mjs',
+  recordingRunnerUsesPlaySnapshotGraph:
+    recordingRunner.includes('state.play?.snapshot') &&
+    recordingRunner.includes('snapshot.corridors') &&
+    !recordingRunner.includes('for (const corridor of state.corridors)'),
 };
 
 const passed = Object.values(checks).every(Boolean);
