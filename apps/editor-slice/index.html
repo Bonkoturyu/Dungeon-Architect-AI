@@ -19,7 +19,7 @@
     #returnEdit { border-color: #716c91; }
     #guide { border-color: #6c78a9; }
     textarea { width: 100%; min-height: 84px; resize: vertical; font: inherit; line-height: 1.35; }
-    #status, #selected, #entitySelected, #editStatus, #validationStatus, #playStatus, #resultStatus, #naturalEditStatus { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    #status, #selected, #entitySelected, #editStatus, #validationStatus, #playStatus, #resultStatus, #generationStatus, #naturalEditStatus { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
     #validationStatus[data-state="blocked"] { color: #ffb2b2; }
     #validationStatus[data-state="pass"] { color: #b9f7c8; }
     #hint { opacity: 0.72; margin-left: auto; font-size: 0.9rem; }
@@ -75,6 +75,17 @@
     <div class="workspace">
       <canvas id="renderCanvas" tabindex="0"></canvas>
       <aside>
+        <fieldset>
+          <legend>Describe / Generate</legend>
+          <label>
+            Dungeon request
+            <textarea id="generationPrompt" aria-label="Dungeon generation request" placeholder="Create a fair but tense 5-minute dungeon with exploration and a few dangerous rewards."></textarea>
+          </label>
+          <div class="button-row">
+            <button id="generateDungeon" type="button">Generate dungeon</button>
+          </div>
+          <p id="generationStatus" class="muted">Enter a design request to generate a new deterministic DungeonSpec.</p>
+        </fieldset>
         <fieldset>
           <legend>Validation / Play</legend>
           <p id="playStatus" class="muted">Not started.</p>
@@ -135,7 +146,7 @@
       </div>
       <p id="onboardingBody"></p>
       <div class="onboarding-footer">
-        <span id="onboardingProgress">1 / 4</span>
+        <span id="onboardingProgress">1 / 5</span>
         <button id="onboardingBack" type="button">Back</button>
         <button id="onboardingNext" type="button">Next</button>
       </div>

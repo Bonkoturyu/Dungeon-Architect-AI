@@ -46,7 +46,8 @@
     "test": "npm run test:core && npm run test:generator && npm run test:intent && npm run test:cloud-intent && npm run test:editor && npm run test:play && npm run test:simulation && npm run test:onboarding && npm run test:hosting && npm run test:benchmark-fixture && npm run test:renderer-three",
     "validate:secret-privacy": "node scripts/run-dai-074-secret-privacy-audit.mjs",
     "smoke:mobile-scope": "node scripts/run-dai-075-mobile-scope-smoke.mjs",
-    "validate:public-docs": "node scripts/run-dai-080-public-docs-audit.mjs"
+    "validate:public-docs": "node scripts/run-dai-080-public-docs-audit.mjs",
+    "smoke:generation-surface": "node scripts/run-dai-081-generation-surface-smoke.mjs"
   },
   "devDependencies": {
     "@babylonjs/core": "9.18.0",

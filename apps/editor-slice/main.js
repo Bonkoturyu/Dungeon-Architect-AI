@@ -2,6 +2,7 @@ import { EditSession } from '../../packages/editor-core/src/edit-session.js';
 import { evaluateStartGate } from '../../packages/editor-core/src/start-gate.js';
 import { startPlaySession, movePlaySession, createPlayResult } from '../../packages/play-core/src/play-session.js';
 import { createThreeRendererAdapter } from '../../packages/renderer-three/src/index.js';
+import { generateDungeonFromDesignIntent } from '../../packages/generator/src/design-intent-generator.js';
 
 const canvas = document.querySelector('#renderCanvas');
 const status = document.querySelector('#status');
@@ -21,6 +22,9 @@ const entityType = document.querySelector('#entityType');
 const addEntityButton = document.querySelector('#addEntity');
 const moveEntityButton = document.querySelector('#moveEntity');
 const removeEntityButton = document.querySelector('#removeEntity');
+const generationPrompt = document.querySelector('#generationPrompt');
+const generateDungeonButton = document.querySelector('#generateDungeon');
+const generationStatus = document.querySelector('#generationStatus');
 const naturalEditInput = document.querySelector('#naturalEditInput');
 const applyNaturalEditButton = document.querySelector('#applyNaturalEdit');
 const naturalEditStatus = document.querySelector('#naturalEditStatus');
@@ -29,6 +33,9 @@ let adapter;
 let session;
 let selectedRoomId = null;
 let selectedEntityId = null;
+let generationBusy = false;
+let lastDesignIntent = null;
+let lastGeneration = null;
 let naturalEditBusy = false;
 let lastNaturalEditCommand = null;
 let mode = 'edit';
@@ -86,6 +93,9 @@ function snapshotState() {
     startAllowed: gate.allowed,
     validationCriticalCount: gate.criticalCount,
     validationErrors: gate.errors.map((entry) => ({ ...entry })),
+    generationBusy,
+    lastDesignIntent: lastDesignIntent ? clone(lastDesignIntent) : null,
+    lastGeneration: lastGeneration ? clone(lastGeneration) : null,
     naturalEditBusy,
     lastNaturalEditCommand: lastNaturalEditCommand ? { ...lastNaturalEditCommand } : null,
     play: currentPlayState(),
@@ -97,6 +107,10 @@ function snapshotState() {
 
 function setEditStatus(message) {
   editStatus.textContent = message;
+}
+
+function setGenerationStatus(message) {
+  generationStatus.textContent = message;
 }
 
 function setNaturalEditStatus(message) {
@@ -169,6 +183,8 @@ function updateUi() {
   moveEntityButton.disabled = !editing || !entity || !entityRoom.value;
   removeEntityButton.disabled = !editing || !entity || entity.type === 'start' || entity.type === 'goal';
   addEntityButton.disabled = !editing || !entityRoom.value;
+  generationPrompt.disabled = !editing || generationBusy;
+  generateDungeonButton.disabled = !editing || generationBusy || !generationPrompt.value.trim();
   naturalEditInput.disabled = !editing || naturalEditBusy;
   applyNaturalEditButton.disabled = !editing || naturalEditBusy || !naturalEditInput.value.trim();
   startButton.disabled = !editing || !gate.allowed;
@@ -298,6 +314,70 @@ function removeEntity() {
   renderActiveSpec();
   setEditStatus(`removed ${removedId}`);
   return true;
+}
+
+async function generateDungeonFromPrompt() {
+  const prompt = generationPrompt.value.trim();
+  if (!prompt || generationBusy || mode !== 'edit') return false;
+
+  generationBusy = true;
+  setGenerationStatus('translating intent…');
+  updateUi();
+
+  try {
+    const endpoint = window.__DAI_DESIGN_INTENT_ENDPOINT__ || '/api/design-intent';
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ prompt }),
+    });
+
+    let payload = null;
+    try {
+      payload = await response.json();
+    } catch {
+      payload = null;
+    }
+
+    if (!response.ok || payload?.ok !== true || !payload.intent) {
+      const code = payload?.error?.code || `HTTP_${response.status}`;
+      setGenerationStatus(`error: ${code}`);
+      return false;
+    }
+
+    const generated = generateDungeonFromDesignIntent(payload.intent, { prompt });
+    session = new EditSession(generated.spec);
+    selectedRoomId = null;
+    selectedEntityId = null;
+    playSession = null;
+    lastPlayResult = null;
+    lastNaturalEditCommand = null;
+    lastDesignIntent = clone(payload.intent);
+    lastGeneration = {
+      selectedProvider: payload.selectedProvider ?? 'unknown',
+      seed: generated.profile.seed,
+      roomCount: generated.profile.roomCount,
+      routeChoice: generated.profile.routeChoice,
+      entityCount: generated.spec.entities.length,
+      eventCount: generated.spec.events.length,
+    };
+    mode = 'edit';
+    generationPrompt.value = '';
+    playStatus.textContent = 'Not started.';
+    resultStatus.textContent = 'No result yet.';
+    renderActiveSpec();
+    setGenerationStatus(
+      `generated: ${lastGeneration.selectedProvider} · ${lastGeneration.roomCount} rooms · seed ${lastGeneration.seed}`
+    );
+    setEditStatus('generated new dungeon');
+    return true;
+  } catch {
+    setGenerationStatus('error: GENERATION_UNAVAILABLE');
+    return false;
+  } finally {
+    generationBusy = false;
+    updateUi();
+  }
 }
 
 function naturalEditContext() {
@@ -523,6 +603,8 @@ async function run() {
     addEntityButton.addEventListener('click', addEntity);
     moveEntityButton.addEventListener('click', moveEntityToTargetRoom);
     removeEntityButton.addEventListener('click', removeEntity);
+    generationPrompt.addEventListener('input', updateUi);
+    generateDungeonButton.addEventListener('click', generateDungeonFromPrompt);
     naturalEditInput.addEventListener('input', updateUi);
     applyNaturalEditButton.addEventListener('click', applyNaturalEdit);
 
@@ -533,6 +615,7 @@ async function run() {
       getScreenPositionForSpecId: (id) => adapter.getScreenPositionForSpecId(id),
       selectRoom,
       selectEntity,
+      generateDungeonFromPrompt,
       applyNaturalEdit,
       evaluateStartGateForSpec: (spec) => evaluateStartGate(spec),
       startDungeon,
