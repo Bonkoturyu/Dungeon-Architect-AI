@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS.** Secret scanning, browser-bundle checks, privacy-contract checks, and one-command validation are implemented; production evidence is pending.
+**DONE.** Production secret/privacy validation passed on 2026-09-18.
 
 ## Purpose
 
@@ -59,6 +59,23 @@ The scanner was corrected rather than disabling history scanning:
 - matched credential values are still never written to evidence.
 
 A corrected production rerun is required before DAI-074 can be marked DONE.
+
+## Production evidence
+
+Reviewed evidence generated at `2026-09-18T08:09:11.864Z` with Node.js `v24.15.0`.
+
+- evidence JSON SHA-256: `c223f7c2b9041751708781782158497ce353c11edcd3f23fe69992eed5238f39`;
+- `passed = true`;
+- all 14 secret/privacy checks passed;
+- forbidden tracked secret paths: none;
+- current high-confidence secret findings: none;
+- Git patch-history high-confidence secret findings: none after explicit synthetic-sentinel filtering;
+- production `dist/` provider-secret-boundary findings: none;
+- persistent browser-storage findings: none;
+- DesignIntent and natural-edit OpenAI requests both preserved `store: false`;
+- natural-edit outbound shape remained exactly request + room IDs + entity ID/type/roomId;
+- Function response echoed neither full prompt nor secret and used `Cache-Control: no-store`;
+- evidence itself contained neither full prompt nor secret.
 
 ## Build boundary
 
