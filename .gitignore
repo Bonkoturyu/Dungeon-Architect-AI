@@ -45,6 +45,7 @@ artifacts/hosting/
 artifacts/hosting-public/
 artifacts/legal/
 artifacts/privacy/
+artifacts/mobile-scope/
 
 # Unity candidates
 Library/
