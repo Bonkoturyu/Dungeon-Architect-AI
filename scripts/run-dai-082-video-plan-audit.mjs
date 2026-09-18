@@ -16,7 +16,7 @@ const checks = {
     videoDoc.includes('https://dungeon-architect-ai.pages.dev/') &&
     storyboard.includes('https://dungeon-architect-ai.pages.dev/'),
   requiredFlowCovered:
-    ['DESCRIBE → GENERATE', 'Manual Edit', 'Natural-language Edit', 'START / Play', 'Result', 'Return to Edit']
+    ['Describe / Generate', 'Manual Edit', 'Natural-language Edit', 'START / Play', 'Result', 'Return to Edit']
       .every((term) => storyboard.includes(term)),
   narrationRespectsBoundaries:
     videoDoc.includes('one constrained EditCommand') &&
