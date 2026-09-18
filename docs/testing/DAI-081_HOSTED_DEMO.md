@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS — Gate 1 DONE.** DAI-081 is split into two evidence gates.
+**DONE pending only the required DAI-074/080 post-integration re-audit before PR merge.** Both hosted-demo functional gates have passed.
 
 1. integrate the missing DESCRIBE → GENERATE surface into the production browser build and validate it locally;
 2. deploy the merged candidate to Cloudflare Pages, configure the production secret, and validate the real public HTTPS URL end-to-end.
@@ -117,7 +117,7 @@ After gate 1 merges to `main`:
 5. deploy `main`;
 6. run `scripts/run-dai-081-public-validation.ps1` against the resulting `https://*.pages.dev` URL.
 
-DAI-081 is **not DONE** until the public HTTPS smoke passes.
+DAI-081 functional acceptance is complete because the public HTTPS smoke passed. PR merge is held only for the post-integration privacy/public-doc re-audit required by project governance.
 
 The Gate-2 public smoke requires:
 
@@ -144,9 +144,30 @@ Expected evidence:
 - `artifacts/hosting-public/dai-081-public.json`;
 - `artifacts/hosting-public/dai-081-public.png`.
 
+## Gate-2 public production evidence
+
+Reviewed public evidence generated at `2026-09-18T15:58:08.818Z` with Node.js `v24.15.0` and Chrome `153.0.8010.50`.
+
+- public URL: `https://dungeon-architect-ai.pages.dev/`;
+- evidence JSON SHA-256: `2fdd088c8de25be64169ce0dd617e40c04467d9303e1ca686a312d55b817a8b1`;
+- screenshot PNG SHA-256: `6d35333cf4e21f0766ca0c0e6477803b2a35f7cde37754b5d8dcb47566dee3fb`;
+- navigation ready: ~1787.257 ms;
+- `passed = true`;
+- all 13 public gates passed;
+- live generation selected `cloud`;
+- generated 5 rooms, routeChoice 0.55, 8 entities and 1 event;
+- generated entity types included enemy / goal / recovery / start / trap / treasure;
+- live natural-language edit produced `move-entity / treasure-1 / room-005`;
+- `/api/design-intent` returned 200;
+- `/api/natural-edit` returned 200;
+- generated dungeon cleared in 4 moves, visiting all 5 rooms;
+- Return to Edit preserved the generated spec;
+- console/page/request/HTTP errors were empty;
+- local API key was not required and full prompts were excluded from evidence.
+
 ## Boundaries
 
 - local gate-1 smoke mocks provider HTTP responses; it proves browser integration, not live provider availability;
 - cloud intent quality remains backed by DAI-045 live regression;
-- final live public generation/natural-edit calls are required in gate 2;
+- live public generation/natural-edit calls passed Gate 2;
 - this task does not select Perspective/Combat or add mobile support.
