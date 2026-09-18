@@ -22,7 +22,7 @@ const checks = {
     videoDoc.includes('one constrained EditCommand') &&
     videoDoc.includes('room-graph locomotion must not be narrated as physics/collision gameplay'),
   actualVideoStillRequired:
-    videoDoc.includes('DAI-082 remains open until an actual final video file is recorded') &&
+    videoDoc.includes('DAI-082 may be marked DONE only after the final video file is available') &&
     videoDoc.includes('actual duration is strictly below 180 seconds'),
   recordingRunnerRegistered: packageJson.scripts?.['demo:video'] === 'node scripts/run-dai-082-recording-demo.mjs',
 };
