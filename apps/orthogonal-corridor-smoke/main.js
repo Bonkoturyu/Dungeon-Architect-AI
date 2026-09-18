@@ -94,6 +94,37 @@ function analyze(plan, spec) {
     }
   }
 
+  const missingBendJunctions = [];
+  for (const corridor of plan.corridorGroups) {
+    const expectedBends = Math.max(0, corridor.route.length - 2);
+    const junctions = corridor.boxes.filter((box) => box.part.startsWith('corridor-junction-'));
+    if (junctions.length !== expectedBends) {
+      missingBendJunctions.push({
+        corridorId: corridor.specId,
+        expectedBends,
+        junctionCount: junctions.length,
+      });
+      continue;
+    }
+    for (let index = 1; index < corridor.route.length - 1; index += 1) {
+      const point = corridor.route[index];
+      const junction = junctions[index - 1];
+      if (
+        junction.position.x !== point.x ||
+        junction.position.z !== point.z ||
+        junction.size.x <= 0 ||
+        junction.size.z <= 0
+      ) {
+        missingBendJunctions.push({
+          corridorId: corridor.specId,
+          bendIndex: index - 1,
+          point,
+          junction,
+        });
+      }
+    }
+  }
+
   const logicalDiagonalCorridors = spec.corridors.filter((corridor) => {
     const from = spec.rooms.find((room) => room.id === corridor.fromRoomId);
     const to = spec.rooms.find((room) => room.id === corridor.toRoomId);
@@ -111,10 +142,12 @@ function analyze(plan, spec) {
     routeConflicts,
     duplicateDoorSides,
     diagonalLogicalWithoutBend,
+    missingBendJunctions,
     allCorridorsOrthogonal: diagonalSegments.length === 0,
     allRoutesConflictFree: routeConflicts.length === 0,
     distinctDoorSidesWherePossible: duplicateDoorSides.length === 0,
     logicalDiagonalsHaveBends: diagonalLogicalWithoutBend.length === 0,
+    allBendsHaveJunctionFloor: missingBendJunctions.length === 0,
   };
 }
 
@@ -139,7 +172,7 @@ async function run() {
     };
     status.textContent = 'ready';
     summary.textContent =
-      `${result.routeCount} corridors · orthogonal ${result.allCorridorsOrthogonal ? 'PASS' : 'FAIL'} · overlap ${result.allRoutesConflictFree ? 'PASS' : 'FAIL'}`;
+      `${result.routeCount} corridors · orthogonal ${result.allCorridorsOrthogonal ? 'PASS' : 'FAIL'} · overlap ${result.allRoutesConflictFree ? 'PASS' : 'FAIL'} · bends ${result.allBendsHaveJunctionFloor ? 'PASS' : 'FAIL'}`;
     window.addEventListener('resize', () => resize(adapter));
   } catch (error) {
     window.__DAI_ORTHOGONAL_SMOKE__ = {
