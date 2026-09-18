@@ -11,8 +11,8 @@ import {
 } from '../src/guide.js';
 
 test('guide exposes the fixed verified workflow in deterministic order', () => {
-  assert.deepEqual(ONBOARDING_STEPS.map((step) => step.id), ['welcome', 'edit', 'validate', 'play']);
-  assert.equal(ONBOARDING_STEPS.length, 4);
+  assert.deepEqual(ONBOARDING_STEPS.map((step) => step.id), ['welcome', 'describe', 'edit', 'validate', 'play']);
+  assert.equal(ONBOARDING_STEPS.length, 5);
 });
 
 test('guide opens at welcome and moves within fixed bounds', () => {
@@ -20,6 +20,8 @@ test('guide opens at welcome and moves within fixed bounds', () => {
   assert.equal(state.open, true);
   assert.equal(currentOnboardingStep(state).id, 'welcome');
 
+  state = nextOnboardingStep(state);
+  assert.equal(currentOnboardingStep(state).id, 'describe');
   state = nextOnboardingStep(state);
   assert.equal(currentOnboardingStep(state).id, 'edit');
   state = nextOnboardingStep(state);
