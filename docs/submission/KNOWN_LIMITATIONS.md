@@ -1,70 +1,62 @@
 # Known Limitations — Current Submission Candidate
 
-These limitations are intentionally public so the judge-facing claims remain narrower than the verified evidence.
+These limitations keep judge-facing claims narrower than verified production evidence.
 
-## 1. Initial full-dungeon generation UI is not integrated yet
+## 1. DesignIntent → DungeonSpec mapping is deliberately bounded
 
-The backend DesignIntent pipeline and procedural DungeonSpec generator both exist and have production tests, but the current integrated editor/play page opens a valid sample dungeon.
+The public demo now supports DESCRIBE → GENERATE, but not every DesignIntent axis has a unique authored mechanic.
 
-The initial **DESCRIBE → GENERATE** prompt UI is therefore still a submission blocker. The current page must not be described as proving the full hackathon end-to-end requirement until that integration exists.
+The current mapping uses production-backed controls such as:
 
-## 2. Current browser fixture is intentionally small
+- prompt-derived deterministic Seed;
+- target duration → bounded room count;
+- routeChoice → alternate-route structure;
+- combat/reward/trap density → bounded entity counts;
+- fairness/difficulty → recovery presence;
+- at least one supported treasure-triggered event.
 
-The integrated judge-facing editor/play surface currently uses a small three-room sample fixture for deterministic authoring, validation, START, Play, and Result evidence.
+This is not a claim that every nuanced intent is perfectly realized.
 
-Other production tests exercise larger/generated structures, including the migrated 20-room PCE fixture, but those are not the same as a final polished judge demo.
+## 2. Natural-language edit vocabulary is narrow
 
-## 3. Natural-language edit vocabulary is narrow
+The integrated AI edit path returns exactly one safe `EditCommand` and currently supports entity relocation (`move-entity`).
 
-The current integrated AI edit path returns exactly one safe `EditCommand` and presently supports entity relocation (`move-entity`).
+It does not expose arbitrary multi-command editing, free-form runtime code, room/corridor generation, or event editing from natural language.
 
-It does not yet expose arbitrary multi-command editing, free-form runtime code, room generation, corridor editing, or event editing from natural language.
-
-## 4. Perspective and combat selection are still Pending Evidence
+## 3. Perspective and combat selection are Pending Evidence
 
 PCE-1.0 remains blocked by:
 
 - three candidate Play cameras with equivalent controls/tasks;
-- the remaining Perspective/Combat evaluation interactions;
+- remaining Perspective/Combat evaluation interactions;
 - P01–P12 participant sessions.
 
 The current top-down Play slice is an engineering implementation, **not** a declared PCE winner.
 
+## 4. Player locomotion is room-graph based
+
+The current Play UI moves by selecting connected rooms. It is not a first/third-person physics character controller and does not claim final physical collision gameplay.
+
 ## 5. Mobile is outside the supported submission scope
 
-ADR-003 confirms:
-
-- supported judging target: desktop Google Chrome on Windows;
-- mobile/narrow: best-effort only.
-
-The 390 × 844 smoke only verifies graceful limitation disclosure and layout integrity. It is not Android/iOS acceptance.
+ADR-003 confirms desktop Google Chrome on Windows as the supported judging target. Mobile/narrow is best-effort only.
 
 ## 6. Browser support is deliberately narrow
 
-Production browser evidence exists for desktop Google Chrome on Windows.
+Production acceptance evidence exists for desktop Google Chrome on Windows.
 
 No Safari or Firefox support claim is made.
 
 ## 7. No persistence/accounts
 
-The current MVP has:
-
-- no accounts;
-- no cloud save;
-- no database;
-- no analytics/telemetry;
-- no persistent browser project storage.
+The MVP has no accounts, cloud save, database, analytics/telemetry, or persistent browser project storage.
 
 Authoring/play state is in memory for the active page session.
 
-## 8. Public deployment is not final yet
+## 8. Submission packaging is still open
 
-Cloudflare Pages + Pages Functions is the confirmed hosting architecture, but the final judge-facing `pages.dev` URL and deployed end-to-end acceptance remain DAI-081 work.
-
-## 9. Final submission media/metadata remain open
-
-The under-three-minute video, short written description, focus category, and frozen candidate hash are M8 follow-up tasks.
+The hosted demo is live and accepted, but the repository visibility switch, under-three-minute video, short description, focus category, and frozen candidate hash remain M8 work.
 
 ## Reopen rule
 
-If a later candidate removes one of these limitations, the public docs must be updated in the same PR or candidate-freeze change that removes it.
+If a later candidate removes one of these limitations, update this document in the same candidate change.
