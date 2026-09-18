@@ -6,11 +6,11 @@
 - [ ] Short description
 - [ ] Focus category
 - [ ] Additional requested materials
-- [ ] Third-party disclosure complete
-- [ ] AI usage disclosure complete
-- [ ] LICENSE / NOTICE complete
-- [ ] Secret/privacy audit pass
+- [x] Third-party disclosure complete
+- [x] AI usage disclosure complete
+- [x] LICENSE / NOTICE complete
+- [x] Secret/privacy audit pass
 - [ ] Fresh-browser demo pass
-- [ ] Known limitations documented
-- [ ] Sample prompts documented
+- [x] Known limitations documented
+- [x] Sample prompts documented
 - [ ] Submission completed before 2026-11-11 23:30 JST
