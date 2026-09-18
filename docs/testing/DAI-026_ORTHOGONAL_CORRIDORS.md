@@ -28,7 +28,7 @@ The Three.js scene planner now routes each corridor as a deterministic axis-alig
 - backbone routes are planned before alternate routes;
 - endpoint doorway sides are kept distinct for a room when degree allows it;
 - a logical diagonal edge must visibly bend at right angles;
-- corridor floor geometry consists of one box per orthogonal segment;
+- straight corridor floor geometry is trimmed at interior bends and each bend receives an explicit square `corridor-junction-*` floor tile, so the rendered walkable surface is continuous without relying on coplanar segment overlap;
 - room wall openings come from the selected endpoint doors rather than intersection with one diagonal rectangle;
 - camera bounds include the routed corridor path.
 
@@ -45,6 +45,7 @@ The primary visual regression reproduces the exact public-demo geometry inputs t
 The regression checks:
 
 - all visual segments are axis-aligned;
+- every interior right-angle bend has explicit floor coverage at the junction;
 - no two routed corridors overlap/cross;
 - rooms with degree <= 4 use distinct doorway sides;
 - logical diagonal edges have visible bends;
@@ -64,6 +65,19 @@ Expected:
 
 - `artifacts/orthogonal-corridors/dai-026-orthogonal-corridors.json`;
 - `artifacts/orthogonal-corridors/dai-026-orthogonal-corridors.png`.
+
+## Second visual-review finding
+
+The first orthogonal-routing screenshot still showed a visible black notch at a right-angle bend. The route centerline was continuous, but the acceptance test did not verify rendered floor continuity at the bend.
+
+DAI-026 was therefore tightened again:
+
+- each interior bend now owns a dedicated square floor junction;
+- adjoining straight segments are trimmed by half the corridor width so they meet the junction instead of relying on overlapping coplanar boxes;
+- Node tests verify one junction floor per interior route point;
+- the visible-Chrome smoke now fails when any bend lacks junction coverage.
+
+The screenshot from that first orthogonal attempt is also rejected and must not be used as submission evidence.
 
 ## DAI-082 boundary
 
