@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS.** Implemented; production Node + visible-Chrome evidence pending.
+**DONE.** Production Node + visible-Chrome orthogonal corridor validation passed on 2026-09-19.
 
 ## Defect found during DAI-082 capture review
 
@@ -78,6 +78,25 @@ DAI-026 was therefore tightened again:
 - the visible-Chrome smoke now fails when any bend lacks junction coverage.
 
 The screenshot from that first orthogonal attempt is also rejected and must not be used as submission evidence.
+
+## Production evidence
+
+Reviewed evidence generated at `2026-09-18T17:08:40.115Z` with Node.js `v24.15.0` and Chrome `153.0.8010.50`.
+
+- evidence JSON SHA-256: `128d78b9d855260a9253d105e86460bd9834216fc41c6bfbd226c4b58513d94d`;
+- screenshot PNG SHA-256: `ee9cd2e2728a0a144c45cebad59e3c67f3dac05797c766a9ba170c8275508f8d`;
+- `passed = true`;
+- renderer ready;
+- all visual corridor segments orthogonal;
+- no routed corridor conflicts;
+- distinct doorway sides used where possible;
+- logical diagonal edge visibly bends;
+- every bend has explicit junction-floor coverage;
+- public-demo alternate route present;
+- diagonal segment / conflict / duplicate-door / missing-junction finding arrays all empty;
+- browser/page/request/HTTP error collections all empty.
+
+Visual review also confirmed that the previously visible black notch at the left right-angle bend is no longer present and the floor reads as continuous.
 
 ## DAI-082 boundary
 
