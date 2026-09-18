@@ -1,4 +1,5 @@
 import { validateDungeonSpec } from '../../core/src/dungeon-spec.js';
+import { corridorRouteSegments, planOrthogonalCorridors } from './orthogonal-corridor-router.js';
 
 export const DEFAULT_SCENE_STYLE = Object.freeze({
   roomHeight: 3,
@@ -28,7 +29,7 @@ function makeBox(specId, part, position, size, rotationY = 0) {
   };
 }
 
-function makeBounds(rooms) {
+function makeBounds(rooms, corridorRoutes = new Map()) {
   let minX = Infinity;
   let maxX = -Infinity;
   let minZ = Infinity;
@@ -39,6 +40,15 @@ function makeBounds(rooms) {
     maxX = Math.max(maxX, room.x + room.width / 2);
     minZ = Math.min(minZ, room.z - room.depth / 2);
     maxZ = Math.max(maxZ, room.z + room.depth / 2);
+  }
+
+  for (const route of corridorRoutes.values()) {
+    for (const point of route.points) {
+      minX = Math.min(minX, point.x);
+      maxX = Math.max(maxX, point.x);
+      minZ = Math.min(minZ, point.z);
+      maxZ = Math.max(maxZ, point.z);
+    }
   }
 
   return {
@@ -146,19 +156,23 @@ function corridorWallOpening(room, side, corridor, fromRoom, toRoom) {
   };
 }
 
-function collectDoorOpenings(spec, roomById) {
+function collectDoorOpenings(spec, corridorRoutes) {
   const byRoom = new Map(spec.rooms.map((room) => [room.id, []]));
 
   for (const corridor of spec.corridors) {
-    const fromRoom = roomById.get(corridor.fromRoomId);
-    const toRoom = roomById.get(corridor.toRoomId);
-    if (!fromRoom || !toRoom) continue;
+    const route = corridorRoutes.get(corridor.id);
+    if (!route) continue;
 
-    for (const room of [fromRoom, toRoom]) {
-      for (const side of WALL_SIDES) {
-        const opening = corridorWallOpening(room, side, corridor, fromRoom, toRoom);
-        if (opening) byRoom.get(room.id).push(opening);
-      }
+    for (const door of [route.fromDoor, route.toDoor]) {
+      const half = door.width / 2;
+      byRoom.get(door.roomId).push({
+        corridorId: corridor.id,
+        side: door.side,
+        startOffset: door.offset - half,
+        endOffset: door.offset + half,
+        centerOffset: door.offset,
+        width: door.width,
+      });
     }
   }
 
@@ -271,27 +285,85 @@ export function createDungeonScenePlan(spec, style = {}) {
 
   const config = { ...DEFAULT_SCENE_STYLE, ...style };
   const roomById = new Map(spec.rooms.map((room) => [room.id, room]));
-  const doorOpeningsByRoom = collectDoorOpenings(spec, roomById);
+  const corridorRoutes = planOrthogonalCorridors(spec);
+  const doorOpeningsByRoom = collectDoorOpenings(spec, corridorRoutes);
   const roomGroups = spec.rooms.map((room) => buildRoomGroup(room, doorOpeningsByRoom.get(room.id) ?? [], config));
   const corridorGroups = [];
   const markers = [];
 
   for (const corridor of spec.corridors) {
-    const from = roomById.get(corridor.fromRoomId);
-    const to = roomById.get(corridor.toRoomId);
-    const dx = to.x - from.x;
-    const dz = to.z - from.z;
-    const length = Math.hypot(dx, dz);
-    const rawRotationY = -Math.atan2(dz, dx);
-    const rotationY = Object.is(rawRotationY, -0) ? 0 : rawRotationY;
-    const box = makeBox(
-      corridor.id,
-      'corridor-floor',
-      { x: (from.x + to.x) / 2, y: -config.floorThickness / 2, z: (from.z + to.z) / 2 },
-      { x: length, y: config.floorThickness, z: corridor.width },
-      rotationY,
-    );
-    corridorGroups.push({ specId: corridor.id, kind: 'corridor', boxes: [box] });
+    const route = corridorRoutes.get(corridor.id);
+    const segments = corridorRouteSegments(route);
+    const boxes = segments.map((segment, index) => {
+      const isFirst = index === 0;
+      const isLast = index === segments.length - 1;
+      const halfWidth = corridor.width / 2;
+
+      let from = { ...segment.from };
+      let to = { ...segment.to };
+
+      if (!isFirst) {
+        if (segment.axis === 'x') {
+          from.x += Math.sign(to.x - from.x) * halfWidth;
+        } else {
+          from.z += Math.sign(to.z - from.z) * halfWidth;
+        }
+      }
+
+      if (!isLast) {
+        if (segment.axis === 'x') {
+          to.x -= Math.sign(to.x - from.x) * halfWidth;
+        } else {
+          to.z -= Math.sign(to.z - from.z) * halfWidth;
+        }
+      }
+
+      const length = Math.abs(to.x - from.x) + Math.abs(to.z - from.z);
+      if (length <= EPSILON) {
+        throw new Error(`Corridor ${corridor.id} segment ${index} is too short for a clean bend junction.`);
+      }
+
+      const rotationY = segment.axis === 'x' ? 0 : -Math.PI / 2;
+      return makeBox(
+        corridor.id,
+        `corridor-floor-${index}`,
+        {
+          x: (from.x + to.x) / 2,
+          y: -config.floorThickness / 2,
+          z: (from.z + to.z) / 2,
+        },
+        { x: length, y: config.floorThickness, z: corridor.width },
+        rotationY,
+      );
+    });
+
+    for (let index = 1; index < route.points.length - 1; index += 1) {
+      const point = route.points[index];
+      boxes.push(makeBox(
+        corridor.id,
+        `corridor-junction-${index - 1}`,
+        {
+          x: point.x,
+          y: -config.floorThickness / 2,
+          z: point.z,
+        },
+        {
+          x: corridor.width,
+          y: config.floorThickness,
+          z: corridor.width,
+        },
+        0,
+      ));
+    }
+
+    corridorGroups.push({
+      specId: corridor.id,
+      kind: 'corridor',
+      boxes,
+      route: route.points.map((point) => ({ ...point })),
+      fromDoor: { ...route.fromDoor },
+      toDoor: { ...route.toDoor },
+    });
   }
 
   for (const entity of spec.entities) {
@@ -311,6 +383,6 @@ export function createDungeonScenePlan(spec, style = {}) {
     roomGroups,
     corridorGroups,
     markers,
-    bounds: makeBounds(spec.rooms),
+    bounds: makeBounds(spec.rooms, corridorRoutes),
   };
 }
