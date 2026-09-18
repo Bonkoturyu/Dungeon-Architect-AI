@@ -66,7 +66,7 @@ GitHub Issues are not created unless explicitly authorized.
 - DAI-075 Mobile scope — DONE (ADR-003 confirms desktop Google Chrome on Windows as the supported judging target; mobile/narrow layouts are best-effort only. Production 1440×900 desktop and 390×844 touch-emulated narrow evidence passed all 13 checks with horizontal overflow 0 and zero browser/network errors; the narrow UI explicitly discloses the limitation. PCE-1.0 mobile tap tasks are N/A for this submission. Reviewed JSON SHA-256 `041f1d964ab342bf49d5972af9dfed73fa6575780178635487525da2c0a0616b`, desktop PNG `22fd5b67df8493bdd3764c1cd5d24960e1550b5b7a7108f1e957f3995fd1d392`, narrow PNG `d9ac4a543d7d1fbb571041169a995ea8419505e81470ced832d689eae46a2796`.)
 
 ## M8
-- DAI-080 Public docs — IN PROGRESS (README rewritten around the current verified browser surface rather than the full target flow; judge quick start, known limitations, sample prompts, storyboard blocking note, checklist updates, and deterministic public-doc audit added; production documentation evidence pending. Repository visibility remains private until explicitly switched before submission.)
+- DAI-080 Public docs — DONE (all 14 documentation audit checks passed: README distinguishes current sample-based integrated flow from the final DESCRIBE→GENERATE target, generation UI incompleteness is explicit, judge guide/limitations/prompts/checklist/storyboard are consistent, all local Markdown links resolve, and no TODO/TBD placeholders remain. Repository visibility and hosted URL remain intentionally unclaimed. Reviewed JSON SHA-256 `2b5cd4665b7b222d7ded9e7fb077cc64ee835603218c7354acf7862a666feb50`.)
 - DAI-081 Hosted demo — OPEN
 - DAI-082 Video — OPEN
 - DAI-083 Description/category — OPEN
