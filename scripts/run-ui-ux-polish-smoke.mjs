@@ -63,6 +63,9 @@ try {
     const workflowTabs = [...document.querySelectorAll('.workflow-tab[data-workflow-tab]')]
       .filter((node) => getComputedStyle(node).display !== 'none').length;
     const validation = document.querySelector('#validationStatus');
+    const history = document.querySelector('.history-group');
+    const selected = document.querySelector('#selected');
+    const entitySelected = document.querySelector('#entitySelected');
     return {
       bodyMode: document.body.dataset.mode,
       viewportWidth: viewport.width,
@@ -75,6 +78,8 @@ try {
       workflowTab: document.body.dataset.workflowTab,
       validationText: validation.textContent,
       validationState: validation.dataset.state,
+      historyHiddenInCreate: getComputedStyle(history).display === 'none',
+      emptySelectionChipsHidden: selected.hidden === true && entitySelected.hidden === true,
       horizontalOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
   });
@@ -94,12 +99,18 @@ try {
     const aside = document.querySelector('aside').getBoundingClientRect();
     const hiddenEditorPanels = [...document.querySelectorAll('.editor-only')]
       .filter((node) => getComputedStyle(node).display === 'none').length;
+    const validation = document.querySelector('#validationStatus');
+    const exitPad = document.querySelector('#playExitButtons')?.getBoundingClientRect();
     return {
       bodyMode: document.body.dataset.mode,
       viewportWidth: viewport.width,
       asideWidth: aside.width,
       hiddenEditorPanels,
       viewportHelp: document.querySelector('#viewportHelp')?.textContent ?? '',
+      validationHidden: getComputedStyle(validation).display === 'none',
+      playMetrics: document.querySelector('#playStatus')?.textContent ?? '',
+      exitPadWidth: exitPad?.width ?? 0,
+      exitPadHeight: exitPad?.height ?? 0,
       horizontalOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
   });
@@ -182,10 +193,20 @@ try {
       editLayout.workflowTab === 'create' &&
       editLayout.visibleWorkflowPanels === 1 &&
       editLayout.workflowTabs === 3,
+    routineChromeReduced:
+      editLayout.historyHiddenInCreate === true &&
+      editLayout.emptySelectionChipsHidden === true,
     playModeApplied: playLayout.bodyMode === 'play',
     authoringPanelsHiddenInPlay: playLayout.hiddenEditorPanels >= 3,
     playViewportExpands: playLayout.viewportWidth > editLayout.viewportWidth,
     playInstructionIsModeAware: playLayout.viewportHelp.includes('Auto-map'),
+    playPanelCompact:
+      playLayout.validationHidden === true &&
+      playLayout.playMetrics.includes('👣') &&
+      playLayout.playMetrics.includes('🗺'),
+    spatialExitPadPresent:
+      playLayout.exitPadWidth >= 160 &&
+      playLayout.exitPadHeight >= 160,
     resultModeApplied: resultLayout.bodyMode === 'result',
     resultVisible: resultLayout.resultText.includes('CLEARED') && resultLayout.playText.includes('👣'),
     authoringPanelsHiddenInResult: resultLayout.editorPanelsHidden === true,
