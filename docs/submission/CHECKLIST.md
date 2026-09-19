@@ -3,8 +3,8 @@
 - [ ] Public repository
 - [x] Hosted browser demo
 - [x] Demo video under 3 minutes
-- [ ] Short description
-- [ ] Focus category
+- [x] Short description
+- [x] Focus category
 - [ ] Additional requested materials
 - [x] Third-party disclosure complete
 - [x] AI usage disclosure complete
