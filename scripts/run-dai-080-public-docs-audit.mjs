@@ -83,6 +83,8 @@ const checks = {
       'docs/architecture/adr/ADR-001-PRODUCTION-RENDERER-THREEJS.md',
       'docs/architecture/adr/ADR-002-HOSTING-CLOUDFLARE-PAGES.md',
       'docs/architecture/adr/ADR-003-MOBILE-SCOPE-DESKTOP-ONLY.md',
+      'docs/architecture/adr/ADR-004-FOCUS-CATEGORY-AI-3D-SCENE-GENERATION.md',
+      'docs/submission/DAI-083_DESCRIPTION_CATEGORY.md',
       'docs/submission/CHECKLIST.md',
     ]),
   readmeDesktopScopeExplicit:
