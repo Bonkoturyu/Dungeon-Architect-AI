@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS.** Recording tooling is prepared on top of the DAI-026 corrected-corridor main. The first capture was rejected for invalid corridor presentation. A later successful functional capture was also rejected as final footage because it included Chrome UI and the Windows taskbar. The final capture must contain only the browser page viewport.
+**DONE.** The final corrected-corridor browser-viewport capture was recorded and visually reviewed on 2026-09-19.
 
 ## Official requirement
 
@@ -110,9 +110,55 @@ Automatic ffmpeg capture uses H.264 (`libx264`), 30 fps, CRF 20, `yuv420p`, and 
 
 These are recording recommendations, not hackathon requirements.
 
+## Final production evidence
+
+Final reviewed capture:
+
+- source: `https://dungeon-architect-ai.pages.dev/`;
+- MP4 duration: **49.5 seconds**;
+- resolution: **1920×1080**;
+- frame rate: **30 fps**;
+- video SHA-256: `98ff93bb95491ea38ec7700f3d2313b99f6aa9a70aa4b2c1dceaff441a6ee25d`;
+- recording-run JSON SHA-256: `aa37f503689e42b0f688668a62b27f8ed42e412bda1d651bed8d451018f1dd64`;
+- recording-end PNG SHA-256: `7d735b7d1d430920637a0fe4714e740ed49f05514750984394d2c4ae3009eb93`;
+- video-plan JSON SHA-256: `3dcd7f003ec5d31c3111099de1886781bfdac17dc2dc84686921dadb61f62fbb`.
+
+Automated run checks passed for:
+
+- public HTTPS;
+- live cloud generation;
+- valid generated dungeon;
+- natural-language edit;
+- cleared Result;
+- Return to Edit;
+- zero browser/page/request/HTTP errors;
+- script duration below 165 seconds;
+- actual capture created;
+- browser-viewport-only capture;
+- viewport at least 1280×720;
+- left edge not trimmed;
+- actual capture under 180 seconds.
+
+Visual review of the MP4 confirmed:
+
+- no Chrome tabs/address bar;
+- no Windows taskbar or terminal;
+- no translation popup;
+- the full `DAI Editor / Play Gate` title is visible;
+- corrected DAI-026 orthogonal corridor geometry is visible and continuous;
+- Generate is shown;
+- manual room move and Undo are shown;
+- the natural-language treasure relocation request is shown;
+- START / Play is shown;
+- `RESULT: cleared` is shown;
+- Return to Edit is shown;
+- no provider key/private data is visible.
+
+The final capture is intentionally concise at 49.5 seconds. The hackathon requirement is only that the demo video be under 3 minutes; no minimum duration, narration, or audio requirement is recorded in the current official-requirements snapshot.
+
 ## Completion gate
 
-DAI-082 may be marked DONE only after the final video file is available and all of the following are checked:
+DAI-082 completion review confirms all of the following:
 
 - actual duration is strictly below 180 seconds;
 - the video uses the public candidate;
