@@ -680,10 +680,6 @@ function handleCanvasPointer(event) {
 
   const roomId = hit.kind === 'room' ? hit.specId : hit.roomId;
   if (!roomId) return;
-  if (mode === 'play') {
-    movePlayToRoom(roomId);
-    return;
-  }
   if (mode === 'edit') selectRoom(roomId);
 }
 
