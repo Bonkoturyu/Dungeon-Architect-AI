@@ -184,7 +184,8 @@ try {
       httpErrors.length === 0,
   };
 
-  const passed = Object.values(checks).every(Boolean);
+  const falseChecks = Object.entries(checks).filter(([, value]) => value !== true).map(([name]) => name);
+  const passed = falseChecks.length === 0;
   const evidence = {
     generatedAt: new Date().toISOString(),
     node: process.version,
@@ -210,6 +211,7 @@ try {
     pageErrors,
     failedRequests,
     httpErrors,
+    falseChecks,
   };
 
   fs.writeFileSync(
@@ -218,7 +220,10 @@ try {
   );
   console.log(JSON.stringify(evidence, null, 2));
 
-  if (!passed) throw new Error(`DAI-086 exploration UX invariant failed: ${JSON.stringify(checks)}`);
+  if (!passed) {
+    console.error('DAI-086 failed checks:', falseChecks.join(', '));
+    throw new Error(`DAI-086 exploration UX invariant failed: ${falseChecks.join(', ')}`);
+  }
 } finally {
   if (browser) await browser.close();
   vite.kill();
