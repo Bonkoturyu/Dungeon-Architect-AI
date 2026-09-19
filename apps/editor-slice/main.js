@@ -35,7 +35,7 @@ const applyNaturalEditButton = document.querySelector('#applyNaturalEdit');
 const naturalEditStatus = document.querySelector('#naturalEditStatus');
 const hint = document.querySelector('#hint');
 const viewportHelp = document.querySelector('#viewportHelp');
-const workflowTabButtons = [...document.querySelectorAll('[data-workflow-tab]')];
+const workflowTabButtons = [...document.querySelectorAll('.workflow-tab[data-workflow-tab]')];
 
 let adapter;
 let session;
