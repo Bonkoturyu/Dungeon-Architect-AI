@@ -28,6 +28,8 @@ const generationStatus = document.querySelector('#generationStatus');
 const naturalEditInput = document.querySelector('#naturalEditInput');
 const applyNaturalEditButton = document.querySelector('#applyNaturalEdit');
 const naturalEditStatus = document.querySelector('#naturalEditStatus');
+const hint = document.querySelector('#hint');
+const viewportHelp = document.querySelector('#viewportHelp');
 
 let adapter;
 let session;
@@ -167,6 +169,22 @@ function updateUi() {
   const room = selectedRoom();
   const entity = selectedEntity();
   const editing = mode === 'edit';
+
+  document.body.dataset.mode = mode;
+  if (hint) {
+    hint.textContent = editing
+      ? 'Edit: select rooms or use the inspector. Play: click a connected room.'
+      : mode === 'play'
+        ? 'Play: click a connected room to move toward the Goal.'
+        : 'Result complete. Return to Edit to continue authoring.';
+  }
+  if (viewportHelp) {
+    viewportHelp.textContent = editing
+      ? 'Click a room to select · Arrow keys move selected room'
+      : mode === 'play'
+        ? 'Click a connected room to move toward the Goal'
+        : 'Run complete · Return to Edit to keep authoring';
+  }
 
   selectedLabel.textContent = room
     ? `room: ${room.id} @ (${room.x.toFixed(1)}, ${room.z.toFixed(1)})`
