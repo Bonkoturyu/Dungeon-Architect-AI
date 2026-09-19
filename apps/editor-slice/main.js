@@ -215,7 +215,7 @@ function updateUi() {
   naturalEditInput.disabled = !editing || naturalEditBusy;
   applyNaturalEditButton.disabled = !editing || naturalEditBusy || !naturalEditInput.value.trim();
   startButton.disabled = !editing || !gate.allowed;
-  mysteryPlayButton.disabled = !editing || !gate.allowed || !lastDesignIntent;
+  mysteryPlayButton.disabled = !editing || !lastDesignIntent;
   mysteryPlayButton.title = lastDesignIntent ? 'Generate a fresh hidden dungeon from the same design intent.' : 'Generate a dungeon first to unlock Mystery Play.';
   returnEditButton.disabled = editing;
 }
@@ -609,8 +609,6 @@ function freshMysterySeed() {
 
 function startMysteryDungeon() {
   if (mode !== 'edit' || !lastDesignIntent) return false;
-  refreshGate();
-  if (!gate.allowed) return false;
 
   const seed = freshMysterySeed();
   const generated = generateDungeonFromDesignIntent(lastDesignIntent, {
