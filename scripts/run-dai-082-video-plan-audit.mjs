@@ -10,32 +10,56 @@ const checks = {
   requirementUnderThreeMinutes:
     videoDoc.includes('demo video under 3 minutes') &&
     videoDoc.includes('hard submission limit: **< 180 seconds**'),
+
   targetHasSafetyMargin:
     videoDoc.includes('internal target: **120–150 seconds**') &&
     storyboard.includes('Internal target: **2:00–2:30**'),
+
   publicCandidateOnly:
     videoDoc.includes('https://dungeon-architect-ai.pages.dev/') &&
     storyboard.includes('https://dungeon-architect-ai.pages.dev/'),
+
   requiredFlowCovered:
     ['Describe / Generate', 'Manual Edit', 'Natural-language Edit', 'START / Play', 'Result', 'Return to Edit']
       .every((term) => storyboard.includes(term)),
+
   narrationRespectsBoundaries:
     videoDoc.includes('one constrained EditCommand') &&
     videoDoc.includes('room-graph locomotion must not be narrated as physics/collision gameplay'),
+
   actualVideoStillRequired:
     videoDoc.includes('DAI-082 may be marked DONE only after the final video file is available') &&
     videoDoc.includes('actual duration is strictly below 180 seconds'),
-  recordingRunnerRegistered: packageJson.scripts?.['demo:video'] === 'node scripts/run-dai-082-recording-demo.mjs',
+
+  recordingRunnerRegistered:
+    packageJson.scripts?.['demo:video'] === 'node scripts/run-dai-082-recording-demo.mjs',
+
   recordingRunnerUsesPlaySnapshotGraph:
     recordingRunner.includes('state.play?.snapshot') &&
     recordingRunner.includes('snapshot.corridors') &&
     !recordingRunner.includes('for (const corridor of state.corridors)'),
+
   recordingRunnerCapturesViewportOnly:
     recordingRunner.includes("'-offset_x', String(region.x)") &&
     recordingRunner.includes("'-offset_y', String(region.y)") &&
-    recordingRunner.includes("'-video_size', \`${region.width}x${region.height}\`") &&
-    recordingRunner.includes("captureMode: useFfmpeg ? 'browser-viewport-region' : 'manual'") &&
-    recordingRunner.includes("'--kiosk'"),
+    recordingRunner.includes("'-video_size', `${region.width}x${region.height}`") &&
+    recordingRunner.includes("captureMode: useFfmpeg ? 'browser-viewport-region' : 'manual'"),
+
+  recordingRunnerForcesFullscreen:
+    recordingRunner.includes("Browser.setWindowBounds") &&
+    recordingRunner.includes("windowState: 'fullscreen'"),
+
+  recordingRunnerSuppressesBrowserUiNoise:
+    recordingRunner.includes("'--disable-extensions'") &&
+    recordingRunner.includes("'--disable-features=Translate,TranslateUI'") &&
+    recordingRunner.includes("'--disable-translate'"),
+
+  recordingRunnerGuardsCaptureFraming:
+    recordingRunner.includes('captureViewportNotNarrow') &&
+    recordingRunner.includes('captureLeftEdgeNotTrimmed') &&
+    recordingRunner.includes('fullscreenLike') &&
+    recordingRunner.includes('viewportCaptureRegion.innerWidth >= 1280') &&
+    recordingRunner.includes('viewportCaptureRegion.innerHeight >= 720'),
 };
 
 const passed = Object.values(checks).every(Boolean);
