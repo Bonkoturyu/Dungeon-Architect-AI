@@ -2,7 +2,7 @@
 
 ## Status
 
-**CONFIRMED candidate metadata.** The short description and final focus category are frozen for the current submission candidate, subject only to reopening if the actual submission form exposes a materially different category list or a stricter description-length limit.
+**DONE.** The short description and final focus category are frozen for the current submission candidate and passed deterministic metadata/public-doc validation on 2026-09-19.
 
 ## Official submission requirement
 
@@ -77,6 +77,26 @@ The chosen metadata is grounded in the current production candidate:
 - DAI-026 corrected continuous orthogonal corridor presentation;
 - DAI-082 final public-demo video;
 - current production README / Judge Quick Start / Known Limitations.
+
+## Production validation evidence
+
+Reviewed DAI-083 metadata evidence:
+
+- generated: `2026-09-19T07:20:44.087Z`;
+- Node.js: `v24.15.0`;
+- `passed = true`;
+- all 8 metadata checks passed;
+- category: `AI 3D Scene Generation`;
+- primary description: 513 characters / 70 words;
+- compact fallback: 215 characters / 27 words;
+- decision closure and checklist closure both passed;
+- evidence JSON SHA-256: `1458ca9cd1ec00aca0ac23547df1f55aafc217c50763ef0a1d9db3b53585d6cb`.
+
+The accompanying public-document revalidation also passed all 12 checks with no missing local links or placeholder findings.
+
+Public-doc evidence JSON SHA-256:
+
+`c9dbc48df13f980fba8161fcff282716d797def70eabcd095c215d9f24f420d1`
 
 ## Reopen conditions
 
