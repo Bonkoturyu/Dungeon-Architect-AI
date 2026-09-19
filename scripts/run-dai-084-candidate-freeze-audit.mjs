@@ -5,7 +5,8 @@ import { execFileSync } from 'node:child_process';
 
 const EXPECTED_COMMIT = 'cacba2a1f8f079ab6401768b97f9fc91fff8f3b9';
 const EXPECTED_TREE = 'e2938bb46e1cf2eedc3a90e2b7603bd6050486ad';
-const ROLLBACK_REMOTE_REF = 'refs/remotes/origin/rollback/submission-candidate-m8-2026-09-19';
+const ROLLBACK_BRANCH = 'rollback/submission-candidate-m8-2026-09-19';
+const ROLLBACK_REMOTE_HEAD = `refs/heads/${ROLLBACK_BRANCH}`;
 const EXPECTED_NODE = '24.15.0';
 const EXPECTED_LOCK_SHA256 = 'ce94a9ee4241ee798c0c32c0fda55f00cb4462fb6ba6244acdd3d53589d261cc';
 
@@ -53,8 +54,11 @@ try {
 } catch {}
 
 let rollbackCommit = null;
+let rollbackLookup = null;
 try {
-  rollbackCommit = git(['rev-parse', ROLLBACK_REMOTE_REF]);
+  rollbackLookup = git(['ls-remote', '--heads', 'origin', ROLLBACK_REMOTE_HEAD]);
+  const [sha, ref] = rollbackLookup.split(/\s+/);
+  if (ref === ROLLBACK_REMOTE_HEAD && /^[0-9a-f]{40}$/.test(sha)) rollbackCommit = sha;
 } catch {}
 
 const candidateTree = candidateExists ? git(['show', '-s', '--format=%T', EXPECTED_COMMIT]) : null;
@@ -94,7 +98,7 @@ const checks = {
   candidateCommitExists: candidateExists,
   candidateCommitExact: manifest.candidateCommit === EXPECTED_COMMIT,
   candidateTreeExact: candidateTree === EXPECTED_TREE && manifest.candidateTree === EXPECTED_TREE,
-  rollbackRefExact: rollbackCommit === EXPECTED_COMMIT && manifest.rollbackBranch === 'rollback/submission-candidate-m8-2026-09-19',
+  rollbackRefExact: rollbackCommit === EXPECTED_COMMIT && manifest.rollbackBranch === ROLLBACK_BRANCH,
   candidateIsAncestorOfCurrentHead,
   onlyDAI084BookkeepingChanged: unexpectedChanges.length === 0,
   nodeVersionExact: candidateNode === EXPECTED_NODE && manifest.nodeVersion === EXPECTED_NODE,
@@ -106,7 +110,10 @@ const checks = {
       .every((required) => distManifest.some((entry) => entry.path === required)),
 };
 
-const passed = Object.values(checks).every(Boolean);
+const falseChecks = Object.entries(checks)
+  .filter(([, value]) => value !== true)
+  .map(([name]) => name);
+const passed = falseChecks.length === 0;
 const evidence = {
   generatedAt: new Date().toISOString(),
   node: process.version,
@@ -115,7 +122,8 @@ const evidence = {
     id: manifest.candidateId,
     commit: EXPECTED_COMMIT,
     tree: candidateTree,
-    rollbackRemoteRef: ROLLBACK_REMOTE_REF,
+    rollbackRemoteRef: ROLLBACK_REMOTE_HEAD,
+    rollbackLookup,
     rollbackCommit,
     currentHead,
     changedPaths,
@@ -133,6 +141,7 @@ const evidence = {
     files: distManifest,
   },
   checks,
+  falseChecks,
 };
 
 fs.mkdirSync(path.resolve('artifacts/candidate-freeze'), { recursive: true });
@@ -147,5 +156,26 @@ fs.writeFileSync(
 
 console.log(JSON.stringify(evidence, null, 2));
 if (!passed) {
-  throw new Error(`DAI-084 candidate-freeze invariant failed: ${JSON.stringify(checks)}`);
+  console.error('');
+  console.error('DAI-084 failed checks:');
+  for (const name of falseChecks) console.error(`  - ${name}`);
+  console.error('');
+  console.error('Key diagnostics:');
+  console.error(JSON.stringify({
+    rollbackLookup,
+    rollbackCommit,
+    expectedCommit: EXPECTED_COMMIT,
+    candidateTree,
+    expectedTree: EXPECTED_TREE,
+    currentHead,
+    changedPaths,
+    unexpectedChanges,
+    candidateNode,
+    lockExists,
+    lockSha256,
+    expectedLockSha256: EXPECTED_LOCK_SHA256,
+    distFileCount: distManifest.length,
+    distManifestSha256,
+  }, null, 2));
+  throw new Error(`DAI-084 candidate-freeze invariant failed: ${falseChecks.join(', ')}`);
 }
