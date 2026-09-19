@@ -1,6 +1,7 @@
 import { EditSession } from '../../packages/editor-core/src/edit-session.js';
 import { evaluateStartGate } from '../../packages/editor-core/src/start-gate.js';
 import { startPlaySession, movePlaySession, createPlayResult } from '../../packages/play-core/src/play-session.js';
+import { createRendererVisibilityFromPlaySession, derivePlayMap } from '../../packages/play-core/src/play-map.js';
 import { createThreeRendererAdapter } from '../../packages/renderer-three/src/index.js';
 import { generateDungeonFromDesignIntent } from '../../packages/generator/src/design-intent-generator.js';
 
@@ -15,7 +16,11 @@ const resultStatus = document.querySelector('#resultStatus');
 const undoButton = document.querySelector('#undo');
 const redoButton = document.querySelector('#redo');
 const startButton = document.querySelector('#start');
+const mysteryPlayButton = document.querySelector('#mysteryPlay');
 const returnEditButton = document.querySelector('#returnEdit');
+const playExitBar = document.querySelector('#playExitBar');
+const playExitButtons = document.querySelector('#playExitButtons');
+const playModeLabel = document.querySelector('#playModeLabel');
 const entitySelect = document.querySelector('#entitySelect');
 const entityRoom = document.querySelector('#entityRoom');
 const entityType = document.querySelector('#entityType');
@@ -43,6 +48,7 @@ let lastNaturalEditCommand = null;
 let mode = 'edit';
 let gate = { allowed: false, criticalCount: 0, errors: [] };
 let playSession = null;
+let playSource = null;
 let lastPlayResult = null;
 
 function clone(value) {
@@ -79,6 +85,8 @@ function currentPlayState() {
     goalRoomId: playSession.goalRoomId,
     moves: playSession.moves,
     visitedRoomIds: [...playSession.visitedRoomIds],
+    map: clone(derivePlayMap(playSession)),
+    source: playSource,
     snapshot: clone(playSession.snapshot),
   };
 }
@@ -101,6 +109,7 @@ function snapshotState() {
     naturalEditBusy,
     lastNaturalEditCommand: lastNaturalEditCommand ? { ...lastNaturalEditCommand } : null,
     play: currentPlayState(),
+    playSource,
     result: lastPlayResult ? clone(lastPlayResult) : null,
     rooms: spec?.rooms.map((room) => ({ id: room.id, x: room.x, z: room.z })) ?? [],
     entities: spec?.entities.map((entity) => ({ id: entity.id, type: entity.type, roomId: entity.roomId })) ?? [],
@@ -173,17 +182,17 @@ function updateUi() {
   document.body.dataset.mode = mode;
   if (hint) {
     hint.textContent = editing
-      ? 'Edit: select rooms or use the inspector. Play: click a connected room.'
+      ? 'Create · Edit · Play'
       : mode === 'play'
-        ? 'Play: click a connected room to move toward the Goal.'
-        : 'Result complete. Return to Edit to continue authoring.';
+        ? 'Choose an exit. The map grows as you explore.'
+        : 'Run complete.';
   }
   if (viewportHelp) {
     viewportHelp.textContent = editing
-      ? 'Click a room to select · Arrow keys move selected room'
+      ? 'Select a room · Arrow keys move'
       : mode === 'play'
-        ? 'Click a connected room to move toward the Goal'
-        : 'Run complete · Return to Edit to keep authoring';
+        ? 'Unknown rooms stay hidden · choose an exit'
+        : 'Run complete · return to edit';
   }
 
   selectedLabel.textContent = room
@@ -206,12 +215,63 @@ function updateUi() {
   naturalEditInput.disabled = !editing || naturalEditBusy;
   applyNaturalEditButton.disabled = !editing || naturalEditBusy || !naturalEditInput.value.trim();
   startButton.disabled = !editing || !gate.allowed;
+  mysteryPlayButton.disabled = !editing || !gate.allowed || !lastDesignIntent;
+  mysteryPlayButton.title = lastDesignIntent ? 'Generate a fresh hidden dungeon from the same design intent.' : 'Generate a dungeon first to unlock Mystery Play.';
   returnEditButton.disabled = editing;
+}
+
+function sideIcon(side) {
+  return ({ north: '↑', east: '→', south: '↓', west: '←' })[side] ?? '◇';
+}
+
+function renderPlayExits() {
+  if (!playExitBar || !playExitButtons || !playSession || mode !== 'play') {
+    if (playExitBar) playExitBar.hidden = true;
+    if (playExitButtons) playExitButtons.replaceChildren();
+    return;
+  }
+
+  const map = derivePlayMap(playSession);
+  const roomPlan = adapter.plan?.roomGroups.find((group) => group.specId === map.currentRoomId);
+  const openingByCorridor = new Map(
+    (roomPlan?.doorOpenings ?? []).map((opening) => [opening.corridorId, opening])
+  );
+
+  const exits = map.currentExits
+    .map((exit) => ({
+      ...exit,
+      side: openingByCorridor.get(exit.corridorId)?.side ?? null,
+    }))
+    .sort((a, b) => {
+      const order = { north: 0, east: 1, south: 2, west: 3 };
+      return (order[a.side] ?? 9) - (order[b.side] ?? 9) || a.corridorId.localeCompare(b.corridorId);
+    });
+
+  const sideCounts = new Map();
+  playExitButtons.replaceChildren(...exits.map((exit) => {
+    const count = (sideCounts.get(exit.side) ?? 0) + 1;
+    sideCounts.set(exit.side, count);
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `exit-button ${exit.explored ? 'is-known' : 'is-unknown'}`;
+    const icon = sideIcon(exit.side);
+    button.textContent = count > 1 ? `${icon}${count}` : icon;
+    const direction = exit.side ?? 'unknown';
+    button.setAttribute('aria-label', exit.explored ? `Return through ${direction} exit` : `Explore ${direction} exit`);
+    button.title = exit.explored ? `Known ${direction} passage` : `Explore ${direction}`;
+    button.addEventListener('click', () => movePlayToRoom(exit.targetRoomId));
+    return button;
+  }));
+
+  playExitBar.hidden = exits.length === 0;
 }
 
 function renderActiveSpec() {
   const spec = activeRenderSpec();
-  adapter.render(spec);
+  const visibility = mode === 'edit' || !playSession
+    ? null
+    : createRendererVisibilityFromPlaySession(playSession);
+  adapter.render(spec, { visibility });
   ensureRoomOptions();
   ensureEntityOptions();
 
@@ -222,6 +282,7 @@ function renderActiveSpec() {
     adapter.setSelectedSpecId(null);
   }
 
+  renderPlayExits();
   refreshGate();
   updateUi();
 }
@@ -381,12 +442,11 @@ async function generateDungeonFromPrompt() {
     };
     mode = 'edit';
     generationPrompt.value = '';
-    playStatus.textContent = 'Not started.';
+    playStatus.textContent = '—';
+  resultStatus.textContent = '—';
     resultStatus.textContent = 'No result yet.';
     renderActiveSpec();
-    setGenerationStatus(
-      `generated: ${lastGeneration.selectedProvider} · ${lastGeneration.roomCount} rooms · seed ${lastGeneration.seed}`
-    );
+    setGenerationStatus(`✓ Generated · ${lastGeneration.roomCount} rooms`);
     setEditStatus('generated new dungeon');
     return true;
   } catch {
@@ -479,15 +539,49 @@ function redo() {
   return true;
 }
 
+function updatePlayReadout() {
+  if (!playSession) {
+    playStatus.textContent = '—';
+    resultStatus.textContent = '—';
+    if (playModeLabel) playModeLabel.textContent = '';
+    return;
+  }
+  const map = derivePlayMap(playSession);
+  const modeName = playSource === 'mystery' ? 'Mystery' : 'Test';
+  if (playModeLabel) playModeLabel.textContent = modeName;
+  playStatus.textContent = `${modeName} · ${playSession.moves} moves · ${map.exploredRoomIds.length} mapped`;
+}
+
 function finalizePlayIfNeeded() {
   if (!playSession || !['cleared', 'failed'].includes(playSession.status)) return false;
   const result = createPlayResult(playSession);
   if (!result.ok) throw new Error(`createPlayResult failed: ${JSON.stringify(result.error)}`);
   lastPlayResult = result.result;
   mode = 'result';
-  playStatus.textContent = `${playSession.status}: room ${playSession.currentRoomId}`;
-  resultStatus.textContent = `RESULT: ${lastPlayResult.status} · moves ${lastPlayResult.moves} · visited ${lastPlayResult.visitedRoomIds.length}`;
+  playStatus.textContent = lastPlayResult.status === 'cleared' ? '✓ Cleared' : 'Run ended';
+  resultStatus.textContent = `${lastPlayResult.moves} moves · ${lastPlayResult.visitedRoomIds.length} rooms mapped`;
   renderActiveSpec();
+  return true;
+}
+
+function beginPlay(spec, source) {
+  const result = startPlaySession(spec, { startedAt: 0 });
+  if (!result.ok) {
+    setEditStatus(`Play blocked: ${result.errors?.[0]?.code ?? 'VALIDATION'}`);
+    return false;
+  }
+
+  playSession = result.session;
+  playSource = source;
+  lastPlayResult = null;
+  mode = playSession.status === 'playing' ? 'play' : 'result';
+  selectedRoomId = playSession.currentRoomId;
+  selectedEntityId = null;
+  resultStatus.textContent = '—';
+  updatePlayReadout();
+  setEditStatus(source === 'mystery' ? 'mystery play started' : 'test play started');
+  renderActiveSpec();
+  finalizePlayIfNeeded();
   return true;
 }
 
@@ -495,28 +589,34 @@ function startDungeon() {
   if (mode !== 'edit') return false;
   refreshGate();
   if (!gate.allowed) {
-    setEditStatus(`START blocked: ${gate.criticalCount} Critical`);
+    setEditStatus(`Play blocked: ${gate.criticalCount} Critical`);
     updateUi();
     return false;
   }
+  return beginPlay(authoringSpec(), 'test');
+}
 
-  const result = startPlaySession(authoringSpec(), { startedAt: 0 });
-  if (!result.ok) {
-    setEditStatus(`START blocked: ${result.errors?.[0]?.code ?? 'VALIDATION'}`);
-    return false;
-  }
+function freshMysterySeed() {
+  const values = new Uint32Array(1);
+  crypto.getRandomValues(values);
+  let seed = values[0] >>> 0;
+  const blocked = new Set([authoringSpec().seed, lastGeneration?.seed].filter(Number.isSafeInteger));
+  while (blocked.has(seed)) seed = (seed + 0x9e3779b9) >>> 0;
+  return seed;
+}
 
-  playSession = result.session;
-  lastPlayResult = null;
-  mode = playSession.status === 'playing' ? 'play' : 'result';
-  selectedRoomId = playSession.currentRoomId;
-  selectedEntityId = null;
-  playStatus.textContent = `playing: ${playSession.currentRoomId} → ${playSession.goalRoomId}`;
-  resultStatus.textContent = 'No result yet.';
-  setEditStatus('START snapshot created');
-  renderActiveSpec();
-  finalizePlayIfNeeded();
-  return true;
+function startMysteryDungeon() {
+  if (mode !== 'edit' || !lastDesignIntent) return false;
+  refreshGate();
+  if (!gate.allowed) return false;
+
+  const seed = freshMysterySeed();
+  const generated = generateDungeonFromDesignIntent(lastDesignIntent, {
+    prompt: 'mystery-play',
+    seed,
+    id: `mystery-${seed}`,
+  });
+  return beginPlay(generated.spec, 'mystery');
 }
 
 function movePlayToRoom(roomId) {
@@ -529,7 +629,7 @@ function movePlayToRoom(roomId) {
 
   playSession = result.session;
   selectedRoomId = playSession.currentRoomId;
-  playStatus.textContent = `playing: ${playSession.currentRoomId} → ${playSession.goalRoomId} · moves ${playSession.moves}`;
+  updatePlayReadout();
   renderActiveSpec();
   finalizePlayIfNeeded();
   return true;
@@ -539,6 +639,7 @@ function returnToEdit() {
   if (mode === 'edit') return false;
   mode = 'edit';
   playSession = null;
+  playSource = null;
   selectedRoomId = null;
   selectedEntityId = null;
   playStatus.textContent = 'Not started.';
@@ -614,6 +715,7 @@ async function run() {
     undoButton.addEventListener('click', undo);
     redoButton.addEventListener('click', redo);
     startButton.addEventListener('click', startDungeon);
+    mysteryPlayButton.addEventListener('click', startMysteryDungeon);
     returnEditButton.addEventListener('click', returnToEdit);
     entitySelect.addEventListener('change', () => selectEntity(entitySelect.value));
     entityRoom.addEventListener('change', updateUi);
@@ -637,6 +739,7 @@ async function run() {
       applyNaturalEdit,
       evaluateStartGateForSpec: (spec) => evaluateStartGate(spec),
       startDungeon,
+      startMysteryDungeon,
       movePlayToRoom,
       returnToEdit,
     };
