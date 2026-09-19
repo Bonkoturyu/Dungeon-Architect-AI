@@ -1,3 +1,5 @@
+import { isRuntimeCorridorEnabled } from './event-runtime.js';
+
 function assertPlaySession(session) {
   if (!session || typeof session !== 'object' || !session.snapshot) {
     throw new TypeError('derivePlayMap requires a PlaySession with a snapshot.');
@@ -32,6 +34,7 @@ export function listCurrentRoomExits(session) {
   const exits = [];
 
   for (const corridor of session.snapshot.corridors) {
+    if (!isRuntimeCorridorEnabled(session, corridor)) continue;
     let targetRoomId = null;
     if (corridor.fromRoomId === currentRoomId) targetRoomId = corridor.toRoomId;
     else if (corridor.toRoomId === currentRoomId) targetRoomId = corridor.fromRoomId;
