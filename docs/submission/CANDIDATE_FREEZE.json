@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "1.0",
+  "candidateId": "m8-submission-candidate-2026-09-19",
+  "candidateCommit": "cacba2a1f8f079ab6401768b97f9fc91fff8f3b9",
+  "candidateTree": "e2938bb46e1cf2eedc3a90e2b7603bd6050486ad",
+  "candidateCommitTimestamp": "2026-09-19T07:23:10Z",
+  "candidateCommitMessage": "Complete DAI-083 description and focus category (#39)",
+  "rollbackBranch": "rollback/submission-candidate-m8-2026-09-19",
+  "nodeVersion": "24.15.0",
+  "auditedPackageLockSha256": "ce94a9ee4241ee798c0c32c0fda55f00cb4462fb6ba6244acdd3d53589d261cc",
+  "publicDemo": "https://dungeon-architect-ai.pages.dev/",
+  "finalVideoSha256": "98ff93bb95491ea38ec7700f3d2313b99f6aa9a70aa4b2c1dceaff441a6ee25d",
+  "submissionMetadataSha256": "1458ca9cd1ec00aca0ac23547df1f55aafc217c50763ef0a1d9db3b53585d6cb",
+  "publicDocsSha256": "c9dbc48df13f980fba8161fcff282716d797def70eabcd095c215d9f24f420d1",
+  "freezeScope": "M8 candidate after DAI-083; DAI-084 documentation and validation are deliberately outside the candidate snapshot.",
+  "rollbackPolicy": "Do not force-reset main. Create a recovery branch from the rollback branch or candidate commit, validate it, and merge/deploy through the normal reviewed path."
+}
