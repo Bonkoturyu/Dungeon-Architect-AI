@@ -57,13 +57,46 @@ async function gate(page) {
   return page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
 }
 
-function startFfmpegCapture() {
+async function getViewportCaptureRegion(page) {
+  return page.evaluate(() => {
+    const dpr = window.devicePixelRatio || 1;
+    const horizontalChrome = Math.max(0, window.outerWidth - window.innerWidth);
+    const sideBorder = horizontalChrome / 2;
+    const verticalChrome = Math.max(0, window.outerHeight - window.innerHeight);
+    const bottomBorder = sideBorder;
+    const chromeAboveViewport = Math.max(0, verticalChrome - bottomBorder);
+
+    const x = Math.round((window.screenX + sideBorder) * dpr);
+    const y = Math.round((window.screenY + chromeAboveViewport) * dpr);
+    const rawWidth = Math.round(window.innerWidth * dpr);
+    const rawHeight = Math.round(window.innerHeight * dpr);
+
+    return {
+      x: Math.max(0, x),
+      y: Math.max(0, y),
+      width: Math.max(2, Math.floor(rawWidth / 2) * 2),
+      height: Math.max(2, Math.floor(rawHeight / 2) * 2),
+      dpr,
+      innerWidth: window.innerWidth,
+      innerHeight: window.innerHeight,
+      outerWidth: window.outerWidth,
+      outerHeight: window.outerHeight,
+      screenX: window.screenX,
+      screenY: window.screenY,
+    };
+  });
+}
+
+function startFfmpegCapture(region) {
   if (!useFfmpeg) return false;
   ffmpegProcess = spawn(ffmpegPath, [
     '-y',
     '-f', 'gdigrab',
     '-framerate', '30',
     '-draw_mouse', '1',
+    '-offset_x', String(region.x),
+    '-offset_y', String(region.y),
+    '-video_size', `${region.width}x${region.height}`,
     '-i', 'desktop',
     '-c:v', 'libx264',
     '-preset', 'veryfast',
@@ -129,7 +162,11 @@ try {
   browser = await chromium.launch({
     executablePath: chromePath,
     headless: false,
-    args: ['--start-maximized'],
+    args: [
+      '--kiosk',
+      '--no-first-run',
+      '--disable-session-crashed-bubble',
+    ],
   });
   const context = await browser.newContext({ viewport: null });
   const page = await context.newPage();
@@ -146,11 +183,19 @@ try {
   await page.goto(baseUrl, { waitUntil: 'networkidle', timeout: 90_000 });
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__?.ready === true && window.__DAI_ONBOARDING__?.ready === true, null, { timeout: 60_000 });
 
+  await page.bringToFront();
+  await wait(1000);
+  const viewportCaptureRegion = await getViewportCaptureRegion(page);
+
   console.log('');
   console.log('DAI-082 recording runner ready.');
   if (useFfmpeg) {
-    console.log(`ffmpeg detected. Recording will be written automatically to: ${capturePath}`);
-    startFfmpegCapture();
+    console.log(`ffmpeg detected. Recording only the browser viewport to: ${capturePath}`);
+    console.log(
+      `capture region: ${viewportCaptureRegion.width}x${viewportCaptureRegion.height} @ ` +
+      `(${viewportCaptureRegion.x}, ${viewportCaptureRegion.y})`
+    );
+    startFfmpegCapture(viewportCaptureRegion);
     await wait(1200);
     if (ffmpegProcess?.exitCode !== null) {
       throw new Error(`ffmpeg exited before recording started. ${ffmpegStderr.slice(-2000)}`);
@@ -366,6 +411,8 @@ try {
       actualVideoFileValidated: false,
       targetFinalVideoSeconds: 150,
       hardSubmissionLimitSeconds: 180,
+      captureMode: useFfmpeg ? 'browser-viewport-region' : 'manual',
+      viewportCaptureRegion,
     },
   };
 
@@ -382,6 +429,10 @@ try {
     evidence.recordingBoundary.ffprobeAvailable = ffprobeAvailable;
     evidence.recordingBoundary.captureProbe = captureProbe;
     evidence.checks.actualCaptureCreated = evidence.recordingBoundary.actualVideoFileCreated === true;
+    evidence.checks.captureIsBrowserViewportOnly =
+      evidence.recordingBoundary.captureMode === 'browser-viewport-region' &&
+      viewportCaptureRegion.width > 0 &&
+      viewportCaptureRegion.height > 0;
     if (captureProbe) {
       evidence.checks.actualCaptureUnder180Seconds =
         Number.isFinite(captureProbe.durationSeconds) &&
