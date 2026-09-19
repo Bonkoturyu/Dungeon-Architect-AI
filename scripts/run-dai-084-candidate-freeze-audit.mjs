@@ -99,7 +99,7 @@ const checks = {
   candidateCommitExact: manifest.candidateCommit === EXPECTED_COMMIT,
   candidateTreeExact: candidateTree === EXPECTED_TREE && manifest.candidateTree === EXPECTED_TREE,
   rollbackRefExact: rollbackCommit === EXPECTED_COMMIT && manifest.rollbackBranch === ROLLBACK_BRANCH,
-  candidateIsAncestorOfCurrentHead,
+  candidateIsAncestorOfCurrentHead: candidateIsAncestorOfHead,
   onlyDAI084BookkeepingChanged: unexpectedChanges.length === 0,
   nodeVersionExact: candidateNode === EXPECTED_NODE && manifest.nodeVersion === EXPECTED_NODE,
   auditedLockfilePresent: lockExists,
