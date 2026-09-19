@@ -87,9 +87,9 @@ const checks = {
     readme.includes('desktop Google Chrome on Windows') &&
     readme.includes('mobile/narrow layouts are best-effort only'),
   readmePendingSubmissionItemsExplicit:
-    readme.includes('DAI-082') &&
     readme.includes('DAI-083') &&
     readme.includes('DAI-084') &&
+    readme.includes('DAI-082 demo video is complete') &&
     readme.includes('GitHub repository is still private'),
   judgeGuideCurrentFlowTruthful:
     quick.includes('https://dungeon-architect-ai.pages.dev/') &&
@@ -118,14 +118,14 @@ const checks = {
     checklist.includes('- [x] AI usage disclosure complete') &&
     checklist.includes('- [x] LICENSE / NOTICE complete') &&
     checklist.includes('- [ ] Public repository') &&
-    checklist.includes('- [ ] Demo video under 3 minutes') &&
+    checklist.includes('- [x] Demo video under 3 minutes') &&
     checklist.includes('- [ ] Short description') &&
     checklist.includes('- [ ] Focus category') &&
-    checklist.includes('- [ ] DAI-081 privacy/public-doc re-audit after generation endpoint integration'),
-  storyboardReadyAfterGovernanceReaudit:
-    storyboard.includes('READY FOR DAI-082 RECORDING') &&
-    storyboard.includes('privacy/public-doc re-audit closes') &&
-    storyboard.includes('actual public candidate'),
+    checklist.includes('- [x] DAI-081 privacy/public-doc re-audit after generation endpoint integration'),
+  storyboardFinalCaptureAccepted:
+    storyboard.includes('DAI-082 FINAL CAPTURE ACCEPTED') &&
+    storyboard.includes('49.5 seconds') &&
+    storyboard.includes('corrected DAI-026 public candidate'),
   localMarkdownLinksResolve: missingLocalLinks.length === 0,
   noTodoOrTbdPlaceholders: placeholderFindings.length === 0,
 };

@@ -1,20 +1,57 @@
 # Demo Storyboard
 
-**Status: READY FOR DAI-082 RECORDING after the DAI-081 privacy/public-doc re-audit closes.**
+**Status: DAI-082 FINAL CAPTURE ACCEPTED.**
 
-Target: under 3 minutes.
+Requirement: **under 3 minutes**. Final reviewed capture: **49.5 seconds**.
 
-## Recommended final storyboard
+Use the actual public candidate:
 
-1. Problem statement.
-2. Open the live Cloudflare Pages demo.
-3. Enter a dungeon generation prompt.
-4. Generate the low-poly dungeon; briefly show Validation PASS.
-5. Make one manual edit.
-6. Make the verified natural-language treasure relocation edit.
-7. Press START.
-8. Play a short route to Goal.
-9. Show cleared Result and Return to Edit.
-10. End card: **Dungeon Architect AI — Describe. Edit. Play.**
+https://dungeon-architect-ai.pages.dev/
 
-Keep the recording on the actual public candidate. Do not substitute isolated test harnesses for judge-facing behavior.
+The pre-DAI-026 and misframed interim captures are rejected. The accepted capture uses the corrected DAI-026 public candidate and fullscreen viewport-only framing.
+
+## Final storyboard
+
+1. **0:00–0:08 — Title / problem**
+   - Dungeon Architect AI
+   - “Describe. Edit. Play.”
+
+2. **0:08–0:32 — Describe / Generate**
+   - enter the verified generation prompt;
+   - click Generate dungeon;
+   - hold the generated 3D dungeon and `Validation: PASS`;
+   - make sure the corrected orthogonal alternate route is visibly coherent.
+
+3. **0:32–0:48 — Generated state**
+   - briefly show rooms/entities and the non-overlapping routed corridors.
+
+4. **0:48–1:05 — Manual Edit**
+   - select one room;
+   - move it;
+   - Undo.
+
+5. **1:05–1:30 — Natural-language Edit**
+   - enter the verified treasure-relocation request;
+   - apply;
+   - show `applied: move-entity`.
+
+6. **1:30–2:00 — START / Play**
+   - press START;
+   - traverse the actual graph-resolved connected route;
+   - reach Goal.
+
+7. **2:00–2:12 — Result**
+   - hold `RESULT: cleared`.
+
+8. **2:12–2:22 — Return to Edit**
+   - return to authoring view.
+
+9. **2:22–2:30 — End card**
+   - “Dungeon Architect AI — Describe. Edit. Play.”
+   - public demo URL.
+
+## Recording rule
+
+Record the real hosted candidate after Cloudflare has deployed DAI-026. Cuts/titles/narration are allowed, but do not use the rejected pre-DAI-026 capture or isolated harnesses as judge-facing footage.
+
+See `docs/testing/DAI-082_VIDEO.md`.

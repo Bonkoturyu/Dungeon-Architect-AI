@@ -2,7 +2,7 @@
 
 ## Status
 
-**DONE.** The DAI-081 post-integration public-document revalidation passed on 2026-09-19.
+**DONE.** The DAI-082 completion status revalidation passed on 2026-09-19.
 
 ## Purpose
 
@@ -98,6 +98,32 @@ Reviewed evidence generated at `2026-09-18T16:08:18.166Z` with Node.js `v24.15.0
 - no TODO/TBD placeholders remain;
 - hosted URL and generation UI may now be claimed complete, while repository visibility remains unchanged.
 
+## DAI-082 status revalidation
+
+DAI-082 changed submission-status claims only: the final video is now complete while Public repository / Description / Focus category / Candidate hash remain open. A fresh `npm run validate:public-docs` pass is required before PR #38 merges.
+
+## DAI-082 completion revalidation
+
+The final DAI-082 finalization command passed on 2026-09-19.
+
+The refreshed public-doc audit confirmed:
+
+- required public documents remain present;
+- README now marks DAI-082 complete while keeping DAI-083/084 and repository publication open;
+- Known Limitations no longer lists the video as pending;
+- Submission Checklist marks the under-three-minute video complete;
+- Demo Storyboard records the accepted 49.5-second corrected DAI-026 capture;
+- local Markdown links resolve;
+- placeholder findings are empty;
+- hosted URL and generation UI remain truthfully claimed complete;
+- repository visibility remains unchanged.
+
+Evidence path produced by the accepted run:
+
+`artifacts/public-docs/dai-080-public-docs.json`
+
+This closes the DAI-082-triggered public-document status revalidation.
+
 ## Completion boundary
 
-DAI-080 may be marked DONE when the documentation audit passes. This does not mark the overall submission candidate complete and does not close DAI-081–084.
+DAI-080 is DONE for the current candidate. This does not mark the overall submission candidate complete; DAI-083, DAI-084 and M9 remain open.

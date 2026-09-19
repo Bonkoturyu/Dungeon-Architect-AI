@@ -80,7 +80,7 @@ Key boundaries:
 - mobile is outside the supported submission acceptance scope;
 - no Safari/Firefox acceptance claim has been made;
 - there are no accounts, persistent project storage, analytics or telemetry;
-- the GitHub repository visibility switch, final video, description/focus category, and candidate freeze remain submission tasks.
+- the GitHub repository visibility switch, description/focus category, and candidate freeze remain submission tasks.
 
 ## Sample prompts
 
@@ -180,9 +180,10 @@ https://dungeon-architect-ai.pages.dev/
 
 Remaining M8 work:
 
-- DAI-082 — demo video under 3 minutes;
 - DAI-083 — short description and focus category;
 - DAI-084 — candidate hash / rollback point.
+
+DAI-082 demo video is complete: the final reviewed public-demo capture is 49.5 seconds at 1920×1080 / 30 fps.
 
 The GitHub repository is still private and must be switched to Public before submission.
 
