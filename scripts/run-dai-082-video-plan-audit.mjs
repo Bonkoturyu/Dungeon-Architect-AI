@@ -30,6 +30,12 @@ const checks = {
     recordingRunner.includes('state.play?.snapshot') &&
     recordingRunner.includes('snapshot.corridors') &&
     !recordingRunner.includes('for (const corridor of state.corridors)'),
+  recordingRunnerCapturesViewportOnly:
+    recordingRunner.includes("'-offset_x', String(region.x)") &&
+    recordingRunner.includes("'-offset_y', String(region.y)") &&
+    recordingRunner.includes("'-video_size', \`${region.width}x${region.height}\`") &&
+    recordingRunner.includes("captureMode: useFfmpeg ? 'browser-viewport-region' : 'manual'") &&
+    recordingRunner.includes("'--kiosk'"),
 };
 
 const passed = Object.values(checks).every(Boolean);
