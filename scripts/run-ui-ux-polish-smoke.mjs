@@ -32,14 +32,6 @@ async function waitForServer(url, timeoutMs = 30_000) {
   throw new Error(`UI/UX smoke server did not become ready.\n${viteOutput}`);
 }
 
-async function clickSpec(page, specId) {
-  const point = await page.evaluate((id) => window.__DAI_EDITOR_SLICE__.getScreenPositionForSpecId(id), specId);
-  if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) {
-    throw new Error(`Screen position unavailable for ${specId}: ${JSON.stringify(point)}`);
-  }
-  await page.mouse.click(point.x, point.y);
-}
-
 const url = `http://127.0.0.1:${port}/apps/editor-slice/index.html`;
 let browser;
 
@@ -141,7 +133,12 @@ try {
 
   if (route.length < 2) throw new Error(`No Play route: ${JSON.stringify(route)}`);
   for (const roomId of route.slice(1)) {
-    await clickSpec(page, roomId);
+    const corridorId = await page.evaluate((expectedRoomId) => {
+      const state = window.__DAI_EDITOR_SLICE__.getState();
+      return state.play?.map?.currentExits?.find((exit) => exit.targetRoomId === expectedRoomId)?.corridorId ?? null;
+    }, roomId);
+    if (!corridorId) throw new Error(`No visible exit to route room ${roomId}`);
+    await page.locator(`#playExitButtons .exit-button[data-corridor-id="${corridorId}"]`).click();
     await page.waitForFunction((expected) => {
       const state = window.__DAI_EDITOR_SLICE__.getState();
       return state.play?.currentRoomId === expected || state.result?.status === 'cleared';
@@ -152,6 +149,7 @@ try {
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().mode === 'result', null, { timeout: 30_000 });
   const resultLayout = await page.evaluate(() => ({
     bodyMode: document.body.dataset.mode,
+    playText: document.querySelector('#playStatus')?.textContent ?? '',
     resultText: document.querySelector('#resultStatus')?.textContent ?? '',
     viewportHelp: document.querySelector('#viewportHelp')?.textContent ?? '',
     editorPanelsHidden: [...document.querySelectorAll('.editor-only')]
@@ -178,11 +176,11 @@ try {
     playModeApplied: playLayout.bodyMode === 'play',
     authoringPanelsHiddenInPlay: playLayout.hiddenEditorPanels >= 3,
     playViewportExpands: playLayout.viewportWidth > editLayout.viewportWidth,
-    playInstructionIsModeAware: playLayout.viewportHelp.includes('connected room'),
+    playInstructionIsModeAware: playLayout.viewportHelp.includes('Unknown rooms stay hidden'),
     resultModeApplied: resultLayout.bodyMode === 'result',
-    resultVisible: resultLayout.resultText.includes('RESULT: cleared'),
+    resultVisible: resultLayout.playText.includes('Cleared') && resultLayout.resultText.includes('moves'),
     authoringPanelsHiddenInResult: resultLayout.editorPanelsHidden === true,
-    resultInstructionIsModeAware: resultLayout.viewportHelp.includes('Return to Edit'),
+    resultInstructionIsModeAware: resultLayout.viewportHelp.toLowerCase().includes('return to edit'),
     returnToEditRestoresMode: returnedMode === 'edit',
     browserErrorsAbsent:
       consoleErrors.length === 0 &&
