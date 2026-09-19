@@ -140,6 +140,7 @@
     #editStatus[hidden],
     .selection-chip[hidden] { display: none !important; }
     body[data-mode="edit"] #returnEdit { display: none; }
+    body[data-mode="edit"]:not([data-workflow-tab="edit"]) .history-group { display: none; }
     body[data-mode="play"] .history-group,
     body[data-mode="result"] .history-group,
     body[data-mode="play"] #editStatus,
