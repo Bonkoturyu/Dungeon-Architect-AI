@@ -35,6 +35,7 @@ const applyNaturalEditButton = document.querySelector('#applyNaturalEdit');
 const naturalEditStatus = document.querySelector('#naturalEditStatus');
 const hint = document.querySelector('#hint');
 const viewportHelp = document.querySelector('#viewportHelp');
+const workflowTabButtons = [...document.querySelectorAll('[data-workflow-tab]')];
 
 let adapter;
 let session;
@@ -50,6 +51,7 @@ let gate = { allowed: false, criticalCount: 0, errors: [] };
 let playSession = null;
 let playSource = null;
 let lastPlayResult = null;
+let workflowTab = 'create';
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -95,6 +97,7 @@ function snapshotState() {
   const spec = session?.spec ?? null;
   return {
     mode,
+    workflowTab,
     selectedRoomId,
     selectedEntityId,
     targetRoomId: entityRoom?.value || null,
@@ -174,12 +177,25 @@ function ensureEntityOptions() {
   }
 }
 
+function setWorkflowTab(nextTab) {
+  if (!['create', 'edit', 'play'].includes(nextTab)) return false;
+  workflowTab = nextTab;
+  document.body.dataset.workflowTab = nextTab;
+  for (const button of workflowTabButtons) {
+    const active = button.dataset.workflowTab === nextTab;
+    button.classList.toggle('is-active', active);
+    button.setAttribute('aria-selected', String(active));
+  }
+  return true;
+}
+
 function updateUi() {
   const room = selectedRoom();
   const entity = selectedEntity();
   const editing = mode === 'edit';
 
   document.body.dataset.mode = mode;
+  document.body.dataset.workflowTab = workflowTab;
   if (hint) {
     hint.textContent = editing
       ? 'Create · Edit · Play'
@@ -301,6 +317,7 @@ function selectRoom(roomId) {
   if (!authoringSpec().rooms.some((room) => room.id === roomId)) return false;
   selectedRoomId = roomId;
   entityRoom.value = roomId;
+  setWorkflowTab('edit');
   adapter.setSelectedSpecId(roomId);
   updateUi();
   return true;
@@ -318,6 +335,7 @@ function selectEntity(entityId) {
 
   selectedEntityId = entity.id;
   entitySelect.value = entity.id;
+  setWorkflowTab('edit');
   updateUi();
   return true;
 }
@@ -444,6 +462,7 @@ async function generateDungeonFromPrompt() {
       eventCount: generated.spec.events.length,
     };
     mode = 'edit';
+    setWorkflowTab('play');
     generationPrompt.value = '';
     playStatus.textContent = '—';
     resultStatus.textContent = '—';
@@ -640,6 +659,7 @@ function returnToEdit() {
   mode = 'edit';
   playSession = null;
   playSource = null;
+  setWorkflowTab('edit');
   selectedRoomId = null;
   selectedEntityId = null;
   playStatus.textContent = '—';
@@ -716,6 +736,9 @@ async function run() {
     window.addEventListener('keydown', handleKeyboard);
     undoButton.addEventListener('click', undo);
     redoButton.addEventListener('click', redo);
+    for (const button of workflowTabButtons) {
+      button.addEventListener('click', () => setWorkflowTab(button.dataset.workflowTab));
+    }
     startButton.addEventListener('click', startDungeon);
     mysteryPlayButton.addEventListener('click', startMysteryDungeon);
     returnEditButton.addEventListener('click', returnToEdit);
