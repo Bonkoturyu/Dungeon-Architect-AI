@@ -9,12 +9,12 @@
     :root {
       color-scheme: dark;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      --bg: #171b24;
-      --surface-1: #202630;
-      --surface-2: #272e3a;
-      --surface-3: #303847;
-      --line: #465166;
-      --line-strong: #5a667d;
+      --bg: #202733;
+      --surface-1: #28313e;
+      --surface-2: #303a49;
+      --surface-3: #394556;
+      --line: #536176;
+      --line-strong: #66758e;
       --text: #f6f7fb;
       --text-soft: #c7ccd7;
       --text-muted: #8891a3;
@@ -62,7 +62,7 @@
       padding: 10px 11px;
       resize: vertical;
       line-height: 1.45;
-      background: #272e3a;
+      background: #313b49;
     }
     textarea::placeholder { color: #70798a; }
 
@@ -84,7 +84,7 @@
       gap: 18px;
       padding: 10px 16px;
       border-bottom: 1px solid var(--line);
-      background: rgba(31, 37, 48, 0.97);
+      background: rgba(38, 46, 59, 0.98);
     }
     .brand-block { display: grid; gap: 2px; min-width: max-content; }
     .brand-eyebrow {
@@ -133,9 +133,19 @@
       font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
     }
     #status {
-      color: var(--text-muted);
+      color: var(--danger);
       font-size: 0.76rem;
     }
+    #status[hidden],
+    #editStatus[hidden],
+    .selection-chip[hidden] { display: none !important; }
+    body[data-mode="edit"] #returnEdit { display: none; }
+    body[data-mode="play"] .history-group,
+    body[data-mode="result"] .history-group,
+    body[data-mode="play"] #editStatus,
+    body[data-mode="result"] #editStatus,
+    body[data-mode="play"] #hint,
+    body[data-mode="result"] #hint { display: none !important; }
     .selection-strip {
       display: flex;
       gap: 8px;
@@ -158,12 +168,12 @@
 
     .toolbar {
       display: grid;
-      grid-template-columns: auto auto minmax(230px, auto) minmax(0, 1fr);
+      grid-template-columns: auto auto minmax(0, 1fr);
       align-items: center;
       gap: 12px;
       padding: 8px 16px;
       border-bottom: 1px solid var(--line);
-      background: #101219;
+      background: #1d2430;
     }
     .toolbar-group { display: flex; gap: 7px; align-items: center; }
     .toolbar-divider { width: 1px; height: 28px; background: var(--line); }
@@ -180,8 +190,8 @@
       justify-self: start;
       display: inline-flex;
       align-items: center;
-      min-height: 32px;
-      padding: 5px 10px;
+      min-height: 30px;
+      padding: 4px 9px;
       border-radius: 999px;
       border: 1px solid var(--line);
       font-size: 0.76rem;
@@ -230,7 +240,7 @@
       overflow: hidden;
       background:
         radial-gradient(circle at 50% 45%, rgba(74, 86, 120, 0.08), transparent 36%),
-        #151922;
+        #202834;
     }
     .viewport-label {
       position: absolute;
@@ -346,14 +356,43 @@
     .button-row > button { flex: 0 0 auto; }
     .wide-action { width: 100%; }
     .muted { color: var(--text-muted); font-size: 0.74rem; line-height: 1.42; }
-    .status-readout {
-      margin: 0;
-      padding: 9px 10px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius-md);
-      background: #101219;
+    .muted:empty { display: none; }
+    .play-summary {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      min-height: 34px;
     }
-    .status-readout + .status-readout { margin-top: 8px; }
+    .play-mode-pill {
+      flex: 0 0 auto;
+      padding: 5px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--text-soft);
+      background: rgba(19, 24, 32, 0.34);
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+    .play-metrics {
+      margin: 0;
+      color: var(--text-soft);
+      font: 0.78rem ui-monospace, SFMono-Regular, Consolas, monospace;
+      letter-spacing: 0.01em;
+    }
+    .result-banner {
+      margin: 12px 0 0;
+      padding: 14px 12px;
+      border: 1px solid rgba(120, 216, 154, 0.62);
+      border-radius: 12px;
+      background: rgba(54, 121, 77, 0.26);
+      color: #ddffe7;
+      text-align: center;
+      font-size: 1.08rem;
+      font-weight: 850;
+      letter-spacing: 0.06em;
+    }
     .danger-action { border-color: #6d4549; color: #ffc5c5; }
 
     body[data-mode="play"] .editor-only,
@@ -364,54 +403,66 @@
     body[data-mode="result"] .workspace {
       grid-template-columns: minmax(0, 1fr) 318px;
     }
+    body[data-mode="play"] #validationStatus,
+    body[data-mode="result"] #validationStatus { display: none; }
+
     body[data-mode="play"] .panel-play,
     body[data-mode="result"] .panel-play {
       border-color: rgba(120, 216, 154, 0.46);
       box-shadow: 0 0 0 1px rgba(120, 216, 154, 0.07), var(--shadow);
     }
-    body[data-mode="play"] .viewport-label strong::after { content: " · PLAY"; color: var(--success); }
-    body[data-mode="result"] .viewport-label strong::after { content: " · RESULT"; color: var(--warning); }
 
     .play-exits {
       position: absolute;
       z-index: 4;
       left: 50%;
-      bottom: 22px;
+      bottom: 18px;
       transform: translateX(-50%);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 10px;
-      border: 1px solid rgba(116, 130, 157, 0.58);
-      border-radius: 999px;
-      background: rgba(28, 34, 44, 0.9);
+      padding: 8px;
+      border: 1px solid rgba(130, 148, 181, 0.5);
+      border-radius: 18px;
+      background: rgba(29, 36, 48, 0.78);
       backdrop-filter: blur(8px);
     }
-    .play-exits-label {
-      padding-left: 5px;
-      color: var(--text-muted);
-      font-size: 0.7rem;
-      font-weight: 750;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
+    #playExitButtons {
+      display: grid;
+      grid-template-columns: repeat(3, 56px);
+      grid-template-rows: repeat(3, 56px);
+      align-items: center;
+      justify-items: center;
     }
-    #playExitButtons { display: flex; gap: 7px; }
+    .exit-center {
+      grid-column: 2;
+      grid-row: 2;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(139, 220, 255, 0.9);
+      border-radius: 50%;
+      box-shadow: 0 0 0 5px rgba(139, 220, 255, 0.12);
+    }
+    .exit-slot { display: flex; align-items: center; justify-content: center; gap: 4px; }
+    .exit-slot.side-north { grid-column: 2; grid-row: 1; }
+    .exit-slot.side-east { grid-column: 3; grid-row: 2; }
+    .exit-slot.side-south { grid-column: 2; grid-row: 3; }
+    .exit-slot.side-west { grid-column: 1; grid-row: 2; }
+    .exit-slot.side-unknown { grid-column: 2; grid-row: 2; transform: translateY(23px); }
     .exit-button {
-      width: 46px;
-      height: 46px;
+      width: 50px;
+      height: 50px;
       padding: 0;
       border-radius: 50%;
-      font-size: 1.25rem;
+      font-size: 1.42rem;
       line-height: 1;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.18);
     }
     .exit-button.is-unknown {
       border-color: rgba(145, 167, 255, 0.78);
-      background: rgba(93, 111, 173, 0.32);
+      background: rgba(91, 118, 196, 0.48);
       color: #f4f7ff;
     }
     .exit-button.is-known {
       border-color: rgba(120, 216, 154, 0.55);
-      background: rgba(63, 122, 82, 0.24);
+      background: rgba(66, 112, 82, 0.2);
       color: #d7ffe4;
     }
     .play-choice-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
@@ -498,7 +549,7 @@
     </header>
 
     <div class="toolbar">
-      <div class="toolbar-group" aria-label="History">
+      <div class="toolbar-group history-group" aria-label="History">
         <button id="undo" type="button" disabled>Undo</button>
         <button id="redo" type="button" disabled>Redo</button>
       </div>
@@ -507,8 +558,8 @@
         <span class="toolbar-divider" aria-hidden="true"></span>
         <button id="guide" class="secondary-accent" type="button" title="Guide" aria-label="Open guide">?</button>
       </div>
-      <span id="editStatus">ready</span>
-      <span id="hint">Create · Edit · Play</span>
+      <span id="editStatus" hidden></span>
+      <span id="hint" hidden></span>
     </div>
 
     <p id="mobileScopeNotice" class="scope-notice" role="note">Desktop demo target: mobile/narrow layouts are best-effort only and are not a supported judging target for this hackathon build. Use desktop Chrome for evaluation.</p>
@@ -516,12 +567,11 @@
     <div class="workspace">
       <section class="viewport-shell" aria-label="Dungeon viewport">
         <div class="viewport-label">
-          <strong>3D Dungeon</strong>
-          <span id="viewportHelp">Click a room to select · Arrow keys move selected room</span>
+          <strong id="viewportTitle">3D Dungeon</strong>
+          <span id="viewportHelp">Select · Arrow keys move</span>
         </div>
         <canvas id="renderCanvas" tabindex="0"></canvas>
         <div id="playExitBar" class="play-exits" hidden>
-          <span class="play-exits-label">Exits</span>
           <div id="playExitButtons" aria-label="Available exits"></div>
         </div>
       </section>
@@ -533,28 +583,28 @@
           <button class="workflow-tab" type="button" data-workflow-tab="play" aria-selected="false">▶ Play</button>
         </nav>
 
-        <fieldset class="panel-primary editor-only" data-workflow-panel="create">
-          <legend>✨ Create</legend>
+        <fieldset class="panel-primary editor-only" data-workflow-panel="create" aria-label="Create dungeon">
           
           <label>
             Prompt
             <textarea id="generationPrompt" aria-label="Dungeon generation request" placeholder="Create a fair but tense 5-minute dungeon with exploration and a few dangerous rewards."></textarea>
           </label>
           <button id="generateDungeon" class="primary-action wide-action" type="button">Generate</button>
-          <p id="generationStatus" class="muted">Enter a design request to generate a new deterministic DungeonSpec.</p>
+          <p id="generationStatus" class="muted" aria-live="polite"></p>
         </fieldset>
 
-        <fieldset class="panel-play" data-workflow-panel="play">
-          <legend>▶ Play</legend>
-          <span id="validationStatus" data-state="blocked">Validation: checking…</span>
+        <fieldset class="panel-play" data-workflow-panel="play" aria-label="Play dungeon">
+          <span id="validationStatus" data-state="blocked">Checking…</span>
           <div class="play-choice-row editor-only">
             <button id="start" class="primary-action" type="button" disabled title="Play the dungeon currently shown in Edit mode.">▶ Test</button>
             <button id="mysteryPlay" class="mystery-action" type="button" disabled title="Generate a fresh hidden dungeon from the same design intent.">🎲 Mystery</button>
           </div>
-          <p class="mode-note editor-only">Test = current map · Mystery = unseen map</p>
-          <p id="playModeLabel" class="muted"></p>
-          <p id="playStatus" class="muted status-readout">—</p>
-          <p id="resultStatus" class="muted status-readout">—</p>
+          <p class="mode-note editor-only">Test = current · Mystery = unseen</p>
+          <div class="play-summary">
+            <span id="playModeLabel" class="play-mode-pill" hidden></span>
+            <p id="playStatus" class="play-metrics" aria-live="polite"></p>
+          </div>
+          <p id="resultStatus" class="result-banner" aria-live="polite" hidden></p>
         </fieldset>
 
         <fieldset class="editor-only" data-workflow-panel="edit">
@@ -593,7 +643,7 @@
             <textarea id="naturalEditInput" aria-label="Natural-language edit request" placeholder="Move the treasure to the room that contains the goal."></textarea>
           </label>
           <button id="applyNaturalEdit" class="wide-action" type="button">✦ Apply</button>
-          <p id="naturalEditStatus" class="muted">One edit per request.</p>
+          <p id="naturalEditStatus" class="muted" aria-live="polite"></p>
         </fieldset>
       </aside>
     </div>
