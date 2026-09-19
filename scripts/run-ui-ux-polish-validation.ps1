@@ -20,7 +20,12 @@ if ($LASTEXITCODE -ne 0) { throw 'npm test failed.' }
 npm run smoke:ui-ux-polish
 if ($LASTEXITCODE -ne 0) { throw 'UI/UX polish visible-Chrome smoke failed.' }
 
+npm run smoke:exploration-ux
+if ($LASTEXITCODE -ne 0) { throw 'Exploration / Mystery Play visible-Chrome smoke failed.' }
+
 Write-Host ''
 Write-Host 'UI/UX polish validation completed successfully.' -ForegroundColor Green
 Write-Host 'Evidence: artifacts/ui-ux-polish/ui-ux-polish.json'
 Write-Host 'Screenshots: artifacts/ui-ux-polish/ui-ux-edit.png / ui-ux-play.png / ui-ux-result.png'
+Write-Host 'Exploration evidence: artifacts/exploration-ux/dai-086-exploration-ux.json'
+Write-Host 'Exploration screenshots: artifacts/exploration-ux/test-play-start.png / test-play-after-one-move.png / mystery-play-start.png'
