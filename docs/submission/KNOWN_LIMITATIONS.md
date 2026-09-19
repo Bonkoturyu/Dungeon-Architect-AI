@@ -55,7 +55,7 @@ Authoring/play state is in memory for the active page session.
 
 ## 8. Submission packaging is still open
 
-The hosted demo, under-three-minute demo video, short description, focus category, and DAI-084 candidate freeze are complete. Repository visibility remains open.
+The hosted demo, under-three-minute demo video, short description, focus category, and historical DAI-084 rollback point are complete. DAI-085 UI/UX polish is in progress and requires a renewed final candidate freeze afterward; repository visibility remains open.
 
 ## Reopen rule
 
