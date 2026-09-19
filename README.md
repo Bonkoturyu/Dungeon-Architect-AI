@@ -80,7 +80,7 @@ Key boundaries:
 - mobile is outside the supported submission acceptance scope;
 - no Safari/Firefox acceptance claim has been made;
 - there are no accounts, persistent project storage, analytics or telemetry;
-- the GitHub repository visibility switch remains a submission task; DAI-084 candidate freeze is in progress.
+- the GitHub repository visibility switch remains a submission task; the DAI-084 candidate freeze is complete.
 
 ## Sample prompts
 
@@ -184,11 +184,12 @@ Submission metadata:
 - Focus category: **AI 3D Scene Generation**
 - Short description: frozen in [DAI-083 Submission Description / Focus Category](docs/submission/DAI-083_DESCRIPTION_CATEGORY.md)
 
-DAI-084 candidate freeze is in progress:
+DAI-084 candidate freeze is complete:
 
 - candidate commit: `cacba2a1f8f079ab6401768b97f9fc91fff8f3b9`;
+- candidate tree: `e2938bb46e1cf2eedc3a90e2b7603bd6050486ad`;
 - rollback branch: `rollback/submission-candidate-m8-2026-09-19`;
-- freeze validation: pending.
+- dist manifest SHA-256: `387287bfba2aaad91a7ef4c9d98ebb522e8ce8e1e0768825d39d33d949d8ea6d`.
 
 See [DAI-084 Candidate Freeze / Rollback Point](docs/submission/DAI-084_CANDIDATE_FREEZE.md).
 
