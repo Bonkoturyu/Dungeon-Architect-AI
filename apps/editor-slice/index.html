@@ -9,12 +9,12 @@
     :root {
       color-scheme: dark;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      --bg: #0c0d12;
-      --surface-1: #12141b;
-      --surface-2: #171a23;
-      --surface-3: #202430;
-      --line: #2d3340;
-      --line-strong: #414a5c;
+      --bg: #171b24;
+      --surface-1: #202630;
+      --surface-2: #272e3a;
+      --surface-3: #303847;
+      --line: #465166;
+      --line-strong: #5a667d;
       --text: #f6f7fb;
       --text-soft: #c7ccd7;
       --text-muted: #8891a3;
@@ -62,7 +62,7 @@
       padding: 10px 11px;
       resize: vertical;
       line-height: 1.45;
-      background: #1c202a;
+      background: #272e3a;
     }
     textarea::placeholder { color: #70798a; }
 
@@ -84,7 +84,7 @@
       gap: 18px;
       padding: 10px 16px;
       border-bottom: 1px solid var(--line);
-      background: rgba(18, 20, 27, 0.96);
+      background: rgba(31, 37, 48, 0.97);
     }
     .brand-block { display: grid; gap: 2px; min-width: max-content; }
     .brand-eyebrow {
@@ -151,7 +151,7 @@
       padding: 5px 9px;
       border: 1px solid var(--line);
       border-radius: 999px;
-      background: #101219;
+      background: #1b202a;
       color: var(--text-muted);
       font-size: 0.73rem;
     }
@@ -230,7 +230,7 @@
       overflow: hidden;
       background:
         radial-gradient(circle at 50% 45%, rgba(74, 86, 120, 0.08), transparent 36%),
-        #0c0d12;
+        #151922;
     }
     .viewport-label {
       position: absolute;
@@ -342,6 +342,55 @@
     body[data-mode="play"] .viewport-label strong::after { content: " · PLAY"; color: var(--success); }
     body[data-mode="result"] .viewport-label strong::after { content: " · RESULT"; color: var(--warning); }
 
+    .play-exits {
+      position: absolute;
+      z-index: 4;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border: 1px solid rgba(116, 130, 157, 0.58);
+      border-radius: 999px;
+      background: rgba(28, 34, 44, 0.9);
+      backdrop-filter: blur(8px);
+    }
+    .play-exits-label {
+      padding-left: 5px;
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      font-weight: 750;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    #playExitButtons { display: flex; gap: 7px; }
+    .exit-button {
+      width: 46px;
+      height: 46px;
+      padding: 0;
+      border-radius: 50%;
+      font-size: 1.25rem;
+      line-height: 1;
+    }
+    .exit-button.is-unknown {
+      border-color: rgba(145, 167, 255, 0.78);
+      background: rgba(93, 111, 173, 0.32);
+      color: #f4f7ff;
+    }
+    .exit-button.is-known {
+      border-color: rgba(120, 216, 154, 0.55);
+      background: rgba(63, 122, 82, 0.24);
+      color: #d7ffe4;
+    }
+    .play-choice-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .play-choice-row button { min-height: 44px; }
+    .mystery-action { border-color: #7b6b9f; background: rgba(99, 79, 137, 0.28); color: #f1eaff; }
+    .mode-note { margin: 8px 0 0; color: var(--text-muted); font-size: 0.68rem; }
+    body[data-mode="play"] .selection-strip,
+    body[data-mode="result"] .selection-strip { display: none; }
+
     [hidden] { display: none !important; }
 
     .onboarding-shell {
@@ -424,10 +473,9 @@
         <button id="redo" type="button" disabled>Redo</button>
       </div>
       <div class="toolbar-group" aria-label="Mode actions">
-        <button id="start" class="primary-action" type="button" disabled>START</button>
-        <button id="returnEdit" type="button" disabled>Return to Edit</button>
+        <button id="returnEdit" type="button" disabled>← Edit</button>
         <span class="toolbar-divider" aria-hidden="true"></span>
-        <button id="guide" class="secondary-accent" type="button">Guide</button>
+        <button id="guide" class="secondary-accent" type="button" title="Guide" aria-label="Open guide">?</button>
       </div>
       <div>
         <span id="validationStatus" data-state="blocked">Validation: checking…</span>
@@ -445,47 +493,56 @@
           <span id="viewportHelp">Click a room to select · Arrow keys move selected room</span>
         </div>
         <canvas id="renderCanvas" tabindex="0"></canvas>
+        <div id="playExitBar" class="play-exits" hidden>
+          <span class="play-exits-label">Exits</span>
+          <div id="playExitButtons" aria-label="Available exits"></div>
+        </div>
       </section>
 
       <aside>
-        <p class="sidebar-heading">Authoring controls</p>
+        <p class="sidebar-heading">Create · Edit · Play</p>
 
         <fieldset class="panel-primary editor-only">
-          <legend>1 · Describe / Generate</legend>
-          <p class="panel-kicker">Describe the dungeon you want. AI translates the request into structured design intent.</p>
+          <legend>✨ Create</legend>
+          
           <label>
-            Dungeon request
+            Prompt
             <textarea id="generationPrompt" aria-label="Dungeon generation request" placeholder="Create a fair but tense 5-minute dungeon with exploration and a few dangerous rewards."></textarea>
           </label>
-          <button id="generateDungeon" class="primary-action wide-action" type="button">Generate dungeon</button>
+          <button id="generateDungeon" class="primary-action wide-action" type="button">Generate</button>
           <p id="generationStatus" class="muted">Enter a design request to generate a new deterministic DungeonSpec.</p>
         </fieldset>
 
         <fieldset class="panel-play">
-          <legend>2 · Validate / Play</legend>
-          <p class="panel-kicker">A valid dungeon can be started immediately. Play follows the frozen execution snapshot.</p>
-          <p id="playStatus" class="muted status-readout">Not started.</p>
-          <p id="resultStatus" class="muted status-readout">No result yet.</p>
+          <legend>▶ Play</legend>
+          <div class="play-choice-row editor-only">
+            <button id="start" class="primary-action" type="button" disabled title="Play the dungeon currently shown in Edit mode.">▶ Test</button>
+            <button id="mysteryPlay" class="mystery-action" type="button" disabled title="Generate a fresh hidden dungeon from the same design intent.">🎲 Mystery</button>
+          </div>
+          <p class="mode-note editor-only">Test = current map · Mystery = unseen map</p>
+          <p id="playModeLabel" class="muted"></p>
+          <p id="playStatus" class="muted status-readout">—</p>
+          <p id="resultStatus" class="muted status-readout">—</p>
         </fieldset>
 
         <fieldset class="editor-only">
-          <legend>3 · Manual Edit</legend>
-          <p class="panel-kicker">Select an entity, choose its target room, or add a supported entity type.</p>
+          <legend>✎ Edit</legend>
+          
           <label>
-            Existing entities
+            Entities
             <select id="entitySelect" size="7" aria-label="Existing entities"></select>
           </label>
           <label>
-            Target room
+            Room
             <select id="entityRoom" aria-label="Target room"></select>
           </label>
           <div class="button-row">
             <button id="moveEntity" type="button" disabled>Move to room</button>
             <button id="removeEntity" class="danger-action" type="button" disabled>Remove</button>
           </div>
-          <p class="muted">Start and Goal can be moved, but generic removal is intentionally blocked.</p>
+          
           <label>
-            Add entity
+            ＋ Type
             <select id="entityType" aria-label="New entity type">
               <option value="enemy">Enemy</option>
               <option value="treasure">Treasure</option>
@@ -493,18 +550,18 @@
               <option value="recovery">Recovery</option>
             </select>
           </label>
-          <button id="addEntity" class="wide-action" type="button">Add to target room</button>
+          <button id="addEntity" class="wide-action" type="button">＋ Add</button>
         </fieldset>
 
         <fieldset class="panel-ai editor-only">
-          <legend>4 · Natural-language Edit</legend>
-          <p class="panel-kicker">Apply one constrained AI edit to the generated authoring state.</p>
+          <legend>✦ AI Edit</legend>
+          
           <label>
             Request
             <textarea id="naturalEditInput" aria-label="Natural-language edit request" placeholder="Move the treasure to the room that contains the goal."></textarea>
           </label>
-          <button id="applyNaturalEdit" class="wide-action" type="button">Apply AI edit</button>
-          <p id="naturalEditStatus" class="muted">One safe edit per request. Current MVP path supports entity relocation.</p>
+          <button id="applyNaturalEdit" class="wide-action" type="button">✦ Apply</button>
+          <p id="naturalEditStatus" class="muted">One edit per request.</p>
         </fieldset>
       </aside>
     </div>
