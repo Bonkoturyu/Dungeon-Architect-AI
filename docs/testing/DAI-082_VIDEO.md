@@ -100,7 +100,7 @@ Use the supported judging environment already accepted for the project:
 - desktop Google Chrome;
 - 1440 × 900 or comparable desktop presentation.
 
-Automatic ffmpeg capture uses H.264 (`libx264`), 30 fps, CRF 20, `yuv420p`, and `faststart`, and excludes tabs/address bar/taskbar by recording only the page viewport. Recommended capture settings for any manual alternative are:
+Automatic ffmpeg capture uses H.264 (`libx264`), 30 fps, CRF 20, `yuv420p`, and `faststart`. Chrome is forced to fullscreen through CDP, extensions/translation UI are disabled, and ffmpeg records only the page viewport. The runner now fails if the resulting page viewport is narrower than 1280×720 or if its left edge appears trimmed. Recommended capture settings for any manual alternative are:
 
 - 1080p or native window resolution;
 - 30 fps;
@@ -121,7 +121,8 @@ DAI-082 may be marked DONE only after the final video file is available and all 
 - natural-language partial Edit is visibly demonstrated;
 - Validation / START is visible;
 - Play reaches Goal and shows Result;
-- no browser chrome, desktop taskbar, terminal, provider key, or private data is visible;
+- no browser chrome, desktop taskbar, terminal, translation popup, provider key, or private data is visible;
+- the full left edge of the application, including the `DAI Editor / Play Gate` title, is visible;
 - no claim exceeds the documented production behavior;
 - the final file is suitable for the submission form or its required host.
 
