@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS.** Recording tooling is prepared on top of the DAI-026 corrected-corridor main. The first capture was rejected for invalid corridor presentation. Final recording resumes only after the corrected main is confirmed on the public Cloudflare URL.
+**IN PROGRESS.** Recording tooling is prepared on top of the DAI-026 corrected-corridor main. The first capture was rejected for invalid corridor presentation. A later successful functional capture was also rejected as final footage because it included Chrome UI and the Windows taskbar. The final capture must contain only the browser page viewport.
 
 ## Official requirement
 
@@ -74,7 +74,7 @@ The runner:
 
 1. opens the public HTTPS candidate in visible Chrome;
 2. detects `ffmpeg` / `ffprobe` from PATH;
-3. when ffmpeg is available, automatically records the primary Windows desktop with `gdigrab` at 30 fps;
+3. when ffmpeg is available, launches Chrome in kiosk mode, computes the page viewport screen rectangle, and records only that viewport region with `gdigrab` at 30 fps;
 4. performs Generate;
 5. demonstrates one manual room edit and Undo;
 6. performs the verified natural-language edit;
@@ -100,7 +100,7 @@ Use the supported judging environment already accepted for the project:
 - desktop Google Chrome;
 - 1440 × 900 or comparable desktop presentation.
 
-Automatic ffmpeg capture uses H.264 (`libx264`), 30 fps, CRF 20, `yuv420p`, and `faststart`. Recommended capture settings for any manual alternative are:
+Automatic ffmpeg capture uses H.264 (`libx264`), 30 fps, CRF 20, `yuv420p`, and `faststart`, and excludes tabs/address bar/taskbar by recording only the page viewport. Recommended capture settings for any manual alternative are:
 
 - 1080p or native window resolution;
 - 30 fps;
@@ -121,7 +121,7 @@ DAI-082 may be marked DONE only after the final video file is available and all 
 - natural-language partial Edit is visibly demonstrated;
 - Validation / START is visible;
 - Play reaches Goal and shows Result;
-- no provider key/private data is visible;
+- no browser chrome, desktop taskbar, terminal, provider key, or private data is visible;
 - no claim exceeds the documented production behavior;
 - the final file is suitable for the submission form or its required host.
 
