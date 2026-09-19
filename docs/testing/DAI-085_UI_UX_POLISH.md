@@ -59,6 +59,27 @@ Primary goals:
 - retained workflow and IDs;
 - improved spacing, contrast, and action hierarchy.
 
+## Second visual pass after first screenshot review
+
+The first visible-Chrome screenshots passed the automated layout gates but still showed too much developer-oriented chrome and insufficient Play emphasis.
+
+The second pass therefore adds:
+
+- brighter neutral application surfaces while keeping the 3D viewport visually dominant;
+- routine `ready` / selection-none / edit-status text hidden;
+- Undo/Redo hidden outside the Edit workflow;
+- `✓ Valid` / `! Fix N` instead of the longer validation sentence;
+- Play stats compressed to `👣 moves` and `🗺 mapped`;
+- a spatial 3×3 exit pad instead of a horizontal "Exits" strip;
+- stronger visual weight for unknown exits than already-explored exits;
+- a cyan current-room floor ring;
+- a closer Play/Result camera fit;
+- concise viewport labels: `Explore / Auto-map` and `Cleared / Run complete`;
+- a dedicated success banner for Result;
+- previous Result state forcibly hidden when a new Play run begins.
+
+These changes remain presentation-only around the shared generation/rendering core. Fog-of-war state remains renderer-independent.
+
 ## Validation
 
 Run:
