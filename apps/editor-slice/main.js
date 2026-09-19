@@ -35,6 +35,7 @@ const applyNaturalEditButton = document.querySelector('#applyNaturalEdit');
 const naturalEditStatus = document.querySelector('#naturalEditStatus');
 const hint = document.querySelector('#hint');
 const viewportHelp = document.querySelector('#viewportHelp');
+const viewportTitle = document.querySelector('#viewportTitle');
 const workflowTabButtons = [...document.querySelectorAll('.workflow-tab[data-workflow-tab]')];
 
 let adapter;
@@ -121,6 +122,7 @@ function snapshotState() {
 
 function setEditStatus(message) {
   editStatus.textContent = message;
+  editStatus.hidden = !/error|blocked|failed/i.test(String(message));
 }
 
 function setGenerationStatus(message) {
@@ -135,11 +137,11 @@ function refreshGate() {
   gate = evaluateStartGate(authoringSpec());
   if (gate.allowed) {
     validationStatus.dataset.state = 'pass';
-    validationStatus.textContent = 'Validation: PASS · Critical 0';
+    validationStatus.textContent = '✓ Valid';
   } else {
     validationStatus.dataset.state = 'blocked';
     const codes = gate.errors.slice(0, 3).map((entry) => entry.code).join(', ');
-    validationStatus.textContent = `Validation: BLOCKED · Critical ${gate.criticalCount}${codes ? ` · ${codes}` : ''}`;
+    validationStatus.textContent = `! Fix ${gate.criticalCount}${codes ? ` · ${codes}` : ''}`;
   }
 }
 
@@ -196,27 +198,26 @@ function updateUi() {
 
   document.body.dataset.mode = mode;
   document.body.dataset.workflowTab = workflowTab;
-  if (hint) {
-    hint.textContent = editing
-      ? 'Create · Edit · Play'
-      : mode === 'play'
-        ? 'Choose an exit. The map grows as you explore.'
-        : 'Run complete.';
+  if (hint) hint.hidden = true;
+  if (viewportTitle) {
+    viewportTitle.textContent = editing ? '3D Dungeon' : mode === 'play' ? 'Explore' : 'Cleared';
   }
   if (viewportHelp) {
     viewportHelp.textContent = editing
-      ? 'Select a room · Arrow keys move'
+      ? 'Select · Arrow keys move'
       : mode === 'play'
-        ? 'Unknown rooms stay hidden · choose an exit'
-        : 'Run complete · return to edit';
+        ? 'Auto-map'
+        : 'Run complete';
   }
 
   selectedLabel.textContent = room
     ? `room: ${room.id} @ (${room.x.toFixed(1)}, ${room.z.toFixed(1)})`
-    : 'room: none';
+    : '';
+  selectedLabel.hidden = !room;
   entitySelectedLabel.textContent = entity
     ? `entity: ${entity.id} [${entity.type}] @ ${entity.roomId}`
-    : 'entity: none';
+    : '';
+  entitySelectedLabel.hidden = !entity;
 
   undoButton.disabled = !editing || !session?.canUndo;
   redoButton.disabled = !editing || !session?.canRedo;
@@ -263,24 +264,40 @@ function renderPlayExits() {
       return (order[a.side] ?? 9) - (order[b.side] ?? 9) || a.corridorId.localeCompare(b.corridorId);
     });
 
-  const sideCounts = new Map();
-  playExitButtons.replaceChildren(...exits.map((exit) => {
-    const count = (sideCounts.get(exit.side) ?? 0) + 1;
-    sideCounts.set(exit.side, count);
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = `exit-button ${exit.explored ? 'is-known' : 'is-unknown'}`;
-    button.dataset.corridorId = exit.corridorId;
-    button.dataset.explored = String(exit.explored);
-    const icon = sideIcon(exit.side);
-    button.textContent = count > 1 ? `${icon}${count}` : icon;
-    const direction = exit.side ?? 'unknown';
-    button.setAttribute('aria-label', exit.explored ? `Return through ${direction} exit` : `Explore ${direction} exit`);
-    button.title = exit.explored ? `Known ${direction} passage` : `Explore ${direction}`;
-    button.addEventListener('click', () => movePlayToRoom(exit.targetRoomId));
-    return button;
-  }));
+  const center = document.createElement('span');
+  center.className = 'exit-center';
+  center.setAttribute('aria-hidden', 'true');
 
+  const grouped = new Map();
+  for (const exit of exits) {
+    const side = exit.side ?? 'unknown';
+    if (!grouped.has(side)) grouped.set(side, []);
+    grouped.get(side).push(exit);
+  }
+
+  const slots = [];
+  for (const [side, sideExits] of grouped) {
+    const slot = document.createElement('div');
+    slot.className = `exit-slot side-${side}`;
+
+    sideExits.forEach((exit, index) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = `exit-button ${exit.explored ? 'is-known' : 'is-unknown'}`;
+      button.dataset.corridorId = exit.corridorId;
+      button.dataset.explored = String(exit.explored);
+      const icon = sideIcon(exit.side);
+      button.textContent = sideExits.length > 1 ? `${icon}${index + 1}` : icon;
+      const direction = exit.side ?? 'unknown';
+      button.setAttribute('aria-label', exit.explored ? `Return through ${direction} exit` : `Explore ${direction} exit`);
+      button.title = exit.explored ? `Known ${direction} passage` : `Explore ${direction}`;
+      button.addEventListener('click', () => movePlayToRoom(exit.targetRoomId));
+      slot.append(button);
+    });
+    slots.push(slot);
+  }
+
+  playExitButtons.replaceChildren(center, ...slots);
   playExitBar.hidden = exits.length === 0;
 }
 
@@ -465,7 +482,8 @@ async function generateDungeonFromPrompt() {
     setWorkflowTab('play');
     generationPrompt.value = '';
     playStatus.textContent = '—';
-    resultStatus.textContent = '—';
+    resultStatus.textContent = '';
+  resultStatus.hidden = true;
     renderActiveSpec();
     setGenerationStatus(`✓ Generated · ${lastGeneration.roomCount} rooms`);
     setEditStatus('generated new dungeon');
@@ -563,14 +581,21 @@ function redo() {
 function updatePlayReadout() {
   if (!playSession) {
     playStatus.textContent = '—';
-    resultStatus.textContent = '—';
-    if (playModeLabel) playModeLabel.textContent = '';
+    resultStatus.textContent = '';
+    resultStatus.hidden = true;
+    if (playModeLabel) {
+      playModeLabel.textContent = '';
+      playModeLabel.hidden = true;
+    }
     return;
   }
   const map = derivePlayMap(playSession);
-  const modeName = playSource === 'mystery' ? 'Mystery' : 'Test';
-  if (playModeLabel) playModeLabel.textContent = modeName;
-  playStatus.textContent = `${modeName} · ${playSession.moves} moves · ${map.exploredRoomIds.length} mapped`;
+  const modeName = playSource === 'mystery' ? 'MYSTERY' : 'TEST';
+  if (playModeLabel) {
+    playModeLabel.textContent = modeName;
+    playModeLabel.hidden = false;
+  }
+  playStatus.textContent = `👣 ${playSession.moves}   🗺 ${map.exploredRoomIds.length}`;
 }
 
 function finalizePlayIfNeeded() {
@@ -579,8 +604,9 @@ function finalizePlayIfNeeded() {
   if (!result.ok) throw new Error(`createPlayResult failed: ${JSON.stringify(result.error)}`);
   lastPlayResult = result.result;
   mode = 'result';
-  playStatus.textContent = lastPlayResult.status === 'cleared' ? '✓ Cleared' : 'Run ended';
-  resultStatus.textContent = `${lastPlayResult.moves} moves · ${lastPlayResult.visitedRoomIds.length} rooms mapped`;
+  playStatus.textContent = `👣 ${lastPlayResult.moves}   🗺 ${lastPlayResult.visitedRoomIds.length}`;
+  resultStatus.textContent = lastPlayResult.status === 'cleared' ? '✓ CLEARED' : 'RUN ENDED';
+  resultStatus.hidden = false;
   renderActiveSpec();
   return true;
 }
@@ -662,9 +688,13 @@ function returnToEdit() {
   setWorkflowTab('edit');
   selectedRoomId = null;
   selectedEntityId = null;
-  playStatus.textContent = '—';
-  resultStatus.textContent = '—';
-  if (playModeLabel) playModeLabel.textContent = '';
+  playStatus.textContent = '';
+  resultStatus.textContent = '';
+  resultStatus.hidden = true;
+  if (playModeLabel) {
+    playModeLabel.textContent = '';
+    playModeLabel.hidden = true;
+  }
   setEditStatus('returned to edit');
   renderActiveSpec();
   canvas.focus();
@@ -764,7 +794,8 @@ async function run() {
       movePlayToRoom,
       returnToEdit,
     };
-    status.textContent = 'ready';
+    status.textContent = '';
+    status.hidden = true;
     canvas.focus();
   } catch (error) {
     window.__DAI_EDITOR_SLICE__ = {
@@ -773,6 +804,7 @@ async function run() {
       message: String(error?.stack || error),
     };
     status.textContent = 'failed';
+    status.hidden = false;
     console.error(error);
   }
 }
