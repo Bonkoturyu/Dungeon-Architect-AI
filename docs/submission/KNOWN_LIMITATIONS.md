@@ -55,7 +55,7 @@ Authoring/play state is in memory for the active page session.
 
 ## 8. Submission packaging is still open
 
-The hosted demo, under-three-minute demo video, short description, and focus category are complete. DAI-084 has fixed the candidate commit/rollback ref but rebuild/hash validation is still pending; repository visibility remains open.
+The hosted demo, under-three-minute demo video, short description, focus category, and DAI-084 candidate freeze are complete. Repository visibility remains open.
 
 ## Reopen rule
 
