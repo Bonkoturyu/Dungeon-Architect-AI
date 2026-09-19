@@ -61,15 +61,32 @@ async function getViewportCaptureRegion(page) {
   return page.evaluate(() => {
     const dpr = window.devicePixelRatio || 1;
     const horizontalChrome = Math.max(0, window.outerWidth - window.innerWidth);
-    const sideBorder = horizontalChrome / 2;
     const verticalChrome = Math.max(0, window.outerHeight - window.innerHeight);
-    const bottomBorder = sideBorder;
-    const chromeAboveViewport = Math.max(0, verticalChrome - bottomBorder);
+    const fullscreenLike =
+      horizontalChrome <= 2 &&
+      verticalChrome <= 2 &&
+      Math.abs(window.screenX) <= 2 &&
+      Math.abs(window.screenY) <= 2;
 
-    const x = Math.round((window.screenX + sideBorder) * dpr);
-    const y = Math.round((window.screenY + chromeAboveViewport) * dpr);
-    const rawWidth = Math.round(window.innerWidth * dpr);
-    const rawHeight = Math.round(window.innerHeight * dpr);
+    let x;
+    let y;
+    let rawWidth;
+    let rawHeight;
+
+    if (fullscreenLike) {
+      x = 0;
+      y = 0;
+      rawWidth = Math.round(window.innerWidth * dpr);
+      rawHeight = Math.round(window.innerHeight * dpr);
+    } else {
+      // Conservative crop: never trim the left/right page edge merely to exclude resize borders.
+      // A few border pixels are preferable to losing application content.
+      x = Math.round(window.screenX * dpr);
+      const estimatedTopChrome = Math.max(0, verticalChrome - 2);
+      y = Math.round((window.screenY + estimatedTopChrome) * dpr);
+      rawWidth = Math.round((window.innerWidth + Math.min(horizontalChrome, 4)) * dpr);
+      rawHeight = Math.round(window.innerHeight * dpr);
+    }
 
     return {
       x: Math.max(0, x),
@@ -83,6 +100,13 @@ async function getViewportCaptureRegion(page) {
       outerHeight: window.outerHeight,
       screenX: window.screenX,
       screenY: window.screenY,
+      horizontalChrome,
+      verticalChrome,
+      fullscreenLike,
+      screenWidth: window.screen.width,
+      screenHeight: window.screen.height,
+      availWidth: window.screen.availWidth,
+      availHeight: window.screen.availHeight,
     };
   });
 }
@@ -163,13 +187,34 @@ try {
     executablePath: chromePath,
     headless: false,
     args: [
-      '--kiosk',
       '--no-first-run',
       '--disable-session-crashed-bubble',
+      '--disable-extensions',
+      '--disable-features=Translate,TranslateUI',
+      '--disable-translate',
+      '--window-position=0,0',
     ],
   });
   const context = await browser.newContext({ viewport: null });
   const page = await context.newPage();
+  const cdp = await context.newCDPSession(page);
+
+  try {
+    const { windowId } = await cdp.send('Browser.getWindowForTarget');
+    await cdp.send('Browser.setWindowBounds', {
+      windowId,
+      bounds: { windowState: 'fullscreen' },
+    });
+  } catch (error) {
+    console.warn(`CDP fullscreen request failed, falling back to maximized window: ${error}`);
+    try {
+      const { windowId } = await cdp.send('Browser.getWindowForTarget');
+      await cdp.send('Browser.setWindowBounds', {
+        windowId,
+        bounds: { windowState: 'maximized' },
+      });
+    } catch {}
+  }
 
   const consoleErrors = [];
   const pageErrors = [];
@@ -181,6 +226,7 @@ try {
   page.on('response', (response) => { if (response.status() >= 400) httpErrors.push({ url: response.url(), status: response.status() }); });
 
   await page.goto(baseUrl, { waitUntil: 'networkidle', timeout: 90_000 });
+  await wait(1500);
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__?.ready === true && window.__DAI_ONBOARDING__?.ready === true, null, { timeout: 60_000 });
 
   await page.bringToFront();
@@ -433,6 +479,12 @@ try {
       evidence.recordingBoundary.captureMode === 'browser-viewport-region' &&
       viewportCaptureRegion.width > 0 &&
       viewportCaptureRegion.height > 0;
+    evidence.checks.captureViewportNotNarrow =
+      viewportCaptureRegion.innerWidth >= 1280 &&
+      viewportCaptureRegion.innerHeight >= 720;
+    evidence.checks.captureLeftEdgeNotTrimmed =
+      viewportCaptureRegion.fullscreenLike === true ||
+      viewportCaptureRegion.x <= Math.max(2, viewportCaptureRegion.screenX * viewportCaptureRegion.dpr + 2);
     if (captureProbe) {
       evidence.checks.actualCaptureUnder180Seconds =
         Number.isFinite(captureProbe.durationSeconds) &&
