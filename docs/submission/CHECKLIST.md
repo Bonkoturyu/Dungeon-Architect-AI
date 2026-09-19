@@ -6,7 +6,7 @@
 - [x] Short description
 - [x] Focus category
 - [ ] Additional requested materials
-- [ ] Candidate hash / rollback point frozen
+- [x] Candidate hash / rollback point frozen
 - [x] Third-party disclosure complete
 - [x] AI usage disclosure complete
 - [x] LICENSE / NOTICE complete
