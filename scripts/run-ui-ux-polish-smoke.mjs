@@ -58,7 +58,9 @@ try {
     const viewport = document.querySelector('.viewport-shell').getBoundingClientRect();
     const aside = document.querySelector('aside').getBoundingClientRect();
     const headerTitle = document.querySelector('.brand-title').getBoundingClientRect();
-    const visibleEditorPanels = [...document.querySelectorAll('.editor-only')]
+    const visibleWorkflowPanels = [...document.querySelectorAll('[data-workflow-panel]')]
+      .filter((node) => getComputedStyle(node).display !== 'none').length;
+    const workflowTabs = [...document.querySelectorAll('[data-workflow-tab]')]
       .filter((node) => getComputedStyle(node).display !== 'none').length;
     const validation = document.querySelector('#validationStatus');
     return {
@@ -68,7 +70,9 @@ try {
       asideWidth: aside.width,
       workspaceWidth: workspace.width,
       headerTitleVisible: headerTitle.width > 0 && headerTitle.height > 0,
-      visibleEditorPanels,
+      visibleWorkflowPanels,
+      workflowTabs,
+      workflowTab: document.body.dataset.workflowTab,
       validationText: validation.textContent,
       validationState: validation.dataset.state,
       horizontalOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -80,6 +84,8 @@ try {
     fullPage: true,
   });
 
+  await page.click('[data-workflow-tab="play"]');
+  await page.waitForFunction(() => document.body.dataset.workflowTab === 'play');
   await page.click('#start');
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().mode === 'play', null, { timeout: 30_000 });
 
@@ -172,7 +178,10 @@ try {
     desktopNoHorizontalOverflow: editLayout.horizontalOverflow <= 0 && playLayout.horizontalOverflow <= 0,
     viewportDominatesSidebar: editLayout.viewportWidth >= editLayout.asideWidth * 2,
     viewportUsableHeight: editLayout.viewportHeight >= 650,
-    authoringPanelsVisibleInEdit: editLayout.visibleEditorPanels >= 3,
+    progressiveDisclosureActive:
+      editLayout.workflowTab === 'create' &&
+      editLayout.visibleWorkflowPanels === 1 &&
+      editLayout.workflowTabs === 3,
     playModeApplied: playLayout.bodyMode === 'play',
     authoringPanelsHiddenInPlay: playLayout.hiddenEditorPanels >= 3,
     playViewportExpands: playLayout.viewportWidth > editLayout.viewportWidth,
