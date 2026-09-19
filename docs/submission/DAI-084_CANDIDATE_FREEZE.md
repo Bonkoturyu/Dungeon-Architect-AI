@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS.** Candidate identity and rollback ref are frozen. Production rebuild / freeze-audit evidence is pending.
+**DONE.** Candidate identity, rollback ref, audited dependency boundary, and production rebuild manifest were validated on 2026-09-19.
 
 ## Frozen candidate
 
@@ -93,6 +93,24 @@ That generated aggregate hash becomes the build-artifact identity recorded after
   `1458ca9cd1ec00aca0ac23547df1f55aafc217c50763ef0a1d9db3b53585d6cb`;
 - latest DAI-083 public-doc evidence SHA-256:
   `c9dbc48df13f980fba8161fcff282716d797def70eabcd095c215d9f24f420d1`.
+
+## Production validation evidence
+
+Reviewed evidence generated at `2026-09-19T07:57:38.243Z` with Node.js `v24.15.0`.
+
+- candidate-freeze evidence JSON SHA-256: `9f70222839f3b460c51c7de99994a48da65ab4fe07884a88ea28de590203c656`;
+- dist manifest SHA-256: `387287bfba2aaad91a7ef4c9d98ebb522e8ce8e1e0768825d39d33d949d8ea6d`;
+- candidate commit/tree matched;
+- rollback branch resolved exactly to the frozen candidate commit;
+- current DAI-084 branch descended from the candidate;
+- only DAI-084 bookkeeping paths changed;
+- Node version matched `24.15.0`;
+- audited local package-lock was present and matched the expected SHA-256;
+- production build was present;
+- required deployable files were present;
+- false-check list was empty.
+
+The generated production build contained 6 files and the aggregate manifest hash above identifies that build output.
 
 ## Reopen rule
 
