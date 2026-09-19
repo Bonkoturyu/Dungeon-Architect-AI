@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { createDungeonScenePlan } from './scene-plan.js';
+import { createDungeonScenePlan, projectDungeonScenePlan } from './scene-plan.js';
 
-const DEFAULT_CLEAR_COLOR = 0x101014;
+const DEFAULT_CLEAR_COLOR = 0x151922;
 const DEFAULT_SELECTION_COLOR = 0x66ccff;
 
 function applyBoxTransform(mesh, box) {
@@ -40,10 +40,19 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
   scene.add(root);
 
   const materials = {
-    room: new THREE.MeshStandardMaterial({ color: 0x8e9aaf, roughness: 0.9, metalness: 0 }),
-    corridor: new THREE.MeshStandardMaterial({ color: 0x6c7890, roughness: 0.95, metalness: 0 }),
-    start: new THREE.MeshStandardMaterial({ color: 0x5bd17f, roughness: 0.7, metalness: 0 }),
-    goal: new THREE.MeshStandardMaterial({ color: 0xe5b65c, roughness: 0.65, metalness: 0 }),
+    room: new THREE.MeshStandardMaterial({ color: 0xb8c5d8, roughness: 0.88, metalness: 0 }),
+    roomExplored: new THREE.MeshStandardMaterial({ color: 0x667389, roughness: 0.92, metalness: 0 }),
+    roomCurrent: new THREE.MeshStandardMaterial({
+      color: 0xdce8f5,
+      roughness: 0.78,
+      metalness: 0,
+      emissive: 0x213748,
+      emissiveIntensity: 0.36,
+    }),
+    corridor: new THREE.MeshStandardMaterial({ color: 0x8d9bb1, roughness: 0.94, metalness: 0 }),
+    corridorExplored: new THREE.MeshStandardMaterial({ color: 0x566477, roughness: 0.96, metalness: 0 }),
+    start: new THREE.MeshStandardMaterial({ color: 0x58d68d, roughness: 0.68, metalness: 0 }),
+    goal: new THREE.MeshStandardMaterial({ color: 0xf1c75b, roughness: 0.62, metalness: 0 }),
   };
 
   const runtimeBySpecId = new Map();
@@ -131,8 +140,18 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     const stagingMap = new Map();
 
     try {
-      for (const room of plan.roomGroups) addBoxGroup(stagingRoot, stagingMap, room, materials.room);
-      for (const corridor of plan.corridorGroups) addBoxGroup(stagingRoot, stagingMap, corridor, materials.corridor);
+      for (const room of plan.roomGroups) {
+        const material = room.visibilityState === 'current'
+          ? materials.roomCurrent
+          : room.visibilityState === 'explored'
+            ? materials.roomExplored
+            : materials.room;
+        addBoxGroup(stagingRoot, stagingMap, room, material);
+      }
+      for (const corridor of plan.corridorGroups) {
+        const material = corridor.visibilityState === 'explored' ? materials.corridorExplored : materials.corridor;
+        addBoxGroup(stagingRoot, stagingMap, corridor, material);
+      }
       for (const marker of plan.markers) addMarker(stagingRoot, stagingMap, marker);
       return { stagingRoot, stagingMap };
     } catch (error) {
@@ -152,9 +171,10 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     renderer.render(scene, camera);
   }
 
-  function render(spec) {
+  function render(spec, { visibility = null } = {}) {
     assertAlive();
-    const plan = createDungeonScenePlan(spec);
+    const fullPlan = createDungeonScenePlan(spec);
+    const plan = visibility ? projectDungeonScenePlan(fullPlan, visibility) : fullPlan;
     const { stagingRoot, stagingMap } = buildStagingScene(plan);
 
     clearRenderedSpec();
