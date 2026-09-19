@@ -74,7 +74,8 @@ GitHub Issues are not created unless explicitly authorized.
 - DAI-084 Candidate hash/rollback — DONE (candidate commit `cacba2a1f8f079ab6401768b97f9fc91fff8f3b9`, tree `e2938bb46e1cf2eedc3a90e2b7603bd6050486ad`, rollback branch `rollback/submission-candidate-m8-2026-09-19`; candidate/tree/ref/Node/audited-lock/build gates all passed, false-check list empty. Freeze JSON SHA-256 `9f70222839f3b460c51c7de99994a48da65ab4fe07884a88ea28de590203c656`; dist manifest SHA-256 `387287bfba2aaad91a7ef4c9d98ebb522e8ce8e1e0768825d39d33d949d8ea6d`.)
 
 ## M8.5 — Submission polish
-- DAI-085 UI/UX polish — IN PROGRESS / VISUAL REVIEW REQUIRED (judge-facing layout/visual hierarchy only: 3D viewport emphasis, workflow grouping, mode-aware Play/Result rail, validation/status readability, consolidated authoring controls. Existing DAI-084 rollback remains historical safety point; a new candidate freeze is required after polish acceptance.)
+- DAI-085 UI/UX polish — IN PROGRESS / VISUAL REVIEW REQUIRED (3D viewport emphasis, reduced text, symbol-first controls, mode-aware Play/Result UI, validation/status hierarchy, consolidated authoring controls. Existing DAI-084 rollback remains historical safety point; a new candidate freeze is required after polish acceptance.)
+- DAI-086 Exploration/Mystery Play UX — IN PROGRESS / VISIBLE-CHROME EVIDENCE PENDING (shared DungeonSpec/Generator/Three.js core retained; Play adds renderer-independent explored-room/traversed-corridor map projection, hidden Goal/unvisited topology, exit-based traversal, and fresh-seed Mystery Play that does not replace the authoring dungeon.)
 
 ## M9
 DAI-090 unexpected prompts; DAI-091 final compliance; DAI-092 submit.
