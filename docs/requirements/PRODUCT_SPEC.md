@@ -80,6 +80,7 @@ Free-form runtime code generation is not part of MVP.
 - Cloud LLM provider path: OpenAI Responses API with `gpt-5.6-luna` for the current MVP
 - Hosting: Cloudflare Pages + Pages Functions (ADR-002)
 - Mobile scope: desktop Chrome supported; mobile/narrow best-effort only (ADR-003)
+- Final focus category: `AI 3D Scene Generation` (ADR-004)
 
 ## Unresolved by design
 
@@ -88,4 +89,3 @@ These still require production evidence before confirmation:
 - Play perspective
 - Combat model
 - Browser local LLM runtime/model
-- Final focus category

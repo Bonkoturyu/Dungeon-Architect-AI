@@ -55,7 +55,7 @@ Authoring/play state is in memory for the active page session.
 
 ## 8. Submission packaging is still open
 
-The hosted demo and under-three-minute demo video are complete. The repository visibility switch, short description, focus category, and frozen candidate hash remain M8 work.
+The hosted demo, under-three-minute demo video, short description, and focus category are complete. The repository visibility switch and frozen candidate hash remain M8 work.
 
 ## Reopen rule
 

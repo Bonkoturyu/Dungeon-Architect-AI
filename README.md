@@ -80,7 +80,7 @@ Key boundaries:
 - mobile is outside the supported submission acceptance scope;
 - no Safari/Firefox acceptance claim has been made;
 - there are no accounts, persistent project storage, analytics or telemetry;
-- the GitHub repository visibility switch, description/focus category, and candidate freeze remain submission tasks.
+- the GitHub repository visibility switch and candidate freeze remain submission tasks.
 
 ## Sample prompts
 
@@ -109,6 +109,7 @@ Relevant ADRs:
 - [ADR-001 — Three.js production renderer](docs/architecture/adr/ADR-001-PRODUCTION-RENDERER-THREEJS.md)
 - [ADR-002 — Cloudflare Pages hosting](docs/architecture/adr/ADR-002-HOSTING-CLOUDFLARE-PAGES.md)
 - [ADR-003 — Desktop-only submission mobile scope](docs/architecture/adr/ADR-003-MOBILE-SCOPE-DESKTOP-ONLY.md)
+- [ADR-004 — Final focus category: AI 3D Scene Generation](docs/architecture/adr/ADR-004-FOCUS-CATEGORY-AI-3D-SCENE-GENERATION.md)
 
 ## Run locally
 
@@ -178,9 +179,13 @@ DAI-081 hosted demo is complete at:
 
 https://dungeon-architect-ai.pages.dev/
 
+Submission metadata:
+
+- Focus category: **AI 3D Scene Generation**
+- Short description: frozen in [DAI-083 Submission Description / Focus Category](docs/submission/DAI-083_DESCRIPTION_CATEGORY.md)
+
 Remaining M8 work:
 
-- DAI-083 — short description and focus category;
 - DAI-084 — candidate hash / rollback point.
 
 DAI-082 demo video is complete: the final reviewed public-demo capture is 49.5 seconds at 1920×1080 / 30 fps.

@@ -2,7 +2,7 @@
 
 ## Status
 
-**DONE.** The DAI-082 completion status revalidation passed on 2026-09-19.
+**DONE.** The DAI-083 metadata status revalidation passed on 2026-09-19.
 
 ## Purpose
 
@@ -123,6 +123,23 @@ Evidence path produced by the accepted run:
 `artifacts/public-docs/dai-080-public-docs.json`
 
 This closes the DAI-082-triggered public-document status revalidation.
+
+## DAI-083 metadata revalidation
+
+The refreshed public-doc audit generated at `2026-09-19T07:20:44.676Z` passed all 12 checks after the short description and focus category were finalized.
+
+- required public docs exist;
+- README reflects finalized submission metadata;
+- DAI-083 metadata doc is included in the public-doc set;
+- checklist marks Short description and Focus category complete;
+- Judge Quick Start / Known Limitations / Sample Prompts remain truthful;
+- DAI-082 accepted storyboard remains intact;
+- submission metadata finalization check passed;
+- local Markdown links resolve;
+- placeholder findings are empty;
+- evidence JSON SHA-256: `c9dbc48df13f980fba8161fcff282716d797def70eabcd095c215d9f24f420d1`.
+
+This closes the DAI-083-triggered public-document revalidation.
 
 ## Completion boundary
 

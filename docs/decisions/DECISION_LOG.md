@@ -108,11 +108,20 @@
 - This does not select Perspective/Combat or satisfy the remaining PCE participant/task prerequisites.
 - See `docs/architecture/adr/ADR-003-MOBILE-SCOPE-DESKTOP-ONLY.md` and `docs/testing/DAI-075_MOBILE_SCOPE.md`.
 
+## 2026-09-19 — Final focus category confirmed
+
+- Status: Confirmed.
+- DAI-083 selects `AI 3D Scene Generation` as the final focus category for the current submission candidate.
+- The public Kaggle track describes this category as plain-language prompts becoming 3D environments, objects, layouts, or full interactive scenes in the browser.
+- Production evidence directly matches that framing: hosted plain-language Generate → validated DesignIntent → deterministic DungeonSpec → Three.js dungeon, followed by Edit / Validate / START / Play / Result.
+- The short submission description is frozen in `docs/submission/DAI-083_DESCRIPTION_CATEGORY.md`, with a 513-character primary version and a 215-character compact fallback.
+- Reopen only if the actual submission form exposes a materially different mandatory category list, a tighter text limit, or production behavior changes.
+- See `docs/architecture/adr/ADR-004-FOCUS-CATEGORY-AI-3D-SCENE-GENERATION.md`.
+
 ## Open decisions
 
 - Play perspective
 - Combat model
 - Browser local LLM runtime/model
-- Final focus category
 
 These remain Open until their production evidence and final ADR/decision entry exist.

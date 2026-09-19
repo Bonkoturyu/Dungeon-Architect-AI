@@ -12,6 +12,7 @@ const publicDocs = [
   'docs/submission/SAMPLE_PROMPTS.md',
   'docs/submission/CHECKLIST.md',
   'docs/submission/DEMO_STORYBOARD.md',
+  'docs/submission/DAI-083_DESCRIPTION_CATEGORY.md',
 ];
 
 function read(file) {
@@ -25,6 +26,7 @@ const limits = texts['docs/submission/KNOWN_LIMITATIONS.md'];
 const prompts = texts['docs/submission/SAMPLE_PROMPTS.md'];
 const checklist = texts['docs/submission/CHECKLIST.md'];
 const storyboard = texts['docs/submission/DEMO_STORYBOARD.md'];
+const submissionMetadata = texts['docs/submission/DAI-083_DESCRIPTION_CATEGORY.md'];
 
 function allIncludes(text, terms) {
   return terms.every((term) => text.includes(term));
@@ -81,13 +83,15 @@ const checks = {
       'docs/architecture/adr/ADR-001-PRODUCTION-RENDERER-THREEJS.md',
       'docs/architecture/adr/ADR-002-HOSTING-CLOUDFLARE-PAGES.md',
       'docs/architecture/adr/ADR-003-MOBILE-SCOPE-DESKTOP-ONLY.md',
+      'docs/architecture/adr/ADR-004-FOCUS-CATEGORY-AI-3D-SCENE-GENERATION.md',
+      'docs/submission/DAI-083_DESCRIPTION_CATEGORY.md',
       'docs/submission/CHECKLIST.md',
     ]),
   readmeDesktopScopeExplicit:
     readme.includes('desktop Google Chrome on Windows') &&
     readme.includes('mobile/narrow layouts are best-effort only'),
   readmePendingSubmissionItemsExplicit:
-    readme.includes('DAI-083') &&
+    readme.includes('Focus category: **AI 3D Scene Generation**') &&
     readme.includes('DAI-084') &&
     readme.includes('DAI-082 demo video is complete') &&
     readme.includes('GitHub repository is still private'),
@@ -119,13 +123,19 @@ const checks = {
     checklist.includes('- [x] LICENSE / NOTICE complete') &&
     checklist.includes('- [ ] Public repository') &&
     checklist.includes('- [x] Demo video under 3 minutes') &&
-    checklist.includes('- [ ] Short description') &&
-    checklist.includes('- [ ] Focus category') &&
+    checklist.includes('- [x] Short description') &&
+    checklist.includes('- [x] Focus category') &&
     checklist.includes('- [x] DAI-081 privacy/public-doc re-audit after generation endpoint integration'),
   storyboardFinalCaptureAccepted:
     storyboard.includes('DAI-082 FINAL CAPTURE ACCEPTED') &&
     storyboard.includes('49.5 seconds') &&
     storyboard.includes('corrected DAI-026 public candidate'),
+  submissionMetadataFinalized:
+    submissionMetadata.includes('**AI 3D Scene Generation**') &&
+    submissionMetadata.includes('513 characters') &&
+    submissionMetadata.includes('70 whitespace-delimited words') &&
+    submissionMetadata.includes('215 characters') &&
+    submissionMetadata.includes('27 whitespace-delimited words'),
   localMarkdownLinksResolve: missingLocalLinks.length === 0,
   noTodoOrTbdPlaceholders: placeholderFindings.length === 0,
 };
