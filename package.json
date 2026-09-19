@@ -52,7 +52,8 @@
     "smoke:orthogonal-corridors": "node scripts/run-dai-026-orthogonal-corridor-smoke.mjs",
     "demo:video": "node scripts/run-dai-082-recording-demo.mjs",
     "validate:video-plan": "node scripts/run-dai-082-video-plan-audit.mjs",
-    "validate:submission-metadata": "node scripts/run-dai-083-submission-metadata-audit.mjs"
+    "validate:submission-metadata": "node scripts/run-dai-083-submission-metadata-audit.mjs",
+    "smoke:ui-ux-polish": "node scripts/run-ui-ux-polish-smoke.mjs"
   },
   "devDependencies": {
     "@babylonjs/core": "9.18.0",
