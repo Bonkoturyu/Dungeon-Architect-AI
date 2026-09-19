@@ -624,7 +624,8 @@ function beginPlay(spec, source) {
   mode = playSession.status === 'playing' ? 'play' : 'result';
   selectedRoomId = playSession.currentRoomId;
   selectedEntityId = null;
-  resultStatus.textContent = '—';
+  resultStatus.textContent = '';
+  resultStatus.hidden = true;
   updatePlayReadout();
   setEditStatus(source === 'mystery' ? 'mystery play started' : 'test play started');
   renderActiveSpec();
