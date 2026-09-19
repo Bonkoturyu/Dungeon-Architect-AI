@@ -274,6 +274,36 @@
       letter-spacing: 0.11em;
       text-transform: uppercase;
     }
+    .workflow-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+      margin: 0 0 12px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(18, 22, 29, 0.62);
+    }
+    .workflow-tab {
+      min-width: 0;
+      min-height: 42px;
+      padding: 7px 6px;
+      border-color: transparent;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.76rem;
+      white-space: nowrap;
+    }
+    .workflow-tab.is-active {
+      border-color: #687796;
+      background: #343d4d;
+      color: var(--text);
+    }
+    body[data-mode="edit"] [data-workflow-panel] { display: none; }
+    body[data-mode="edit"][data-workflow-tab="create"] [data-workflow-panel="create"],
+    body[data-mode="edit"][data-workflow-tab="edit"] [data-workflow-panel="edit"],
+    body[data-mode="edit"][data-workflow-tab="play"] [data-workflow-panel="play"] { display: block; }
+
     fieldset {
       min-width: 0;
       border: 1px solid var(--line);
@@ -384,7 +414,7 @@
       background: rgba(63, 122, 82, 0.24);
       color: #d7ffe4;
     }
-    .play-choice-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .play-choice-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
     .play-choice-row button { min-height: 44px; }
     .mystery-action { border-color: #7b6b9f; background: rgba(99, 79, 137, 0.28); color: #f1eaff; }
     .mode-note { margin: 8px 0 0; color: var(--text-muted); font-size: 0.68rem; }
@@ -452,12 +482,12 @@
     }
   </style>
 </head>
-<body data-mode="edit">
+<body data-mode="edit" data-workflow-tab="create">
   <main>
     <header class="app-header">
       <div class="brand-block">
-        <span class="brand-eyebrow">Dungeon Architect AI</span>
-        <h1 class="brand-title">DAI Editor / Play Gate</h1>
+        <span class="brand-eyebrow">Describe · Build · Explore</span>
+        <h1 class="brand-title">Dungeon Architect AI</h1>
       </div>
       <span class="mode-badge" aria-hidden="true"></span>
       <span id="status">loading</span>
@@ -477,11 +507,8 @@
         <span class="toolbar-divider" aria-hidden="true"></span>
         <button id="guide" class="secondary-accent" type="button" title="Guide" aria-label="Open guide">?</button>
       </div>
-      <div>
-        <span id="validationStatus" data-state="blocked">Validation: checking…</span>
-        <span id="editStatus">ready</span>
-      </div>
-      <span id="hint">Edit: select rooms or use the inspector. Play: click a connected room.</span>
+      <span id="editStatus">ready</span>
+      <span id="hint">Create · Edit · Play</span>
     </div>
 
     <p id="mobileScopeNotice" class="scope-notice" role="note">Desktop demo target: mobile/narrow layouts are best-effort only and are not a supported judging target for this hackathon build. Use desktop Chrome for evaluation.</p>
@@ -500,9 +527,13 @@
       </section>
 
       <aside>
-        <p class="sidebar-heading">Create · Edit · Play</p>
+        <nav class="workflow-tabs editor-only" aria-label="Authoring workflow">
+          <button class="workflow-tab is-active" type="button" data-workflow-tab="create" aria-selected="true">✨ Create</button>
+          <button class="workflow-tab" type="button" data-workflow-tab="edit" aria-selected="false">✎ Edit</button>
+          <button class="workflow-tab" type="button" data-workflow-tab="play" aria-selected="false">▶ Play</button>
+        </nav>
 
-        <fieldset class="panel-primary editor-only">
+        <fieldset class="panel-primary editor-only" data-workflow-panel="create">
           <legend>✨ Create</legend>
           
           <label>
@@ -513,8 +544,9 @@
           <p id="generationStatus" class="muted">Enter a design request to generate a new deterministic DungeonSpec.</p>
         </fieldset>
 
-        <fieldset class="panel-play">
+        <fieldset class="panel-play" data-workflow-panel="play">
           <legend>▶ Play</legend>
+          <span id="validationStatus" data-state="blocked">Validation: checking…</span>
           <div class="play-choice-row editor-only">
             <button id="start" class="primary-action" type="button" disabled title="Play the dungeon currently shown in Edit mode.">▶ Test</button>
             <button id="mysteryPlay" class="mystery-action" type="button" disabled title="Generate a fresh hidden dungeon from the same design intent.">🎲 Mystery</button>
@@ -525,8 +557,8 @@
           <p id="resultStatus" class="muted status-readout">—</p>
         </fieldset>
 
-        <fieldset class="editor-only">
-          <legend>✎ Edit</legend>
+        <fieldset class="editor-only" data-workflow-panel="edit">
+          <legend>✎ Entities</legend>
           
           <label>
             Entities
@@ -553,7 +585,7 @@
           <button id="addEntity" class="wide-action" type="button">＋ Add</button>
         </fieldset>
 
-        <fieldset class="panel-ai editor-only">
+        <fieldset class="panel-ai editor-only" data-workflow-panel="edit">
           <legend>✦ AI Edit</legend>
           
           <label>
