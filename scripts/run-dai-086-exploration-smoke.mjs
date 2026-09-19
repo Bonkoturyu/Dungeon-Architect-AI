@@ -131,6 +131,8 @@ try {
 
   await page.click('#returnEdit');
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().mode === 'edit');
+  await page.click('[data-workflow-tab="play"]');
+  await page.waitForFunction(() => document.body.dataset.workflowTab === 'play');
 
   const mysteryEnabled = await page.locator('#mysteryPlay').isEnabled();
   if (!mysteryEnabled) throw new Error('Mystery Play should be enabled after generation.');
