@@ -174,7 +174,7 @@ try {
   const checks = {
     editorReady: editLayout.bodyMode === 'edit',
     titleVisible: editLayout.headerTitleVisible === true,
-    validationReadable: editLayout.validationState === 'pass' && editLayout.validationText.includes('PASS'),
+    validationReadable: editLayout.validationState === 'pass' && editLayout.validationText.includes('Valid'),
     desktopNoHorizontalOverflow: editLayout.horizontalOverflow <= 0 && playLayout.horizontalOverflow <= 0,
     viewportDominatesSidebar: editLayout.viewportWidth >= editLayout.asideWidth * 2,
     viewportUsableHeight: editLayout.viewportHeight >= 650,
@@ -185,11 +185,11 @@ try {
     playModeApplied: playLayout.bodyMode === 'play',
     authoringPanelsHiddenInPlay: playLayout.hiddenEditorPanels >= 3,
     playViewportExpands: playLayout.viewportWidth > editLayout.viewportWidth,
-    playInstructionIsModeAware: playLayout.viewportHelp.includes('Unknown rooms stay hidden'),
+    playInstructionIsModeAware: playLayout.viewportHelp.includes('Auto-map'),
     resultModeApplied: resultLayout.bodyMode === 'result',
-    resultVisible: resultLayout.playText.includes('Cleared') && resultLayout.resultText.includes('moves'),
+    resultVisible: resultLayout.resultText.includes('CLEARED') && resultLayout.playText.includes('👣'),
     authoringPanelsHiddenInResult: resultLayout.editorPanelsHidden === true,
-    resultInstructionIsModeAware: resultLayout.viewportHelp.toLowerCase().includes('return to edit'),
+    resultInstructionIsModeAware: resultLayout.viewportHelp.toLowerCase().includes('run complete'),
     returnToEditRestoresMode: returnedMode === 'edit',
     browserErrorsAbsent:
       consoleErrors.length === 0 &&
