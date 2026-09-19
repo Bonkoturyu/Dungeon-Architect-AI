@@ -2,7 +2,7 @@
 
 ## Status
 
-**DONE.** The DAI-081 post-integration public-document revalidation passed on 2026-09-19.
+**DONE for the DAI-081 candidate / DAI-082 STATUS REVALIDATION PENDING.** DAI-082 has now completed, so README, Known Limitations, Checklist and Storyboard were updated and the deterministic public-doc audit contract was advanced accordingly.
 
 ## Purpose
 
@@ -97,6 +97,10 @@ Reviewed evidence generated at `2026-09-18T16:08:18.166Z` with Node.js `v24.15.0
 - all local Markdown links resolve;
 - no TODO/TBD placeholders remain;
 - hosted URL and generation UI may now be claimed complete, while repository visibility remains unchanged.
+
+## DAI-082 status revalidation
+
+DAI-082 changed submission-status claims only: the final video is now complete while Public repository / Description / Focus category / Candidate hash remain open. A fresh `npm run validate:public-docs` pass is required before PR #38 merges.
 
 ## Completion boundary
 
