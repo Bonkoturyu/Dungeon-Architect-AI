@@ -254,6 +254,8 @@ function renderPlayExits() {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = `exit-button ${exit.explored ? 'is-known' : 'is-unknown'}`;
+    button.dataset.corridorId = exit.corridorId;
+    button.dataset.explored = String(exit.explored);
     const icon = sideIcon(exit.side);
     button.textContent = count > 1 ? `${icon}${count}` : icon;
     const direction = exit.side ?? 'unknown';
@@ -429,6 +431,7 @@ async function generateDungeonFromPrompt() {
     selectedRoomId = null;
     selectedEntityId = null;
     playSession = null;
+    playSource = null;
     lastPlayResult = null;
     lastNaturalEditCommand = null;
     lastDesignIntent = clone(payload.intent);
@@ -443,8 +446,7 @@ async function generateDungeonFromPrompt() {
     mode = 'edit';
     generationPrompt.value = '';
     playStatus.textContent = '—';
-  resultStatus.textContent = '—';
-    resultStatus.textContent = 'No result yet.';
+    resultStatus.textContent = '—';
     renderActiveSpec();
     setGenerationStatus(`✓ Generated · ${lastGeneration.roomCount} rooms`);
     setEditStatus('generated new dungeon');
@@ -642,7 +644,9 @@ function returnToEdit() {
   playSource = null;
   selectedRoomId = null;
   selectedEntityId = null;
-  playStatus.textContent = 'Not started.';
+  playStatus.textContent = '—';
+  resultStatus.textContent = '—';
+  if (playModeLabel) playModeLabel.textContent = '';
   setEditStatus('returned to edit');
   renderActiveSpec();
   canvas.focus();
