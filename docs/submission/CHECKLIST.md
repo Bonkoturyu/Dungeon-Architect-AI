@@ -2,7 +2,7 @@
 
 - [ ] Public repository
 - [x] Hosted browser demo
-- [ ] Demo video under 3 minutes — corrected-corridor re-record pending
+- [x] Demo video under 3 minutes
 - [ ] Short description
 - [ ] Focus category
 - [ ] Additional requested materials
