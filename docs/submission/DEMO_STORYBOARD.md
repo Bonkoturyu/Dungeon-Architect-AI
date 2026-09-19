@@ -1,14 +1,14 @@
 # Demo Storyboard
 
-**Status: DAI-082 RE-RECORD READY AFTER CORRECTED PUBLIC DEPLOYMENT.**
+**Status: DAI-082 FINAL CAPTURE ACCEPTED.**
 
-Target: **under 3 minutes**. Internal target: **2:00–2:30**.
+Requirement: **under 3 minutes**. Final reviewed capture: **49.5 seconds**.
 
 Use the actual public candidate:
 
 https://dungeon-architect-ai.pages.dev/
 
-The first capture is rejected and must not be used; it predates DAI-026 continuous orthogonal corridor routing.
+The pre-DAI-026 and misframed interim captures are rejected. The accepted capture uses the corrected DAI-026 public candidate and fullscreen viewport-only framing.
 
 ## Final storyboard
 
