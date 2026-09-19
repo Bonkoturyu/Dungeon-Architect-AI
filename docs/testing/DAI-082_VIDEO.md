@@ -74,7 +74,7 @@ The runner:
 
 1. opens the public HTTPS candidate in visible Chrome;
 2. detects `ffmpeg` / `ffprobe` from PATH;
-3. when ffmpeg is available, launches Chrome in kiosk mode, computes the page viewport screen rectangle, and records only that viewport region with `gdigrab` at 30 fps;
+3. when ffmpeg is available, forces Chrome fullscreen through CDP, disables extensions/translation UI, computes the page viewport screen rectangle, and records only that viewport region with `gdigrab` at 30 fps;
 4. performs Generate;
 5. demonstrates one manual room edit and Undo;
 6. performs the verified natural-language edit;
