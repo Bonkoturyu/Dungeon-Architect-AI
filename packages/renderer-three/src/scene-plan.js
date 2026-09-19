@@ -279,6 +279,77 @@ function buildRoomGroup(room, doorOpenings, config) {
   };
 }
 
+
+function boundsFromPlanGroups(roomGroups, corridorGroups, fallbackBounds) {
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minZ = Infinity;
+  let maxZ = -Infinity;
+
+  for (const group of [...roomGroups, ...corridorGroups]) {
+    for (const box of group.boxes ?? []) {
+      const rotationY = box.rotationY ?? 0;
+      const cos = Math.cos(rotationY);
+      const sin = Math.sin(rotationY);
+      const halfX = (Math.abs(cos) * box.size.x + Math.abs(sin) * box.size.z) / 2;
+      const halfZ = (Math.abs(sin) * box.size.x + Math.abs(cos) * box.size.z) / 2;
+      minX = Math.min(minX, box.position.x - halfX);
+      maxX = Math.max(maxX, box.position.x + halfX);
+      minZ = Math.min(minZ, box.position.z - halfZ);
+      maxZ = Math.max(maxZ, box.position.z + halfZ);
+    }
+  }
+
+  if (![minX, maxX, minZ, maxZ].every(Number.isFinite)) return { ...fallbackBounds };
+
+  return {
+    minX,
+    maxX,
+    minZ,
+    maxZ,
+    centerX: (minX + maxX) / 2,
+    centerZ: (minZ + maxZ) / 2,
+    width: maxX - minX,
+    depth: maxZ - minZ,
+  };
+}
+
+export function projectDungeonScenePlan(plan, visibility) {
+  if (!visibility) return plan;
+  if (!plan || typeof plan !== 'object') throw new TypeError('projectDungeonScenePlan requires a scene plan.');
+
+  const roomIds = new Set(Array.isArray(visibility.roomIds) ? visibility.roomIds : []);
+  const corridorIds = new Set(Array.isArray(visibility.corridorIds) ? visibility.corridorIds : []);
+  const currentRoomId = typeof visibility.currentRoomId === 'string' ? visibility.currentRoomId : null;
+
+  const roomGroups = plan.roomGroups
+    .filter((group) => roomIds.has(group.specId))
+    .map((group) => ({
+      ...group,
+      visibilityState: group.specId === currentRoomId ? 'current' : 'explored',
+    }));
+
+  const corridorGroups = plan.corridorGroups
+    .filter((group) => corridorIds.has(group.specId))
+    .map((group) => ({ ...group, visibilityState: 'explored' }));
+
+  const markers = plan.markers.filter((marker) => roomIds.has(marker.roomId));
+  const bounds = boundsFromPlanGroups(roomGroups, corridorGroups, plan.bounds);
+
+  return {
+    ...plan,
+    roomGroups,
+    corridorGroups,
+    markers,
+    bounds,
+    visibility: {
+      roomIds: [...roomIds],
+      corridorIds: [...corridorIds],
+      currentRoomId,
+    },
+  };
+}
+
 export function createDungeonScenePlan(spec, style = {}) {
   const validation = validateDungeonSpec(spec);
   if (!validation.valid) throw new DungeonScenePlanError(validation.errors);
