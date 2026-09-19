@@ -10,7 +10,7 @@ A new candidate freeze is required after polish is approved.
 
 ## Scope
 
-Judge-facing UI/UX polish only. No DesignIntent, DungeonSpec, generator, provider, editor command, Play Core, or simulation semantics are changed.
+Judge-facing UI/UX polish plus DAI-086 exploration presentation. DesignIntent/DungeonSpec contracts, provider behavior, EditCommand semantics, and simulation semantics remain unchanged. Play gains a renderer-independent visibility/map projection and Mystery Play entry path while continuing to use the same Generator, DungeonSpec, PlaySession, and Three.js renderer.
 
 Primary goals:
 
@@ -21,7 +21,9 @@ Primary goals:
 - hide irrelevant authoring controls during Play/Result;
 - preserve all existing DOM IDs and automation paths;
 - keep desktop Chrome as the supported submission target;
-- keep narrow/mobile as best-effort.
+- keep narrow/mobile as best-effort;
+- make Play exploratory: hide unvisited topology, auto-map visited rooms/corridors, and expose exits without revealing Goal location;
+- provide Test Current and fresh-seed Mystery Play.
 
 ## First polish pass
 
@@ -73,7 +75,11 @@ Expected:
 - `artifacts/ui-ux-polish/ui-ux-polish.json`;
 - `artifacts/ui-ux-polish/ui-ux-edit.png`;
 - `artifacts/ui-ux-polish/ui-ux-play.png`;
-- `artifacts/ui-ux-polish/ui-ux-result.png`.
+- `artifacts/ui-ux-polish/ui-ux-result.png`;
+- `artifacts/exploration-ux/dai-086-exploration-ux.json`;
+- `artifacts/exploration-ux/test-play-start.png`;
+- `artifacts/exploration-ux/test-play-after-one-move.png`;
+- `artifacts/exploration-ux/mystery-play-start.png`.
 
 The screenshots require human visual review before merge.
 
