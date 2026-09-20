@@ -2,6 +2,14 @@ import { EditSession } from '../../packages/editor-core/src/edit-session.js';
 import { evaluateStartGate } from '../../packages/editor-core/src/start-gate.js';
 import { startPlaySession, movePlaySession, createPlayResult } from '../../packages/play-core/src/play-session.js';
 import { createRendererVisibilityFromPlaySession, derivePlayMap } from '../../packages/play-core/src/play-map.js';
+import { listRoomEnemies, recordEnemyEncounter, defeatEnemy } from '../../packages/play-core/src/enemy-runtime.js';
+import {
+  listRoomInteractables,
+  openTreasure,
+  avoidTrap,
+  triggerTrap,
+  useRecovery,
+} from '../../packages/play-core/src/interaction-runtime.js';
 import { createThreeRendererAdapter } from '../../packages/renderer-three/src/index.js';
 import { generateDungeonFromDesignIntent } from '../../packages/generator/src/design-intent-generator.js';
 
@@ -13,6 +21,7 @@ const editStatus = document.querySelector('#editStatus');
 const validationStatus = document.querySelector('#validationStatus');
 const playStatus = document.querySelector('#playStatus');
 const resultStatus = document.querySelector('#resultStatus');
+const resultMetrics = document.querySelector('#resultMetrics');
 const undoButton = document.querySelector('#undo');
 const redoButton = document.querySelector('#redo');
 const startButton = document.querySelector('#start');
@@ -20,6 +29,8 @@ const mysteryPlayButton = document.querySelector('#mysteryPlay');
 const returnEditButton = document.querySelector('#returnEdit');
 const playExitBar = document.querySelector('#playExitBar');
 const playExitButtons = document.querySelector('#playExitButtons');
+const roomEventBar = document.querySelector('#roomEventBar');
+const roomEventItems = document.querySelector('#roomEventItems');
 const playModeLabel = document.querySelector('#playModeLabel');
 const moveCount = document.querySelector('#moveCount');
 const mappedCount = document.querySelector('#mappedCount');
@@ -239,6 +250,162 @@ function updateUi() {
   returnEditButton.disabled = editing;
 }
 
+function roomContents() {
+  if (!playSession || mode !== 'play') return { enemies: [], interactables: [] };
+  return {
+    enemies: listRoomEnemies(playSession),
+    interactables: listRoomInteractables(playSession),
+  };
+}
+
+function roomBlocksExit() {
+  const { enemies, interactables } = roomContents();
+  return enemies.length > 0 ||
+    interactables.some((entry) => entry.entity.type === 'trap' && entry.state.status === 'armed');
+}
+
+function applyPlayRuntimeResult(result, failurePrefix) {
+  if (!result?.ok) {
+    setEditStatus(`${failurePrefix}: ${result?.error?.code ?? 'UNKNOWN'}`);
+    return false;
+  }
+  playSession = result.session;
+  updatePlayReadout();
+  renderActiveSpec();
+  return true;
+}
+
+function clearEnemy(enemyId) {
+  if (!playSession || mode !== 'play') return false;
+  const at = playSession.moves + playSession.gameplayState.counters.interactions + 1;
+  let current = playSession;
+  const enemyState = listRoomEnemies(current, current.currentRoomId, { includeDefeated: true })
+    .find((entry) => entry.enemy.id === enemyId)?.state;
+  if ((enemyState?.encounters ?? 0) === 0) {
+    const encountered = recordEnemyEncounter(current, enemyId, { at });
+    if (!encountered.ok) return applyPlayRuntimeResult(encountered, 'Encounter failed');
+    current = encountered.session;
+  }
+  return applyPlayRuntimeResult(defeatEnemy(current, enemyId, { at: at + 1 }), 'Clear failed');
+}
+
+function interactWithRoomEntity(action, entityId) {
+  if (!playSession || mode !== 'play') return false;
+  const at = playSession.moves + playSession.gameplayState.counters.interactions + 1;
+  const handlers = {
+    'open-treasure': () => openTreasure(playSession, entityId, { at }),
+    'avoid-trap': () => avoidTrap(playSession, entityId, { at }),
+    'trigger-trap': () => triggerTrap(playSession, entityId, { at }),
+    'use-recovery': () => useRecovery(playSession, entityId, { at }),
+  };
+  const handler = handlers[action];
+  if (!handler) return false;
+  return applyPlayRuntimeResult(handler(), 'Interaction failed');
+}
+
+function renderRoomEvents() {
+  if (!roomEventBar || !roomEventItems || !playSession || mode !== 'play') {
+    if (roomEventBar) roomEventBar.hidden = true;
+    if (roomEventItems) roomEventItems.replaceChildren();
+    return;
+  }
+
+  const { enemies, interactables } = roomContents();
+  const cards = [];
+
+  for (const { enemy } of enemies) {
+    const card = document.createElement('div');
+    card.className = 'room-event is-blocking';
+    card.dataset.entityId = enemy.id;
+    card.dataset.kind = 'enemy';
+
+    const type = document.createElement('span');
+    type.className = 'room-event-type';
+    type.textContent = 'ENEMY';
+
+    const note = document.createElement('span');
+    note.className = 'room-event-note';
+    note.textContent = 'blocks exits';
+
+    const actions = document.createElement('div');
+    actions.className = 'room-event-actions';
+    const clear = document.createElement('button');
+    clear.type = 'button';
+    clear.className = 'safe-action';
+    clear.dataset.action = 'clear-enemy';
+    clear.textContent = 'CLEAR';
+    clear.addEventListener('click', () => clearEnemy(enemy.id));
+    actions.append(clear);
+
+    card.append(type, note, actions);
+    cards.push(card);
+  }
+
+  for (const entry of interactables) {
+    const { entity, warning, state } = entry;
+    const card = document.createElement('div');
+    const blocking = entity.type === 'trap' && state.status === 'armed';
+    card.className = `room-event${blocking ? ' is-blocking' : ''}`;
+    card.dataset.entityId = entity.id;
+    card.dataset.kind = entity.type;
+
+    const type = document.createElement('span');
+    type.className = 'room-event-type';
+    type.textContent = entity.type === 'treasure'
+      ? 'CHEST'
+      : entity.type === 'trap'
+        ? 'TRAP'
+        : 'REST';
+
+    const note = document.createElement('span');
+    note.className = 'room-event-note';
+    if (entity.type === 'trap') note.textContent = warning === 'floor-cracks' ? 'cracked floor' : 'something feels off';
+    else if (entity.type === 'treasure') note.textContent = warning === 'suspicious-glow' ? 'suspicious glow' : 'optional';
+    else note.textContent = 'optional';
+
+    const actions = document.createElement('div');
+    actions.className = 'room-event-actions';
+
+    if (entity.type === 'treasure') {
+      const open = document.createElement('button');
+      open.type = 'button';
+      open.dataset.action = 'open-treasure';
+      open.textContent = 'OPEN';
+      open.addEventListener('click', () => interactWithRoomEntity('open-treasure', entity.id));
+      actions.append(open);
+    } else if (entity.type === 'trap') {
+      const avoid = document.createElement('button');
+      avoid.type = 'button';
+      avoid.className = 'safe-action';
+      avoid.dataset.action = 'avoid-trap';
+      avoid.textContent = 'AVOID';
+      avoid.addEventListener('click', () => interactWithRoomEntity('avoid-trap', entity.id));
+
+      const risk = document.createElement('button');
+      risk.type = 'button';
+      risk.className = 'risk-action';
+      risk.dataset.action = 'trigger-trap';
+      risk.textContent = 'RISK';
+      risk.addEventListener('click', () => interactWithRoomEntity('trigger-trap', entity.id));
+      actions.append(avoid, risk);
+    } else if (entity.type === 'recovery') {
+      const use = document.createElement('button');
+      use.type = 'button';
+      use.className = 'safe-action';
+      use.dataset.action = 'use-recovery';
+      use.textContent = 'USE';
+      use.addEventListener('click', () => interactWithRoomEntity('use-recovery', entity.id));
+      actions.append(use);
+    }
+
+    card.append(type, note, actions);
+    cards.push(card);
+  }
+
+  roomEventItems.replaceChildren(...cards);
+  roomEventBar.hidden = cards.length === 0;
+}
+
 function sideIcon(side) {
   return ({ north: '↑', east: '→', south: '↓', west: '←' })[side] ?? '◇';
 }
@@ -247,6 +414,12 @@ function renderPlayExits() {
   if (!playExitBar || !playExitButtons || !playSession || mode !== 'play') {
     if (playExitBar) playExitBar.hidden = true;
     if (playExitButtons) playExitButtons.replaceChildren();
+    return;
+  }
+
+  if (roomBlocksExit()) {
+    playExitBar.hidden = true;
+    playExitButtons.replaceChildren();
     return;
   }
 
@@ -319,6 +492,7 @@ function renderActiveSpec() {
     adapter.setSelectedSpecId(null);
   }
 
+  renderRoomEvents();
   renderPlayExits();
   refreshGate();
   updateUi();
@@ -603,6 +777,25 @@ function updatePlayReadout() {
   if (mappedCount) mappedCount.textContent = String(map.exploredRoomIds.length);
 }
 
+function renderResultMetrics(result) {
+  if (!resultMetrics) return;
+  const metrics = result?.metrics ?? {};
+  const items = [
+    ['ENEMY', metrics.enemiesCleared ?? 0],
+    ['CHEST', metrics.treasuresOpened ?? 0],
+    ['TRAP', metrics.trapsTriggered ?? 0],
+  ];
+  resultMetrics.replaceChildren(...items.map(([label, value]) => {
+    const item = document.createElement('span');
+    item.className = 'result-metric';
+    const strong = document.createElement('strong');
+    strong.textContent = label;
+    item.append(strong, document.createTextNode(` ${value}`));
+    return item;
+  }));
+  resultMetrics.hidden = false;
+}
+
 function finalizePlayIfNeeded() {
   if (!playSession || !['cleared', 'failed'].includes(playSession.status)) return false;
   const result = createPlayResult(playSession);
@@ -613,6 +806,7 @@ function finalizePlayIfNeeded() {
   if (mappedCount) mappedCount.textContent = String(lastPlayResult.visitedRoomIds.length);
   resultStatus.textContent = lastPlayResult.status === 'cleared' ? '✓ CLEARED' : 'RUN ENDED';
   resultStatus.hidden = false;
+  renderResultMetrics(lastPlayResult);
   renderActiveSpec();
   return true;
 }
@@ -632,6 +826,10 @@ function beginPlay(spec, source) {
   selectedEntityId = null;
   resultStatus.textContent = '';
   resultStatus.hidden = true;
+  if (resultMetrics) {
+    resultMetrics.replaceChildren();
+    resultMetrics.hidden = true;
+  }
   updatePlayReadout();
   setEditStatus(source === 'mystery' ? 'mystery play started' : 'test play started');
   renderActiveSpec();
@@ -699,6 +897,10 @@ function returnToEdit() {
   if (mappedCount) mappedCount.textContent = '0';
   resultStatus.textContent = '';
   resultStatus.hidden = true;
+  if (resultMetrics) {
+    resultMetrics.replaceChildren();
+    resultMetrics.hidden = true;
+  }
   if (playModeLabel) {
     playModeLabel.textContent = '';
     playModeLabel.hidden = true;
@@ -800,6 +1002,8 @@ async function run() {
       startDungeon,
       startMysteryDungeon,
       movePlayToRoom,
+      clearEnemy,
+      interactWithRoomEntity,
       returnToEdit,
     };
     status.textContent = '';
