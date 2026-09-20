@@ -89,6 +89,8 @@ try {
       .filter((node) => getComputedStyle(node).display !== 'none').length;
     const validation = document.querySelector('#validationStatus');
     const toolbar = document.querySelector('.toolbar');
+    const canvas = document.querySelector('#renderCanvas');
+    const canvasRect = canvas.getBoundingClientRect();
     const selected = document.querySelector('#selected');
     const entitySelected = document.querySelector('#entitySelected');
     return {
@@ -108,6 +110,10 @@ try {
       validationState: validation.dataset.state,
       toolbarHiddenInCreate: getComputedStyle(toolbar).display === 'none',
       emptySelectionChipsHidden: selected.hidden === true && entitySelected.hidden === true,
+      canvasCssWidth: canvasRect.width,
+      canvasCssHeight: canvasRect.height,
+      canvasBackingWidth: canvas.width,
+      canvasBackingHeight: canvas.height,
       horizontalOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
   });
@@ -121,6 +127,12 @@ try {
   await page.waitForFunction(() => document.body.dataset.workflowTab === 'play');
   await page.click('#start');
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().mode === 'play', null, { timeout: 30_000 });
+  await page.waitForFunction(() => {
+    const canvas = document.querySelector('#renderCanvas');
+    const rect = canvas.getBoundingClientRect();
+    return Math.abs(canvas.width - rect.width) <= 1 &&
+      Math.abs(canvas.height - rect.height) <= 1;
+  }, null, { timeout: 5_000 });
 
   const playLayout = await page.evaluate(() => {
     const viewport = document.querySelector('.viewport-shell').getBoundingClientRect();
@@ -133,6 +145,8 @@ try {
     const exitPrompt = document.querySelector('.exit-prompt')?.textContent ?? '';
     const viewportLabel = document.querySelector('.viewport-label');
     const viewportLabelStyle = getComputedStyle(viewportLabel);
+    const canvas = document.querySelector('#renderCanvas');
+    const canvasRect = canvas.getBoundingClientRect();
     const asideStyle = getComputedStyle(document.querySelector('aside'));
     return {
       bodyMode: document.body.dataset.mode,
@@ -148,6 +162,10 @@ try {
       playAsidePosition: asideStyle.position,
       exitPadWidth: exitPad?.width ?? 0,
       exitPadHeight: exitPad?.height ?? 0,
+      canvasCssWidth: canvasRect.width,
+      canvasCssHeight: canvasRect.height,
+      canvasBackingWidth: canvas.width,
+      canvasBackingHeight: canvas.height,
       horizontalOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
   });
@@ -238,7 +256,13 @@ try {
     routineChromeReduced:
       editLayout.toolbarHiddenInCreate === true &&
       editLayout.emptySelectionChipsHidden === true,
+    editCanvasMatchesLayout:
+      Math.abs(editLayout.canvasBackingWidth - editLayout.canvasCssWidth) <= 1 &&
+      Math.abs(editLayout.canvasBackingHeight - editLayout.canvasCssHeight) <= 1,
     playModeApplied: playLayout.bodyMode === 'play',
+    playCanvasMatchesExpandedLayout:
+      Math.abs(playLayout.canvasBackingWidth - playLayout.canvasCssWidth) <= 1 &&
+      Math.abs(playLayout.canvasBackingHeight - playLayout.canvasCssHeight) <= 1,
     authoringPanelsHiddenInPlay: playLayout.hiddenEditorPanels >= 3,
     playViewportExpands: playLayout.viewportWidth > editLayout.viewportWidth,
     playInstructionIsModeAware: playLayout.viewportHelp.includes('Auto-map'),
