@@ -279,10 +279,19 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     const fullPlan = createDungeonScenePlan(spec);
     const plan = visibility ? projectDungeonScenePlan(fullPlan, visibility) : fullPlan;
     const { stagingRoot, stagingMap } = buildStagingScene(plan, { resultMode, entityStates });
+    const previousVisibility = previousPlan?.visibility ?? null;
+    const nextVisibility = plan.visibility ?? null;
+    const visibilityChanged =
+      Boolean(previousVisibility) !== Boolean(nextVisibility) ||
+      (previousVisibility && nextVisibility && (
+        previousVisibility.currentRoomId !== nextVisibility.currentRoomId ||
+        previousVisibility.roomIds.join('|') !== nextVisibility.roomIds.join('|') ||
+        previousVisibility.corridorIds.join('|') !== nextVisibility.corridorIds.join('|')
+      ));
     const shouldFitCamera =
       !previousPlan ||
       previousPlan.sourceSpecId !== plan.sourceSpecId ||
-      Boolean(previousPlan.visibility) !== Boolean(plan.visibility);
+      visibilityChanged;
 
     clearRenderedSpec();
     for (const child of [...stagingRoot.children]) {
