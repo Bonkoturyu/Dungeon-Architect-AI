@@ -78,6 +78,9 @@ try {
     throw new Error(`unexpected treasure-1 initial room: ${entityRoom(initial, 'treasure-1')}`);
   }
 
+  await page.click('[data-workflow-tab="edit"]');
+  await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().workflowTab === 'edit');
+
   await page.locator('#entitySelect').selectOption('treasure-1');
   await page.locator('#entityRoom').selectOption('room-goal');
   await page.locator('#moveEntity').click();
