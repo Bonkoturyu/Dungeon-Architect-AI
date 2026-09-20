@@ -72,3 +72,42 @@ test('renderer visibility contains explored rooms, traversed corridors, and curr
   assert.equal(visibility.corridorIds.length, 1);
   assert.equal(visibility.currentRoomId, 'room-002');
 });
+
+
+test('parallel corridor traversal preserves the selected enabled corridor', () => {
+  const spec = fixture();
+  const first = spec.corridors.find((corridor) =>
+    (corridor.fromRoomId === 'room-001' && corridor.toRoomId === 'room-002') ||
+    (corridor.fromRoomId === 'room-002' && corridor.toRoomId === 'room-001'));
+  assert.ok(first);
+
+  first.initiallyEnabled = false;
+  const selected = {
+    ...first,
+    id: `${first.id}-parallel`,
+    initiallyEnabled: true,
+  };
+  spec.corridors.push(selected);
+
+  const started = startPlaySession(spec).session;
+  const exits = listCurrentRoomExits(started).filter((exit) => exit.targetRoomId === 'room-002');
+  assert.deepEqual(exits.map((exit) => exit.corridorId), [selected.id]);
+
+  const disabledMove = movePlaySession(started, 'room-002', {
+    at: 1,
+    corridorId: first.id,
+  });
+  assert.equal(disabledMove.ok, false);
+  assert.equal(disabledMove.error.code, 'CORRIDOR_DISABLED');
+
+  const moved = movePlaySession(started, 'room-002', {
+    at: 1,
+    corridorId: selected.id,
+  });
+  assert.equal(moved.ok, true);
+  assert.equal(moved.session.events.find((event) => event.type === 'move')?.corridorId, selected.id);
+
+  const map = derivePlayMap(moved.session);
+  assert.deepEqual(map.traversedCorridorIds, [selected.id]);
+  assert.equal(map.traversedCorridorIds.includes(first.id), false);
+});
