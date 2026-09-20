@@ -452,6 +452,20 @@
       font-weight: 900;
       letter-spacing: 0.06em;
     }
+    .result-metrics {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px 10px;
+      margin-top: 9px;
+      color: #aeb9c9;
+      font: 0.66rem ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+    .result-metric strong {
+      color: #e6ebf3;
+      font-weight: 850;
+      letter-spacing: 0.05em;
+    }
     .danger-action { border-color: #6d4549; color: #ffc5c5; }
 
     body[data-mode="play"] .editor-only,
@@ -496,6 +510,80 @@
     body[data-mode="result"] .panel-play {
       border-color: rgba(120, 216, 154, 0.46);
       box-shadow: 0 0 0 1px rgba(120, 216, 154, 0.07), var(--shadow);
+    }
+
+    .room-events {
+      position: absolute;
+      z-index: 4;
+      left: 18px;
+      bottom: 18px;
+      width: min(310px, calc(100% - 36px));
+      padding: 9px;
+      border: 1px solid rgba(113, 128, 153, 0.5);
+      border-radius: 14px;
+      background: rgba(29, 36, 48, 0.88);
+      backdrop-filter: blur(8px);
+    }
+    .room-event-heading {
+      display: block;
+      margin: 0 0 6px 2px;
+      color: #94a1b4;
+      font-size: 0.58rem;
+      font-weight: 850;
+      letter-spacing: 0.11em;
+    }
+    #roomEventItems {
+      display: grid;
+      gap: 6px;
+    }
+    .room-event {
+      display: grid;
+      grid-template-columns: minmax(72px, auto) 1fr auto;
+      align-items: center;
+      gap: 8px;
+      min-height: 34px;
+      padding: 6px 7px;
+      border: 1px solid rgba(87, 101, 125, 0.58);
+      border-radius: 9px;
+      background: rgba(41, 50, 64, 0.78);
+    }
+    .room-event.is-blocking {
+      border-color: rgba(228, 167, 104, 0.74);
+      background: rgba(91, 61, 38, 0.28);
+    }
+    .room-event-type {
+      color: #eff3f9;
+      font-size: 0.66rem;
+      font-weight: 900;
+      letter-spacing: 0.07em;
+    }
+    .room-event-note {
+      min-width: 0;
+      overflow: hidden;
+      color: #9eabba;
+      font-size: 0.62rem;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .room-event-actions {
+      display: flex;
+      gap: 5px;
+    }
+    .room-event-actions button {
+      min-height: 27px;
+      padding: 4px 7px;
+      border-radius: 7px;
+      font-size: 0.62rem;
+      font-weight: 850;
+      letter-spacing: 0.04em;
+    }
+    .room-event-actions .risk-action {
+      border-color: rgba(227, 150, 112, 0.7);
+      color: #ffd6c4;
+    }
+    .room-event-actions .safe-action {
+      border-color: rgba(120, 216, 154, 0.56);
+      color: #d9ffe5;
     }
 
     .play-exits {
@@ -639,6 +727,12 @@
         background: var(--surface-1);
       }
       .viewport-label { top: 10px; left: 10px; }
+      .room-events {
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        width: auto;
+      }
     }
   </style>
 </head>
@@ -679,6 +773,10 @@
           <span id="viewportHelp">Select · Arrow keys move</span>
         </div>
         <canvas id="renderCanvas" tabindex="0"></canvas>
+        <div id="roomEventBar" class="room-events" hidden>
+          <span class="room-event-heading">ROOM</span>
+          <div id="roomEventItems"></div>
+        </div>
         <div id="playExitBar" class="play-exits" hidden>
           <span class="exit-prompt">CHOOSE EXIT</span>
           <div id="playExitButtons" aria-label="Available exits"></div>
@@ -718,6 +816,7 @@
             </div>
           </div>
           <p id="resultStatus" class="result-banner" aria-live="polite" hidden></p>
+          <div id="resultMetrics" class="result-metrics" hidden></div>
         </fieldset>
 
         <fieldset class="editor-only" data-workflow-panel="edit">
