@@ -32,6 +32,31 @@ async function waitForServer(url, timeoutMs = 30_000) {
   throw new Error(`UI/UX smoke server did not become ready.\n${viteOutput}`);
 }
 
+async function resolveBlockingEvents(page) {
+  let guard = 0;
+  while (guard < 20) {
+    guard += 1;
+
+    const enemy = page.locator('.room-event.is-blocking [data-action="clear-enemy"]').first();
+    if (await enemy.count()) {
+      await enemy.click();
+      await page.waitForTimeout(25);
+      continue;
+    }
+
+    const trap = page.locator('.room-event.is-blocking [data-action="avoid-trap"]').first();
+    if (await trap.count()) {
+      await trap.click();
+      await page.waitForTimeout(25);
+      continue;
+    }
+
+    return;
+  }
+
+  throw new Error('Blocking room-event resolution exceeded guard.');
+}
+
 const url = `http://127.0.0.1:${port}/apps/editor-slice/index.html`;
 let browser;
 
@@ -162,12 +187,17 @@ try {
 
   if (route.length < 2) throw new Error(`No Play route: ${JSON.stringify(route)}`);
   for (const roomId of route.slice(1)) {
+    await resolveBlockingEvents(page);
+
     const corridorId = await page.evaluate((expectedRoomId) => {
       const state = window.__DAI_EDITOR_SLICE__.getState();
       return state.play?.map?.currentExits?.find((exit) => exit.targetRoomId === expectedRoomId)?.corridorId ?? null;
     }, roomId);
     if (!corridorId) throw new Error(`No visible exit to route room ${roomId}`);
-    await page.locator(`#playExitButtons .exit-button[data-corridor-id="${corridorId}"]`).click();
+
+    const exitButton = page.locator(`#playExitButtons .exit-button[data-corridor-id="${corridorId}"]`);
+    await exitButton.waitFor({ state: 'visible', timeout: 5_000 });
+    await exitButton.click();
     await page.waitForFunction((expected) => {
       const state = window.__DAI_EDITOR_SLICE__.getState();
       return state.play?.currentRoomId === expected || state.result?.status === 'cleared';
