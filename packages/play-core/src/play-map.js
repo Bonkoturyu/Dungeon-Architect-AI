@@ -19,8 +19,15 @@ function traversedCorridorIds(session) {
 
   for (const event of session.events ?? []) {
     if (event?.type !== 'move' || typeof event.roomId !== 'string' || !previousRoomId) continue;
-    const corridor = session.snapshot.corridors.find((candidate) =>
+
+    const recorded = typeof event.corridorId === 'string'
+      ? session.snapshot.corridors.find((candidate) =>
+          candidate.id === event.corridorId &&
+          corridorConnects(candidate, previousRoomId, event.roomId))
+      : null;
+    const corridor = recorded ?? session.snapshot.corridors.find((candidate) =>
       corridorConnects(candidate, previousRoomId, event.roomId));
+
     if (corridor && !ids.includes(corridor.id)) ids.push(corridor.id);
     previousRoomId = event.roomId;
   }
