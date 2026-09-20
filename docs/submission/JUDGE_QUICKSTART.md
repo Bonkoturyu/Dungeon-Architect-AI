@@ -13,22 +13,23 @@ https://dungeon-architect-ai.pages.dev/
 ## Walkthrough
 
 1. Open the live demo. The five-step Guide opens at Welcome and includes Describe, Edit, Validate and Play.
-2. In **Describe / Generate**, enter:
+2. In **Create**, enter:
    ```text
    Create a fair but tense 5-minute dungeon with exploration and a few dangerous rewards.
    ```
 3. Click **Generate dungeon**. The production cloud path returns validated DesignIntent and the browser builds a deterministic DungeonSpec.
-4. Confirm `Validation: PASS · Critical 0`.
-5. Use the Entity inspector for a manual authoring change if desired.
+4. Confirm the validation pill shows `✓ Valid`.
+5. Select **Edit**. Use the Entity inspector for a manual authoring change if desired.
 6. In **Natural-language edit**, enter:
    ```text
    Move the treasure to the room that contains the goal.
    ```
 7. Confirm the AI edit applies one constrained `move-entity` command.
-8. Press `START`.
-9. In Play mode, click connected rooms until Goal.
-10. Confirm Result reports `cleared`.
-11. Use **Return to Edit**; the generated authoring spec remains available.
+8. Select **Play**, then press **▶ Test** to play the current authored dungeon. **🎲 Mystery** instead generates a fresh hidden dungeon from the same DesignIntent.
+9. Play begins with Fog of War. If a Room Event blocks exits, resolve it first (for example **CLEAR** an Enemy or **AVOID / RISK** a Trap).
+10. Move using the directional **CHOOSE EXIT** pad. Explored rooms and traversed corridors remain mapped; hidden topology and the Goal stay concealed until discovered.
+11. Reach the Goal and confirm Result shows `✓ CLEARED` with compact run metrics.
+12. Use **Return to Edit**; the generated authoring spec remains available.
 
 ## AI/data boundary
 
