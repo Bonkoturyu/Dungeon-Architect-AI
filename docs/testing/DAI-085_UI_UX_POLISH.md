@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS / VISUAL REVIEW REQUIRED.**
+**DONE.**
 
 This task intentionally occurs after the first DAI-084 freeze. The old frozen candidate and rollback branch remain valid recovery points, but they are no longer the intended final submission candidate once this runtime UI change is accepted.
 
@@ -123,7 +123,16 @@ Expected:
 - `artifacts/exploration-ux/test-play-after-one-move.png`;
 - `artifacts/exploration-ux/mystery-play-start.png`.
 
-The screenshots require human visual review before merge.
+The visible-Chrome smoke passed all checks with empty browser/page/request/HTTP error collections. Human visual review of the refreshed 1440×900 evidence bundle was accepted on 2026-09-20.
+
+Reviewed evidence SHA-256:
+
+- JSON: `d39b4f9a132e606552f9cc5251e2b95819f79048f09b0dbbfa463343e454d459`;
+- Edit PNG: `be73f1f226191ec8e1898830e8da9fa2c1e501c4bb3218a683479c123353ca44`;
+- Play PNG: `33324dc43cfcfd7650e39ad7e59f25e8423a9c011afaabaf49136488d5365d1a`;
+- Result PNG: `f02f3250961c716a0f37f648b7c33615c17810f119b82ae0fc9b8f09a1a9344f`.
+
+Visual review found no blocker: Create/Edit/Play hierarchy remained legible, Play used the full workspace with a compact overlay, the spatial exit pad did not obscure the dungeon, Result clearly surfaced the cleared state, and no clipping/overlap/horizontal overflow was observed.
 
 ## Candidate-freeze consequence
 
