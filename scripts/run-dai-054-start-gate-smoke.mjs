@@ -105,6 +105,17 @@ try {
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().play?.currentRoomId === 'room-middle');
   const afterMiddle = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
 
+  const middleEnemy = afterMiddle.play?.snapshot?.entities.find(
+    (entity) => entity.type === 'enemy' && entity.roomId === 'room-middle',
+  ) ?? null;
+  if (middleEnemy) {
+    const clearedEnemy = await page.evaluate(
+      (enemyId) => window.__DAI_EDITOR_SLICE__.clearEnemy(enemyId),
+      middleEnemy.id,
+    );
+    if (!clearedEnemy) throw new Error(`failed to clear blocking enemy: ${middleEnemy.id}`);
+  }
+
   const goalMoved = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.movePlayToRoom('room-goal'));
   if (!goalMoved) throw new Error('room-goal movement failed');
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().mode === 'result');
