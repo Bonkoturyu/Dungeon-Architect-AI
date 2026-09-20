@@ -871,6 +871,10 @@ function startMysteryDungeon() {
 
 function movePlayToRoom(roomId) {
   if (mode !== 'play' || !playSession) return false;
+  if (roomBlocksExit()) {
+    setEditStatus('Resolve room event before leaving');
+    return false;
+  }
   const result = movePlaySession(playSession, roomId, { at: playSession.moves + 1 });
   if (!result.ok) {
     setEditStatus(`Move blocked: ${result.error.code}`);
