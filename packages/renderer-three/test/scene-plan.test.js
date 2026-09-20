@@ -181,3 +181,35 @@ test('rejects invalid DungeonSpec before planning', () => {
   const invalid = { ...fixture, entities: [] };
   assert.throws(() => createDungeonScenePlan(invalid), DungeonScenePlanError);
 });
+
+
+test('touching connected rooms remove the shared wall and use the combined outer shell', () => {
+  const touching = {
+    schemaVersion: '1.0',
+    id: 'touching-room-fixture',
+    seed: 5,
+    rooms: [
+      { id: 'a', x: 0, z: 0, width: 8, depth: 8 },
+      { id: 'b', x: 8, z: 0, width: 8, depth: 8 },
+    ],
+    corridors: [
+      { id: 'ab', fromRoomId: 'a', toRoomId: 'b', width: 3, kind: 'backbone' },
+    ],
+    entities: [
+      { id: 'start', type: 'start', roomId: 'a' },
+      { id: 'goal', type: 'goal', roomId: 'b' },
+    ],
+    events: [],
+  };
+
+  const plan = createDungeonScenePlan(touching);
+  const a = roomGroup(plan, 'a');
+  const b = roomGroup(plan, 'b');
+  const corridor = plan.corridorGroups.find((group) => group.specId === 'ab');
+
+  assert.equal(a.boxes.some((box) => box.part.startsWith('wall-east-')), false);
+  assert.equal(b.boxes.some((box) => box.part.startsWith('wall-west-')), false);
+  assert.equal(corridor.boxes.length, 0);
+  assert.equal(a.doorOpenings.find((opening) => opening.corridorId === 'ab').width, 8);
+  assert.equal(b.doorOpenings.find((opening) => opening.corridorId === 'ab').width, 8);
+});
