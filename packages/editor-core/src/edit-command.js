@@ -43,8 +43,36 @@ export function applyEditCommand(spec, command) {
       if (!next.rooms.some((room) => room.id === command.roomId)) {
         return fail("ROOM_NOT_FOUND", `Unknown room: ${command.roomId}`);
       }
+      if (entity.type === "start" || entity.type === "goal") {
+        const counterpartType = entity.type === "start" ? "goal" : "start";
+        const counterpart = next.entities.find((item) => item.type === counterpartType);
+        if (counterpart?.roomId === command.roomId) {
+          return fail(
+            "START_GOAL_SAME_ROOM",
+            `Start and Goal must be in different rooms; ${command.roomId} already contains ${counterpartType}.`
+          );
+        }
+      }
       inverse = { type: "move-entity", entityId: entity.id, roomId: entity.roomId };
       entity.roomId = command.roomId;
+      break;
+    }
+
+    case "resize-room": {
+      const room = next.rooms.find((item) => item.id === command.roomId);
+      if (!room) return fail("ROOM_NOT_FOUND", `Unknown room: ${command.roomId}`);
+      if (!Number.isFinite(command.width) || command.width <= 0 ||
+          !Number.isFinite(command.depth) || command.depth <= 0) {
+        return fail("ROOM_DIMENSION_INVALID", "Room width/depth must be finite numbers greater than zero.");
+      }
+      inverse = {
+        type: "resize-room",
+        roomId: room.id,
+        width: room.width,
+        depth: room.depth
+      };
+      room.width = command.width;
+      room.depth = command.depth;
       break;
     }
 
