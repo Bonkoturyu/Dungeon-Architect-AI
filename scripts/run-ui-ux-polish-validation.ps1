@@ -23,6 +23,18 @@ if ($LASTEXITCODE -ne 0) { throw 'Hosting build failed.' }
 npm run smoke:generation-surface
 if ($LASTEXITCODE -ne 0) { throw 'DAI-081 local generation-surface smoke failed.' }
 
+npm run smoke:manual-editor
+if ($LASTEXITCODE -ne 0) { throw 'DAI-051 manual-editor smoke failed.' }
+
+npm run smoke:start-gate
+if ($LASTEXITCODE -ne 0) { throw 'DAI-054 START-gate smoke failed.' }
+
+npm run smoke:browser-performance
+if ($LASTEXITCODE -ne 0) { throw 'DAI-071 browser-performance smoke failed.' }
+
+npm run smoke:mobile-scope
+if ($LASTEXITCODE -ne 0) { throw 'DAI-075 mobile-scope smoke failed.' }
+
 npm run smoke:ui-ux-polish
 if ($LASTEXITCODE -ne 0) { throw 'UI/UX polish visible-Chrome smoke failed.' }
 
