@@ -218,6 +218,7 @@ function updateUi() {
   const room = selectedRoom();
   const entity = selectedEntity();
   const editing = mode === 'edit';
+  const authoringBusy = generationBusy || naturalEditBusy;
 
   document.body.dataset.mode = mode;
   document.body.dataset.workflowTab = workflowTab;
@@ -242,22 +243,22 @@ function updateUi() {
     : '';
   entitySelectedLabel.hidden = !entity;
 
-  undoButton.disabled = !editing || !session?.canUndo;
-  redoButton.disabled = !editing || !session?.canRedo;
-  entitySelect.disabled = !editing;
-  entityRoom.disabled = !editing;
-  entityType.disabled = !editing;
-  moveEntityButton.disabled = !editing || !entity || !entityRoom.value;
-  removeEntityButton.disabled = !editing || !entity || entity.type === 'start' || entity.type === 'goal';
-  addEntityButton.disabled = !editing || !entityRoom.value;
-  generationPrompt.disabled = !editing || generationBusy;
-  generateDungeonButton.disabled = !editing || generationBusy || !generationPrompt.value.trim();
-  naturalEditInput.disabled = !editing || naturalEditBusy;
-  applyNaturalEditButton.disabled = !editing || naturalEditBusy || !naturalEditInput.value.trim();
-  startButton.disabled = !editing || generationBusy || !gate.allowed;
-  mysteryPlayButton.disabled = !editing || generationBusy || !lastDesignIntent;
-  mysteryPlayButton.title = generationBusy
-    ? 'Wait for the current generation request to finish.'
+  undoButton.disabled = !editing || authoringBusy || !session?.canUndo;
+  redoButton.disabled = !editing || authoringBusy || !session?.canRedo;
+  entitySelect.disabled = !editing || authoringBusy;
+  entityRoom.disabled = !editing || authoringBusy;
+  entityType.disabled = !editing || authoringBusy;
+  moveEntityButton.disabled = !editing || authoringBusy || !entity || !entityRoom.value;
+  removeEntityButton.disabled = !editing || authoringBusy || !entity || entity.type === 'start' || entity.type === 'goal';
+  addEntityButton.disabled = !editing || authoringBusy || !entityRoom.value;
+  generationPrompt.disabled = !editing || authoringBusy;
+  generateDungeonButton.disabled = !editing || authoringBusy || !generationPrompt.value.trim();
+  naturalEditInput.disabled = !editing || authoringBusy;
+  applyNaturalEditButton.disabled = !editing || authoringBusy || !naturalEditInput.value.trim();
+  startButton.disabled = !editing || authoringBusy || !gate.allowed;
+  mysteryPlayButton.disabled = !editing || authoringBusy || !lastDesignIntent;
+  mysteryPlayButton.title = authoringBusy
+    ? 'Wait for the current AI request to finish.'
     : lastDesignIntent
       ? 'Generate a fresh hidden dungeon from the same design intent.'
       : 'Generate a dungeon first to unlock Mystery Play.';
@@ -554,7 +555,7 @@ function selectEntity(entityId) {
 }
 
 function applyCommand(command, successMessage) {
-  if (mode !== 'edit') return false;
+  if (mode !== 'edit' || generationBusy || naturalEditBusy) return false;
   const result = session.apply(command);
   if (!result.ok) {
     setEditStatus(`error: ${result.error.code}`);
@@ -586,7 +587,7 @@ function nextEntityId(type) {
 }
 
 function addEntity() {
-  if (mode !== 'edit') return false;
+  if (mode !== 'edit' || generationBusy || naturalEditBusy) return false;
   const roomId = entityRoom.value;
   const type = entityType.value;
   if (!roomId || !['enemy', 'treasure', 'trap', 'recovery'].includes(type)) return false;
@@ -604,7 +605,7 @@ function addEntity() {
 }
 
 function moveEntityToTargetRoom() {
-  if (mode !== 'edit') return false;
+  if (mode !== 'edit' || generationBusy || naturalEditBusy) return false;
   const entity = selectedEntity();
   const roomId = entityRoom.value;
   if (!entity || !roomId) return false;
@@ -612,7 +613,7 @@ function moveEntityToTargetRoom() {
 }
 
 function removeEntity() {
-  if (mode !== 'edit') return false;
+  if (mode !== 'edit' || generationBusy || naturalEditBusy) return false;
   const entity = selectedEntity();
   if (!entity || entity.type === 'start' || entity.type === 'goal') return false;
 
@@ -630,7 +631,7 @@ function removeEntity() {
 
 async function generateDungeonFromPrompt() {
   const prompt = generationPrompt.value.trim();
-  if (!prompt || generationBusy || mode !== 'edit') return false;
+  if (!prompt || generationBusy || naturalEditBusy || mode !== 'edit') return false;
 
   generationBusy = true;
   setGenerationStatus('translating intent…');
@@ -703,7 +704,7 @@ function naturalEditContext() {
 
 async function applyNaturalEdit() {
   const prompt = naturalEditInput.value.trim();
-  if (!prompt || naturalEditBusy || mode !== 'edit') return false;
+  if (!prompt || naturalEditBusy || generationBusy || mode !== 'edit') return false;
 
   naturalEditBusy = true;
   lastNaturalEditCommand = null;
@@ -758,7 +759,7 @@ async function applyNaturalEdit() {
 }
 
 function undo() {
-  if (!session.canUndo || mode !== 'edit') return false;
+  if (!session.canUndo || mode !== 'edit' || generationBusy || naturalEditBusy) return false;
   const result = session.undo();
   if (!result.ok) throw new Error(`undo failed: ${JSON.stringify(result.error)}`);
   renderActiveSpec();
@@ -767,7 +768,7 @@ function undo() {
 }
 
 function redo() {
-  if (!session.canRedo || mode !== 'edit') return false;
+  if (!session.canRedo || mode !== 'edit' || generationBusy || naturalEditBusy) return false;
   const result = session.redo();
   if (!result.ok) throw new Error(`redo failed: ${JSON.stringify(result.error)}`);
   renderActiveSpec();
@@ -859,7 +860,7 @@ function beginPlay(spec, source) {
 }
 
 function startDungeon() {
-  if (mode !== 'edit' || generationBusy) return false;
+  if (mode !== 'edit' || generationBusy || naturalEditBusy) return false;
   refreshGate();
   if (!gate.allowed) {
     setEditStatus(`Play blocked: ${gate.criticalCount} Critical`);
@@ -879,7 +880,7 @@ function freshMysterySeed() {
 }
 
 function startMysteryDungeon() {
-  if (mode !== 'edit' || generationBusy || !lastDesignIntent) return false;
+  if (mode !== 'edit' || generationBusy || naturalEditBusy || !lastDesignIntent) return false;
 
   const seed = freshMysterySeed();
   const generated = generateDungeonFromDesignIntent(lastDesignIntent, {
