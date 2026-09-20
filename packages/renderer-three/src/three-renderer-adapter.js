@@ -378,6 +378,8 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     for (const id of [...new Set(ids)].filter((value) => typeof value === 'string')) {
       const target = runtimeBySpecId.get(id);
       if (!target) continue;
+      const targetBounds = new THREE.Box3().setFromObject(target);
+      if (targetBounds.isEmpty()) continue;
       const helper = new THREE.BoxHelper(target, 0xf4c95d);
       helper.name = `path-highlight:${id}`;
       scene.add(helper);
