@@ -75,3 +75,34 @@ test('goal marker stays hidden until the goal room is explored', () => {
   });
   assert.equal(after.markers.some((marker) => marker.type === 'goal'), true);
 });
+
+
+test('scene plan includes low-poly marker definitions for gameplay entities', () => {
+  const spec = fixture();
+  spec.entities.push(
+    { id: 'enemy-marker', type: 'enemy', roomId: 'room-002', initiallyActive: true },
+    { id: 'treasure-marker', type: 'treasure', roomId: 'room-002', warning: 'none' },
+    { id: 'trap-marker', type: 'trap', roomId: 'room-003', warning: 'floor-cracks' },
+    { id: 'recovery-marker', type: 'recovery', roomId: 'room-004' },
+  );
+
+  const plan = createDungeonScenePlan(spec);
+  const byType = new Map(plan.markers.map((marker) => [marker.type, marker]));
+  for (const type of ['start', 'goal', 'enemy', 'treasure', 'trap', 'recovery']) {
+    assert.ok(byType.has(type), `missing marker type: ${type}`);
+  }
+  assert.equal(byType.get('trap').warning, 'floor-cracks');
+});
+
+test('play projection hides gameplay markers in unexplored rooms', () => {
+  const spec = fixture();
+  spec.entities.push({ id: 'enemy-hidden', type: 'enemy', roomId: 'room-003', initiallyActive: true });
+  const plan = createDungeonScenePlan(spec);
+  const projected = projectDungeonScenePlan(plan, {
+    roomIds: ['room-001'],
+    corridorIds: [],
+    currentRoomId: 'room-001',
+  });
+
+  assert.equal(projected.markers.some((marker) => marker.specId === 'enemy-hidden'), false);
+});
