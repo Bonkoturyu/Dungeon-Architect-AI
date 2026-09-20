@@ -57,6 +57,33 @@ async function gate(page) {
   return page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
 }
 
+async function resolveBlockingEvents(page) {
+  let guard = 0;
+  while (guard < 20) {
+    guard += 1;
+
+    const enemy = page.locator('.room-event.is-blocking [data-action="clear-enemy"]').first();
+    if (await enemy.count()) {
+      await enemy.click();
+      mark('room-event-resolved', { action: 'clear-enemy' });
+      await wait(900);
+      continue;
+    }
+
+    const trap = page.locator('.room-event.is-blocking [data-action="avoid-trap"]').first();
+    if (await trap.count()) {
+      await trap.click();
+      mark('room-event-resolved', { action: 'avoid-trap' });
+      await wait(900);
+      continue;
+    }
+
+    return;
+  }
+
+  throw new Error('Blocking room-event resolution exceeded guard.');
+}
+
 async function getViewportCaptureRegion(page) {
   return page.evaluate(() => {
     const dpr = window.devicePixelRatio || 1;
@@ -343,6 +370,7 @@ try {
 
     const adjacency = new Map(snapshot.rooms.map((room) => [room.id, []]));
     for (const corridor of snapshot.corridors) {
+      if (corridor.initiallyEnabled === false) continue;
       if (!adjacency.has(corridor.fromRoomId) || !adjacency.has(corridor.toRoomId)) continue;
       adjacency.get(corridor.fromRoomId).push(corridor.toRoomId);
       adjacency.get(corridor.toRoomId).push(corridor.fromRoomId);
@@ -394,7 +422,17 @@ try {
   mark('play-route-resolved', { routeRoomIds: resolvedRouteRoomIds });
 
   for (const roomId of resolvedRouteRoomIds.slice(1)) {
-    await clickSpec(page, roomId);
+    await resolveBlockingEvents(page);
+
+    const corridorId = await page.evaluate((expectedRoomId) => {
+      const state = window.__DAI_EDITOR_SLICE__.getState();
+      return state.play?.map?.currentExits?.find((exit) => exit.targetRoomId === expectedRoomId)?.corridorId ?? null;
+    }, roomId);
+    if (!corridorId) throw new Error(`No visible Play exit to ${roomId}`);
+
+    const exitButton = page.locator(`#playExitButtons .exit-button[data-corridor-id="${corridorId}"]`);
+    await exitButton.waitFor({ state: 'visible', timeout: 10_000 });
+    await exitButton.click();
     await page.waitForFunction(
       (expectedRoomId) => {
         const state = window.__DAI_EDITOR_SLICE__.getState();
@@ -403,7 +441,7 @@ try {
       roomId,
       { timeout: 10_000 },
     );
-    mark('play-room-reached', { roomId });
+    mark('play-room-reached', { roomId, corridorId });
     await wait(1300);
     const state = await gate(page);
     if (state.result?.status === 'cleared') break;
