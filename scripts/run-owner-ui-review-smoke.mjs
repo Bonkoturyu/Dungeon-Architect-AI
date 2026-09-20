@@ -111,6 +111,15 @@ try {
   await page.waitForTimeout(50);
   const cameraAfterZoom = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getCameraState());
 
+  // Touch two connected rooms and verify their shared wall/corridor gap collapses into one outer shell.
+  await page.evaluate(() => window.__DAI_EDITOR_SLICE__.selectRoom('room-middle'));
+  await canvas.focus();
+  for (let index = 0; index < 4; index += 1) await page.keyboard.press('a');
+  const touchingState = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
+  const touchingCorridorVisiblePoint = await page.evaluate(() =>
+    window.__DAI_EDITOR_SLICE__.getScreenPositionForSpecId('corridor-1'));
+  await page.screenshot({ path: path.join(outputDir, 'touching-room-shell.png'), fullPage: true });
+
   // Generate and verify no authored topology is revealed before the choice.
   await page.fill('#generationPrompt', prompt);
   await page.click('#generateDungeon');
@@ -225,6 +234,9 @@ try {
   const checks = {
     mouseOrbitChangesCamera: distance3(cameraBefore.position, cameraAfterOrbit.position) > 0.1,
     mouseWheelZoomChangesDistance: cameraAfterZoom.distance < cameraAfterOrbit.distance - 0.1,
+    touchingConnectedRoomsUseOuterShell:
+      touchingState.rooms.find((room) => room.id === 'room-middle')?.x === 8 &&
+      touchingCorridorVisiblePoint === null,
     promptRemainsVisibleAfterGenerate: promptInputAfterGenerate === prompt,
     promptHistoryRetainsFullPrompt: generated.promptHistory.length === 1 &&
       generated.promptHistory[0].prompt === prompt &&
@@ -277,6 +289,8 @@ try {
     cameraBefore,
     cameraAfterOrbit,
     cameraAfterZoom,
+    touchingRoomMiddle: touchingState.rooms.find((room) => room.id === 'room-middle'),
+    touchingCorridorVisiblePoint,
     roomOptionText,
     resizedGoal,
     middleBefore,
