@@ -1246,9 +1246,27 @@ function handleCanvasPointer(event) {
     return;
   }
 
+  if (mode !== 'edit') return;
+
+  if (['start', 'goal', 'enemy', 'treasure', 'trap', 'recovery'].includes(hit.kind)) {
+    selectEntity(hit.specId);
+    return;
+  }
+
   const roomId = hit.kind === 'room' ? hit.specId : hit.roomId;
-  if (!roomId) return;
-  if (mode === 'edit') selectRoom(roomId);
+  if (roomId) selectRoom(roomId);
+}
+
+function handleCanvasPointerDown(event) {
+  canvasPointerOrigin = { x: event.clientX, y: event.clientY };
+}
+
+function handleCanvasPointerUp(event) {
+  const origin = canvasPointerOrigin;
+  canvasPointerOrigin = null;
+  if (!origin) return;
+  const distance = Math.hypot(event.clientX - origin.x, event.clientY - origin.y);
+  if (distance <= 5) handleCanvasPointer(event);
 }
 
 function isFormControl(target) {
@@ -1279,8 +1297,12 @@ function handleKeyboard(event) {
     ArrowRight: [1, 0],
     ArrowUp: [0, -1],
     ArrowDown: [0, 1],
+    a: [-1, 0],
+    d: [1, 0],
+    w: [0, -1],
+    s: [0, 1],
   };
-  const move = moves[event.key];
+  const move = moves[event.key] ?? moves[key];
   if (!move) return;
   event.preventDefault();
   moveSelected(move[0], move[1]);
@@ -1298,7 +1320,8 @@ async function run() {
     canvasResizeObserver = new ResizeObserver(() => resize());
     canvasResizeObserver.observe(canvas);
 
-    canvas.addEventListener('pointerdown', handleCanvasPointer);
+    canvas.addEventListener('pointerdown', handleCanvasPointerDown);
+    canvas.addEventListener('pointerup', handleCanvasPointerUp);
     window.addEventListener('resize', resize);
     window.addEventListener('keydown', handleKeyboard);
     undoButton.addEventListener('click', undo);
@@ -1309,8 +1332,14 @@ async function run() {
     startButton.addEventListener('click', startDungeon);
     mysteryPlayButton.addEventListener('click', startMysteryDungeon);
     returnEditButton.addEventListener('click', returnToEdit);
+    roomSelect.addEventListener('change', () => selectRoom(roomSelect.value));
+    resizeRoomButton.addEventListener('click', resizeSelectedRoom);
+    checkPathButton.addEventListener('click', checkStartGoalPath);
     entitySelect.addEventListener('change', () => selectEntity(entitySelect.value));
-    entityRoom.addEventListener('change', updateUi);
+    entityRoom.addEventListener('change', () => {
+      ensureRoomOptions();
+      updateUi();
+    });
     entityType.addEventListener('change', updateUi);
     addEntityButton.addEventListener('click', addEntity);
     moveEntityButton.addEventListener('click', moveEntityToTargetRoom);
@@ -1319,6 +1348,7 @@ async function run() {
     generateDungeonButton.addEventListener('click', generateDungeonFromPrompt);
     naturalEditInput.addEventListener('input', updateUi);
     applyNaturalEditButton.addEventListener('click', applyNaturalEdit);
+    renderPromptHistory();
 
     window.__DAI_EDITOR_SLICE__ = {
       ready: true,
@@ -1327,6 +1357,8 @@ async function run() {
       getScreenPositionForSpecId: (id) => adapter.getScreenPositionForSpecId(id),
       selectRoom,
       selectEntity,
+      resizeSelectedRoom,
+      checkStartGoalPath,
       generateDungeonFromPrompt,
       applyNaturalEdit,
       evaluateStartGateForSpec: (spec) => evaluateStartGate(spec),
