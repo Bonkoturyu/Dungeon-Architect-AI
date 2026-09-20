@@ -197,20 +197,9 @@ try {
   current = await state(page);
   const blockingCardsBefore = await page.locator('.room-event.is-blocking').count();
   const exitButtonsWhileBlocked = await page.locator('#playExitButtons .exit-button').count();
-  const countersBeforeBlock = { ...current.play.snapshot && current.play ? current.play.snapshot && current.play : {} };
-  const gameplayBeforeBlock = await page.evaluate(() => {
-    const s = window.__DAI_EDITOR_SLICE__.getState();
-    return s.play?.snapshot ? window.__DAI_EDITOR_SLICE__.getState().play : null;
-  });
-
   await page.screenshot({ path: path.join(outputDir, 'room-event-blocked.png'), fullPage: true });
 
   const firstBlockingKind = await page.locator('.room-event.is-blocking').first().getAttribute('data-kind');
-  const sessionCountersBefore = await page.evaluate(() => {
-    const s = window.__DAI_EDITOR_SLICE__.getState();
-    return s.play ? { ...s.play.snapshot, _ignored: true } : null;
-  });
-
   // Resolve all mandatory encounters through the actual visible buttons.
   await resolveBlockingEvents(page);
   const exitButtonsAfterResolve = await page.locator('#playExitButtons .exit-button').count();
@@ -267,8 +256,9 @@ try {
     blockingRoomEventVisible: blockingCardsBefore > 0,
     unresolvedThreatLocksExits: exitButtonsWhileBlocked === 0,
     mandatoryEncounterCanBeResolved: blockingCardsAfter === 0 && exitButtonsAfterResolve > 0,
-    enemyOrTrapRuntimeChanged:
-      (metrics.enemiesCleared ?? 0) > 0 || (metrics.trapsTriggered ?? 0) >= 0,
+    mandatoryRuntimeRecorded:
+      (metrics.interactions ?? 0) > 0 &&
+      ((metrics.enemiesCleared ?? 0) > 0 || firstBlockingKind === 'trap'),
     optionalTreasureActionAvailable: treasureVisible === true,
     treasureOpenRecorded: (metrics.treasuresOpened ?? 0) >= 1,
     resultShowsInteractionMetrics:
