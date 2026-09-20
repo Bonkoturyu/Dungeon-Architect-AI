@@ -104,3 +104,18 @@ test("resize-room changes any room dimensions and supports inverse", () => {
   assert.equal(restored.spec.rooms.at(-1).width, room.width);
   assert.equal(restored.spec.rooms.at(-1).depth, room.depth);
 });
+
+
+test("resize-room rejects a size that overlaps another room", () => {
+  const original = fixture();
+  const middle = original.rooms[1];
+  const result = applyEditCommand(original, {
+    type: "resize-room",
+    roomId: middle.id,
+    width: 100,
+    depth: 100,
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.error.code, "EDIT_RESULT_INVALID");
+  assert.match(result.error.message, /ROOM_OVERLAP/);
+});
