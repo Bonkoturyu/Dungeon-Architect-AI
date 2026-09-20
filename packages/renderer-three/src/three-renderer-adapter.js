@@ -183,13 +183,13 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
   }
 
   function fitCamera(bounds, { playMode = false } = {}) {
-    const minimumSpan = playMode ? 12 : 16;
+    const minimumSpan = playMode ? 14.5 : 16;
     const span = Math.max(bounds.width, bounds.depth, minimumSpan);
-    const distance = span * (playMode ? 1.0 : 1.25);
+    const distance = span * (playMode ? 1.04 : 1.25);
     camera.position.set(
-      bounds.centerX + distance * (playMode ? 0.36 : 0.45),
-      distance * (playMode ? 0.72 : 0.8),
-      bounds.centerZ + distance * (playMode ? 0.9 : 1),
+      bounds.centerX + distance * (playMode ? 0.34 : 0.45),
+      distance * (playMode ? 0.7 : 0.8),
+      bounds.centerZ + distance * (playMode ? 0.92 : 1),
     );
     camera.lookAt(bounds.centerX, 0, bounds.centerZ);
   }
