@@ -65,3 +65,42 @@ test("EditSession supports deterministic undo and redo", () => {
   assert.equal(session.spec.rooms[0].x, 25);
   assert.equal(session.spec.rooms[0].z, 30);
 });
+
+
+test("move-entity rejects placing Start and Goal in the same room", () => {
+  const original = fixture();
+  const start = original.entities.find((entity) => entity.type === "start");
+  const goal = original.entities.find((entity) => entity.type === "goal");
+  const result = applyEditCommand(original, {
+    type: "move-entity",
+    entityId: start.id,
+    roomId: goal.roomId,
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.error.code, "START_GOAL_SAME_ROOM");
+});
+
+test("resize-room changes any room dimensions and supports inverse", () => {
+  const original = fixture();
+  const room = original.rooms.at(-1);
+  const result = applyEditCommand(original, {
+    type: "resize-room",
+    roomId: room.id,
+    width: 13,
+    depth: 9,
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.spec.rooms.at(-1).width, 13);
+  assert.equal(result.spec.rooms.at(-1).depth, 9);
+  assert.deepEqual(result.inverse, {
+    type: "resize-room",
+    roomId: room.id,
+    width: room.width,
+    depth: room.depth,
+  });
+
+  const restored = applyEditCommand(result.spec, result.inverse);
+  assert.equal(restored.ok, true);
+  assert.equal(restored.spec.rooms.at(-1).width, room.width);
+  assert.equal(restored.spec.rooms.at(-1).depth, room.depth);
+});
