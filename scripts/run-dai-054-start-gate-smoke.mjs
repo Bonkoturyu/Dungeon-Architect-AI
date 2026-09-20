@@ -85,6 +85,8 @@ try {
     return window.__DAI_EDITOR_SLICE__.evaluateStartGateForSpec(spec);
   });
 
+  await page.click('[data-workflow-tab="play"]');
+  await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().workflowTab === 'play');
   const startEnabled = await page.locator('#start').isEnabled();
   await page.locator('#start').click();
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().mode === 'play');
@@ -98,15 +100,13 @@ try {
     applyNaturalEdit: document.querySelector('#applyNaturalEdit').disabled,
   }));
 
-  const middlePoint = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getScreenPositionForSpecId('room-middle'));
-  if (!middlePoint) throw new Error('room-middle screen position unavailable');
-  await page.mouse.click(middlePoint.x, middlePoint.y);
+  const middleMoved = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.movePlayToRoom('room-middle'));
+  if (!middleMoved) throw new Error('room-middle movement failed');
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().play?.currentRoomId === 'room-middle');
   const afterMiddle = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
 
-  const goalPoint = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getScreenPositionForSpecId('room-goal'));
-  if (!goalPoint) throw new Error('room-goal screen position unavailable');
-  await page.mouse.click(goalPoint.x, goalPoint.y);
+  const goalMoved = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.movePlayToRoom('room-goal'));
+  if (!goalMoved) throw new Error('room-goal movement failed');
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().mode === 'result');
   const afterGoal = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
 
