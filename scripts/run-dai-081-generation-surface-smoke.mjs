@@ -147,6 +147,9 @@ try {
   const generated = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
   await page.screenshot({ path: path.join(outputDir, 'dai-081-generation-surface.png'), fullPage: true });
 
+  await page.click('[data-workflow-tab="edit"]');
+  await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().workflowTab === 'edit');
+
   await page.fill('#naturalEditInput', 'Move the treasure to the room that contains the goal.');
   await page.click('#applyNaturalEdit');
   await page.waitForFunction(() => {
@@ -155,6 +158,9 @@ try {
       state.entities.find((entity) => entity.id === 'treasure-1')?.roomId === 'room-005';
   });
   const afterEdit = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
+
+  await page.click('[data-workflow-tab="play"]');
+  await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().workflowTab === 'play');
 
   await page.click('#start');
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().mode === 'play');
