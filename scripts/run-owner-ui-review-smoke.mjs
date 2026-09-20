@@ -124,6 +124,8 @@ try {
   await page.screenshot({ path: path.join(outputDir, 'touching-room-shell.png'), fullPage: true });
 
   // Generate and verify no authored topology is revealed before the choice.
+  await page.click('[data-workflow-tab="create"]');
+  await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().workflowTab === 'create');
   await page.fill('#generationPrompt', prompt);
   await page.click('#generateDungeon');
   await page.waitForFunction(() => {
