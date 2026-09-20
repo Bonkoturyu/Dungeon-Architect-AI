@@ -156,6 +156,77 @@ function corridorWallOpening(room, side, corridor, fromRoom, toRoom) {
   };
 }
 
+function sharedRoomBoundary(fromRoom, toRoom) {
+  const from = {
+    minX: fromRoom.x - fromRoom.width / 2,
+    maxX: fromRoom.x + fromRoom.width / 2,
+    minZ: fromRoom.z - fromRoom.depth / 2,
+    maxZ: fromRoom.z + fromRoom.depth / 2,
+  };
+  const to = {
+    minX: toRoom.x - toRoom.width / 2,
+    maxX: toRoom.x + toRoom.width / 2,
+    minZ: toRoom.z - toRoom.depth / 2,
+    maxZ: toRoom.z + toRoom.depth / 2,
+  };
+
+  function verticalBoundary(x, fromSide, toSide) {
+    const start = Math.max(from.minZ, to.minZ);
+    const end = Math.min(from.maxZ, to.maxZ);
+    if (end - start <= EPSILON) return null;
+    const center = (start + end) / 2;
+    return {
+      point: { x, z: center },
+      width: end - start,
+      fromDoor: {
+        roomId: fromRoom.id,
+        side: fromSide,
+        offset: center - fromRoom.z,
+      },
+      toDoor: {
+        roomId: toRoom.id,
+        side: toSide,
+        offset: center - toRoom.z,
+      },
+    };
+  }
+
+  function horizontalBoundary(z, fromSide, toSide) {
+    const start = Math.max(from.minX, to.minX);
+    const end = Math.min(from.maxX, to.maxX);
+    if (end - start <= EPSILON) return null;
+    const center = (start + end) / 2;
+    return {
+      point: { x: center, z },
+      width: end - start,
+      fromDoor: {
+        roomId: fromRoom.id,
+        side: fromSide,
+        offset: center - fromRoom.x,
+      },
+      toDoor: {
+        roomId: toRoom.id,
+        side: toSide,
+        offset: center - toRoom.x,
+      },
+    };
+  }
+
+  if (Math.abs(from.maxX - to.minX) <= EPSILON) {
+    return verticalBoundary(from.maxX, 'east', 'west');
+  }
+  if (Math.abs(from.minX - to.maxX) <= EPSILON) {
+    return verticalBoundary(from.minX, 'west', 'east');
+  }
+  if (Math.abs(from.maxZ - to.minZ) <= EPSILON) {
+    return horizontalBoundary(from.maxZ, 'south', 'north');
+  }
+  if (Math.abs(from.minZ - to.maxZ) <= EPSILON) {
+    return horizontalBoundary(from.minZ, 'north', 'south');
+  }
+  return null;
+}
+
 function collectDoorOpenings(spec, corridorRoutes) {
   const byRoom = new Map(spec.rooms.map((room) => [room.id, []]));
 
@@ -370,7 +441,39 @@ export function createDungeonScenePlan(spec, style = {}) {
 
   const config = { ...DEFAULT_SCENE_STYLE, ...style };
   const roomById = new Map(spec.rooms.map((room) => [room.id, room]));
-  const corridorRoutes = planOrthogonalCorridors(spec);
+  const touchingByCorridor = new Map();
+  const routedCorridors = [];
+
+  for (const corridor of spec.corridors) {
+    const fromRoom = roomById.get(corridor.fromRoomId);
+    const toRoom = roomById.get(corridor.toRoomId);
+    const shared = fromRoom && toRoom ? sharedRoomBoundary(fromRoom, toRoom) : null;
+    if (shared) touchingByCorridor.set(corridor.id, shared);
+    else routedCorridors.push(corridor);
+  }
+
+  const corridorRoutes = planOrthogonalCorridors({
+    ...spec,
+    corridors: routedCorridors,
+  });
+
+  for (const corridor of spec.corridors) {
+    const shared = touchingByCorridor.get(corridor.id);
+    if (!shared) continue;
+    corridorRoutes.set(corridor.id, {
+      corridorId: corridor.id,
+      points: [{ ...shared.point }],
+      fromDoor: {
+        ...shared.fromDoor,
+        width: shared.width,
+      },
+      toDoor: {
+        ...shared.toDoor,
+        width: shared.width,
+      },
+    });
+  }
+
   const doorOpeningsByRoom = collectDoorOpenings(spec, corridorRoutes);
   const roomGroups = spec.rooms.map((room) => buildRoomGroup(room, doorOpeningsByRoom.get(room.id) ?? [], config));
   const corridorGroups = [];
