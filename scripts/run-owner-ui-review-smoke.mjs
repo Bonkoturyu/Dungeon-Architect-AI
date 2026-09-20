@@ -182,6 +182,15 @@ try {
   const resizedGoal = await page.evaluate((id) =>
     window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === id), goalRoomId);
 
+  await page.fill('#roomWidth', '100');
+  await page.fill('#roomDepth', '100');
+  await page.click('#resizeRoom');
+  await page.waitForTimeout(50);
+  const afterUnsafeResize = await page.evaluate((id) => ({
+    room: window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === id),
+    editStatus: document.querySelector('#editStatus')?.textContent ?? '',
+  }), goalRoomId);
+
   const middleRoomId = await page.evaluate(() => {
     const state = window.__DAI_EDITOR_SLICE__.getState();
     return state.rooms.find((room) => room.id !== state.entities.find((entity) => entity.type === 'start')?.roomId &&
@@ -269,6 +278,10 @@ try {
       roomOptionText.some((text) => text.includes('START')) &&
       roomOptionText.some((text) => text.includes('GOAL')),
     anyRoomCanBeResized: resizedGoal?.width === 10 && resizedGoal?.depth === 9,
+    unsafeRoomResizeRejected:
+      afterUnsafeResize.room?.width === 10 &&
+      afterUnsafeResize.room?.depth === 9 &&
+      afterUnsafeResize.editStatus.includes('EDIT_RESULT_INVALID'),
     wasdMovesSelectedRoom: middleAfterW?.z === middleBefore.z - 1,
     pathCheckShowsReachableRoute:
       pathState?.reachable === true &&
@@ -308,6 +321,7 @@ try {
     touchingCorridorVisiblePoint,
     roomOptionText,
     resizedGoal,
+    afterUnsafeResize,
     middleBefore,
     middleAfterW,
     pathState,
