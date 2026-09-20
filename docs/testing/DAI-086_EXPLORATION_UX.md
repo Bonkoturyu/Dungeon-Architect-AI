@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS / VISIBLE-CHROME EVIDENCE PENDING.**
+**DONE.**
 
 ## Goal
 
@@ -89,4 +89,13 @@ Expected evidence:
 - `artifacts/exploration-ux/test-play-after-one-move.png`;
 - `artifacts/exploration-ux/mystery-play-start.png`.
 
-Human visual review remains required before merge.
+The visible-Chrome smoke passed and human visual review was accepted on 2026-09-20.
+
+Reviewed evidence SHA-256:
+
+- JSON: `df363a36e86c0cfaf8ebaf51071484a6a3ee5cc2968a0b1cc1e6fdbfd6c74438`;
+- Test start PNG: `a01f069cb209031e817d2fcaf5800456a2f7b45a71cc9d25d6e53695c1622601`;
+- Test after one move PNG: `9a0d41dd0916f716ce3f7b1ba41f0d708ef94d3ebd3510c7452c1dd130a10a5c`;
+- Mystery start PNG: `7ed88dc2ba33ee6032d61e6ad9d67032504e3e2045e88de6933ff6b97a540501`.
+
+The reviewed captures confirmed Start-only initial mapping, persistent explored topology after movement, clear current-room emphasis, hidden unrelated topology/Goal, and a fresh Mystery layout using the same compact Play presentation.
