@@ -105,6 +105,9 @@ try {
     const validation = document.querySelector('#validationStatus');
     const exitPad = document.querySelector('#playExitButtons')?.getBoundingClientRect();
     const metricText = document.querySelector('#playStatus')?.innerText ?? '';
+    const exitPrompt = document.querySelector('.exit-prompt')?.textContent ?? '';
+    const viewportLabel = document.querySelector('.viewport-label');
+    const viewportLabelStyle = getComputedStyle(viewportLabel);
     const asideStyle = getComputedStyle(document.querySelector('aside'));
     return {
       bodyMode: document.body.dataset.mode,
@@ -114,6 +117,9 @@ try {
       viewportHelp: document.querySelector('#viewportHelp')?.textContent ?? '',
       validationHidden: getComputedStyle(validation).display === 'none',
       playMetrics: metricText,
+      exitPrompt,
+      viewportHudBorder: viewportLabelStyle.borderStyle,
+      viewportHudBackground: viewportLabelStyle.backgroundColor,
       playAsidePosition: asideStyle.position,
       exitPadWidth: exitPad?.width ?? 0,
       exitPadHeight: exitPad?.height ?? 0,
@@ -208,16 +214,21 @@ try {
     playInstructionIsModeAware: playLayout.viewportHelp.includes('Auto-map'),
     playPanelCompact:
       playLayout.validationHidden === true &&
-      playLayout.playMetrics.includes('↠') &&
-      playLayout.playMetrics.includes('▦') &&
+      playLayout.playMetrics.includes('MOVE') &&
+      playLayout.playMetrics.includes('MAP') &&
       playLayout.playAsidePosition === 'absolute',
+    playHudClearlyNonInteractive:
+      playLayout.viewportHudBorder === 'none' &&
+      playLayout.viewportHudBackground === 'rgba(0, 0, 0, 0)',
+    exitInstructionMinimal:
+      playLayout.exitPrompt === 'CHOOSE EXIT',
     spatialExitPadPresent:
       playLayout.exitPadWidth >= 130 &&
       playLayout.exitPadWidth <= 150 &&
       playLayout.exitPadHeight >= 130 &&
       playLayout.exitPadHeight <= 150,
     resultModeApplied: resultLayout.bodyMode === 'result',
-    resultVisible: resultLayout.resultText.includes('CLEARED') && resultLayout.playText.includes('↠'),
+    resultVisible: resultLayout.resultText.includes('CLEARED') && resultLayout.playText.includes('MOVE'),
     authoringPanelsHiddenInResult: resultLayout.editorPanelsHidden === true,
     resultInstructionIsModeAware: resultLayout.viewportHelp.toLowerCase().includes('run complete'),
     returnToEditRestoresMode: returnedMode === 'edit',
