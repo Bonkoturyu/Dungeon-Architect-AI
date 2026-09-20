@@ -34,6 +34,13 @@ const roomEventItems = document.querySelector('#roomEventItems');
 const playModeLabel = document.querySelector('#playModeLabel');
 const moveCount = document.querySelector('#moveCount');
 const mappedCount = document.querySelector('#mappedCount');
+const roomSelect = document.querySelector('#roomSelect');
+const roomWidth = document.querySelector('#roomWidth');
+const roomDepth = document.querySelector('#roomDepth');
+const resizeRoomButton = document.querySelector('#resizeRoom');
+const checkPathButton = document.querySelector('#checkPath');
+const pathStatus = document.querySelector('#pathStatus');
+const entityCards = document.querySelector('#entityCards');
 const entitySelect = document.querySelector('#entitySelect');
 const entityRoom = document.querySelector('#entityRoom');
 const entityType = document.querySelector('#entityType');
@@ -43,6 +50,8 @@ const removeEntityButton = document.querySelector('#removeEntity');
 const generationPrompt = document.querySelector('#generationPrompt');
 const generateDungeonButton = document.querySelector('#generateDungeon');
 const generationStatus = document.querySelector('#generationStatus');
+const generationHistory = document.querySelector('#generationHistory');
+const authoringPreviewCover = document.querySelector('#authoringPreviewCover');
 const naturalEditInput = document.querySelector('#naturalEditInput');
 const applyNaturalEditButton = document.querySelector('#applyNaturalEdit');
 const naturalEditStatus = document.querySelector('#naturalEditStatus');
@@ -68,6 +77,10 @@ let lastPlayResult = null;
 let workflowTab = 'create';
 let playActionClock = 0;
 let canvasResizeObserver = null;
+let promptHistory = [];
+let authoringPreviewConcealed = false;
+let pathCheckResult = null;
+let canvasPointerOrigin = null;
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -133,12 +146,21 @@ function snapshotState() {
     generationBusy,
     lastDesignIntent: lastDesignIntent ? clone(lastDesignIntent) : null,
     lastGeneration: lastGeneration ? clone(lastGeneration) : null,
+    promptHistory: [...promptHistory],
+    authoringPreviewConcealed,
+    pathCheckResult: pathCheckResult ? clone(pathCheckResult) : null,
     naturalEditBusy,
     lastNaturalEditCommand: lastNaturalEditCommand ? { ...lastNaturalEditCommand } : null,
     play: currentPlayState(),
     playSource,
     result: lastPlayResult ? clone(lastPlayResult) : null,
-    rooms: spec?.rooms.map((room) => ({ id: room.id, x: room.x, z: room.z })) ?? [],
+    rooms: spec?.rooms.map((room) => ({
+      id: room.id,
+      x: room.x,
+      z: room.z,
+      width: room.width,
+      depth: room.depth,
+    })) ?? [],
     entities: spec?.entities.map((entity) => ({ id: entity.id, type: entity.type, roomId: entity.roomId })) ?? [],
   };
 }
