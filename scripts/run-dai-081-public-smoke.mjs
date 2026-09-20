@@ -96,6 +96,9 @@ try {
   const treasure = entityByType(generated, 'treasure');
   if (!goal || !treasure) throw new Error('Generated spec is missing goal or treasure.');
 
+  await page.click('[data-workflow-tab="edit"]');
+  await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().workflowTab === 'edit');
+
   await page.fill('#naturalEditInput', editPrompt);
   await page.click('#applyNaturalEdit');
   await page.waitForFunction(({ treasureId, goalRoomId }) => {
@@ -105,6 +108,9 @@ try {
   }, { treasureId: treasure.id, goalRoomId: goal.roomId }, { timeout: 120_000 });
 
   const afterEdit = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
+
+  await page.click('[data-workflow-tab="play"]');
+  await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().workflowTab === 'play');
 
   await page.click('#start');
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().mode === 'play', null, { timeout: 30_000 });
