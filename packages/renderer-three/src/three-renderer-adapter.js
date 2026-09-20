@@ -381,6 +381,15 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     draw();
   }
 
+  function getCameraState() {
+    assertAlive();
+    return {
+      position: { x: camera.position.x, y: camera.position.y, z: camera.position.z },
+      target: { x: controls.target.x, y: controls.target.y, z: controls.target.z },
+      distance: camera.position.distanceTo(controls.target),
+    };
+  }
+
   function getScreenPositionForSpecId(id) {
     assertAlive();
     const target = runtimeBySpecId.get(id);
@@ -418,6 +427,7 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     pickSpecAt,
     setSelectedSpecId,
     setHighlightedSpecIds,
+    getCameraState,
     getScreenPositionForSpecId,
     dispose,
     get selectedSpecId() {
