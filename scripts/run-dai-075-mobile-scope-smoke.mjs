@@ -94,6 +94,8 @@ try {
   const narrowBeforeClose = await readiness(narrowPage);
   await narrowPage.click('#onboardingClose');
   await narrowPage.waitForFunction(() => window.__DAI_ONBOARDING__.getState().open === false);
+  await narrowPage.click('[data-workflow-tab="play"]');
+  await narrowPage.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().workflowTab === 'play');
   const narrowAfterClose = await readiness(narrowPage);
   await narrowPage.screenshot({ path: path.join(outputDir, 'dai-075-narrow.png'), fullPage: true });
   await narrowContext.close();
