@@ -190,30 +190,137 @@ function refreshGate() {
   }
 }
 
+function roomRole(roomId) {
+  const entities = authoringSpec().entities;
+  if (entities.some((entity) => entity.type === 'start' && entity.roomId === roomId)) return 'start';
+  if (entities.some((entity) => entity.type === 'goal' && entity.roomId === roomId)) return 'goal';
+  return null;
+}
+
+function roomLabel(roomId) {
+  const role = roomRole(roomId);
+  if (role === 'start') return `◆ START · ${roomId}`;
+  if (role === 'goal') return `★ GOAL · ${roomId}`;
+  return `▦ ${roomId}`;
+}
+
+function entityDisplay(entity) {
+  const table = {
+    start: { icon: '◆', label: 'Start' },
+    goal: { icon: '★', label: 'Goal' },
+    enemy: { icon: '⚔', label: 'Enemy' },
+    treasure: { icon: '▣', label: 'Chest' },
+    trap: { icon: '⚠', label: 'Trap' },
+    recovery: { icon: '✚', label: 'Recovery' },
+  };
+  return table[entity.type] ?? { icon: '◇', label: entity.type };
+}
+
+function renderPromptHistory() {
+  if (!generationHistory) return;
+  if (promptHistory.length === 0) {
+    const empty = document.createElement('span');
+    empty.className = 'muted';
+    empty.textContent = 'No prompts yet.';
+    generationHistory.replaceChildren(empty);
+    return;
+  }
+
+  generationHistory.replaceChildren(...promptHistory.map((entry, index) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'prompt-history-item';
+    button.title = entry.prompt;
+    const meta = document.createElement('strong');
+    meta.textContent = `#${promptHistory.length - index} · ${entry.roomCount} rooms`;
+    const text = document.createElement('span');
+    text.textContent = entry.prompt;
+    button.append(meta, document.createElement('br'), text);
+    button.addEventListener('click', () => {
+      generationPrompt.value = entry.prompt;
+      updateUi();
+      generationPrompt.focus();
+    });
+    return button;
+  }));
+}
+
 function ensureRoomOptions() {
-  const current = entityRoom.value;
+  const currentTarget = entityRoom.value;
   const rooms = authoringSpec().rooms;
+  const entity = selectedEntity();
+  const start = authoringSpec().entities.find((item) => item.type === 'start');
+  const goal = authoringSpec().entities.find((item) => item.type === 'goal');
+
   entityRoom.replaceChildren(...rooms.map((room) => {
     const option = document.createElement('option');
     option.value = room.id;
-    option.textContent = room.id;
+    option.textContent = roomLabel(room.id);
+    if (entity?.type === 'start' && goal?.roomId === room.id) option.disabled = true;
+    if (entity?.type === 'goal' && start?.roomId === room.id) option.disabled = true;
+    return option;
+  }));
+
+  roomSelect.replaceChildren(...rooms.map((room) => {
+    const option = document.createElement('option');
+    option.value = room.id;
+    option.textContent = roomLabel(room.id);
     return option;
   }));
 
   if (selectedRoomId && rooms.some((room) => room.id === selectedRoomId)) {
+    roomSelect.value = selectedRoomId;
+  } else {
+    roomSelect.selectedIndex = -1;
+  }
+
+  if (entity && rooms.some((room) => room.id === entity.roomId)) {
+    entityRoom.value = entity.roomId;
+  } else if (selectedRoomId && rooms.some((room) => room.id === selectedRoomId)) {
     entityRoom.value = selectedRoomId;
-  } else if (current && rooms.some((room) => room.id === current)) {
-    entityRoom.value = current;
+  } else if (currentTarget && rooms.some((room) => room.id === currentTarget)) {
+    entityRoom.value = currentTarget;
   }
 }
 
 function ensureEntityOptions() {
   const entities = authoringSpec().entities;
   entitySelect.replaceChildren(...entities.map((entity) => {
+    const presentation = entityDisplay(entity);
     const option = document.createElement('option');
     option.value = entity.id;
-    option.textContent = `[${entity.type}] ${entity.id} @ ${entity.roomId}`;
+    option.textContent = `${presentation.icon} ${presentation.label} · ${roomLabel(entity.roomId)}`;
     return option;
+  }));
+
+  entityCards.replaceChildren(...entities.map((entity) => {
+    const presentation = entityDisplay(entity);
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `entity-card${selectedEntityId === entity.id ? ' is-selected' : ''}`;
+    button.dataset.entityId = entity.id;
+
+    const icon = document.createElement('span');
+    icon.className = 'entity-icon';
+    icon.textContent = presentation.icon;
+
+    const main = document.createElement('span');
+    main.className = 'entity-main';
+    const name = document.createElement('span');
+    name.className = 'entity-name';
+    name.textContent = presentation.label;
+    const room = document.createElement('span');
+    room.className = 'entity-room';
+    room.textContent = roomLabel(entity.roomId);
+    main.append(name, room);
+
+    const kind = document.createElement('span');
+    kind.className = 'entity-kind';
+    kind.textContent = entity.type.toUpperCase();
+
+    button.append(icon, main, kind);
+    button.addEventListener('click', () => selectEntity(entity.id));
+    return button;
   }));
 
   if (selectedEntityId && entities.some((entity) => entity.id === selectedEntityId)) {
@@ -226,13 +333,17 @@ function ensureEntityOptions() {
 
 function setWorkflowTab(nextTab) {
   if (!['create', 'edit', 'play'].includes(nextTab)) return false;
+  const revealsAuthoring = nextTab === 'edit' && authoringPreviewConcealed;
   workflowTab = nextTab;
+  if (revealsAuthoring) authoringPreviewConcealed = false;
   document.body.dataset.workflowTab = nextTab;
   for (const button of workflowTabButtons) {
     const active = button.dataset.workflowTab === nextTab;
     button.classList.toggle('is-active', active);
     button.setAttribute('aria-selected', String(active));
   }
+  if (revealsAuthoring && adapter) renderActiveSpec();
+  else updateUi();
   return true;
 }
 
