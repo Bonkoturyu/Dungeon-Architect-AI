@@ -17,6 +17,12 @@ if ($LASTEXITCODE -ne 0) { throw 'npm ci failed.' }
 npm test
 if ($LASTEXITCODE -ne 0) { throw 'npm test failed.' }
 
+npm run build:hosting
+if ($LASTEXITCODE -ne 0) { throw 'Hosting build failed.' }
+
+npm run smoke:generation-surface
+if ($LASTEXITCODE -ne 0) { throw 'DAI-081 local generation-surface smoke failed.' }
+
 npm run smoke:ui-ux-polish
 if ($LASTEXITCODE -ne 0) { throw 'UI/UX polish visible-Chrome smoke failed.' }
 
@@ -27,7 +33,7 @@ npm run smoke:room-events
 if ($LASTEXITCODE -ne 0) { throw 'Room-event Play visible-Chrome smoke failed.' }
 
 Write-Host ''
-Write-Host 'UI/UX polish validation completed successfully.' -ForegroundColor Green
+Write-Host 'UI/UX polish + DAI-081 local integration validation completed successfully.' -ForegroundColor Green
 Write-Host 'Evidence: artifacts\ui-ux-polish/ui-ux-polish.json'
 Write-Host 'Screenshots: artifacts\ui-ux-polish/ui-ux-edit.png / ui-ux-play.png / ui-ux-result.png'
 Write-Host 'Exploration evidence: artifacts\exploration-ux/dai-086-exploration-ux.json'
