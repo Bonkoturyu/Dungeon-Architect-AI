@@ -71,3 +71,18 @@ test("Start and Goal cannot share a room", async () => {
   assert.equal(result.valid, false);
   assert.ok(result.errors.some((error) => error.code === "START_GOAL_SAME_ROOM"));
 });
+
+
+test("overlapping room interiors are rejected while touching edges remain valid", async () => {
+  const overlapping = await loadFixture();
+  overlapping.rooms.find((room) => room.id === "room-middle").width = 50;
+  const overlapResult = validateDungeonSpec(overlapping);
+  assert.equal(overlapResult.valid, false);
+  assert.ok(overlapResult.errors.some((error) => error.code === "ROOM_OVERLAP"));
+
+  const touching = await loadFixture();
+  touching.rooms.find((room) => room.id === "room-middle").x = 8;
+  const touchingResult = validateDungeonSpec(touching);
+  assert.equal(touchingResult.valid, true);
+  assert.ok(!touchingResult.errors.some((error) => error.code === "ROOM_OVERLAP"));
+});
