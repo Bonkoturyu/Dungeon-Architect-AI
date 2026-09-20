@@ -481,7 +481,11 @@ function renderActiveSpec() {
   const visibility = mode === 'edit' || !playSession
     ? null
     : createRendererVisibilityFromPlaySession(playSession);
-  adapter.render(spec, { visibility, resultMode: mode === 'result' });
+  adapter.render(spec, {
+    visibility,
+    resultMode: mode === 'result',
+    entityStates: mode === 'edit' ? null : playSession?.gameplayState?.entityStates ?? null,
+  });
   ensureRoomOptions();
   ensureEntityOptions();
 
