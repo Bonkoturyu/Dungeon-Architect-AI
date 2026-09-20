@@ -21,6 +21,8 @@ const returnEditButton = document.querySelector('#returnEdit');
 const playExitBar = document.querySelector('#playExitBar');
 const playExitButtons = document.querySelector('#playExitButtons');
 const playModeLabel = document.querySelector('#playModeLabel');
+const moveCount = document.querySelector('#moveCount');
+const mappedCount = document.querySelector('#mappedCount');
 const entitySelect = document.querySelector('#entitySelect');
 const entityRoom = document.querySelector('#entityRoom');
 const entityType = document.querySelector('#entityType');
@@ -580,7 +582,8 @@ function redo() {
 
 function updatePlayReadout() {
   if (!playSession) {
-    playStatus.textContent = '—';
+    if (moveCount) moveCount.textContent = '0';
+    if (mappedCount) mappedCount.textContent = '0';
     resultStatus.textContent = '';
     resultStatus.hidden = true;
     if (playModeLabel) {
@@ -595,7 +598,8 @@ function updatePlayReadout() {
     playModeLabel.textContent = modeName;
     playModeLabel.hidden = false;
   }
-  playStatus.textContent = `👣 ${playSession.moves}   🗺 ${map.exploredRoomIds.length}`;
+  if (moveCount) moveCount.textContent = String(playSession.moves);
+  if (mappedCount) mappedCount.textContent = String(map.exploredRoomIds.length);
 }
 
 function finalizePlayIfNeeded() {
@@ -604,7 +608,8 @@ function finalizePlayIfNeeded() {
   if (!result.ok) throw new Error(`createPlayResult failed: ${JSON.stringify(result.error)}`);
   lastPlayResult = result.result;
   mode = 'result';
-  playStatus.textContent = `👣 ${lastPlayResult.moves}   🗺 ${lastPlayResult.visitedRoomIds.length}`;
+  if (moveCount) moveCount.textContent = String(lastPlayResult.moves);
+  if (mappedCount) mappedCount.textContent = String(lastPlayResult.visitedRoomIds.length);
   resultStatus.textContent = lastPlayResult.status === 'cleared' ? '✓ CLEARED' : 'RUN ENDED';
   resultStatus.hidden = false;
   renderActiveSpec();
@@ -689,7 +694,8 @@ function returnToEdit() {
   setWorkflowTab('edit');
   selectedRoomId = null;
   selectedEntityId = null;
-  playStatus.textContent = '';
+  if (moveCount) moveCount.textContent = '0';
+  if (mappedCount) mappedCount.textContent = '0';
   resultStatus.textContent = '';
   resultStatus.hidden = true;
   if (playModeLabel) {
