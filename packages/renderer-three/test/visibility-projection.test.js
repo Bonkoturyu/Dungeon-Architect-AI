@@ -1,7 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { generateDungeonSpec } from '../../generator/src/dungeon-generator.js';
-import { createDungeonScenePlan, projectDungeonScenePlan } from '../src/scene-plan.js';
+import {
+  createDungeonScenePlan,
+  projectDungeonScenePlan,
+  shouldRenderMarkerForRuntime,
+} from '../src/scene-plan.js';
 
 function fixture() {
   return generateDungeonSpec({ seed: 909, roomCount: 5, routeChoice: 0, id: 'visibility-fixture' });
@@ -92,6 +96,36 @@ test('scene plan includes low-poly marker definitions for gameplay entities', ()
     assert.ok(byType.has(type), `missing marker type: ${type}`);
   }
   assert.equal(byType.get('trap').warning, 'floor-cracks');
+  assert.equal(byType.get('enemy').initiallyActive, true);
+});
+
+test('dormant enemy marker stays hidden in Play until runtime activation', () => {
+  const spec = fixture();
+  spec.entities.push({
+    id: 'enemy-dormant',
+    type: 'enemy',
+    roomId: 'room-002',
+    initiallyActive: false,
+  });
+
+  const plan = createDungeonScenePlan(spec);
+  const marker = plan.markers.find((entry) => entry.specId === 'enemy-dormant');
+  assert.ok(marker);
+  assert.equal(marker.initiallyActive, false);
+
+  assert.equal(shouldRenderMarkerForRuntime(marker, {}), false);
+  assert.equal(shouldRenderMarkerForRuntime(marker, {
+    'enemy-dormant': { status: 'dormant' },
+  }), false);
+  assert.equal(shouldRenderMarkerForRuntime(marker, {
+    'enemy-dormant': { status: 'active' },
+  }), true);
+  assert.equal(shouldRenderMarkerForRuntime(marker, {
+    'enemy-dormant': { status: 'defeated' },
+  }), false);
+
+  // Authoring/Edit render has no runtime state and must still show the entity.
+  assert.equal(shouldRenderMarkerForRuntime(marker, null), true);
 });
 
 test('play projection hides gameplay markers in unexplored rooms', () => {
