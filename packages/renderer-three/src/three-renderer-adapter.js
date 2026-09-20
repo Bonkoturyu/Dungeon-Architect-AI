@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import {
   createDungeonScenePlan,
   projectDungeonScenePlan,
@@ -34,6 +35,14 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
   scene.background = new THREE.Color(clearColor);
 
   const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
+  const controls = new OrbitControls(camera, canvas);
+  controls.enableDamping = false;
+  controls.enablePan = false;
+  controls.rotateSpeed = 0.7;
+  controls.zoomSpeed = 1.0;
+  controls.minDistance = 5;
+  controls.maxDistance = 250;
+
   const ambient = new THREE.HemisphereLight(0xffffff, 0x222233, 1.5);
   const sun = new THREE.DirectionalLight(0xffffff, 1.4);
   sun.position.set(20, 35, 10);
@@ -108,6 +117,7 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
   let lastPlan = null;
   let selectedSpecId = null;
   let selectionHelper = null;
+  let pathHelpers = [];
 
   function assertAlive() {
     if (disposed) throw new Error('Three renderer adapter has been disposed.');
@@ -127,8 +137,18 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     selectionHelper = null;
   }
 
+  function clearPathHelpers() {
+    for (const helper of pathHelpers) {
+      scene.remove(helper);
+      helper.geometry?.dispose();
+      helper.material?.dispose();
+    }
+    pathHelpers = [];
+  }
+
   function clearRenderedSpec() {
     clearSelectionHelper();
+    clearPathHelpers();
     selectedSpecId = null;
     for (const child of [...root.children]) {
       root.remove(child);
@@ -245,7 +265,8 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
       distance * (playMode ? 0.7 : 0.8),
       bounds.centerZ + distance * (playMode ? 0.92 : 1),
     );
-    camera.lookAt(bounds.centerX, 0, bounds.centerZ);
+    controls.target.set(bounds.centerX, 0, bounds.centerZ);
+    controls.update();
   }
 
   function draw() {
@@ -346,6 +367,20 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     draw();
   }
 
+  function setHighlightedSpecIds(ids = []) {
+    assertAlive();
+    clearPathHelpers();
+    for (const id of [...new Set(ids)].filter((value) => typeof value === 'string')) {
+      const target = runtimeBySpecId.get(id);
+      if (!target) continue;
+      const helper = new THREE.BoxHelper(target, 0xf4c95d);
+      helper.name = `path-highlight:${id}`;
+      scene.add(helper);
+      pathHelpers.push(helper);
+    }
+    draw();
+  }
+
   function getScreenPositionForSpecId(id) {
     assertAlive();
     const target = runtimeBySpecId.get(id);
@@ -368,10 +403,13 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
   function dispose() {
     if (disposed) return;
     clearRenderedSpec();
+    controls.dispose();
     for (const material of Object.values(materials)) material.dispose();
     renderer.dispose();
     disposed = true;
   }
+
+  controls.addEventListener('change', draw);
 
   return {
     render,
@@ -379,6 +417,7 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     getObjectBySpecId,
     pickSpecAt,
     setSelectedSpecId,
+    setHighlightedSpecIds,
     getScreenPositionForSpecId,
     dispose,
     get selectedSpecId() {
