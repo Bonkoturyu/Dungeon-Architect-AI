@@ -140,7 +140,9 @@
     #editStatus[hidden],
     .selection-chip[hidden] { display: none !important; }
     body[data-mode="edit"] #returnEdit { display: none; }
-    body[data-mode="edit"]:not([data-workflow-tab="edit"]) .history-group { display: none; }
+    body[data-mode="edit"]:not([data-workflow-tab="edit"]) .toolbar { display: none; }
+    body[data-mode="play"] .toolbar,
+    body[data-mode="result"] .toolbar { display: none; }
     body[data-mode="play"] .history-group,
     body[data-mode="result"] .history-group,
     body[data-mode="play"] #editStatus,
@@ -167,9 +169,29 @@
       font-size: 0.73rem;
     }
 
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: 0;
+    }
+    .icon-button {
+      width: 34px;
+      min-width: 34px;
+      padding: 0;
+      border-color: rgba(102, 117, 142, 0.72);
+      background: rgba(48, 58, 73, 0.62);
+      color: var(--text-muted);
+      border-radius: 50%;
+    }
+    .icon-button:hover:not(:disabled) {
+      color: var(--text);
+      background: var(--surface-3);
+    }
+
     .toolbar {
       display: grid;
-      grid-template-columns: auto auto minmax(0, 1fr);
+      grid-template-columns: auto minmax(0, 1fr);
       align-items: center;
       gap: 12px;
       padding: 8px 16px;
@@ -377,10 +399,23 @@
       letter-spacing: 0.08em;
     }
     .play-metrics {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       margin: 0;
       color: var(--text-soft);
       font: 0.78rem ui-monospace, SFMono-Regular, Consolas, monospace;
       letter-spacing: 0.01em;
+    }
+    .metric {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+    .metric-symbol {
+      color: var(--accent-strong);
+      font-size: 0.9rem;
     }
     .result-banner {
       margin: 12px 0 0;
@@ -390,8 +425,8 @@
       background: rgba(54, 121, 77, 0.26);
       color: #ddffe7;
       text-align: center;
-      font-size: 1.08rem;
-      font-weight: 850;
+      font-size: 1.12rem;
+      font-weight: 900;
       letter-spacing: 0.06em;
     }
     .danger-action { border-color: #6d4549; color: #ffc5c5; }
@@ -400,9 +435,36 @@
     body[data-mode="result"] .editor-only {
       display: none;
     }
+    .workspace { position: relative; }
+
     body[data-mode="play"] .workspace,
     body[data-mode="result"] .workspace {
-      grid-template-columns: minmax(0, 1fr) 318px;
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    body[data-mode="play"] aside,
+    body[data-mode="result"] aside {
+      position: absolute;
+      z-index: 5;
+      top: 14px;
+      right: 14px;
+      width: 244px;
+      min-height: 0;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      overflow: visible;
+      pointer-events: none;
+    }
+
+    body[data-mode="play"] aside .panel-play,
+    body[data-mode="result"] aside .panel-play {
+      pointer-events: auto;
+      margin: 0;
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(31, 39, 51, 0.9);
+      backdrop-filter: blur(8px);
     }
     body[data-mode="play"] #validationStatus,
     body[data-mode="result"] #validationStatus { display: none; }
@@ -419,27 +481,27 @@
       left: 50%;
       bottom: 18px;
       transform: translateX(-50%);
-      padding: 8px;
-      border: 1px solid rgba(130, 148, 181, 0.5);
-      border-radius: 18px;
+      padding: 6px;
+      border: 1px solid rgba(130, 148, 181, 0.46);
+      border-radius: 16px;
       background: rgba(29, 36, 48, 0.78);
       backdrop-filter: blur(8px);
     }
     #playExitButtons {
       display: grid;
-      grid-template-columns: repeat(3, 56px);
-      grid-template-rows: repeat(3, 56px);
+      grid-template-columns: repeat(3, 46px);
+      grid-template-rows: repeat(3, 46px);
       align-items: center;
       justify-items: center;
     }
     .exit-center {
       grid-column: 2;
       grid-row: 2;
-      width: 16px;
-      height: 16px;
+      width: 12px;
+      height: 12px;
       border: 2px solid rgba(139, 220, 255, 0.9);
       border-radius: 50%;
-      box-shadow: 0 0 0 5px rgba(139, 220, 255, 0.12);
+      box-shadow: 0 0 0 4px rgba(139, 220, 255, 0.1);
     }
     .exit-slot { display: flex; align-items: center; justify-content: center; gap: 4px; }
     .exit-slot.side-north { grid-column: 2; grid-row: 1; }
@@ -448,11 +510,11 @@
     .exit-slot.side-west { grid-column: 1; grid-row: 2; }
     .exit-slot.side-unknown { grid-column: 2; grid-row: 2; transform: translateY(23px); }
     .exit-button {
-      width: 50px;
-      height: 50px;
+      width: 42px;
+      height: 42px;
       padding: 0;
       border-radius: 50%;
-      font-size: 1.42rem;
+      font-size: 1.18rem;
       line-height: 1;
       box-shadow: 0 4px 16px rgba(0,0,0,0.18);
     }
@@ -530,6 +592,13 @@
       }
       .viewport-shell { min-height: 62vh; }
       aside { border-left: 0; border-top: 1px solid var(--line); overflow: visible; }
+      body[data-mode="play"] aside,
+      body[data-mode="result"] aside {
+        position: static;
+        width: auto;
+        padding: 14px;
+        background: var(--surface-1);
+      }
       .viewport-label { top: 10px; left: 10px; }
     }
   </style>
@@ -547,17 +616,16 @@
         <span id="selected" class="selection-chip">room: none</span>
         <span id="entitySelected" class="selection-chip">entity: none</span>
       </div>
+      <div class="header-actions">
+        <button id="returnEdit" type="button" disabled>← Edit</button>
+        <button id="guide" class="secondary-accent icon-button" type="button" title="Guide" aria-label="Open guide">?</button>
+      </div>
     </header>
 
     <div class="toolbar">
       <div class="toolbar-group history-group" aria-label="History">
         <button id="undo" type="button" disabled>Undo</button>
         <button id="redo" type="button" disabled>Redo</button>
-      </div>
-      <div class="toolbar-group" aria-label="Mode actions">
-        <button id="returnEdit" type="button" disabled>← Edit</button>
-        <span class="toolbar-divider" aria-hidden="true"></span>
-        <button id="guide" class="secondary-accent" type="button" title="Guide" aria-label="Open guide">?</button>
       </div>
       <span id="editStatus" hidden></span>
       <span id="hint" hidden></span>
@@ -603,7 +671,10 @@
           <p class="mode-note editor-only">Test = current · Mystery = unseen</p>
           <div class="play-summary">
             <span id="playModeLabel" class="play-mode-pill" hidden></span>
-            <p id="playStatus" class="play-metrics" aria-live="polite"></p>
+            <div id="playStatus" class="play-metrics" aria-live="polite">
+              <span class="metric" aria-label="Moves"><span class="metric-symbol" aria-hidden="true">↠</span><span id="moveCount">0</span></span>
+              <span class="metric" aria-label="Mapped rooms"><span class="metric-symbol" aria-hidden="true">▦</span><span id="mappedCount">0</span></span>
+            </div>
           </div>
           <p id="resultStatus" class="result-banner" aria-live="polite" hidden></p>
         </fieldset>
