@@ -77,5 +77,7 @@ GitHub Issues are not created unless explicitly authorized.
 - DAI-085 UI/UX polish — IN PROGRESS / VISUAL REVIEW REQUIRED (requirement-driven polish: keep prompt→3D→edit→play creation flow primary; reduce developer chrome; concise Create/Edit/Play hierarchy; full-width Play; compact TEST/MYSTERY + MOVE/MAP overlay; clearly non-interactive HUD; restrained color focus. Existing DAI-084 rollback remains historical safety point; a new candidate freeze is required after polish acceptance.)
 - DAI-086 Exploration/Mystery Play UX — IN PROGRESS / VISUAL REVIEW REQUIRED (shared DungeonSpec/Generator/Three.js core retained; Play is intentionally a compact proof that generated working logic is immediately explorable, not a separate full roguelike product. Fog-of-war, auto-mapping, local exit choices, hidden Goal/topology, and fresh-seed Mystery Play remain the game loop.)
 
+- DAI-087 Room events / Play meaning — IN PROGRESS / VISIBLE-CHROME EVIDENCE PENDING (existing Enemy/Treasure/Trap/Recovery runtime surfaced in browser Play; unresolved Enemy/Trap temporarily block exits; Treasure/Recovery remain optional; Result surfaces compact ENEMY/CHEST/TRAP metrics. No second game engine or arbitrary runtime code.)
+
 ## M9
 DAI-090 unexpected prompts; DAI-091 final compliance; DAI-092 submit.
