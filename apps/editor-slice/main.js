@@ -244,9 +244,13 @@ function updateUi() {
   generateDungeonButton.disabled = !editing || generationBusy || !generationPrompt.value.trim();
   naturalEditInput.disabled = !editing || naturalEditBusy;
   applyNaturalEditButton.disabled = !editing || naturalEditBusy || !naturalEditInput.value.trim();
-  startButton.disabled = !editing || !gate.allowed;
-  mysteryPlayButton.disabled = !editing || !lastDesignIntent;
-  mysteryPlayButton.title = lastDesignIntent ? 'Generate a fresh hidden dungeon from the same design intent.' : 'Generate a dungeon first to unlock Mystery Play.';
+  startButton.disabled = !editing || generationBusy || !gate.allowed;
+  mysteryPlayButton.disabled = !editing || generationBusy || !lastDesignIntent;
+  mysteryPlayButton.title = generationBusy
+    ? 'Wait for the current generation request to finish.'
+    : lastDesignIntent
+      ? 'Generate a fresh hidden dungeon from the same design intent.'
+      : 'Generate a dungeon first to unlock Mystery Play.';
   returnEditButton.disabled = editing;
 }
 
@@ -842,7 +846,7 @@ function beginPlay(spec, source) {
 }
 
 function startDungeon() {
-  if (mode !== 'edit') return false;
+  if (mode !== 'edit' || generationBusy) return false;
   refreshGate();
   if (!gate.allowed) {
     setEditStatus(`Play blocked: ${gate.criticalCount} Critical`);
@@ -862,7 +866,7 @@ function freshMysterySeed() {
 }
 
 function startMysteryDungeon() {
-  if (mode !== 'edit' || !lastDesignIntent) return false;
+  if (mode !== 'edit' || generationBusy || !lastDesignIntent) return false;
 
   const seed = freshMysterySeed();
   const generated = generateDungeonFromDesignIntent(lastDesignIntent, {
