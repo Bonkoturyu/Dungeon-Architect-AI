@@ -17,9 +17,9 @@ EDIT
   ↓
 VALIDATE
   ↓
-START
+TEST / MYSTERY
   ↓
-PLAY
+EXPLORE + ROOM EVENTS
   ↓
 RESULT
 ```
@@ -48,7 +48,7 @@ Suggested natural-language edit:
 Move the treasure to the room that contains the goal.
 ```
 
-Then confirm `Validation: PASS`, press `START`, follow connected rooms to Goal, inspect Result, and use **Return to Edit**.
+Then confirm `✓ Valid`, open **Play**, choose **▶ Test** (current authored dungeon) or **🎲 Mystery** (fresh hidden dungeon from the same DesignIntent), resolve any blocking Room Events, navigate with the directional **CHOOSE EXIT** pad until Goal, inspect `✓ CLEARED`, and use **← Edit**.
 
 ## What is production-backed today
 
@@ -59,10 +59,10 @@ Then confirm `Validation: PASS`, press `START`, follow connected rooms to Goal, 
 | DungeonSpec | Renderer-independent schema, parser, validation, deterministic generation |
 | Procedural core | Deterministic graph/layout, corridors, Start/Goal, route-choice controls, Seed reproducibility |
 | Natural-language generation | OpenAI Responses cloud path + deterministic fallback → validated DesignIntent → bounded DungeonSpec mapping |
-| Play core | Session snapshot, room movement, enemy/treasure/trap/recovery/event runtime, clear/failure Result |
+| Play core | Session snapshot, Fog of War / auto-map, directional exits, enemy/treasure/trap/recovery Room Events, Test/Mystery play, clear/failure Result |
 | Natural-language edit | Live-tested constrained `move-entity` translation through server-side OpenAI path |
 | Edit mode | Room selection/movement, entity add/move/remove, Undo/Redo |
-| Validation | Critical START gate with structural/reachability checks |
+| Validation | Critical Play gate with structural/reachability checks |
 | Simulation | Deterministic simulator, shortest/greedy/cautious agents, metrics, intent-fit and explainable summary |
 | Hosting | Cloudflare Pages + Pages Functions / ADR-002 |
 | Legal/security | Dependency/AI/service registers, third-party notice, secret/privacy audit |
@@ -80,7 +80,7 @@ Key boundaries:
 - mobile is outside the supported submission acceptance scope;
 - no Safari/Firefox acceptance claim has been made;
 - there are no accounts, persistent project storage, analytics or telemetry;
-- the GitHub repository visibility switch remains a submission task. DAI-085 UI/UX polish is in progress; the existing DAI-084 freeze is retained as a historical rollback point and will be renewed after polish acceptance.
+- the GitHub repository visibility switch remains a submission task. DAI-085–088 local polish gates are complete; the historical DAI-084 freeze remains a rollback point until the refreshed public demo/video are revalidated and a new final freeze is created.
 
 ## Sample prompts
 
@@ -98,7 +98,7 @@ The repository also retains the frozen ten-case DesignIntent regression corpus a
 - `DungeonSpec` is renderer-independent serialized dungeon data.
 - Generator/Core produces deterministic structure and bounded intent-driven entities.
 - Editor mutations go through explicit `EditCommand` operations.
-- `START` creates a fixed execution snapshot.
+- `▶ Test` creates a fixed execution snapshot of the current authored dungeon; `🎲 Mystery` creates a fresh hidden snapshot from the same validated DesignIntent.
 - Play Core does not directly mutate authoring state.
 - Three.js consumes the spec/snapshot through a disposable renderer adapter.
 - Cloudflare Pages Functions hold provider credentials server-side.
@@ -191,9 +191,9 @@ Historical DAI-084 rollback point:
 - rollback branch: `rollback/submission-candidate-m8-2026-09-19`;
 - dist manifest SHA-256: `387287bfba2aaad91a7ef4c9d98ebb522e8ce8e1e0768825d39d33d949d8ea6d`.
 
-See [DAI-084 Candidate Freeze / Rollback Point](docs/submission/DAI-084_CANDIDATE_FREEZE.md). A new final freeze will be created after DAI-085 UI/UX polish.
+See [DAI-084 Candidate Freeze / Rollback Point](docs/submission/DAI-084_CANDIDATE_FREEZE.md). A new final freeze will be created after the refreshed public-demo and video gates.
 
-DAI-082 demo video is complete: the final reviewed public-demo capture is 49.5 seconds at 1920×1080 / 30 fps.
+The previous DAI-082 capture remains historical evidence for the pre-polish candidate. A refreshed demo video is required after the DAI-085–088 public deployment is revalidated.
 
 The GitHub repository is still private and must be switched to Public before submission.
 
