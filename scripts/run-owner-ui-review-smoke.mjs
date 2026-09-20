@@ -111,8 +111,11 @@ try {
   await page.waitForTimeout(50);
   const cameraAfterZoom = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getCameraState());
 
-  // Touch two connected rooms and verify their shared wall/corridor gap collapses into one outer shell.
+  // Ordinary selection/rerender should preserve the user's manual camera.
   await page.evaluate(() => window.__DAI_EDITOR_SLICE__.selectRoom('room-middle'));
+  const cameraAfterSelection = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getCameraState());
+
+  // Touch two connected rooms and verify their shared wall/corridor gap collapses into one outer shell.
   await canvas.focus();
   for (let index = 0; index < 4; index += 1) await page.keyboard.press('a');
   const touchingState = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
@@ -234,6 +237,9 @@ try {
   const checks = {
     mouseOrbitChangesCamera: distance3(cameraBefore.position, cameraAfterOrbit.position) > 0.1,
     mouseWheelZoomChangesDistance: cameraAfterZoom.distance < cameraAfterOrbit.distance - 0.1,
+    cameraPersistsAcrossEditorRerender:
+      distance3(cameraAfterZoom.position, cameraAfterSelection.position) < 0.01 &&
+      Math.abs(cameraAfterZoom.distance - cameraAfterSelection.distance) < 0.01,
     touchingConnectedRoomsUseOuterShell:
       touchingState.rooms.find((room) => room.id === 'room-middle')?.x === 8 &&
       touchingCorridorVisiblePoint === null,
@@ -289,6 +295,7 @@ try {
     cameraBefore,
     cameraAfterOrbit,
     cameraAfterZoom,
+    cameraAfterSelection,
     touchingRoomMiddle: touchingState.rooms.find((room) => room.id === 'room-middle'),
     touchingCorridorVisiblePoint,
     roomOptionText,
