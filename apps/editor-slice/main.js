@@ -885,6 +885,8 @@ function addEntity() {
     return false;
   }
   selectedEntityId = id;
+  selectedRoomId = null;
+  clearPathCheck();
   renderActiveSpec();
   setEditStatus(`added ${id}`);
   return true;
@@ -910,6 +912,7 @@ function removeEntity() {
     return false;
   }
   selectedEntityId = null;
+  clearPathCheck();
   renderActiveSpec();
   setEditStatus(`removed ${removedId}`);
   return true;
@@ -962,14 +965,20 @@ async function generateDungeonFromPrompt() {
       eventCount: generated.spec.events.length,
     };
     mode = 'edit';
+    authoringPreviewConcealed = true;
+    pathCheckResult = null;
+    promptHistory = [
+      { prompt, roomCount: lastGeneration.roomCount },
+      ...promptHistory,
+    ].slice(0, 8);
+    renderPromptHistory();
     setWorkflowTab('play');
-    generationPrompt.value = '';
     if (moveCount) moveCount.textContent = '0';
     if (mappedCount) mappedCount.textContent = '0';
     resultStatus.textContent = '';
     resultStatus.hidden = true;
     renderActiveSpec();
-    setGenerationStatus(`✓ Generated · ${lastGeneration.roomCount} rooms`);
+    setGenerationStatus(`✓ Generated · ${lastGeneration.roomCount} rooms · layout hidden`);
     setEditStatus('generated new dungeon');
     return true;
   } catch {
@@ -1031,6 +1040,7 @@ async function applyNaturalEdit() {
       selectedRoomId = command.roomId;
     }
     naturalEditInput.value = '';
+    clearPathCheck();
     renderActiveSpec();
     setNaturalEditStatus(`applied: ${command.type}`);
     setEditStatus(`natural edit: ${command.type}`);
@@ -1048,6 +1058,7 @@ function undo() {
   if (!session.canUndo || mode !== 'edit' || generationBusy || naturalEditBusy) return false;
   const result = session.undo();
   if (!result.ok) throw new Error(`undo failed: ${JSON.stringify(result.error)}`);
+  clearPathCheck();
   renderActiveSpec();
   setEditStatus('undo');
   return true;
@@ -1057,6 +1068,7 @@ function redo() {
   if (!session.canRedo || mode !== 'edit' || generationBusy || naturalEditBusy) return false;
   const result = session.redo();
   if (!result.ok) throw new Error(`redo failed: ${JSON.stringify(result.error)}`);
+  clearPathCheck();
   renderActiveSpec();
   setEditStatus('redo');
   return true;
