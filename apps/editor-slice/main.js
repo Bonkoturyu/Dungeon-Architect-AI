@@ -352,36 +352,69 @@ function updateUi() {
   const entity = selectedEntity();
   const editing = mode === 'edit';
   const authoringBusy = generationBusy || naturalEditBusy;
+  const concealed = editing && authoringPreviewConcealed;
 
   document.body.dataset.mode = mode;
   document.body.dataset.workflowTab = workflowTab;
   if (hint) hint.hidden = true;
+
+  if (authoringPreviewCover) authoringPreviewCover.hidden = !concealed;
+  canvas.style.visibility = concealed ? 'hidden' : 'visible';
+
   if (viewportTitle) {
-    viewportTitle.textContent = editing ? '3D Dungeon' : mode === 'play' ? 'Explore' : 'Cleared';
+    viewportTitle.textContent = concealed
+      ? 'Dungeon Ready'
+      : editing
+        ? '3D Dungeon'
+        : mode === 'play'
+          ? 'Explore'
+          : 'Cleared';
   }
   if (viewportHelp) {
-    viewportHelp.textContent = editing
-      ? 'Select · Arrow keys move'
-      : mode === 'play'
-        ? 'Auto-map'
-        : 'Run complete';
+    viewportHelp.textContent = concealed
+      ? 'Layout hidden · choose Edit, Test, or Mystery'
+      : editing
+        ? 'Drag orbit · Wheel zoom · WASD / Arrow keys move'
+        : mode === 'play'
+          ? 'Auto-map'
+          : 'Run complete';
   }
 
   selectedLabel.textContent = room
-    ? `room: ${room.id} @ (${room.x.toFixed(1)}, ${room.z.toFixed(1)})`
+    ? `${roomLabel(room.id)} @ (${room.x.toFixed(1)}, ${room.z.toFixed(1)}) · ${room.width}×${room.depth}`
     : '';
   selectedLabel.hidden = !room;
   entitySelectedLabel.textContent = entity
-    ? `entity: ${entity.id} [${entity.type}] @ ${entity.roomId}`
+    ? `${entityDisplay(entity).icon} ${entityDisplay(entity).label} · ${roomLabel(entity.roomId)}`
     : '';
   entitySelectedLabel.hidden = !entity;
 
+  if (room) {
+    if (document.activeElement !== roomWidth) roomWidth.value = String(room.width);
+    if (document.activeElement !== roomDepth) roomDepth.value = String(room.depth);
+  } else {
+    roomWidth.value = '';
+    roomDepth.value = '';
+  }
+
+  const start = authoringSpec().entities.find((item) => item.type === 'start');
+  const goal = authoringSpec().entities.find((item) => item.type === 'goal');
+  const targetForbidden =
+    (entity?.type === 'start' && entityRoom.value === goal?.roomId) ||
+    (entity?.type === 'goal' && entityRoom.value === start?.roomId);
+
   undoButton.disabled = !editing || authoringBusy || !session?.canUndo;
   redoButton.disabled = !editing || authoringBusy || !session?.canRedo;
+  roomSelect.disabled = !editing || authoringBusy;
+  roomWidth.disabled = !editing || authoringBusy || !room;
+  roomDepth.disabled = !editing || authoringBusy || !room;
+  resizeRoomButton.disabled = !editing || authoringBusy || !room;
+  checkPathButton.disabled = !editing || authoringBusy;
   entitySelect.disabled = !editing || authoringBusy;
   entityRoom.disabled = !editing || authoringBusy;
   entityType.disabled = !editing || authoringBusy;
-  moveEntityButton.disabled = !editing || authoringBusy || !entity || !entityRoom.value;
+  moveEntityButton.disabled = !editing || authoringBusy || !entity || !entityRoom.value || targetForbidden;
+  moveEntityButton.title = targetForbidden ? 'Start and Goal must be in different rooms.' : '';
   removeEntityButton.disabled = !editing || authoringBusy || !entity || entity.type === 'start' || entity.type === 'goal';
   addEntityButton.disabled = !editing || authoringBusy || !entityRoom.value;
   generationPrompt.disabled = !editing || authoringBusy;
