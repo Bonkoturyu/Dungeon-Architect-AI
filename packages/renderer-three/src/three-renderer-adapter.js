@@ -55,6 +55,12 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
       transparent: true,
       opacity: 0.95,
     }),
+    resultRing: new THREE.MeshBasicMaterial({
+      color: 0xf4c95d,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 1,
+    }),
     corridor: new THREE.MeshStandardMaterial({ color: 0x8d9bb1, roughness: 0.94, metalness: 0 }),
     corridorExplored: new THREE.MeshStandardMaterial({ color: 0x566477, roughness: 0.96, metalness: 0 }),
     start: new THREE.MeshStandardMaterial({ color: 0x58d68d, roughness: 0.68, metalness: 0 }),
@@ -141,7 +147,7 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     targetMap.set(marker.specId, group);
   }
 
-  function buildStagingScene(plan) {
+  function buildStagingScene(plan, { resultMode = false } = {}) {
     const stagingRoot = new THREE.Group();
     const stagingMap = new Map();
 
@@ -165,8 +171,8 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
         const floor = currentRoom?.boxes?.find((box) => box.part === 'floor');
         if (floor) {
           const ring = new THREE.Mesh(
-            new THREE.RingGeometry(0.82, 1.12, 32),
-            materials.currentRing,
+            new THREE.RingGeometry(resultMode ? 0.88 : 0.82, resultMode ? 1.2 : 1.12, 32),
+            resultMode ? materials.resultRing : materials.currentRing,
           );
           ring.name = 'current-room-ring';
           ring.rotation.x = -Math.PI / 2;
@@ -183,9 +189,9 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
   }
 
   function fitCamera(bounds, { playMode = false } = {}) {
-    const minimumSpan = playMode ? 14.5 : 16;
+    const minimumSpan = playMode ? 16 : 16;
     const span = Math.max(bounds.width, bounds.depth, minimumSpan);
-    const distance = span * (playMode ? 1.04 : 1.25);
+    const distance = span * (playMode ? 1.05 : 1.25);
     camera.position.set(
       bounds.centerX + distance * (playMode ? 0.34 : 0.45),
       distance * (playMode ? 0.7 : 0.8),
@@ -198,11 +204,11 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     renderer.render(scene, camera);
   }
 
-  function render(spec, { visibility = null } = {}) {
+  function render(spec, { visibility = null, resultMode = false } = {}) {
     assertAlive();
     const fullPlan = createDungeonScenePlan(spec);
     const plan = visibility ? projectDungeonScenePlan(fullPlan, visibility) : fullPlan;
-    const { stagingRoot, stagingMap } = buildStagingScene(plan);
+    const { stagingRoot, stagingMap } = buildStagingScene(plan, { resultMode });
 
     clearRenderedSpec();
     for (const child of [...stagingRoot.children]) {
