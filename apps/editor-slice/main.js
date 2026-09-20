@@ -399,6 +399,13 @@ function updateUi() {
 
   const start = authoringSpec().entities.find((item) => item.type === 'start');
   const goal = authoringSpec().entities.find((item) => item.type === 'goal');
+
+  for (const option of entityRoom.options) {
+    option.disabled =
+      (entity?.type === 'start' && option.value === goal?.roomId) ||
+      (entity?.type === 'goal' && option.value === start?.roomId);
+  }
+
   const targetForbidden =
     (entity?.type === 'start' && entityRoom.value === goal?.roomId) ||
     (entity?.type === 'goal' && entityRoom.value === start?.roomId);
