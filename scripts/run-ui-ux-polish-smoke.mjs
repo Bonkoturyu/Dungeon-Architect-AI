@@ -63,13 +63,16 @@ try {
     const workflowTabs = [...document.querySelectorAll('.workflow-tab[data-workflow-tab]')]
       .filter((node) => getComputedStyle(node).display !== 'none').length;
     const validation = document.querySelector('#validationStatus');
-    const history = document.querySelector('.history-group');
+    const toolbar = document.querySelector('.toolbar');
     const selected = document.querySelector('#selected');
     const entitySelected = document.querySelector('#entitySelected');
     return {
       bodyMode: document.body.dataset.mode,
       viewportWidth: viewport.width,
       viewportHeight: viewport.height,
+      viewportTop: viewport.top,
+      viewportBottom: viewport.bottom,
+      documentHeight: document.documentElement.clientHeight,
       asideWidth: aside.width,
       workspaceWidth: workspace.width,
       headerTitleVisible: headerTitle.width > 0 && headerTitle.height > 0,
@@ -78,7 +81,7 @@ try {
       workflowTab: document.body.dataset.workflowTab,
       validationText: validation.textContent,
       validationState: validation.dataset.state,
-      historyHiddenInCreate: getComputedStyle(history).display === 'none',
+      toolbarHiddenInCreate: getComputedStyle(toolbar).display === 'none',
       emptySelectionChipsHidden: selected.hidden === true && entitySelected.hidden === true,
       horizontalOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
@@ -197,7 +200,7 @@ try {
       editLayout.visibleWorkflowPanels === 1 &&
       editLayout.workflowTabs === 3,
     routineChromeReduced:
-      editLayout.historyHiddenInCreate === true &&
+      editLayout.toolbarHiddenInCreate === true &&
       editLayout.emptySelectionChipsHidden === true,
     playModeApplied: playLayout.bodyMode === 'play',
     authoringPanelsHiddenInPlay: playLayout.hiddenEditorPanels >= 3,
