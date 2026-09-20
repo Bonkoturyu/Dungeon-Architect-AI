@@ -66,6 +66,8 @@ let playSession = null;
 let playSource = null;
 let lastPlayResult = null;
 let workflowTab = 'create';
+let playActionClock = 0;
+let canvasResizeObserver = null;
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -75,6 +77,11 @@ function resize() {
   if (!adapter) return;
   const rect = canvas.getBoundingClientRect();
   adapter.resize(Math.max(1, Math.floor(rect.width)), Math.max(1, Math.floor(rect.height)));
+}
+
+function nextPlayActionAt() {
+  playActionClock += 1;
+  return playActionClock;
 }
 
 function authoringSpec() {
@@ -99,10 +106,13 @@ function currentPlayState() {
     status: playSession.status,
     currentRoomId: playSession.currentRoomId,
     goalRoomId: playSession.goalRoomId,
+    startedAt: playSession.startedAt,
+    completedAt: playSession.completedAt,
     moves: playSession.moves,
     visitedRoomIds: [...playSession.visitedRoomIds],
     map: clone(derivePlayMap(playSession)),
     source: playSource,
+    events: clone(playSession.events ?? []),
     snapshot: clone(playSession.snapshot),
   };
 }
@@ -281,21 +291,23 @@ function applyPlayRuntimeResult(result, failurePrefix) {
 
 function clearEnemy(enemyId) {
   if (!playSession || mode !== 'play') return false;
-  const at = playSession.moves + playSession.gameplayState.counters.interactions + 1;
   let current = playSession;
   const enemyState = listRoomEnemies(current, current.currentRoomId, { includeDefeated: true })
     .find((entry) => entry.enemy.id === enemyId)?.state;
   if ((enemyState?.encounters ?? 0) === 0) {
-    const encountered = recordEnemyEncounter(current, enemyId, { at });
+    const encountered = recordEnemyEncounter(current, enemyId, { at: nextPlayActionAt() });
     if (!encountered.ok) return applyPlayRuntimeResult(encountered, 'Encounter failed');
     current = encountered.session;
   }
-  return applyPlayRuntimeResult(defeatEnemy(current, enemyId, { at: at + 1 }), 'Clear failed');
+  return applyPlayRuntimeResult(
+    defeatEnemy(current, enemyId, { at: nextPlayActionAt() }),
+    'Clear failed',
+  );
 }
 
 function interactWithRoomEntity(action, entityId) {
   if (!playSession || mode !== 'play') return false;
-  const at = playSession.moves + playSession.gameplayState.counters.interactions + 1;
+  const at = nextPlayActionAt();
   const handlers = {
     'open-treasure': () => openTreasure(playSession, entityId, { at }),
     'avoid-trap': () => avoidTrap(playSession, entityId, { at }),
@@ -827,6 +839,7 @@ function beginPlay(spec, source) {
   }
 
   playSession = result.session;
+  playActionClock = Number.isFinite(playSession.startedAt) ? playSession.startedAt : 0;
   playSource = source;
   lastPlayResult = null;
   mode = playSession.status === 'playing' ? 'play' : 'result';
@@ -884,7 +897,7 @@ function movePlayToRoom(roomId, corridorId = null) {
     return false;
   }
   const result = movePlaySession(playSession, roomId, {
-    at: playSession.moves + 1,
+    at: nextPlayActionAt(),
     corridorId,
   });
   if (!result.ok) {
@@ -905,6 +918,7 @@ function returnToEdit() {
   mode = 'edit';
   playSession = null;
   playSource = null;
+  playActionClock = 0;
   setWorkflowTab('edit');
   selectedRoomId = null;
   selectedEntityId = null;
@@ -981,6 +995,9 @@ async function run() {
     adapter = createThreeRendererAdapter({ canvas });
     resize();
     renderActiveSpec();
+
+    canvasResizeObserver = new ResizeObserver(() => resize());
+    canvasResizeObserver.observe(canvas);
 
     canvas.addEventListener('pointerdown', handleCanvasPointer);
     window.addEventListener('resize', resize);
