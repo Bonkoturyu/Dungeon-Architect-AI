@@ -2,7 +2,7 @@
 
 ## Status
 
-**DONE.** The final corrected-corridor browser-viewport capture was recorded and visually reviewed on 2026-09-19.
+**REFRESH REQUIRED.** The 2026-09-19 corrected-corridor capture remains accepted historical evidence for the pre-polish candidate. DAI-085–088 changed the judge-facing Play UX, so a new public-demo capture is required after redeployment and refreshed DAI-081 public E2E.
 
 ## Official requirement
 
@@ -30,11 +30,11 @@ Do not record isolated test harnesses in a way that implies they are the judge-f
 | --- | --- | --- |
 | 0:00–0:08 | Product title / live demo opening | “Dungeon Architect AI — Describe. Edit. Play.” |
 | 0:08–0:32 | Type generation prompt and Generate | Plain language becomes validated design intent and a 3D dungeon |
-| 0:32–0:48 | Hold generated dungeon + PASS state | Deterministic rooms, entities, Seed and START eligibility |
+| 0:32–0:48 | Hold generated dungeon + `✓ Valid` state | Deterministic rooms/entities and Play eligibility |
 | 0:48–1:05 | Select/move one room, then Undo | Manual authoring works directly on the generated dungeon |
 | 1:05–1:30 | Type verified natural-language edit and apply | AI performs one constrained safe edit through EditCommand |
-| 1:30–2:00 | START and traverse connected rooms | Same generated dungeon is immediately playable |
-| 2:00–2:12 | Cleared Result | Result proves the loop reaches Goal |
+| 1:30–2:00 | ▶ Test, resolve Room Events, navigate with CHOOSE EXIT | Same generated dungeon is immediately explorable under Fog of War |
+| 2:00–2:12 | `✓ CLEARED` Result + metrics | Result proves the loop reaches Goal and working interactions executed |
 | 2:12–2:22 | Return to Edit | Authoring state remains available after Play |
 | 2:22–2:30 | End card | Live URL + “Describe. Edit. Play.” |
 
@@ -50,7 +50,7 @@ The recording runner intentionally targets the central 0:08–2:22 interaction s
 >
 > Natural-language editing uses the same safe command boundary. Here I ask to move the treasure to the room containing the goal, and the AI returns one constrained EditCommand instead of arbitrary runtime code.
 >
-> Once validation passes, START freezes the execution snapshot. I can play the generated dungeon immediately, move through connected rooms, reach the goal, and get a cleared Result.
+> Once validation passes, ▶ Test freezes the current authored dungeon into an execution snapshot. Play reveals only explored rooms, Room Events expose working logic, and the directional exit pad maps the route as I move toward the goal.
 >
 > Returning to Edit restores the authoring view so the same generated dungeon can be changed again.
 >
@@ -78,8 +78,8 @@ The runner:
 4. performs Generate;
 5. demonstrates one manual room edit and Undo;
 6. performs the verified natural-language edit;
-7. STARTs the generated dungeon and clicks through rooms to Goal;
-8. shows the cleared Result and Return to Edit;
+7. selects Play, starts ▶ Test, resolves blocking Room Events, and traverses visible exit controls to Goal;
+8. shows the `✓ CLEARED` Result and Return to Edit;
 9. stops ffmpeg cleanly and probes the resulting MP4 duration.
 
 If ffmpeg is unavailable or `DAI_RECORD_WITH_FFMPEG=0`, the runner falls back to manual OBS / Windows capture.
@@ -149,8 +149,8 @@ Visual review of the MP4 confirmed:
 - Generate is shown;
 - manual room move and Undo are shown;
 - the natural-language treasure relocation request is shown;
-- START / Play is shown;
-- `RESULT: cleared` is shown;
+- the historical START / Play flow is shown (superseded by the DAI-085–088 `▶ Test` / exit-pad UX for the refreshed capture);
+- the historical `RESULT: cleared` state is shown (superseded by `✓ CLEARED` for the refreshed capture);
 - Return to Edit is shown;
 - no provider key/private data is visible.
 
@@ -165,8 +165,8 @@ DAI-082 completion review confirms all of the following:
 - DESCRIBE → GENERATE is visibly demonstrated;
 - manual Edit is visibly demonstrated;
 - natural-language partial Edit is visibly demonstrated;
-- Validation / START is visible;
-- Play reaches Goal and shows Result;
+- `✓ Valid` and the Play choice are visible;
+- ▶ Test reaches Goal through Room Events / directional exits and shows `✓ CLEARED`;
 - no browser chrome, desktop taskbar, terminal, translation popup, provider key, or private data is visible;
 - the full left edge of the application, including the `DAI Editor / Play Gate` title, is visible;
 - no claim exceeds the documented production behavior;
