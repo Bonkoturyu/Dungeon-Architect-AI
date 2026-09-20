@@ -24,7 +24,7 @@ export const ONBOARDING_STEPS = Object.freeze([
     id: 'validate',
     eyebrow: 'Step 3 · Validate',
     title: 'Choose how to play',
-    body: 'PASS unlocks ▶ Test for the current map. 🎲 Mystery creates a fresh unseen map from the same design intent.',
+    body: '✓ Valid unlocks ▶ Test for the current map. 🎲 Mystery creates a fresh unseen map from the same design intent.',
     target: 'validation',
   }),
   Object.freeze({
