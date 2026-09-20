@@ -483,9 +483,10 @@ async function generateDungeonFromPrompt() {
     mode = 'edit';
     setWorkflowTab('play');
     generationPrompt.value = '';
-    playStatus.textContent = '—';
+    if (moveCount) moveCount.textContent = '0';
+    if (mappedCount) mappedCount.textContent = '0';
     resultStatus.textContent = '';
-  resultStatus.hidden = true;
+    resultStatus.hidden = true;
     renderActiveSpec();
     setGenerationStatus(`✓ Generated · ${lastGeneration.roomCount} rooms`);
     setEditStatus('generated new dungeon');
@@ -674,7 +675,7 @@ function movePlayToRoom(roomId) {
   if (mode !== 'play' || !playSession) return false;
   const result = movePlaySession(playSession, roomId, { at: playSession.moves + 1 });
   if (!result.ok) {
-    playStatus.textContent = `blocked: ${result.error.code}`;
+    setEditStatus(`Move blocked: ${result.error.code}`);
     return false;
   }
 
