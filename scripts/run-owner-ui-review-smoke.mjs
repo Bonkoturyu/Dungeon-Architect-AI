@@ -224,7 +224,13 @@ try {
   }));
 
   // Same-room Start/Goal protection in UI and validation.
-  const goalOptionDisabledForStart = await page.locator(`#entityRoom option[value="${goalRoomId}"]`).isDisabled();
+  await page.waitForFunction((goalId) => {
+    const option = document.querySelector(`#entityRoom option[value="${goalId}"]`);
+    return option?.disabled === true;
+  }, goalRoomId);
+  const goalOptionDisabledForStart = await page.evaluate((goalId) =>
+    document.querySelector(`#entityRoom option[value="${goalId}"]`)?.disabled === true,
+  goalRoomId);
   const sameRoomGate = await page.evaluate(async () => {
     const response = await fetch('/spec/dungeon/fixtures/minimal-valid-v1.json', { cache: 'no-store' });
     const spec = await response.json();
