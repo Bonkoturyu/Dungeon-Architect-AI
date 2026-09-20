@@ -80,6 +80,27 @@ The second pass therefore adds:
 
 These changes remain presentation-only around the shared generation/rendering core. Fog-of-war state remains renderer-independent.
 
+## Third visual pass
+
+The second screenshot set confirmed that Fog-of-War, current-room emphasis, compact metrics, and the first spatial exit pad were working, but three presentation issues remained:
+
+- the 318 px Play/Result rail wasted viewport width;
+- the exit pad was visually larger than necessary;
+- emoji metrics were platform-dependent and less legible than intended.
+
+The third pass changes presentation only:
+
+- Play/Result now use the 3D viewport at full workspace width;
+- the Play/Result status panel becomes a compact top-right overlay;
+- the Edit toolbar exists only in the Edit workflow;
+- Help / Return-to-Edit move into the main header;
+- the exit pad shrinks from 168 px to roughly 138 px;
+- Play metrics use stable glyphs `↠` (moves) and `▦` (mapped rooms) rather than emoji;
+- the Play camera pulls back slightly to retain more exploration context;
+- Result keeps the compact overlay and stronger `✓ CLEARED` banner.
+
+The overlay retains pointer access only on the status card itself, leaving the 3D surface unobstructed elsewhere.
+
 ## Validation
 
 Run:
