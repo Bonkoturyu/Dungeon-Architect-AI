@@ -1,5 +1,9 @@
 import * as THREE from 'three';
-import { createDungeonScenePlan, projectDungeonScenePlan } from './scene-plan.js';
+import {
+  createDungeonScenePlan,
+  projectDungeonScenePlan,
+  shouldRenderMarkerForRuntime,
+} from './scene-plan.js';
 
 const DEFAULT_CLEAR_COLOR = 0x202834;
 const DEFAULT_SELECTION_COLOR = 0x66ccff;
@@ -150,19 +154,8 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     targetMap.set(definition.specId, group);
   }
 
-  function markerResolved(marker, entityStates) {
-    if (!entityStates || !marker) return false;
-    const state = entityStates[marker.specId];
-    if (!state) return false;
-    if (marker.type === 'enemy') return state.status === 'defeated';
-    if (marker.type === 'treasure') return state.status === 'opened';
-    if (marker.type === 'trap') return state.status && state.status !== 'armed';
-    if (marker.type === 'recovery') return state.status === 'used';
-    return false;
-  }
-
   function addMarker(targetRoot, targetMap, marker, entityStates = null) {
-    if (markerResolved(marker, entityStates)) return;
+    if (!shouldRenderMarkerForRuntime(marker, entityStates)) return;
     const group = makeSpecGroup(marker.specId, marker.type);
     group.userData.roomId = marker.roomId;
     let geometry;
