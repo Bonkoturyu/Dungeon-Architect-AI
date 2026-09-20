@@ -672,12 +672,19 @@ function renderActiveSpec() {
   ensureRoomOptions();
   ensureEntityOptions();
 
-  const highlightId = mode === 'edit' ? selectedRoomId : playSession?.currentRoomId ?? null;
-  if (highlightId && spec.rooms.some((room) => room.id === highlightId)) {
+  const highlightId = mode === 'edit'
+    ? (selectedEntityId ?? selectedRoomId)
+    : playSession?.currentRoomId ?? null;
+  if (highlightId && (
+    spec.rooms.some((room) => room.id === highlightId) ||
+    spec.entities.some((entity) => entity.id === highlightId)
+  )) {
     adapter.setSelectedSpecId(highlightId);
   } else {
     adapter.setSelectedSpecId(null);
   }
+
+  adapter.setHighlightedSpecIds(pathCheckResult?.highlightIds ?? []);
 
   renderRoomEvents();
   renderPlayExits();
@@ -689,15 +696,20 @@ function selectRoom(roomId) {
   if (mode !== 'edit') return false;
   if (roomId == null) {
     selectedRoomId = null;
+    selectedEntityId = null;
     adapter.setSelectedSpecId(null);
+    ensureEntityOptions();
     updateUi();
     return false;
   }
 
   if (!authoringSpec().rooms.some((room) => room.id === roomId)) return false;
   selectedRoomId = roomId;
+  selectedEntityId = null;
   entityRoom.value = roomId;
   setWorkflowTab('edit');
+  ensureRoomOptions();
+  ensureEntityOptions();
   adapter.setSelectedSpecId(roomId);
   updateUi();
   return true;
@@ -709,15 +721,27 @@ function selectEntity(entityId) {
   if (!entity) {
     selectedEntityId = null;
     entitySelect.selectedIndex = -1;
+    ensureEntityOptions();
     updateUi();
     return false;
   }
 
   selectedEntityId = entity.id;
+  selectedRoomId = null;
   entitySelect.value = entity.id;
+  entityRoom.value = entity.roomId;
   setWorkflowTab('edit');
+  ensureRoomOptions();
+  ensureEntityOptions();
+  adapter.setSelectedSpecId(entity.id);
   updateUi();
   return true;
+}
+
+function clearPathCheck() {
+  pathCheckResult = null;
+  if (pathStatus) pathStatus.textContent = 'Path not checked.';
+  adapter?.setHighlightedSpecIds([]);
 }
 
 function applyCommand(command, successMessage) {
@@ -727,6 +751,7 @@ function applyCommand(command, successMessage) {
     setEditStatus(`error: ${result.error.code}`);
     return false;
   }
+  clearPathCheck();
   renderActiveSpec();
   setEditStatus(successMessage);
   return true;
@@ -741,6 +766,101 @@ function moveSelected(dx, dz) {
     x: room.x + dx,
     z: room.z + dz,
   }, `moved ${room.id}`);
+}
+
+function resizeSelectedRoom() {
+  const room = selectedRoom();
+  if (!room || mode !== 'edit') return false;
+  const width = Number(roomWidth.value);
+  const depth = Number(roomDepth.value);
+  if (!Number.isFinite(width) || width <= 0 || !Number.isFinite(depth) || depth <= 0) {
+    setEditStatus('error: ROOM_DIMENSION_INVALID');
+    return false;
+  }
+  return applyCommand({
+    type: 'resize-room',
+    roomId: room.id,
+    width,
+    depth,
+  }, `resized ${room.id} to ${width}×${depth}`);
+}
+
+function shortestStartGoalPath(spec) {
+  const start = spec.entities.find((entity) => entity.type === 'start');
+  const goal = spec.entities.find((entity) => entity.type === 'goal');
+  if (!start || !goal || start.roomId === goal.roomId) return null;
+
+  const adjacency = new Map(spec.rooms.map((room) => [room.id, []]));
+  for (const corridor of spec.corridors) {
+    if (corridor.initiallyEnabled === false) continue;
+    adjacency.get(corridor.fromRoomId)?.push({ roomId: corridor.toRoomId, corridorId: corridor.id });
+    adjacency.get(corridor.toRoomId)?.push({ roomId: corridor.fromRoomId, corridorId: corridor.id });
+  }
+  for (const exits of adjacency.values()) exits.sort((a, b) => a.corridorId.localeCompare(b.corridorId));
+
+  const queue = [start.roomId];
+  const previous = new Map([[start.roomId, null]]);
+  while (queue.length) {
+    const current = queue.shift();
+    if (current === goal.roomId) break;
+    for (const edge of adjacency.get(current) ?? []) {
+      if (previous.has(edge.roomId)) continue;
+      previous.set(edge.roomId, { roomId: current, corridorId: edge.corridorId });
+      queue.push(edge.roomId);
+    }
+  }
+  if (!previous.has(goal.roomId)) return null;
+
+  const roomIds = [];
+  const corridorIds = [];
+  let current = goal.roomId;
+  while (current != null) {
+    roomIds.push(current);
+    const prev = previous.get(current);
+    if (!prev) break;
+    corridorIds.push(prev.corridorId);
+    current = prev.roomId;
+  }
+  roomIds.reverse();
+  corridorIds.reverse();
+  return {
+    roomIds,
+    corridorIds,
+    moves: corridorIds.length,
+  };
+}
+
+function checkStartGoalPath() {
+  if (mode !== 'edit') return false;
+  const spec = authoringSpec();
+  const path = shortestStartGoalPath(spec);
+  if (!path) {
+    pathCheckResult = {
+      reachable: false,
+      roomIds: [],
+      corridorIds: [],
+      highlightIds: [],
+    };
+    pathStatus.textContent = '✕ Unreachable\nStart cannot reach Goal using initially enabled corridors.';
+    adapter.setHighlightedSpecIds([]);
+    return false;
+  }
+
+  const routeText = path.roomIds.map((roomId) => {
+    const role = roomRole(roomId);
+    if (role === 'start') return 'START';
+    if (role === 'goal') return 'GOAL';
+    return roomId;
+  }).join(' → ');
+
+  pathCheckResult = {
+    reachable: true,
+    ...path,
+    highlightIds: [...path.roomIds, ...path.corridorIds],
+  };
+  pathStatus.textContent = `✓ Reachable · ${path.moves} move${path.moves === 1 ? '' : 's'}\n${routeText}`;
+  adapter.setHighlightedSpecIds(pathCheckResult.highlightIds);
+  return true;
 }
 
 function nextEntityId(type) {
