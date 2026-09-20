@@ -64,7 +64,13 @@ try {
   });
 
   await page.goto(url, { waitUntil: 'networkidle', timeout: 60_000 });
-  await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__?.ready === true, null, { timeout: 60_000 });
+  await page.waitForFunction(
+    () => window.__DAI_EDITOR_SLICE__?.ready === true && window.__DAI_ONBOARDING__?.ready === true,
+    null,
+    { timeout: 60_000 },
+  );
+  await page.evaluate(() => window.__DAI_ONBOARDING__.close());
+  await page.waitForFunction(() => window.__DAI_ONBOARDING__.getState().open === false);
 
   const startup = await page.evaluate(() => ({
     failed: window.__DAI_EDITOR_SLICE__.failed,
