@@ -466,7 +466,7 @@ function renderPlayExits() {
       const direction = exit.side ?? 'unknown';
       button.setAttribute('aria-label', exit.explored ? `Return through ${direction} exit` : `Explore ${direction} exit`);
       button.title = exit.explored ? `Known ${direction} passage` : `Explore ${direction}`;
-      button.addEventListener('click', () => movePlayToRoom(exit.targetRoomId));
+      button.addEventListener('click', () => movePlayToRoom(exit.targetRoomId, exit.corridorId));
       slot.append(button);
     });
     slots.push(slot);
@@ -873,13 +873,16 @@ function startMysteryDungeon() {
   return beginPlay(generated.spec, 'mystery');
 }
 
-function movePlayToRoom(roomId) {
+function movePlayToRoom(roomId, corridorId = null) {
   if (mode !== 'play' || !playSession) return false;
   if (roomBlocksExit()) {
     setEditStatus('Resolve room event before leaving');
     return false;
   }
-  const result = movePlaySession(playSession, roomId, { at: playSession.moves + 1 });
+  const result = movePlaySession(playSession, roomId, {
+    at: playSession.moves + 1,
+    corridorId,
+  });
   if (!result.ok) {
     setEditStatus(`Move blocked: ${result.error.code}`);
     return false;
