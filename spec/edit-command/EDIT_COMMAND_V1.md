@@ -18,6 +18,14 @@ Authoring UI must not mutate DungeonSpec directly. Supported edits are expressed
 { "type": "move-entity", "entityId": "enemy-1", "roomId": "room-004" }
 ```
 
+Start and Goal may be moved through this command, but validation rejects placing them in the same room.
+
+### `resize-room`
+
+```json
+{ "type": "resize-room", "roomId": "room-004", "width": 10, "depth": 14 }
+```
+
 ### `add-entity`
 
 Generic add supports non-protected entity types. Start/Goal cannot be created through this generic command.
@@ -57,7 +65,6 @@ The browser edit stays undoable/redoable because the translated result is an ord
 
 - room add/remove
 - corridor add/remove
-- resize-room
 - door/shortcut commands
 - event logic edits
 - batch transactions
