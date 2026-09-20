@@ -1347,10 +1347,7 @@ async function run() {
     resizeRoomButton.addEventListener('click', resizeSelectedRoom);
     checkPathButton.addEventListener('click', checkStartGoalPath);
     entitySelect.addEventListener('change', () => selectEntity(entitySelect.value));
-    entityRoom.addEventListener('change', () => {
-      ensureRoomOptions();
-      updateUi();
-    });
+    entityRoom.addEventListener('change', updateUi);
     entityType.addEventListener('change', updateUi);
     addEntityButton.addEventListener('click', addEntity);
     moveEntityButton.addEventListener('click', moveEntityToTargetRoom);
