@@ -60,3 +60,14 @@ test("unreachable Goal is rejected", async () => {
   assert.equal(result.valid, false);
   assert.ok(result.errors.some((error) => error.code === "GOAL_UNREACHABLE"));
 });
+
+
+test("Start and Goal cannot share a room", async () => {
+  const spec = await loadFixture();
+  const goal = spec.entities.find((entity) => entity.type === "goal");
+  const start = spec.entities.find((entity) => entity.type === "start");
+  goal.roomId = start.roomId;
+  const result = validateDungeonSpec(spec);
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((error) => error.code === "START_GOAL_SAME_ROOM"));
+});
