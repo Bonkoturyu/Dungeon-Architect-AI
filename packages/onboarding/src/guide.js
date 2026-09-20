@@ -10,14 +10,14 @@ export const ONBOARDING_STEPS = Object.freeze([
     id: 'describe',
     eyebrow: 'Step 1 · Describe',
     title: 'Generate from design intent',
-    body: 'Describe a dungeon in one sentence. Generate builds the playable 3D map.',
+    body: 'Describe a dungeon in one sentence. Generate builds it, then keeps the full layout hidden until you choose Edit, Test, or Mystery.',
     target: 'generation',
   }),
   Object.freeze({
     id: 'edit',
     eyebrow: 'Step 2 · Edit',
     title: 'Shape the dungeon',
-    body: 'Select rooms or entities to edit. Use ✦ AI Edit for one natural-language relocation.',
+    body: 'Drag the 3D view to orbit and use the wheel to zoom. Select rooms or entities, move rooms with WASD / Arrow keys, resize any room, or check the Start → Goal path.',
     target: 'authoring',
   }),
   Object.freeze({
