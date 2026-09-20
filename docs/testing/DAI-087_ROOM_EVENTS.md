@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS / VISIBLE-CHROME EVIDENCE PENDING.**
+**DONE.**
 
 ## Why this exists
 
@@ -73,3 +73,16 @@ Expected:
 - `artifacts/room-events/room-event-result.png`.
 
 The browser smoke discovers generated event rooms from the actual snapshot rather than relying on fixed room IDs.
+
+
+## Accepted evidence
+
+The visible-Chrome smoke passed and human visual review was accepted on 2026-09-20.
+
+Reviewed evidence SHA-256:
+
+- JSON: `cce73710c00fb228540b6f6f376a60c260a41ad64a1bb3576de2def52fba2724`;
+- blocked-event PNG: `8b593827b9c061bcf620163c3cc44f402cdadde0b6e7f2fa14318fe90079f055`;
+- result PNG: `4a0ae39005c44fc9c7ce37d0ba6cbdb8ef26f36892243c391238c1112fd5cc5d`.
+
+The reviewed blocked-event capture made the active Enemy and exit-blocking state legible. The Result capture surfaced explored topology and compact interaction counters cleanly. The smoke evidence reported empty console/page/request/HTTP error collections.
