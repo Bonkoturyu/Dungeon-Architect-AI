@@ -248,6 +248,13 @@ try {
   });
 
   const metrics = result.result?.metrics ?? {};
+  const eventTimes = (result.play?.events ?? [])
+    .map((event) => event.at)
+    .filter((value) => Number.isFinite(value));
+  const eventTimesMonotonic = eventTimes.every(
+    (value, index) => index === 0 || value >= eventTimes[index - 1],
+  );
+  const latestEventAt = eventTimes.length ? Math.max(...eventTimes) : result.play?.startedAt ?? 0;
   const checks = {
     generatedWorkingEntities:
       snapshot.entities.some((entity) => entity.type === 'enemy') &&
@@ -266,6 +273,10 @@ try {
       resultText.includes('CHEST') &&
       resultText.includes('TRAP'),
     runClears: result.result?.status === 'cleared',
+    playEventTimesMonotonic: eventTimesMonotonic,
+    resultTimeNotBeforeEvents:
+      Number.isFinite(result.result?.completedAt) &&
+      result.result.completedAt >= latestEventAt,
     authoringDungeonUnchanged: authoringProjectionAfter === authoringProjectionBefore,
     browserErrorsAbsent:
       consoleErrors.length === 0 &&
@@ -288,6 +299,7 @@ try {
     treasurePath,
     goalPath,
     resultMetrics: metrics,
+    playEventTimes: eventTimes,
     resultText,
     interactionState,
     consoleErrors,
