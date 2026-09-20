@@ -19,6 +19,13 @@ function findEntity(spec, type) {
   return spec.entities.find((entity) => entity.type === type);
 }
 
+function corridorConnects(corridor, roomA, roomB) {
+  return (
+    (corridor.fromRoomId === roomA && corridor.toRoomId === roomB) ||
+    (corridor.fromRoomId === roomB && corridor.toRoomId === roomA)
+  );
+}
+
 function buildAdjacency(session) {
   const spec = session.snapshot;
   const adjacency = new Map(spec.rooms.map((room) => [room.id, new Set()]));
@@ -107,7 +114,7 @@ export function startPlaySession(authoringSpec, { startedAt = 0 } = {}) {
   return { ok: true, blocked: false, session };
 }
 
-export function movePlaySession(session, targetRoomId, { at = session?.startedAt ?? 0 } = {}) {
+export function movePlaySession(session, targetRoomId, { at = session?.startedAt ?? 0, corridorId = null } = {}) {
   if (!isPlaying(session)) {
     return { ok: false, error: { code: "SESSION_NOT_PLAYING", message: "Session is not in playing state." } };
   }
@@ -127,6 +134,48 @@ export function movePlaySession(session, targetRoomId, { at = session?.startedAt
     };
   }
 
+  const enabledCandidates = session.snapshot.corridors.filter((corridor) =>
+    corridorConnects(corridor, session.currentRoomId, targetRoomId) &&
+    isRuntimeCorridorEnabled(session, corridor)
+  );
+
+  let traversedCorridor = enabledCandidates[0] ?? null;
+  if (corridorId !== null) {
+    const requestedCorridor = session.snapshot.corridors.find((corridor) => corridor.id === corridorId) ?? null;
+    if (!requestedCorridor) {
+      return {
+        ok: false,
+        error: { code: "CORRIDOR_NOT_FOUND", message: `Unknown corridor: ${corridorId}` }
+      };
+    }
+    if (!corridorConnects(requestedCorridor, session.currentRoomId, targetRoomId)) {
+      return {
+        ok: false,
+        error: {
+          code: "CORRIDOR_TARGET_MISMATCH",
+          message: `${corridorId} does not connect ${session.currentRoomId} to ${targetRoomId}.`
+        }
+      };
+    }
+    if (!isRuntimeCorridorEnabled(session, requestedCorridor)) {
+      return {
+        ok: false,
+        error: { code: "CORRIDOR_DISABLED", message: `${corridorId} is disabled.` }
+      };
+    }
+    traversedCorridor = requestedCorridor;
+  }
+
+  if (!traversedCorridor) {
+    return {
+      ok: false,
+      error: {
+        code: "ROOM_NOT_ADJACENT",
+        message: `${targetRoomId} is not adjacent to ${session.currentRoomId}.`
+      }
+    };
+  }
+
   let next = clone(session);
   next.currentRoomId = targetRoomId;
   next.moves += 1;
@@ -136,7 +185,7 @@ export function movePlaySession(session, targetRoomId, { at = session?.startedAt
     counter: "roomEntries",
     delta: 1
   });
-  next.events.push({ type: "move", roomId: targetRoomId, at });
+  next.events.push({ type: "move", roomId: targetRoomId, corridorId: traversedCorridor.id, at });
 
   const dispatched = dispatchSupportedEvents(next, {
     type: "on_enter_room",

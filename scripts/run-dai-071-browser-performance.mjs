@@ -182,6 +182,10 @@ try {
     measure('select-room-middle', () => api.selectRoom('room-middle'));
     const afterStart = measure('start', () => api.startDungeon());
     const afterMiddle = measure('move-middle', () => api.movePlayToRoom('room-middle'));
+    const middleEnemy = afterMiddle.play?.snapshot?.entities.find(
+      (entity) => entity.type === 'enemy' && entity.roomId === 'room-middle',
+    ) ?? null;
+    if (middleEnemy) measure('clear-middle-enemy', () => api.clearEnemy(middleEnemy.id));
     const afterGoal = measure('move-goal', () => api.movePlayToRoom('room-goal'));
     const afterReturn = measure('return-edit', () => api.returnToEdit());
 

@@ -64,7 +64,13 @@ try {
   });
 
   await page.goto(url, { waitUntil: 'networkidle', timeout: 60_000 });
-  await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__?.ready === true, null, { timeout: 60_000 });
+  await page.waitForFunction(
+    () => window.__DAI_EDITOR_SLICE__?.ready === true && window.__DAI_ONBOARDING__?.ready === true,
+    null,
+    { timeout: 60_000 },
+  );
+  await page.evaluate(() => window.__DAI_ONBOARDING__.close());
+  await page.waitForFunction(() => window.__DAI_ONBOARDING__.getState().open === false);
 
   const startup = await page.evaluate(() => ({
     failed: window.__DAI_EDITOR_SLICE__.failed,
@@ -77,6 +83,9 @@ try {
   if (entityRoom(initial, 'treasure-1') !== 'room-middle') {
     throw new Error(`unexpected treasure-1 initial room: ${entityRoom(initial, 'treasure-1')}`);
   }
+
+  await page.click('[data-workflow-tab="edit"]');
+  await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().workflowTab === 'edit');
 
   await page.locator('#entitySelect').selectOption('treasure-1');
   await page.locator('#entityRoom').selectOption('room-goal');

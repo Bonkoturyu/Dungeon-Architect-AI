@@ -1,7 +1,11 @@
 import * as THREE from 'three';
-import { createDungeonScenePlan } from './scene-plan.js';
+import {
+  createDungeonScenePlan,
+  projectDungeonScenePlan,
+  shouldRenderMarkerForRuntime,
+} from './scene-plan.js';
 
-const DEFAULT_CLEAR_COLOR = 0x101014;
+const DEFAULT_CLEAR_COLOR = 0x202834;
 const DEFAULT_SELECTION_COLOR = 0x66ccff;
 
 function applyBoxTransform(mesh, box) {
@@ -40,10 +44,59 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
   scene.add(root);
 
   const materials = {
-    room: new THREE.MeshStandardMaterial({ color: 0x8e9aaf, roughness: 0.9, metalness: 0 }),
-    corridor: new THREE.MeshStandardMaterial({ color: 0x6c7890, roughness: 0.95, metalness: 0 }),
-    start: new THREE.MeshStandardMaterial({ color: 0x5bd17f, roughness: 0.7, metalness: 0 }),
-    goal: new THREE.MeshStandardMaterial({ color: 0xe5b65c, roughness: 0.65, metalness: 0 }),
+    room: new THREE.MeshStandardMaterial({ color: 0xb8c5d8, roughness: 0.88, metalness: 0 }),
+    roomExplored: new THREE.MeshStandardMaterial({ color: 0x667389, roughness: 0.92, metalness: 0 }),
+    roomCurrent: new THREE.MeshStandardMaterial({
+      color: 0xe8f1fb,
+      roughness: 0.76,
+      metalness: 0,
+      emissive: 0x2b5268,
+      emissiveIntensity: 0.5,
+    }),
+    currentRing: new THREE.MeshBasicMaterial({
+      color: 0x8bdcff,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.95,
+    }),
+    resultRing: new THREE.MeshBasicMaterial({
+      color: 0xf4c95d,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 1,
+    }),
+    corridor: new THREE.MeshStandardMaterial({ color: 0x8d9bb1, roughness: 0.94, metalness: 0 }),
+    corridorExplored: new THREE.MeshStandardMaterial({ color: 0x566477, roughness: 0.96, metalness: 0 }),
+    start: new THREE.MeshStandardMaterial({ color: 0x58d68d, roughness: 0.68, metalness: 0 }),
+    goal: new THREE.MeshStandardMaterial({ color: 0xf1c75b, roughness: 0.62, metalness: 0 }),
+    enemy: new THREE.MeshStandardMaterial({
+      color: 0xe36d73,
+      roughness: 0.72,
+      metalness: 0,
+      emissive: 0x4a171d,
+      emissiveIntensity: 0.28,
+    }),
+    treasure: new THREE.MeshStandardMaterial({
+      color: 0xe2b85f,
+      roughness: 0.58,
+      metalness: 0.12,
+      emissive: 0x49350f,
+      emissiveIntensity: 0.18,
+    }),
+    trap: new THREE.MeshStandardMaterial({
+      color: 0xd9825b,
+      roughness: 0.8,
+      metalness: 0,
+      emissive: 0x3d1f12,
+      emissiveIntensity: 0.2,
+    }),
+    recovery: new THREE.MeshStandardMaterial({
+      color: 0x69c9d4,
+      roughness: 0.64,
+      metalness: 0,
+      emissive: 0x123c42,
+      emissiveIntensity: 0.24,
+    }),
   };
 
   const runtimeBySpecId = new Map();
@@ -101,7 +154,8 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     targetMap.set(definition.specId, group);
   }
 
-  function addMarker(targetRoot, targetMap, marker) {
+  function addMarker(targetRoot, targetMap, marker, entityStates = null) {
+    if (!shouldRenderMarkerForRuntime(marker, entityStates)) return;
     const group = makeSpecGroup(marker.specId, marker.type);
     group.userData.roomId = marker.roomId;
     let geometry;
@@ -110,9 +164,24 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     if (marker.type === 'start') {
       geometry = new THREE.CylinderGeometry(0.75, 0.75, marker.height, 20);
       material = materials.start;
-    } else {
+    } else if (marker.type === 'goal') {
       geometry = new THREE.ConeGeometry(0.8, marker.height * 1.5, 20);
       material = materials.goal;
+    } else if (marker.type === 'enemy') {
+      geometry = new THREE.OctahedronGeometry(0.72, 0);
+      material = materials.enemy;
+    } else if (marker.type === 'treasure') {
+      geometry = new THREE.BoxGeometry(1.0, marker.height, 0.78);
+      material = materials.treasure;
+    } else if (marker.type === 'trap') {
+      geometry = new THREE.CylinderGeometry(0.82, 0.82, marker.height, 6);
+      material = materials.trap;
+    } else if (marker.type === 'recovery') {
+      geometry = new THREE.IcosahedronGeometry(0.58, 0);
+      material = materials.recovery;
+    } else {
+      geometry = new THREE.SphereGeometry(0.5, 12, 8);
+      material = materials.room;
     }
 
     const mesh = new THREE.Mesh(geometry, material);
@@ -126,14 +195,40 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     targetMap.set(marker.specId, group);
   }
 
-  function buildStagingScene(plan) {
+  function buildStagingScene(plan, { resultMode = false, entityStates = null } = {}) {
     const stagingRoot = new THREE.Group();
     const stagingMap = new Map();
 
     try {
-      for (const room of plan.roomGroups) addBoxGroup(stagingRoot, stagingMap, room, materials.room);
-      for (const corridor of plan.corridorGroups) addBoxGroup(stagingRoot, stagingMap, corridor, materials.corridor);
-      for (const marker of plan.markers) addMarker(stagingRoot, stagingMap, marker);
+      for (const room of plan.roomGroups) {
+        const material = room.visibilityState === 'current'
+          ? materials.roomCurrent
+          : room.visibilityState === 'explored'
+            ? materials.roomExplored
+            : materials.room;
+        addBoxGroup(stagingRoot, stagingMap, room, material);
+      }
+      for (const corridor of plan.corridorGroups) {
+        const material = corridor.visibilityState === 'explored' ? materials.corridorExplored : materials.corridor;
+        addBoxGroup(stagingRoot, stagingMap, corridor, material);
+      }
+      for (const marker of plan.markers) addMarker(stagingRoot, stagingMap, marker, entityStates);
+
+      if (plan.visibility?.currentRoomId) {
+        const currentRoom = plan.roomGroups.find((group) => group.specId === plan.visibility.currentRoomId);
+        const floor = currentRoom?.boxes?.find((box) => box.part === 'floor');
+        if (floor) {
+          const ring = new THREE.Mesh(
+            new THREE.RingGeometry(resultMode ? 0.88 : 0.82, resultMode ? 1.2 : 1.12, 32),
+            resultMode ? materials.resultRing : materials.currentRing,
+          );
+          ring.name = 'current-room-ring';
+          ring.rotation.x = -Math.PI / 2;
+          ring.position.set(floor.position.x, 0.025, floor.position.z);
+          stagingRoot.add(ring);
+        }
+      }
+
       return { stagingRoot, stagingMap };
     } catch (error) {
       disposeObjectTree(stagingRoot);
@@ -141,10 +236,15 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     }
   }
 
-  function fitCamera(bounds) {
-    const span = Math.max(bounds.width, bounds.depth, 16);
-    const distance = span * 1.25;
-    camera.position.set(bounds.centerX + distance * 0.45, distance * 0.8, bounds.centerZ + distance);
+  function fitCamera(bounds, { playMode = false } = {}) {
+    const minimumSpan = playMode ? 16 : 16;
+    const span = Math.max(bounds.width, bounds.depth, minimumSpan);
+    const distance = span * (playMode ? 1.05 : 1.25);
+    camera.position.set(
+      bounds.centerX + distance * (playMode ? 0.34 : 0.45),
+      distance * (playMode ? 0.7 : 0.8),
+      bounds.centerZ + distance * (playMode ? 0.92 : 1),
+    );
     camera.lookAt(bounds.centerX, 0, bounds.centerZ);
   }
 
@@ -152,10 +252,11 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     renderer.render(scene, camera);
   }
 
-  function render(spec) {
+  function render(spec, { visibility = null, resultMode = false, entityStates = null } = {}) {
     assertAlive();
-    const plan = createDungeonScenePlan(spec);
-    const { stagingRoot, stagingMap } = buildStagingScene(plan);
+    const fullPlan = createDungeonScenePlan(spec);
+    const plan = visibility ? projectDungeonScenePlan(fullPlan, visibility) : fullPlan;
+    const { stagingRoot, stagingMap } = buildStagingScene(plan, { resultMode, entityStates });
 
     clearRenderedSpec();
     for (const child of [...stagingRoot.children]) {
@@ -164,7 +265,7 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     }
     for (const [specId, object] of stagingMap) runtimeBySpecId.set(specId, object);
 
-    fitCamera(plan.bounds);
+    fitCamera(plan.bounds, { playMode: Boolean(visibility) });
     lastPlan = plan;
     draw();
 

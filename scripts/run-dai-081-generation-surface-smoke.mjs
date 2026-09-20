@@ -36,6 +36,27 @@ async function waitForServer(url, timeoutMs = 30_000) {
   throw new Error(`generation preview server did not become ready.\n${viteOutput}`);
 }
 
+async function resolveBlockingEvents(page) {
+  let guard = 0;
+  while (guard < 20) {
+    guard += 1;
+    const enemy = page.locator('.room-event.is-blocking [data-action="clear-enemy"]').first();
+    if (await enemy.count()) {
+      await enemy.click();
+      await page.waitForTimeout(25);
+      continue;
+    }
+    const trap = page.locator('.room-event.is-blocking [data-action="avoid-trap"]').first();
+    if (await trap.count()) {
+      await trap.click();
+      await page.waitForTimeout(25);
+      continue;
+    }
+    return;
+  }
+  throw new Error('Blocking room-event resolution exceeded guard.');
+}
+
 const url = `http://127.0.0.1:${port}/`;
 let browser;
 try {
@@ -126,6 +147,9 @@ try {
   const generated = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
   await page.screenshot({ path: path.join(outputDir, 'dai-081-generation-surface.png'), fullPage: true });
 
+  await page.click('[data-workflow-tab="edit"]');
+  await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().workflowTab === 'edit');
+
   await page.fill('#naturalEditInput', 'Move the treasure to the room that contains the goal.');
   await page.click('#applyNaturalEdit');
   await page.waitForFunction(() => {
@@ -135,10 +159,15 @@ try {
   });
   const afterEdit = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
 
+  await page.click('[data-workflow-tab="play"]');
+  await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().workflowTab === 'play');
+
   await page.click('#start');
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().mode === 'play');
   for (const roomId of ['room-002', 'room-003', 'room-004', 'room-005']) {
-    await page.evaluate((id) => window.__DAI_EDITOR_SLICE__.movePlayToRoom(id), roomId);
+    await resolveBlockingEvents(page);
+    const moved = await page.evaluate((id) => window.__DAI_EDITOR_SLICE__.movePlayToRoom(id), roomId);
+    if (!moved) throw new Error(`Play move blocked before ${roomId}`);
   }
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().result?.status === 'cleared');
   const result = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());

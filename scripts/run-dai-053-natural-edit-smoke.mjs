@@ -160,7 +160,13 @@ try {
   });
 
   await page.goto(editorUrl, { waitUntil: 'networkidle', timeout: 60_000 });
-  await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__?.ready === true, null, { timeout: 60_000 });
+  await page.waitForFunction(
+    () => window.__DAI_EDITOR_SLICE__?.ready === true && window.__DAI_ONBOARDING__?.ready === true,
+    null,
+    { timeout: 60_000 },
+  );
+  await page.evaluate(() => window.__DAI_ONBOARDING__.close());
+  await page.waitForFunction(() => window.__DAI_ONBOARDING__.getState().open === false);
   const startup = await page.evaluate(() => ({
     failed: window.__DAI_EDITOR_SLICE__.failed,
     message: window.__DAI_EDITOR_SLICE__.message ?? null,
@@ -171,6 +177,8 @@ try {
   const initialRoom = entityRoom(startup.state, 'treasure-1');
   if (initialRoom !== 'room-middle') throw new Error(`unexpected treasure start room: ${initialRoom}`);
 
+  await page.click('[data-workflow-tab="edit"]');
+  await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().workflowTab === 'edit');
   await page.fill('#naturalEditInput', testPrompt);
   await page.click('#applyNaturalEdit');
   await page.waitForFunction(() => {

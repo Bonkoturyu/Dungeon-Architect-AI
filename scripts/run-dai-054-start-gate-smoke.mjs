@@ -68,7 +68,13 @@ try {
   });
 
   await page.goto(url, { waitUntil: 'networkidle', timeout: 60_000 });
-  await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__?.ready === true, null, { timeout: 60_000 });
+  await page.waitForFunction(
+    () => window.__DAI_EDITOR_SLICE__?.ready === true && window.__DAI_ONBOARDING__?.ready === true,
+    null,
+    { timeout: 60_000 },
+  );
+  await page.evaluate(() => window.__DAI_ONBOARDING__.close());
+  await page.waitForFunction(() => window.__DAI_ONBOARDING__.getState().open === false);
 
   const startup = await page.evaluate(() => ({
     failed: window.__DAI_EDITOR_SLICE__.failed,
@@ -85,6 +91,8 @@ try {
     return window.__DAI_EDITOR_SLICE__.evaluateStartGateForSpec(spec);
   });
 
+  await page.click('[data-workflow-tab="play"]');
+  await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().workflowTab === 'play');
   const startEnabled = await page.locator('#start').isEnabled();
   await page.locator('#start').click();
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().mode === 'play');
@@ -98,15 +106,24 @@ try {
     applyNaturalEdit: document.querySelector('#applyNaturalEdit').disabled,
   }));
 
-  const middlePoint = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getScreenPositionForSpecId('room-middle'));
-  if (!middlePoint) throw new Error('room-middle screen position unavailable');
-  await page.mouse.click(middlePoint.x, middlePoint.y);
+  const middleMoved = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.movePlayToRoom('room-middle'));
+  if (!middleMoved) throw new Error('room-middle movement failed');
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().play?.currentRoomId === 'room-middle');
   const afterMiddle = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
 
-  const goalPoint = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getScreenPositionForSpecId('room-goal'));
-  if (!goalPoint) throw new Error('room-goal screen position unavailable');
-  await page.mouse.click(goalPoint.x, goalPoint.y);
+  const middleEnemy = afterMiddle.play?.snapshot?.entities.find(
+    (entity) => entity.type === 'enemy' && entity.roomId === 'room-middle',
+  ) ?? null;
+  if (middleEnemy) {
+    const clearedEnemy = await page.evaluate(
+      (enemyId) => window.__DAI_EDITOR_SLICE__.clearEnemy(enemyId),
+      middleEnemy.id,
+    );
+    if (!clearedEnemy) throw new Error(`failed to clear blocking enemy: ${middleEnemy.id}`);
+  }
+
+  const goalMoved = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.movePlayToRoom('room-goal'));
+  if (!goalMoved) throw new Error('room-goal movement failed');
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().mode === 'result');
   const afterGoal = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
 

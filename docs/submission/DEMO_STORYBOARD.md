@@ -1,8 +1,8 @@
 # Demo Storyboard
 
-**Status: DAI-082 FINAL CAPTURE ACCEPTED.**
+**Status: REFRESH REQUIRED AFTER DAI-085–088 POLISH.**
 
-Requirement: **under 3 minutes**. Final reviewed capture: **49.5 seconds**.
+Requirement: **under 3 minutes**. The previously accepted 49.5-second capture remains historical evidence for the pre-polish candidate and must not be treated as the final post-polish submission video.
 
 Use the actual public candidate:
 
@@ -19,7 +19,7 @@ The pre-DAI-026 and misframed interim captures are rejected. The accepted captur
 2. **0:08–0:32 — Describe / Generate**
    - enter the verified generation prompt;
    - click Generate dungeon;
-   - hold the generated 3D dungeon and `Validation: PASS`;
+   - hold the generated 3D dungeon and `✓ Valid`;
    - make sure the corrected orthogonal alternate route is visibly coherent.
 
 3. **0:32–0:48 — Generated state**
@@ -35,13 +35,15 @@ The pre-DAI-026 and misframed interim captures are rejected. The accepted captur
    - apply;
    - show `applied: move-entity`.
 
-6. **1:30–2:00 — START / Play**
-   - press START;
-   - traverse the actual graph-resolved connected route;
+6. **1:30–2:00 — Test / Explore**
+   - select **Play** and press **▶ Test**;
+   - show Fog of War / auto-map;
+   - resolve a visible blocking Room Event when present;
+   - traverse the graph-resolved route using the directional **CHOOSE EXIT** pad;
    - reach Goal.
 
 7. **2:00–2:12 — Result**
-   - hold `RESULT: cleared`.
+   - hold `✓ CLEARED` and the compact ENEMY / CHEST / TRAP metrics.
 
 8. **2:12–2:22 — Return to Edit**
    - return to authoring view.
@@ -52,6 +54,6 @@ The pre-DAI-026 and misframed interim captures are rejected. The accepted captur
 
 ## Recording rule
 
-Record the real hosted candidate after Cloudflare has deployed DAI-026. Cuts/titles/narration are allowed, but do not use the rejected pre-DAI-026 capture or isolated harnesses as judge-facing footage.
+Record the real hosted candidate only after the DAI-085–088 polish branch is merged, Cloudflare has deployed it, and refreshed DAI-081 public E2E passes. Cuts/titles/narration are allowed, but do not use the historical pre-polish capture as the final judge-facing video.
 
 See `docs/testing/DAI-082_VIDEO.md`.

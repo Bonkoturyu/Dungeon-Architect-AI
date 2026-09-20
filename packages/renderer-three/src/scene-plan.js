@@ -279,6 +279,91 @@ function buildRoomGroup(room, doorOpenings, config) {
   };
 }
 
+
+function boundsFromPlanGroups(roomGroups, corridorGroups, fallbackBounds) {
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minZ = Infinity;
+  let maxZ = -Infinity;
+
+  for (const group of [...roomGroups, ...corridorGroups]) {
+    for (const box of group.boxes ?? []) {
+      const rotationY = box.rotationY ?? 0;
+      const cos = Math.cos(rotationY);
+      const sin = Math.sin(rotationY);
+      const halfX = (Math.abs(cos) * box.size.x + Math.abs(sin) * box.size.z) / 2;
+      const halfZ = (Math.abs(sin) * box.size.x + Math.abs(cos) * box.size.z) / 2;
+      minX = Math.min(minX, box.position.x - halfX);
+      maxX = Math.max(maxX, box.position.x + halfX);
+      minZ = Math.min(minZ, box.position.z - halfZ);
+      maxZ = Math.max(maxZ, box.position.z + halfZ);
+    }
+  }
+
+  if (![minX, maxX, minZ, maxZ].every(Number.isFinite)) return { ...fallbackBounds };
+
+  return {
+    minX,
+    maxX,
+    minZ,
+    maxZ,
+    centerX: (minX + maxX) / 2,
+    centerZ: (minZ + maxZ) / 2,
+    width: maxX - minX,
+    depth: maxZ - minZ,
+  };
+}
+
+export function projectDungeonScenePlan(plan, visibility) {
+  if (!visibility) return plan;
+  if (!plan || typeof plan !== 'object') throw new TypeError('projectDungeonScenePlan requires a scene plan.');
+
+  const roomIds = new Set(Array.isArray(visibility.roomIds) ? visibility.roomIds : []);
+  const corridorIds = new Set(Array.isArray(visibility.corridorIds) ? visibility.corridorIds : []);
+  const currentRoomId = typeof visibility.currentRoomId === 'string' ? visibility.currentRoomId : null;
+
+  const roomGroups = plan.roomGroups
+    .filter((group) => roomIds.has(group.specId))
+    .map((group) => ({
+      ...group,
+      visibilityState: group.specId === currentRoomId ? 'current' : 'explored',
+    }));
+
+  const corridorGroups = plan.corridorGroups
+    .filter((group) => corridorIds.has(group.specId))
+    .map((group) => ({ ...group, visibilityState: 'explored' }));
+
+  const markers = plan.markers.filter((marker) => roomIds.has(marker.roomId));
+  const bounds = boundsFromPlanGroups(roomGroups, corridorGroups, plan.bounds);
+
+  return {
+    ...plan,
+    roomGroups,
+    corridorGroups,
+    markers,
+    bounds,
+    visibility: {
+      roomIds: [...roomIds],
+      corridorIds: [...corridorIds],
+      currentRoomId,
+    },
+  };
+}
+
+export function shouldRenderMarkerForRuntime(marker, entityStates) {
+  if (!marker || !entityStates) return true;
+
+  const state = entityStates[marker.specId] ?? null;
+  if (marker.type === 'enemy') {
+    const status = state?.status ?? (marker.initiallyActive === false ? 'dormant' : 'active');
+    return status === 'active';
+  }
+  if (marker.type === 'treasure') return state?.status !== 'opened';
+  if (marker.type === 'trap') return state?.status == null || state.status === 'armed';
+  if (marker.type === 'recovery') return state?.status !== 'used';
+  return true;
+}
+
 export function createDungeonScenePlan(spec, style = {}) {
   const validation = validateDungeonSpec(spec);
   if (!validation.valid) throw new DungeonScenePlanError(validation.errors);
@@ -290,6 +375,8 @@ export function createDungeonScenePlan(spec, style = {}) {
   const roomGroups = spec.rooms.map((room) => buildRoomGroup(room, doorOpeningsByRoom.get(room.id) ?? [], config));
   const corridorGroups = [];
   const markers = [];
+  const entitiesByRoom = new Map(spec.rooms.map((room) => [room.id, []]));
+  for (const entity of spec.entities) entitiesByRoom.get(entity.roomId)?.push(entity);
 
   for (const corridor of spec.corridors) {
     const route = corridorRoutes.get(corridor.id);
@@ -366,15 +453,41 @@ export function createDungeonScenePlan(spec, style = {}) {
     });
   }
 
-  for (const entity of spec.entities) {
-    if (entity.type !== 'start' && entity.type !== 'goal') continue;
-    const room = roomById.get(entity.roomId);
-    markers.push({
-      specId: entity.id,
-      roomId: entity.roomId,
-      type: entity.type,
-      position: { x: room.x, y: config.markerHeight / 2, z: room.z },
-      height: config.markerHeight,
+  const markerSlots = [
+    { x: 0, z: 0 },
+    { x: -0.24, z: -0.2 },
+    { x: 0.24, z: -0.2 },
+    { x: -0.24, z: 0.2 },
+    { x: 0.24, z: 0.2 },
+    { x: 0, z: 0.28 },
+    { x: 0, z: -0.28 },
+  ];
+
+  for (const room of spec.rooms) {
+    const entities = [...(entitiesByRoom.get(room.id) ?? [])]
+      .sort((a, b) => {
+        const order = { start: 0, goal: 1, enemy: 2, treasure: 3, trap: 4, recovery: 5 };
+        return (order[a.type] ?? 99) - (order[b.type] ?? 99) || a.id.localeCompare(b.id);
+      });
+
+    entities.forEach((entity, index) => {
+      const slot = markerSlots[index % markerSlots.length];
+      const height = entity.type === 'trap' ? 0.18 : entity.type === 'treasure' ? 0.7 : config.markerHeight;
+      markers.push({
+        specId: entity.id,
+        roomId: entity.roomId,
+        type: entity.type,
+        position: {
+          x: room.x + slot.x * Math.max(2, room.width),
+          y: height / 2,
+          z: room.z + slot.z * Math.max(2, room.depth),
+        },
+        height,
+        warning: entity.warning ?? null,
+        ...(entity.type === 'enemy'
+          ? { initiallyActive: entity.initiallyActive !== false }
+          : {}),
+      });
     });
   }
 
