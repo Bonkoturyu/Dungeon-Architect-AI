@@ -361,6 +361,8 @@ export function createDungeonScenePlan(spec, style = {}) {
   const roomGroups = spec.rooms.map((room) => buildRoomGroup(room, doorOpeningsByRoom.get(room.id) ?? [], config));
   const corridorGroups = [];
   const markers = [];
+  const entitiesByRoom = new Map(spec.rooms.map((room) => [room.id, []]));
+  for (const entity of spec.entities) entitiesByRoom.get(entity.roomId)?.push(entity);
 
   for (const corridor of spec.corridors) {
     const route = corridorRoutes.get(corridor.id);
@@ -437,15 +439,38 @@ export function createDungeonScenePlan(spec, style = {}) {
     });
   }
 
-  for (const entity of spec.entities) {
-    if (entity.type !== 'start' && entity.type !== 'goal') continue;
-    const room = roomById.get(entity.roomId);
-    markers.push({
-      specId: entity.id,
-      roomId: entity.roomId,
-      type: entity.type,
-      position: { x: room.x, y: config.markerHeight / 2, z: room.z },
-      height: config.markerHeight,
+  const markerSlots = [
+    { x: 0, z: 0 },
+    { x: -0.24, z: -0.2 },
+    { x: 0.24, z: -0.2 },
+    { x: -0.24, z: 0.2 },
+    { x: 0.24, z: 0.2 },
+    { x: 0, z: 0.28 },
+    { x: 0, z: -0.28 },
+  ];
+
+  for (const room of spec.rooms) {
+    const entities = [...(entitiesByRoom.get(room.id) ?? [])]
+      .sort((a, b) => {
+        const order = { start: 0, goal: 1, enemy: 2, treasure: 3, trap: 4, recovery: 5 };
+        return (order[a.type] ?? 99) - (order[b.type] ?? 99) || a.id.localeCompare(b.id);
+      });
+
+    entities.forEach((entity, index) => {
+      const slot = markerSlots[index % markerSlots.length];
+      const height = entity.type === 'trap' ? 0.18 : entity.type === 'treasure' ? 0.7 : config.markerHeight;
+      markers.push({
+        specId: entity.id,
+        roomId: entity.roomId,
+        type: entity.type,
+        position: {
+          x: room.x + slot.x * Math.max(2, room.width),
+          y: height / 2,
+          z: room.z + slot.z * Math.max(2, room.depth),
+        },
+        height,
+        warning: entity.warning ?? null,
+      });
     });
   }
 
