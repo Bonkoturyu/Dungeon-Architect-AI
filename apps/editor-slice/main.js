@@ -1355,6 +1355,8 @@ async function run() {
       failed: false,
       getState: snapshotState,
       getScreenPositionForSpecId: (id) => adapter.getScreenPositionForSpecId(id),
+      getCameraState: () => adapter.getCameraState(),
+      getRenderedSelection: () => adapter.selectedSpecId,
       selectRoom,
       selectEntity,
       resizeSelectedRoom,
