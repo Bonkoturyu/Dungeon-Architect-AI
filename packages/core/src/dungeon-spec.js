@@ -190,6 +190,27 @@ function validateEntities(entities, ids, roomIds, entityIds, entityTypeById, err
   if (goalCount !== 1) {
     pushError(errors, "GOAL_COUNT_INVALID", "entities", `Exactly one goal entity is required; found ${goalCount}.`);
   }
+
+  if (startCount === 1 && goalCount === 1) {
+    const start = entities.find((entity) => entity?.type === "start");
+    const goal = entities.find((entity) => entity?.type === "goal");
+    if (
+      start &&
+      goal &&
+      typeof start.roomId === "string" &&
+      typeof goal.roomId === "string" &&
+      roomIds.has(start.roomId) &&
+      roomIds.has(goal.roomId) &&
+      start.roomId === goal.roomId
+    ) {
+      pushError(
+        errors,
+        "START_GOAL_SAME_ROOM",
+        "entities",
+        `Start and Goal must be in different rooms; both reference ${start.roomId}.`
+      );
+    }
+  }
 }
 
 function validateReachability(spec, roomIds, errors) {
