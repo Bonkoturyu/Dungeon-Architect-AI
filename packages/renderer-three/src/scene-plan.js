@@ -350,6 +350,20 @@ export function projectDungeonScenePlan(plan, visibility) {
   };
 }
 
+export function shouldRenderMarkerForRuntime(marker, entityStates) {
+  if (!marker || !entityStates) return true;
+
+  const state = entityStates[marker.specId] ?? null;
+  if (marker.type === 'enemy') {
+    const status = state?.status ?? (marker.initiallyActive === false ? 'dormant' : 'active');
+    return status === 'active';
+  }
+  if (marker.type === 'treasure') return state?.status !== 'opened';
+  if (marker.type === 'trap') return state?.status == null || state.status === 'armed';
+  if (marker.type === 'recovery') return state?.status !== 'used';
+  return true;
+}
+
 export function createDungeonScenePlan(spec, style = {}) {
   const validation = validateDungeonSpec(spec);
   if (!validation.valid) throw new DungeonScenePlanError(validation.errors);
@@ -470,6 +484,9 @@ export function createDungeonScenePlan(spec, style = {}) {
         },
         height,
         warning: entity.warning ?? null,
+        ...(entity.type === 'enemy'
+          ? { initiallyActive: entity.initiallyActive !== false }
+          : {}),
       });
     });
   }
