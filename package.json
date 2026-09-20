@@ -54,7 +54,8 @@
     "validate:video-plan": "node scripts/run-dai-082-video-plan-audit.mjs",
     "validate:submission-metadata": "node scripts/run-dai-083-submission-metadata-audit.mjs",
     "smoke:ui-ux-polish": "node scripts/run-ui-ux-polish-smoke.mjs",
-    "smoke:exploration-ux": "node scripts/run-dai-086-exploration-smoke.mjs"
+    "smoke:exploration-ux": "node scripts/run-dai-086-exploration-smoke.mjs",
+    "smoke:room-events": "node scripts/run-dai-087-room-events-smoke.mjs"
   },
   "devDependencies": {
     "@babylonjs/core": "9.18.0",
