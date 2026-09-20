@@ -53,6 +53,8 @@ try {
   await page.waitForFunction(() => window.__DAI_ONBOARDING__.getState().open === false);
 
   const initialTreasureRoom = entityRoom(initial.editor, 'treasure-1');
+  await page.click('[data-workflow-tab="edit"]');
+  await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().workflowTab === 'edit');
   await page.fill('#naturalEditInput', testPrompt);
   await page.click('#applyNaturalEdit');
   await page.waitForFunction(() => {
