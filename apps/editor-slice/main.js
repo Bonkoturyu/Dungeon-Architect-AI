@@ -1044,7 +1044,7 @@ async function applyNaturalEdit() {
     lastNaturalEditCommand = { ...command };
     if (command.type === 'move-entity') {
       selectedEntityId = command.entityId;
-      selectedRoomId = command.roomId;
+      selectedRoomId = null;
     }
     naturalEditInput.value = '';
     clearPathCheck();
