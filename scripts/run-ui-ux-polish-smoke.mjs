@@ -101,6 +101,8 @@ try {
       .filter((node) => getComputedStyle(node).display === 'none').length;
     const validation = document.querySelector('#validationStatus');
     const exitPad = document.querySelector('#playExitButtons')?.getBoundingClientRect();
+    const metricText = document.querySelector('#playStatus')?.innerText ?? '';
+    const asideStyle = getComputedStyle(document.querySelector('aside'));
     return {
       bodyMode: document.body.dataset.mode,
       viewportWidth: viewport.width,
@@ -108,7 +110,8 @@ try {
       hiddenEditorPanels,
       viewportHelp: document.querySelector('#viewportHelp')?.textContent ?? '',
       validationHidden: getComputedStyle(validation).display === 'none',
-      playMetrics: document.querySelector('#playStatus')?.textContent ?? '',
+      playMetrics: metricText,
+      playAsidePosition: asideStyle.position,
       exitPadWidth: exitPad?.width ?? 0,
       exitPadHeight: exitPad?.height ?? 0,
       horizontalOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -202,13 +205,16 @@ try {
     playInstructionIsModeAware: playLayout.viewportHelp.includes('Auto-map'),
     playPanelCompact:
       playLayout.validationHidden === true &&
-      playLayout.playMetrics.includes('👣') &&
-      playLayout.playMetrics.includes('🗺'),
+      playLayout.playMetrics.includes('↠') &&
+      playLayout.playMetrics.includes('▦') &&
+      playLayout.playAsidePosition === 'absolute',
     spatialExitPadPresent:
-      playLayout.exitPadWidth >= 160 &&
-      playLayout.exitPadHeight >= 160,
+      playLayout.exitPadWidth >= 130 &&
+      playLayout.exitPadWidth <= 150 &&
+      playLayout.exitPadHeight >= 130 &&
+      playLayout.exitPadHeight <= 150,
     resultModeApplied: resultLayout.bodyMode === 'result',
-    resultVisible: resultLayout.resultText.includes('CLEARED') && resultLayout.playText.includes('👣'),
+    resultVisible: resultLayout.resultText.includes('CLEARED') && resultLayout.playText.includes('↠'),
     authoringPanelsHiddenInResult: resultLayout.editorPanelsHidden === true,
     resultInstructionIsModeAware: resultLayout.viewportHelp.toLowerCase().includes('run complete'),
     returnToEditRestoresMode: returnedMode === 'edit',
