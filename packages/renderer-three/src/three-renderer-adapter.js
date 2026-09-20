@@ -65,6 +65,34 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     corridorExplored: new THREE.MeshStandardMaterial({ color: 0x566477, roughness: 0.96, metalness: 0 }),
     start: new THREE.MeshStandardMaterial({ color: 0x58d68d, roughness: 0.68, metalness: 0 }),
     goal: new THREE.MeshStandardMaterial({ color: 0xf1c75b, roughness: 0.62, metalness: 0 }),
+    enemy: new THREE.MeshStandardMaterial({
+      color: 0xe36d73,
+      roughness: 0.72,
+      metalness: 0,
+      emissive: 0x4a171d,
+      emissiveIntensity: 0.28,
+    }),
+    treasure: new THREE.MeshStandardMaterial({
+      color: 0xe2b85f,
+      roughness: 0.58,
+      metalness: 0.12,
+      emissive: 0x49350f,
+      emissiveIntensity: 0.18,
+    }),
+    trap: new THREE.MeshStandardMaterial({
+      color: 0xd9825b,
+      roughness: 0.8,
+      metalness: 0,
+      emissive: 0x3d1f12,
+      emissiveIntensity: 0.2,
+    }),
+    recovery: new THREE.MeshStandardMaterial({
+      color: 0x69c9d4,
+      roughness: 0.64,
+      metalness: 0,
+      emissive: 0x123c42,
+      emissiveIntensity: 0.24,
+    }),
   };
 
   const runtimeBySpecId = new Map();
@@ -122,7 +150,19 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     targetMap.set(definition.specId, group);
   }
 
-  function addMarker(targetRoot, targetMap, marker) {
+  function markerResolved(marker, entityStates) {
+    if (!entityStates || !marker) return false;
+    const state = entityStates[marker.specId];
+    if (!state) return false;
+    if (marker.type === 'enemy') return state.status === 'defeated';
+    if (marker.type === 'treasure') return state.status === 'opened';
+    if (marker.type === 'trap') return state.status && state.status !== 'armed';
+    if (marker.type === 'recovery') return state.status === 'used';
+    return false;
+  }
+
+  function addMarker(targetRoot, targetMap, marker, entityStates = null) {
+    if (markerResolved(marker, entityStates)) return;
     const group = makeSpecGroup(marker.specId, marker.type);
     group.userData.roomId = marker.roomId;
     let geometry;
@@ -131,9 +171,24 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     if (marker.type === 'start') {
       geometry = new THREE.CylinderGeometry(0.75, 0.75, marker.height, 20);
       material = materials.start;
-    } else {
+    } else if (marker.type === 'goal') {
       geometry = new THREE.ConeGeometry(0.8, marker.height * 1.5, 20);
       material = materials.goal;
+    } else if (marker.type === 'enemy') {
+      geometry = new THREE.OctahedronGeometry(0.72, 0);
+      material = materials.enemy;
+    } else if (marker.type === 'treasure') {
+      geometry = new THREE.BoxGeometry(1.0, marker.height, 0.78);
+      material = materials.treasure;
+    } else if (marker.type === 'trap') {
+      geometry = new THREE.CylinderGeometry(0.82, 0.82, marker.height, 6);
+      material = materials.trap;
+    } else if (marker.type === 'recovery') {
+      geometry = new THREE.IcosahedronGeometry(0.58, 0);
+      material = materials.recovery;
+    } else {
+      geometry = new THREE.SphereGeometry(0.5, 12, 8);
+      material = materials.room;
     }
 
     const mesh = new THREE.Mesh(geometry, material);
@@ -147,7 +202,7 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     targetMap.set(marker.specId, group);
   }
 
-  function buildStagingScene(plan, { resultMode = false } = {}) {
+  function buildStagingScene(plan, { resultMode = false, entityStates = null } = {}) {
     const stagingRoot = new THREE.Group();
     const stagingMap = new Map();
 
@@ -164,7 +219,7 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
         const material = corridor.visibilityState === 'explored' ? materials.corridorExplored : materials.corridor;
         addBoxGroup(stagingRoot, stagingMap, corridor, material);
       }
-      for (const marker of plan.markers) addMarker(stagingRoot, stagingMap, marker);
+      for (const marker of plan.markers) addMarker(stagingRoot, stagingMap, marker, entityStates);
 
       if (plan.visibility?.currentRoomId) {
         const currentRoom = plan.roomGroups.find((group) => group.specId === plan.visibility.currentRoomId);
@@ -204,11 +259,11 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     renderer.render(scene, camera);
   }
 
-  function render(spec, { visibility = null, resultMode = false } = {}) {
+  function render(spec, { visibility = null, resultMode = false, entityStates = null } = {}) {
     assertAlive();
     const fullPlan = createDungeonScenePlan(spec);
     const plan = visibility ? projectDungeonScenePlan(fullPlan, visibility) : fullPlan;
-    const { stagingRoot, stagingMap } = buildStagingScene(plan, { resultMode });
+    const { stagingRoot, stagingMap } = buildStagingScene(plan, { resultMode, entityStates });
 
     clearRenderedSpec();
     for (const child of [...stagingRoot.children]) {
