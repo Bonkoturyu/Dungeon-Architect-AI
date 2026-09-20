@@ -311,6 +311,11 @@ try {
   mark('natural-edit-applied');
   await wait(3500);
 
+  await page.click('[data-workflow-tab="play"]');
+  await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().workflowTab === 'play');
+  mark('play-tab-selected');
+  await wait(800);
+
   await page.click('#start');
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().mode === 'play', null, { timeout: 30_000 });
   mark('play-started');
