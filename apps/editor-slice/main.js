@@ -853,10 +853,17 @@ function checkStartGoalPath() {
     return roomId;
   }).join(' → ');
 
+  const startEntity = spec.entities.find((entity) => entity.type === 'start');
+  const goalEntity = spec.entities.find((entity) => entity.type === 'goal');
   pathCheckResult = {
     reachable: true,
     ...path,
-    highlightIds: [...path.roomIds, ...path.corridorIds],
+    highlightIds: [
+      ...path.roomIds,
+      ...path.corridorIds,
+      startEntity?.id,
+      goalEntity?.id,
+    ].filter(Boolean),
   };
   pathStatus.textContent = `✓ Reachable · ${path.moves} move${path.moves === 1 ? '' : 's'}\n${routeText}`;
   adapter.setHighlightedSpecIds(pathCheckResult.highlightIds);
@@ -1136,6 +1143,10 @@ function beginPlay(spec, source) {
     setEditStatus(`Play blocked: ${result.errors?.[0]?.code ?? 'VALIDATION'}`);
     return false;
   }
+
+  pathCheckResult = null;
+  if (pathStatus) pathStatus.textContent = 'Path not checked.';
+  adapter.setHighlightedSpecIds([]);
 
   playSession = result.session;
   playActionClock = Number.isFinite(playSession.startedAt) ? playSession.startedAt : 0;
