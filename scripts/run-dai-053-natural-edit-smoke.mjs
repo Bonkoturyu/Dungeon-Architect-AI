@@ -171,6 +171,8 @@ try {
   const initialRoom = entityRoom(startup.state, 'treasure-1');
   if (initialRoom !== 'room-middle') throw new Error(`unexpected treasure start room: ${initialRoom}`);
 
+  await page.click('[data-workflow-tab="edit"]');
+  await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().workflowTab === 'edit');
   await page.fill('#naturalEditInput', testPrompt);
   await page.click('#applyNaturalEdit');
   await page.waitForFunction(() => {
