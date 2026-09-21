@@ -130,11 +130,18 @@ export function grantProgressionReward(
     !Number.isSafeInteger(player.level) ||
     !Number.isSafeInteger(player.xp) ||
     !Number.isSafeInteger(player.gold) ||
+    !player.equipment ||
+    typeof player.equipment !== "object" ||
+    Array.isArray(player.equipment) ||
     player.level <= 0 ||
     player.xp < 0 ||
     player.gold < 0
   ) {
     return { ok: false, error: { code: "PLAYER_PROGRESSION_INVALID", message: "Player progression state is invalid." } };
+  }
+
+  if (!Number.isSafeInteger(player.xp + xp) || !Number.isSafeInteger(player.gold + gold)) {
+    return { ok: false, error: { code: "PROGRESSION_OVERFLOW", message: "Progression reward would overflow safe integer state." } };
   }
 
   player.xp += xp;
