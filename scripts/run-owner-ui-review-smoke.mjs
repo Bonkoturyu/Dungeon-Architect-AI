@@ -292,6 +292,7 @@ try {
   await page.click('#returnEdit');
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().mode === 'edit');
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().workflowTab === 'edit');
+  const afterMysteryReturn = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
 
   const sidebarHierarchy = await page.evaluate(() => {
     const goal = document.querySelector('.goal-check-card').getBoundingClientRect();
@@ -917,6 +918,39 @@ try {
       mystery.play.snapshot.seed !== authoringSeed &&
       mystery.play.map.exploredRoomIds.length === 1 &&
       mysteryCoverHidden === true,
+    mysteryReturnAdoptsPlayedSnapshot:
+      afterMysteryReturn.mode === 'edit' &&
+      afterMysteryReturn.workflowTab === 'edit' &&
+      afterMysteryReturn.authoringPreviewConcealed === false &&
+      afterMysteryReturn.lastGeneration?.seed === mystery.play.snapshot.seed &&
+      afterMysteryReturn.canUndo === false &&
+      JSON.stringify(afterMysteryReturn.rooms) === JSON.stringify(
+        mystery.play.snapshot.rooms.map((room) => ({
+          id: room.id,
+          x: room.x,
+          z: room.z,
+          width: room.width,
+          depth: room.depth,
+        })),
+      ) &&
+      JSON.stringify(afterMysteryReturn.corridors) === JSON.stringify(
+        mystery.play.snapshot.corridors.map((corridor) => ({
+          id: corridor.id,
+          fromRoomId: corridor.fromRoomId,
+          toRoomId: corridor.toRoomId,
+          width: corridor.width,
+          kind: corridor.kind ?? null,
+          fromSide: corridor.fromSide ?? null,
+          toSide: corridor.toSide ?? null,
+        })),
+      ) &&
+      JSON.stringify(afterMysteryReturn.entities) === JSON.stringify(
+        mystery.play.snapshot.entities.map((entity) => ({
+          id: entity.id,
+          type: entity.type,
+          roomId: entity.roomId,
+        })),
+      ),
     roomListMarksStartAndGoal:
       roomOptionText.some((text) => /start/i.test(text)) &&
       roomOptionText.some((text) => /goal/i.test(text)),
@@ -1109,6 +1143,7 @@ try {
     goalAfterOwnerUp,
     generatedGoalRoomInspectorTab,
     concealedGoalCheck,
+    afterMysteryReturn,
     touchingRoomMiddle: touchingState.rooms.find((room) => room.id === 'room-middle'),
     touchingCorridorVisiblePoint,
     afterBlockedTouchMove,
