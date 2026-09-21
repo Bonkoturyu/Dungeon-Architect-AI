@@ -452,10 +452,23 @@ export function createDungeonScenePlan(spec, style = {}) {
     else routedCorridors.push(corridor);
   }
 
-  const corridorRoutes = planOrthogonalCorridors({
-    ...spec,
-    corridors: routedCorridors,
-  });
+  let corridorRoutes;
+  let routingFallbackUsed = false;
+  try {
+    corridorRoutes = planOrthogonalCorridors({
+      ...spec,
+      corridors: routedCorridors,
+    });
+  } catch {
+    corridorRoutes = planOrthogonalCorridors({
+      ...spec,
+      corridors: routedCorridors,
+    }, {
+      allowCrossings: true,
+      outerMargin: 14,
+    });
+    routingFallbackUsed = true;
+  }
 
   for (const corridor of spec.corridors) {
     const shared = touchingByCorridor.get(corridor.id);
@@ -600,5 +613,6 @@ export function createDungeonScenePlan(spec, style = {}) {
     corridorGroups,
     markers,
     bounds: makeBounds(spec.rooms, corridorRoutes),
+    routingFallbackUsed,
   };
 }
