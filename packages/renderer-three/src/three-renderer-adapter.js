@@ -160,6 +160,9 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
   let corridorDraftGroup = null;
   let corridorDraftTargetHelper = null;
   let hiddenDraftCorridorId = null;
+  let roomDraftRoomId = null;
+  let roomDraftEntityIds = [];
+  let roomDraftHelper = null;
 
   function assertAlive() {
     if (disposed) throw new Error('Three renderer adapter has been disposed.');
@@ -223,11 +226,33 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     draw();
   }
 
+  function clearRoomDraftPreview() {
+    if (roomDraftRoomId) {
+      const room = runtimeBySpecId.get(roomDraftRoomId);
+      if (room) room.position.set(0, 0, 0);
+    }
+    for (const entityId of roomDraftEntityIds) {
+      const entity = runtimeBySpecId.get(entityId);
+      if (entity) entity.position.set(0, 0, 0);
+    }
+    roomDraftRoomId = null;
+    roomDraftEntityIds = [];
+    if (roomDraftHelper) {
+      scene.remove(roomDraftHelper);
+      roomDraftHelper.geometry?.dispose();
+      roomDraftHelper.material?.dispose();
+      roomDraftHelper = null;
+    }
+    selectionHelper?.update?.();
+    draw();
+  }
+
   function clearRenderedSpec() {
     clearSelectionHelper();
     clearContextHelper();
     clearPathHelpers();
     clearCorridorDraftPreview();
+    clearRoomDraftPreview();
     selectedSpecId = null;
     for (const child of [...root.children]) {
       root.remove(child);
@@ -554,6 +579,52 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     draw();
   }
 
+  function setRoomDraftPreview({
+    roomId,
+    x,
+    z,
+    state = 'ready',
+  } = {}) {
+    assertAlive();
+    if (typeof roomId !== 'string' || !Number.isFinite(x) || !Number.isFinite(z)) return false;
+
+    if (roomDraftRoomId && roomDraftRoomId !== roomId) clearRoomDraftPreview();
+
+    const room = runtimeBySpecId.get(roomId);
+    const roomPlan = lastPlan?.roomGroups?.find((entry) => entry.specId === roomId);
+    const floor = roomPlan?.boxes?.find((box) => box.part === 'floor');
+    if (!room || !floor) return false;
+
+    const dx = x - floor.position.x;
+    const dz = z - floor.position.z;
+    room.position.set(dx, 0, dz);
+
+    roomDraftRoomId = roomId;
+    roomDraftEntityIds = [];
+    for (const [specId, object] of runtimeBySpecId) {
+      if (object.userData?.roomId !== roomId) continue;
+      object.position.set(dx, 0, dz);
+      roomDraftEntityIds.push(specId);
+    }
+
+    if (roomDraftHelper) {
+      scene.remove(roomDraftHelper);
+      roomDraftHelper.geometry?.dispose();
+      roomDraftHelper.material?.dispose();
+    }
+    roomDraftHelper = new THREE.BoxHelper(room, state === 'blocked' ? 0xff7373 : 0x78d89a);
+    roomDraftHelper.name = `room-draft:${roomId}`;
+    scene.add(roomDraftHelper);
+
+    selectionHelper?.update?.();
+    if (selectionFillHelper) {
+      selectionFillHelper.position.x = x;
+      selectionFillHelper.position.z = z;
+    }
+    draw();
+    return true;
+  }
+
   function setCameraControlsEnabled(enabled) {
     assertAlive();
     controls.enabled = enabled === true;
@@ -738,6 +809,8 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     getGroundPointAt,
     setCorridorDraftPreview,
     clearCorridorDraftPreview,
+    setRoomDraftPreview,
+    clearRoomDraftPreview,
     setCameraControlsEnabled,
     setSelectedSpecId,
     setContextSpecId,
