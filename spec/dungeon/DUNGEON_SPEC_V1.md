@@ -29,6 +29,13 @@ Clean-room production contract. No Pre experiment implementation is copied.
 
 Both room references must exist; a corridor cannot connect a room to itself.
 
+Optional manual-rendering preferences:
+
+- `fromSide`: `north | east | south | west`
+- `toSide`: `north | east | south | west`
+
+When omitted, the renderer/router chooses the doorway side automatically. These fields constrain only the endpoint wall used by the orthogonal corridor route; they do not change logical graph connectivity.
+
 ## Entities
 
 MVP v1 types:
