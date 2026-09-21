@@ -410,7 +410,7 @@ function updateUi() {
       : editing
         ? 'Drag orbit · Wheel zoom · WASD / Arrow keys move'
         : mode === 'play'
-          ? 'Auto-map'
+          ? 'WASD / Arrow keys · Auto-map'
           : 'Run complete';
   }
 
