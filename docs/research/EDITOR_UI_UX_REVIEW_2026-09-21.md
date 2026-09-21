@@ -155,9 +155,11 @@ The green state is therefore not a loose proximity hint. The editor builds the a
 
 Target-side semantics:
 
-- dropping on the target Room floor/body or a Room-bound Entity keeps the target doorway side **Auto**;
-- deliberately pointing at a target Room wall fixes that exact North/East/South/West side;
-- the source wall remains explicit because Corridor drafting starts from the wall the user dragged.
+- direct 3D drag always keeps the **target doorway side Auto**, regardless of which target Room surface the camera ray happens to hit;
+- the source wall remains explicit because Corridor drafting starts from the wall the user dragged;
+- users who want to pin the target doorway to North/East/South/West can do so afterward in the Corridor inspector.
+
+This deliberately avoids treating a perspective-dependent wall hit as user intent. A Room that visually looks like the drop target must not accidentally receive a fixed target wall merely because the camera ray intersected that wall before the floor.
 
 Room creation in the inspector uses four direct cardinal action buttons rather than a direction dropdown followed by a separate Add action.
 
