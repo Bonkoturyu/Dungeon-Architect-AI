@@ -15,6 +15,33 @@ Dungeon Architect AIで採用できるダンジョン生成方式を整理し、
 
 現行方式そのものの固定仕様は [GENERATOR_VERSIONS.md](../architecture/GENERATOR_VERSIONS.md) を参照。
 
+## Web再調査・出典確認
+
+2026-09-21 に以下の一次・準一次資料をWebで再確認した。
+
+- TU Delft / IEEE survey **Procedural Generation of Dungeons** — dungeon PCGの各方式を整理し、単なる生成速度よりもgameplay-related criteriaによる高水準制御が重要な研究課題だと整理している。
+  - https://research.tudelft.nl/en/publications/procedural-generation-of-dungeons/
+  - DOI: https://doi.org/10.1109/TCIAIG.2013.2290371
+- TU Delft / Springer chapter **Constructive generation methods for dungeons and levels** — constructive generatorを「固定された短い生成処理で、結果を評価して再生成する探索を基本的に行わない方式」と整理。
+  - https://research.tudelft.nl/en/publications/constructive-generation-methods-for-dungeons-and-levels/
+  - DOI: https://doi.org/10.1007/978-3-319-42716-4_3
+- AIIDE **Designing Procedurally Generated Levels** — gameplay constraintからgraph grammarとplayer action graphを生成し、dungeon crawlerのlayout/contentへ変換する例。
+  - https://ojs.aaai.org/index.php/AIIDE/article/view/12592
+- RogueBasin — BSP / Random Walk / Cellular Automata。
+  - https://roguebasin.com/index.php/Basic_BSP_Dungeon_generation
+  - https://roguebasin.com/index.php/Random_Walk_Cave_Generation
+  - https://www.roguebasin.com/index.php/Cellular_Automata_Method_for_Generating_Random_Cave-Like_Levels
+- Bob Nystrom — Rooms + Mazes。Roomとmaze regionをspanning-tree的に接続し、余分なconnectorを確率的に残してloopを作る構成を確認。
+  - https://journal.stuffwithstuff.com/2014/12/21/rooms-and-mazes/
+- Jamis Buck — Recursive Backtrackingなどmaze generation。
+  - https://weblog.jamisbuck.org/2010/12/27/maze-generation-recursive-backtracking
+- Maxim Gumin — WFC original repository。local pattern constraint / observation / propagationの基本方式を確認。
+  - https://github.com/mxgmn/WaveFunctionCollapse
+- Delaunay + MSTの実用例は、Three.jsの公開実装でscatter → separation → Delaunay → MST + loopsというpipelineを確認。
+  - https://github.com/majidmanzarpour/threejs-procedural-dungeon
+
+この資料では、学術資料を分類・設計上の根拠に優先し、RogueBasin / 技術記事 / 公開実装を実装パターンの参考として扱う。
+
 ---
 
 # 1. 現行方式 — Generator Version 1
@@ -57,7 +84,7 @@ Orthogonal Corridor Rendering
 - fresh SeedでもRoom全体の見た目が大きく変わりにくい
 - dead-endや大規模branch、自然なRoom散布はV1では主目的ではない
 
-特にMysteryについて、V1はfresh Seedでalternate routeやEntity placementは変化するが、serpentine Room layoutは変化しない。そのため「新しい未知のダンジョン」としての視覚差が弱い場合がある。これは将来Versionで改善候補。
+特にMysteryについて、V1はfresh Seedでalternate routeやEntity placementは変化するが、serpentine Room layoutは変化しない。そのため「新しい未知のダンジョン」としての視覚差が弱い場合がある。**V1を上書きせず、次Versionでspatial layout variabilityを導入する**ことを改善方針とする。
 
 ---
 
@@ -528,7 +555,7 @@ Graph Grammar
 
 ## Delaunay / MST implementation references
 
-- Three.js procedural dungeon example: scatter → separate → Delaunay → MST + loops  
+- Three.js procedural dungeon example: deterministic Seed、scatter → separate → Delaunay → MST + loops → semantics → carve の実装例  
   https://github.com/majidmanzarpour/threejs-procedural-dungeon
 - Unity procedural dungeon example using Delaunay + spanning tree  
   https://github.com/sharpaccent/Procedural-Dungeon-Generator
