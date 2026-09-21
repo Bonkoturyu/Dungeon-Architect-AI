@@ -238,7 +238,10 @@ function friendlyEditError(error) {
   const code = error?.code ?? 'EDIT_FAILED';
   const message = String(error?.message ?? '');
   if (code === 'START_GOAL_SAME_ROOM') return t('notice.sameRoom');
+  if (code === 'PROTECTED_ROOM') return t('notice.protectedRoom');
+  if (code === 'CORRIDOR_SIDE_INVALID') return t('notice.route');
   if (code === 'EDIT_RESULT_INVALID' && message.includes('ROOM_OVERLAP')) return t('notice.overlap');
+  if (code === 'EDIT_RESULT_INVALID' && message.includes('GOAL_UNREACHABLE')) return t('goal.unreachableDetail');
   if (code === 'ROOM_DIMENSION_INVALID') return t('notice.dimension');
   return `Blocked: ${code}`;
 }
@@ -908,13 +911,15 @@ function renderActiveSpec() {
   });
   ensureRoomOptions();
   ensureEntityOptions();
+  ensureCorridorOptions();
 
   const highlightId = mode === 'edit'
     ? (selectedEntityId ?? selectedRoomId ?? selectedCorridorId)
     : playSession?.currentRoomId ?? null;
   if (highlightId && (
     spec.rooms.some((room) => room.id === highlightId) ||
-    spec.entities.some((entity) => entity.id === highlightId)
+    spec.entities.some((entity) => entity.id === highlightId) ||
+    spec.corridors.some((corridor) => corridor.id === highlightId)
   )) {
     adapter.setSelectedSpecId(highlightId);
   } else {
@@ -964,6 +969,7 @@ function selectEntity(entityId) {
   const entity = entityId ? authoringSpec().entities.find((item) => item.id === entityId) : null;
   if (!entity) {
     selectedEntityId = null;
+    selectedCorridorId = null;
     entitySelect.selectedIndex = -1;
     ensureEntityOptions();
     updateUi();
@@ -1429,6 +1435,7 @@ async function generateDungeonFromPrompt() {
     session = new EditSession(generated.spec);
     selectedRoomId = null;
     selectedEntityId = null;
+    selectedCorridorId = null;
     playSession = null;
     playSource = null;
     lastPlayResult = null;
@@ -1629,6 +1636,7 @@ function beginPlay(spec, source) {
   mode = playSession.status === 'playing' ? 'play' : 'result';
   selectedRoomId = playSession.currentRoomId;
   selectedEntityId = null;
+  selectedCorridorId = null;
   resultStatus.textContent = '';
   resultStatus.hidden = true;
   if (resultMetrics) {
@@ -1706,6 +1714,7 @@ function returnToEdit() {
   setWorkflowTab('edit');
   selectedRoomId = null;
   selectedEntityId = null;
+  selectedCorridorId = null;
   if (moveCount) moveCount.textContent = '0';
   if (mappedCount) mappedCount.textContent = '0';
   resultStatus.textContent = '';
@@ -1738,6 +1747,11 @@ function handleCanvasPointer(event) {
     return;
   }
 
+  if (hit.kind === 'corridor') {
+    selectCorridor(hit.specId);
+    return;
+  }
+
   const roomId = hit.kind === 'room' ? hit.specId : hit.roomId;
   if (roomId) selectRoom(roomId);
 }
@@ -1759,6 +1773,7 @@ function refreshLocalizedUi() {
   renderPromptHistory();
   ensureRoomOptions();
   ensureEntityOptions();
+  ensureCorridorOptions();
   renderPathStatus();
   refreshGate();
   updatePlayReadout();
@@ -1877,6 +1892,16 @@ async function run() {
     roomDepthMinus.addEventListener('click', () => stepRoomSize('depth', -1));
     roomDepthPlus.addEventListener('click', () => stepRoomSize('depth', 1));
     resizeRoomButton.addEventListener('click', resizeSelectedRoom);
+    addRoomButton.addEventListener('click', addRoom);
+    removeRoomButton.addEventListener('click', removeSelectedRoom);
+    corridorSelect.addEventListener('change', () => selectCorridor(corridorSelect.value));
+    corridorFromSide.addEventListener('change', updateUi);
+    corridorToSide.addEventListener('change', updateUi);
+    corridorFromRoom.addEventListener('change', updateUi);
+    corridorToRoom.addEventListener('change', updateUi);
+    applyCorridorSidesButton.addEventListener('click', applyCorridorSides);
+    addCorridorButton.addEventListener('click', addCorridor);
+    removeCorridorButton.addEventListener('click', removeSelectedCorridor);
     checkPathButton.addEventListener('click', checkStartGoalPath);
     entitySelect.addEventListener('change', () => selectEntity(entitySelect.value));
     entityRoom.addEventListener('change', updateUi);
@@ -1904,6 +1929,12 @@ async function run() {
       },
       selectRoom,
       selectEntity,
+      selectCorridor,
+      addRoom,
+      removeSelectedRoom,
+      addCorridor,
+      applyCorridorSides,
+      removeSelectedCorridor,
       resizeSelectedRoom,
       checkStartGoalPath,
       generateDungeonFromPrompt,
