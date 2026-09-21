@@ -2209,8 +2209,10 @@ function updateCorridorDraft(event) {
   let targetSide = null;
   if (hit?.kind === 'room' && hit.specId !== corridorDraft.sourceRoomId) {
     targetRoomId = hit.specId;
-    // Room floor/body means Auto. Only a deliberately pointed wall fixes N/E/S/W.
-    targetSide = wallSideFromPart(hit.part);
+    // Direct drag fixes only the source wall. The destination stays Auto so
+    // camera perspective cannot accidentally pin an unintended target wall.
+    // Users can explicitly pin the destination side afterward in the Corridor inspector.
+    targetSide = null;
   } else if (hit?.roomId && hit.roomId !== corridorDraft.sourceRoomId) {
     targetRoomId = hit.roomId;
   }
