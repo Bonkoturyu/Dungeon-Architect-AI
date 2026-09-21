@@ -48,6 +48,22 @@ test('dragging east into another room yields a ready corridor candidate', () => 
   assert.deepEqual(preview.points.at(-1), { x: 12, z: 0 });
 });
 
+test('hovered target room snaps the draft even when the ground projection misses it', () => {
+  const spec = fixture();
+  const preview = buildCorridorDragPreview(spec, {
+    sourceRoomId: 'a',
+    sourceSide: 'east',
+    pointer: { x: 5, z: 20 },
+    targetRoomId: 'b',
+    width: 3,
+  });
+
+  assert.equal(preview.state, 'ready');
+  assert.equal(preview.targetRoomId, 'b');
+  assert.equal(preview.targetSide, 'west');
+  assert.deepEqual(preview.points.at(-1), { x: 12, z: 0 });
+});
+
 test('dragging without reaching a room remains an open cancellable preview', () => {
   const preview = buildCorridorDragPreview(fixture(), {
     sourceRoomId: 'a',
@@ -103,7 +119,7 @@ test('existing corridor is excluded when previewing its own reconnection', () =>
   assert.equal(preview.targetRoomId, 'b');
 });
 
-test('crossing a different existing corridor blocks the draft', () => {
+test('crossing a different existing corridor blocks an open draft before a room is reached', () => {
   const spec = {
     rooms: [
       { id: 'a', x: 0, z: 0, width: 8, depth: 8 },
@@ -119,7 +135,7 @@ test('crossing a different existing corridor blocks the draft', () => {
   const preview = buildCorridorDragPreview(spec, {
     sourceRoomId: 'a',
     sourceSide: 'east',
-    pointer: { x: 20, z: 12 },
+    pointer: { x: 20, z: 6 },
     corridorRoutes: [
       {
         corridorId: 'cd',
