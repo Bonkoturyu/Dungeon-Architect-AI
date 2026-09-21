@@ -280,7 +280,7 @@ try {
   const uiScale = await page.evaluate(() => {
     const button = document.querySelector('#checkPath').getBoundingClientRect();
     const workflow = document.querySelector('.workflow-tab').getBoundingClientRect();
-    const select = document.querySelector('#entityRoom').getBoundingClientRect();
+    const select = document.querySelector('#roomSelect').getBoundingClientRect();
     const helper = getComputedStyle(document.querySelector('.panel-kicker'));
     const label = getComputedStyle(document.querySelector('label'));
     return {
