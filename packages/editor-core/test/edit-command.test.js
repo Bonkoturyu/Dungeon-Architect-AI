@@ -119,3 +119,124 @@ test("resize-room rejects a size that overlaps another room", () => {
   assert.equal(result.error.code, "EDIT_RESULT_INVALID");
   assert.match(result.error.message, /ROOM_OVERLAP/);
 });
+
+
+test("room add/remove commands are undoable and preserve valid topology", () => {
+  const original = fixture();
+  const session = new EditSession(original);
+  const room = { id: "room-editor-test", x: 72, z: 0, width: 8, depth: 8 };
+
+  assert.equal(session.apply({ type: "add-room", room }).ok, true);
+  assert.ok(session.spec.rooms.some((entry) => entry.id === room.id));
+
+  assert.equal(session.undo().ok, true);
+  assert.ok(!session.spec.rooms.some((entry) => entry.id === room.id));
+
+  assert.equal(session.redo().ok, true);
+  assert.ok(session.spec.rooms.some((entry) => entry.id === room.id));
+});
+
+test("remove-room removes non-protected contents and incident corridors when remaining Start→Goal stays valid", () => {
+  const original = fixture();
+  const removableRoom = {
+    id: "side-room",
+    x: 72,
+    z: 12,
+    width: 8,
+    depth: 8,
+  };
+  original.rooms.push(removableRoom);
+  original.corridors.push({
+    id: "side-corridor",
+    fromRoomId: original.rooms[1].id,
+    toRoomId: removableRoom.id,
+    width: 3,
+    kind: "manual",
+  });
+  original.entities.push({
+    id: "side-treasure",
+    type: "treasure",
+    roomId: removableRoom.id,
+  });
+  original.events.push({
+    id: "side-event",
+    trigger: { type: "on_open_treasure", entityId: "side-treasure" },
+    conditions: [{ type: "one_shot" }],
+    actions: [{ type: "reveal_hint", hintId: "side-hint" }],
+  });
+
+  const session = new EditSession(original);
+  const removed = session.apply({ type: "remove-room", roomId: removableRoom.id });
+  assert.equal(removed.ok, true);
+  assert.ok(!session.spec.rooms.some((room) => room.id === removableRoom.id));
+  assert.ok(!session.spec.corridors.some((corridor) => corridor.id === "side-corridor"));
+  assert.ok(!session.spec.entities.some((entity) => entity.id === "side-treasure"));
+  assert.ok(!session.spec.events.some((event) => event.id === "side-event"));
+
+  assert.equal(session.undo().ok, true);
+  assert.ok(session.spec.rooms.some((room) => room.id === removableRoom.id));
+  assert.ok(session.spec.corridors.some((corridor) => corridor.id === "side-corridor"));
+  assert.ok(session.spec.entities.some((entity) => entity.id === "side-treasure"));
+  assert.ok(session.spec.events.some((event) => event.id === "side-event"));
+});
+
+test("remove-room refuses Start/Goal rooms", () => {
+  const original = fixture();
+  const startRoomId = original.entities.find((entity) => entity.type === "start").roomId;
+  const result = applyEditCommand(original, { type: "remove-room", roomId: startRoomId });
+  assert.equal(result.ok, false);
+  assert.equal(result.error.code, "PROTECTED_ROOM");
+});
+
+test("corridor add/remove and explicit doorway sides are undoable", () => {
+  const original = fixture();
+  const session = new EditSession(original);
+  const corridor = {
+    id: "manual-corridor",
+    fromRoomId: original.rooms[0].id,
+    toRoomId: original.rooms[2].id,
+    width: 3,
+    kind: "manual",
+  };
+
+  assert.equal(session.apply({ type: "add-corridor", corridor }).ok, true);
+  assert.ok(session.spec.corridors.some((entry) => entry.id === corridor.id));
+
+  assert.equal(session.apply({
+    type: "set-corridor-doors",
+    corridorId: corridor.id,
+    fromSide: "north",
+    toSide: "west",
+  }).ok, true);
+  let edited = session.spec.corridors.find((entry) => entry.id === corridor.id);
+  assert.equal(edited.fromSide, "north");
+  assert.equal(edited.toSide, "west");
+
+  assert.equal(session.undo().ok, true);
+  edited = session.spec.corridors.find((entry) => entry.id === corridor.id);
+  assert.equal(edited.fromSide, undefined);
+  assert.equal(edited.toSide, undefined);
+
+  assert.equal(session.apply({
+    type: "set-corridor-doors",
+    corridorId: corridor.id,
+    fromSide: "auto",
+    toSide: "south",
+  }).ok, true);
+  edited = session.spec.corridors.find((entry) => entry.id === corridor.id);
+  assert.equal(edited.fromSide, undefined);
+  assert.equal(edited.toSide, "south");
+});
+
+test("corridor side edit rejects unsupported side identifiers", () => {
+  const original = fixture();
+  const corridorId = original.corridors[0].id;
+  const result = applyEditCommand(original, {
+    type: "set-corridor-doors",
+    corridorId,
+    fromSide: "up-left",
+    toSide: "auto",
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.error.code, "CORRIDOR_SIDE_INVALID");
+});
