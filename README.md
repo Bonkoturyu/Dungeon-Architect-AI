@@ -114,8 +114,9 @@ The current production generator is frozen as **Generator Version 1**. Future ge
 - Cloudflare Pages Functions hold provider credentials server-side.
 - AI output is schema-constrained and independently validated before application.
 
-Relevant ADRs:
+Relevant ADRs and design reviews:
 
+- [Editor UI/UX Review — 2026-09-21](docs/research/EDITOR_UI_UX_REVIEW_2026-09-21.md)
 - [ADR-001 — Three.js production renderer](docs/architecture/adr/ADR-001-PRODUCTION-RENDERER-THREEJS.md)
 - [ADR-002 — Cloudflare Pages hosting](docs/architecture/adr/ADR-002-HOSTING-CLOUDFLARE-PAGES.md)
 - [ADR-003 — Desktop-only submission mobile scope](docs/architecture/adr/ADR-003-MOBILE-SCOPE-DESKTOP-ONLY.md)
