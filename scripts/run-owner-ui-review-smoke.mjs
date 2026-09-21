@@ -90,6 +90,43 @@ try {
     null,
     { timeout: 60_000 },
   );
+
+  // English must be the default. The same live language state is shared by
+  // the main UI and the first-run onboarding dialog.
+  const languageSamples = {};
+  languageSamples.en = await page.evaluate(() => ({
+    htmlLang: document.documentElement.lang,
+    title: document.querySelector('#onboardingTitle')?.textContent ?? '',
+    createTab: document.querySelector('[data-workflow-tab="create"]')?.textContent ?? '',
+    stateLanguage: window.__DAI_EDITOR_SLICE__.getState().language,
+  }));
+
+  for (const [language, expectedTitle, expectedCreate] of [
+    ['ja', 'Dungeon Architect AIへようこそ', '✨ 作成'],
+    ['zh-Hans', '欢迎使用 Dungeon Architect AI', '✨ 创建'],
+    ['zh-Hant', '歡迎使用 Dungeon Architect AI', '✨ 建立'],
+    ['ko', 'Dungeon Architect AI에 오신 것을 환영합니다', '✨ 생성'],
+  ]) {
+    await page.locator(`#onboarding [data-language="${language}"]`).click();
+    await page.waitForFunction(({ language, expectedTitle, expectedCreate }) =>
+      document.documentElement.lang === language &&
+      document.querySelector('#onboardingTitle')?.textContent === expectedTitle &&
+      document.querySelector('[data-workflow-tab="create"]')?.textContent === expectedCreate,
+    { language, expectedTitle, expectedCreate });
+    languageSamples[language] = await page.evaluate(() => ({
+      htmlLang: document.documentElement.lang,
+      title: document.querySelector('#onboardingTitle')?.textContent ?? '',
+      createTab: document.querySelector('[data-workflow-tab="create"]')?.textContent ?? '',
+      activeHeaderLanguage: document.querySelector('.app-header [data-language].is-active')?.dataset.language ?? null,
+      activeDialogLanguage: document.querySelector('#onboarding [data-language].is-active')?.dataset.language ?? null,
+      stateLanguage: window.__DAI_EDITOR_SLICE__.getState().language,
+    }));
+  }
+
+  await page.locator('#onboarding [data-language="en"]').click();
+  await page.waitForFunction(() =>
+    document.documentElement.lang === 'en' &&
+    document.querySelector('#onboardingTitle')?.textContent === 'Welcome to Dungeon Architect AI');
   await page.evaluate(() => window.__DAI_ONBOARDING__.close());
 
   // Camera orbit / zoom.
@@ -179,6 +216,9 @@ try {
     const tabs = document.querySelector('.workflow-tabs').getBoundingClientRect();
     return { cardTop: card.top, cardBottom: card.bottom, tabsTop: tabs.top };
   });
+  const editPanelOrder = await page.evaluate(() =>
+    [...document.querySelectorAll('fieldset[data-workflow-panel="edit"]')]
+      .map((fieldset) => fieldset.querySelector('legend')?.textContent?.trim() ?? ''));
 
   // Room labels, all-room resize, and WASD.
   const roomOptionText = await page.locator('#roomSelect option').allTextContents();
@@ -378,6 +418,26 @@ try {
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().mode === 'edit');
 
   const checks = {
+    englishIsDefaultLanguage:
+      languageSamples.en.htmlLang === 'en' &&
+      languageSamples.en.title === 'Welcome to Dungeon Architect AI' &&
+      languageSamples.en.createTab === '✨ Create' &&
+      languageSamples.en.stateLanguage === 'en',
+    allFiveLanguagesSwitchLive:
+      languageSamples.ja?.stateLanguage === 'ja' &&
+      languageSamples['zh-Hans']?.stateLanguage === 'zh-Hans' &&
+      languageSamples['zh-Hant']?.stateLanguage === 'zh-Hant' &&
+      languageSamples.ko?.stateLanguage === 'ko' &&
+      languageSamples.ja?.activeHeaderLanguage === 'ja' &&
+      languageSamples.ja?.activeDialogLanguage === 'ja' &&
+      languageSamples['zh-Hans']?.activeHeaderLanguage === 'zh-Hans' &&
+      languageSamples['zh-Hant']?.activeHeaderLanguage === 'zh-Hant' &&
+      languageSamples.ko?.activeHeaderLanguage === 'ko',
+    editPanelsOrderedAiEntityRoom:
+      editPanelOrder.length === 3 &&
+      editPanelOrder[0] === '✦ AI Request' &&
+      editPanelOrder[1] === '✦ Entities' &&
+      editPanelOrder[2] === '▦ Rooms',
     mouseOrbitChangesCamera: distance3(cameraBefore.position, cameraAfterOrbit.position) > 0.1,
     mouseWheelZoomChangesDistance: cameraAfterZoom.distance < cameraAfterOrbit.distance - 0.1,
     roomSelectionDoesNotRecenterCamera:
@@ -482,6 +542,8 @@ try {
     browserVersion: browser.version(),
     passed: falseChecks.length === 0,
     checks,
+    languageSamples,
+    editPanelOrder,
     falseChecks,
     cameraBefore,
     cameraAfterOrbit,
