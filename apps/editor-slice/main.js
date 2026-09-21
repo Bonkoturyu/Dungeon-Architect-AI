@@ -827,9 +827,6 @@ function applyCommand(command, successMessage) {
 
   clearPathCheck();
   renderActiveSpec();
-  if (command.type === 'move-room' || command.type === 'resize-room') {
-    adapter.focusSpecId(command.roomId, { preserveDistance: true });
-  }
   setEditStatus(successMessage);
   return true;
 }
