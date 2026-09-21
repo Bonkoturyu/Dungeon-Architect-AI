@@ -153,6 +153,18 @@ The temporary Corridor uses distinct visual states:
 
 Room creation in the inspector uses four direct cardinal action buttons rather than a direction dropdown followed by a separate Add action.
 
+Room creation and movement follow selection context:
+
+- when a Room is selected, a compass-style North / East / South / West control adds a Room relative to that selected Room;
+- when no Room is selected, a single action adds a Room near the center of the current 3D view, searching nearby positions until it finds non-overlapping space;
+- a newly added Room becomes selected immediately;
+- a selected Room with **no connected Corridors** can be left-dragged from its floor to an arbitrary free position;
+- connected Rooms are not freely dragged by mouse, avoiding accidental topology distortion;
+- dragging an isolated Room into another Room shows a blocked preview and does not commit the move;
+- wall dragging always takes precedence over Room dragging because it is the direct Corridor creation gesture.
+
+Corridor targeting uses the actual object under the pointer. When the cursor is over a Room or an Entity contained by a Room, that Room is treated as the intended connection target even if the camera perspective makes its ground-plane projection fall outside the Room footprint. Final Corridor creation still passes renderer preflight before commit.
+
 ## Layout-not-renderable feedback
 
 Internal renderer/preflight failures must not be presented as only `LAYOUT_NOT_RENDERABLE`.
