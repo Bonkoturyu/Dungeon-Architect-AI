@@ -74,6 +74,18 @@ Free-form runtime code generation is not part of MVP.
 - complex action combat
 - large enemy roster
 
+## Supported UI languages
+
+The browser UI and first-run guide support live switching between:
+
+- English (**default**)
+- Japanese
+- Simplified Chinese
+- Traditional Chinese
+- Korean
+
+Language selection is page-session UI state only; reloading starts in English. Dungeon IDs, schema identifiers, API identifiers, and validation/error codes remain stable language-neutral contracts.
+
 ## Confirmed production scope decisions
 
 - 3D stack: Three.js 0.185.1 (ADR-001)
