@@ -487,6 +487,8 @@ try {
   await page.mouse.move(dragPoints.start.x, dragPoints.start.y);
   await page.mouse.down({ button: 'left' });
   await page.mouse.move(dragPoints.end.x, dragPoints.end.y, { steps: 14 });
+  const corridorDraftBeforeRelease = await page.evaluate(() =>
+    window.__DAI_EDITOR_SLICE__.getState().corridorDraftPreview);
   await page.mouse.up({ button: 'left' });
   await page.waitForFunction((corridorCount) =>
     window.__DAI_EDITOR_SLICE__.getState().corridors.length === corridorCount + 1,
@@ -883,13 +885,21 @@ try {
       Math.abs(centeredRoomAfterDrag.x - centeredRoomDragPlan.target.x) <= 0.25 &&
       Math.abs(centeredRoomAfterDrag.z - centeredRoomDragPlan.target.z) <= 0.25 &&
       afterCenteredRoomCleanup.rooms.length === structuralAfterCleanup.rooms.length,
+    directCorridorDragPreviewMatchesFinalRouting:
+      corridorDraftBeforeRelease?.state === 'ready' &&
+      corridorDraftBeforeRelease?.targetRoomId === addedRoomId &&
+      corridorDraftBeforeRelease?.targetSide == null &&
+      corridorDraftBeforeRelease?.hasCommitCommand === true &&
+      corridorDraftBeforeRelease?.commitCorridorId != null &&
+      corridorDraftBeforeRelease?.routedFromSide === structuralSetup.side &&
+      corridorDraftBeforeRelease?.routedToSide === structuralSetup.opposite,
     directCorridorDragAddRemoveWorks:
       structuralAfterAddCorridor.corridors.length === structuralBefore.corridors.length + 1 &&
       structuralAfterAddCorridor.inspectorTab === 'corridors' &&
       structuralAfterCleanup.corridors.length === structuralBefore.corridors.length,
-    corridorCardinalDoorSidesWork:
+    corridorSourceSideAndAutoTargetWork:
       structuralAfterSides.corridor?.fromSide === structuralSetup.side &&
-      structuralAfterSides.corridor?.toSide === structuralSetup.opposite &&
+      structuralAfterSides.corridor?.toSide == null &&
       structuralAfterSides.selectedCorridorId === addedCorridorId &&
       structuralAfterSides.selectionText.includes(addedCorridorId),
     corridorDraftReleaseWithoutRoomCancels:
@@ -1023,6 +1033,7 @@ try {
     structuralSetup,
     structuralBefore,
     structuralAfterAddRoom,
+    corridorDraftBeforeRelease,
     structuralAfterAddCorridor,
     structuralAfterSides,
     beforeCancelledDraft,
