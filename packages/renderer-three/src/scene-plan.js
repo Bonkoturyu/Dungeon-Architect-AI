@@ -448,7 +448,11 @@ export function createDungeonScenePlan(spec, style = {}) {
     const fromRoom = roomById.get(corridor.fromRoomId);
     const toRoom = roomById.get(corridor.toRoomId);
     const shared = fromRoom && toRoom ? sharedRoomBoundary(fromRoom, toRoom) : null;
-    if (shared) touchingByCorridor.set(corridor.id, shared);
+    const sharedMatchesPreference =
+      shared &&
+      (!corridor.fromSide || corridor.fromSide === shared.fromDoor.side) &&
+      (!corridor.toSide || corridor.toSide === shared.toDoor.side);
+    if (sharedMatchesPreference) touchingByCorridor.set(corridor.id, shared);
     else routedCorridors.push(corridor);
   }
 
