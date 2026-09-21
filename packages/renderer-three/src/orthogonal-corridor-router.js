@@ -31,6 +31,17 @@ function outsidePoint(room, side, clearance, offset = 0) {
   }
 }
 
+function candidateDoorOffsets(room, side, corridorWidth) {
+  const span = side === 'north' || side === 'south' ? room.width : room.depth;
+  const maximum = Math.max(0, span / 2 - corridorWidth / 2 - 0.25);
+  if (maximum <= EPSILON) return [0];
+
+  const inner = maximum / 2;
+  return [0, -inner, inner, -maximum, maximum]
+    .filter((value, index, values) =>
+      values.findIndex((candidate) => Math.abs(candidate - value) <= EPSILON) === index);
+}
+
 function samePoint(a, b) {
   return Math.abs(a.x - b.x) <= EPSILON && Math.abs(a.z - b.z) <= EPSILON;
 }
@@ -315,69 +326,83 @@ export function planOrthogonalCorridors(spec, {
 
     for (const fromSide of fromSides) {
       for (const toSide of toSides) {
-        const fromDoor = doorPoint(fromRoom, fromSide);
-        const toDoor = doorPoint(toRoom, toSide);
-        const fromOutside = outsidePoint(fromRoom, fromSide, clearance);
-        const toOutside = outsidePoint(toRoom, toSide, clearance);
+        const fromOffsets = candidateDoorOffsets(fromRoom, fromSide, corridor.width);
+        const toOffsets = candidateDoorOffsets(toRoom, toSide, corridor.width);
 
-        const endpointSegments = [
-          [fromDoor, fromOutside],
-          [toOutside, toDoor],
-        ];
-        if (!allowCrossings && endpointSegments.some(([a, b]) =>
-          occupiedSegments.some(([c, d]) => segmentsConflict(a, b, c, d)))) {
-          continue;
-        }
+        for (const fromOffset of fromOffsets) {
+          for (const toOffset of toOffsets) {
+            const fromDoor = doorPoint(fromRoom, fromSide, fromOffset);
+            const toDoor = doorPoint(toRoom, toSide, toOffset);
+            const fromOutside = outsidePoint(fromRoom, fromSide, clearance, fromOffset);
+            const toOutside = outsidePoint(toRoom, toSide, clearance, toOffset);
 
-        const middle = findOrthogonalPath({
-          rooms: spec.rooms,
-          start: fromOutside,
-          goal: toOutside,
-          clearance,
-          margin: outerMargin + routes.size * (corridor.width + 1),
-          occupiedSegments: [...occupiedSegments, ...endpointSegments],
-          bendPenalty,
-          allowCrossings,
-        });
-        if (!middle) continue;
+            const endpointSegments = [
+              [fromDoor, fromOutside],
+              [toOutside, toDoor],
+            ];
+            if (!allowCrossings && endpointSegments.some(([a, b]) =>
+              occupiedSegments.some(([c, d]) => segmentsConflict(a, b, c, d)))) {
+              continue;
+            }
 
-        const points = simplify([fromDoor, fromOutside, ...middle, toOutside, toDoor]);
-        const segments = routeSegments(points);
-        if (segments.some(([a, b]) => !axisSegment(a, b))) continue;
+            const middle = findOrthogonalPath({
+              rooms: spec.rooms,
+              start: fromOutside,
+              goal: toOutside,
+              clearance,
+              margin: outerMargin + routes.size * (corridor.width + 1),
+              occupiedSegments: [...occupiedSegments, ...endpointSegments],
+              bendPenalty,
+              allowCrossings,
+            });
+            if (!middle) continue;
 
-        let length = 0;
-        let bends = 0;
-        let previousAxis = null;
-        for (const [a, b] of segments) {
-          const axis = axisSegment(a, b).axis;
-          length += segmentLength(a, b);
-          if (previousAxis && previousAxis !== axis) bends += 1;
-          previousAxis = axis;
-        }
+            const points = simplify([fromDoor, fromOutside, ...middle, toOutside, toDoor]);
+            const segments = routeSegments(points);
+            if (segments.some(([a, b]) => !axisSegment(a, b))) continue;
 
-        const reused =
-          usage.get(fromRoom.id).get(fromSide) +
-          usage.get(toRoom.id).get(toSide);
-        const directionalPenalty =
-          targetSidePenalty(fromRoom, toRoom, fromSide) +
-          targetSidePenalty(toRoom, fromRoom, toSide);
-        const score =
-          reused * reusedDoorPenalty +
-          directionalPenalty +
-          length +
-          bends * bendPenalty;
+            let length = 0;
+            let bends = 0;
+            let previousAxis = null;
+            for (const [a, b] of segments) {
+              const axis = axisSegment(a, b).axis;
+              length += segmentLength(a, b);
+              if (previousAxis && previousAxis !== axis) bends += 1;
+              previousAxis = axis;
+            }
 
-        if (!best || score < best.score - EPSILON) {
-          best = {
-            score,
-            route: {
-              corridorId: corridor.id,
-              points,
-              fromDoor: { roomId: fromRoom.id, side: fromSide, offset: 0, width: corridor.width },
-              toDoor: { roomId: toRoom.id, side: toSide, offset: 0, width: corridor.width },
-            },
-            segments,
-          };
+            const reused =
+              usage.get(fromRoom.id).get(fromSide) +
+              usage.get(toRoom.id).get(toSide);
+            const directionalPenalty =
+              targetSidePenalty(fromRoom, toRoom, fromSide) +
+              targetSidePenalty(toRoom, fromRoom, toSide);
+            // Preserve centered doors whenever they work. Along-wall offsets are
+            // deterministic resilience candidates, not an aesthetic preference.
+            const offsetPenalty =
+              (Math.abs(fromOffset) > EPSILON ? 100 : 0) +
+              (Math.abs(toOffset) > EPSILON ? 100 : 0) +
+              (Math.abs(fromOffset) + Math.abs(toOffset)) * 0.01;
+            const score =
+              reused * reusedDoorPenalty +
+              directionalPenalty +
+              offsetPenalty +
+              length +
+              bends * bendPenalty;
+
+            if (!best || score < best.score - EPSILON) {
+              best = {
+                score,
+                route: {
+                  corridorId: corridor.id,
+                  points,
+                  fromDoor: { roomId: fromRoom.id, side: fromSide, offset: fromOffset, width: corridor.width },
+                  toDoor: { roomId: toRoom.id, side: toSide, offset: toOffset, width: corridor.width },
+                },
+                segments,
+              };
+            }
+          }
         }
       }
     }
