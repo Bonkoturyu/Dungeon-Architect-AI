@@ -621,13 +621,23 @@ function updateUi() {
           : t('viewport.resultTitle');
   }
   if (viewportHelp) {
-    viewportHelp.textContent = concealed
+    let helpText = concealed
       ? t('viewport.hiddenHelp')
       : editing
         ? t('viewport.editHelp')
         : mode === 'play'
           ? t('viewport.playHelp')
           : t('viewport.resultHelp');
+    if (
+      editing &&
+      !concealed &&
+      room &&
+      !authoringSpec().corridors.some((corridor) =>
+        corridor.fromRoomId === room.id || corridor.toRoomId === room.id)
+    ) {
+      helpText += ` · ${t('viewport.isolatedRoomDragHelp')}`;
+    }
+    viewportHelp.textContent = helpText;
   }
 
   renderEditContextHud();
@@ -1867,7 +1877,8 @@ function beginRoomDrag(event) {
   if (!room || roomHasIncidentCorridor(room.id)) return false;
 
   const hit = adapter.pickDetailedAt(event.clientX, event.clientY);
-  if (!hit || hit.kind !== 'room' || hit.specId !== room.id || hit.part !== 'floor') return false;
+  if (!hit || hit.kind !== 'room' || hit.specId !== room.id) return false;
+  if (wallSideFromPart(hit.part)) return false;
 
   const ground = adapter.getGroundPointAt(event.clientX, event.clientY);
   if (!ground) return false;
