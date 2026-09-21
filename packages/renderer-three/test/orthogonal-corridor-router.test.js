@@ -147,3 +147,40 @@ test('explicit cardinal doorway sides override automatic endpoint selection', ()
   assert.ok(corridorRouteSegments(route).every((segment) =>
     segment.axis === 'x' || segment.axis === 'z'));
 });
+
+
+test('forced wall side can shift its doorway along the wall when the center is blocked', () => {
+  const spec = {
+    schemaVersion: '1.0',
+    id: 'shifted-doorway-resilience',
+    seed: 11,
+    rooms: [
+      { id: 'a', x: 0, z: 0, width: 8, depth: 8 },
+      { id: 'blocker', x: 6, z: 0, width: 4, depth: 4 },
+      { id: 'b', x: 20, z: 0, width: 8, depth: 8 },
+    ],
+    corridors: [
+      {
+        id: 'ab',
+        fromRoomId: 'a',
+        toRoomId: 'b',
+        width: 3,
+        kind: 'manual',
+        fromSide: 'east',
+        toSide: 'west',
+      },
+    ],
+    entities: [
+      { id: 'start', type: 'start', roomId: 'a' },
+      { id: 'goal', type: 'goal', roomId: 'b' },
+    ],
+    events: [],
+  };
+
+  const route = planOrthogonalCorridors(spec, { allowCrossings: true }).get('ab');
+  assert.equal(route.fromDoor.side, 'east');
+  assert.equal(route.toDoor.side, 'west');
+  assert.notEqual(route.fromDoor.offset, 0);
+  assert.ok(corridorRouteSegments(route).every((segment) =>
+    segment.axis === 'x' || segment.axis === 'z'));
+});
