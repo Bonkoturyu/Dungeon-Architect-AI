@@ -126,6 +126,7 @@ export function createSimulationObservation(session, { step = 0 } = {}) {
     adjacentRoomIds,
     visitedRoomIds: [...session.visitedRoomIds],
     moves: session.moves,
+    playerState: clone(session.playerState),
     enemies,
     interactables,
     counters: clone(session.gameplayState?.counters ?? {}),
