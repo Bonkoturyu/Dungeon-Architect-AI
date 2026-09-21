@@ -148,8 +148,16 @@ The owner review replaces the previous left-drag orbit interaction with an edito
 The temporary Corridor uses distinct visual states:
 
 - cyan: drafting / no Room reached yet;
-- green: valid Room connection candidate;
-- red: blocked collision or invalid connection.
+- green: **final scene-plan preflight succeeded** and releasing the mouse will commit the same routed Corridor;
+- red: duplicate / invalid connection / final scene-plan routing failure.
+
+The green state is therefore not a loose proximity hint. The editor builds the actual add/reconnect edit command, runs the same `createDungeonScenePlan()` routing preflight used for commit, and renders the resulting final route as the temporary Corridor. This prevents a green preview from turning into a routing error on mouse release.
+
+Target-side semantics:
+
+- dropping on the target Room floor/body or a Room-bound Entity keeps the target doorway side **Auto**;
+- deliberately pointing at a target Room wall fixes that exact North/East/South/West side;
+- the source wall remains explicit because Corridor drafting starts from the wall the user dragged.
 
 Room creation in the inspector uses four direct cardinal action buttons rather than a direction dropdown followed by a separate Add action.
 
