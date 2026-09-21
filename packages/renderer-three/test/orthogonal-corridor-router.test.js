@@ -112,3 +112,38 @@ test('orthogonal routing is deterministic', () => {
   const b = planOrthogonalCorridors(structuredClone(spec));
   assert.deepEqual([...a.entries()], [...b.entries()]);
 });
+
+
+test('explicit cardinal doorway sides override automatic endpoint selection', () => {
+  const spec = {
+    schemaVersion: '1.0',
+    id: 'explicit-door-sides',
+    seed: 7,
+    rooms: [
+      { id: 'a', x: 0, z: 0, width: 8, depth: 8 },
+      { id: 'b', x: 16, z: 0, width: 8, depth: 8 },
+    ],
+    corridors: [
+      {
+        id: 'ab',
+        fromRoomId: 'a',
+        toRoomId: 'b',
+        width: 3,
+        kind: 'manual',
+        fromSide: 'north',
+        toSide: 'south',
+      },
+    ],
+    entities: [
+      { id: 'start', type: 'start', roomId: 'a' },
+      { id: 'goal', type: 'goal', roomId: 'b' },
+    ],
+    events: [],
+  };
+
+  const route = planOrthogonalCorridors(spec).get('ab');
+  assert.equal(route.fromDoor.side, 'north');
+  assert.equal(route.toDoor.side, 'south');
+  assert.ok(corridorRouteSegments(route).every((segment) =>
+    segment.axis === 'x' || segment.axis === 'z'));
+});
