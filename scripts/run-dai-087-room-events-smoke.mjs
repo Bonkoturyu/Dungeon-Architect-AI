@@ -238,6 +238,9 @@ try {
   const result = await state(page);
   const resultText = await page.locator('#resultMetrics').innerText();
   const hpReadout = await page.locator('#hpCount').innerText();
+  const levelReadout = await page.locator('#levelCount').innerText();
+  const xpReadout = await page.locator('#xpCount').innerText();
+  const goldReadout = await page.locator('#goldCount').innerText();
   await page.screenshot({ path: path.join(outputDir, 'room-event-result.png'), fullPage: true });
 
   await page.click('#returnEdit');
@@ -284,7 +287,10 @@ try {
       resultText.includes('G') &&
       resultText.includes('LOOT') &&
       resultText.includes('WPN') &&
-      resultText.includes('ARM'),
+      resultText.includes('ARM') &&
+      levelReadout === String(result.result?.playerState?.level ?? 1) &&
+      goldReadout === String(result.result?.playerState?.gold ?? 0) &&
+      xpReadout.startsWith(`${result.result?.playerState?.xp ?? 0}/`),
     progressionRewardsRecorded:
       (metrics.goldEarned ?? 0) > 0 &&
       (metrics.lootCollected ?? 0) >= 1 &&
@@ -323,6 +329,9 @@ try {
     playEventTimes: eventTimes,
     resultText,
     hpReadout,
+    levelReadout,
+    xpReadout,
+    goldReadout,
     interactionState,
     consoleErrors,
     pageErrors,
