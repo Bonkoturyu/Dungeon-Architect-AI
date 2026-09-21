@@ -235,6 +235,7 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
       const entity = runtimeBySpecId.get(entityId);
       if (entity) entity.position.set(0, 0, 0);
     }
+    const restoredRoomId = roomDraftRoomId;
     roomDraftRoomId = null;
     roomDraftEntityIds = [];
     if (roomDraftHelper) {
@@ -244,6 +245,14 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
       roomDraftHelper = null;
     }
     selectionHelper?.update?.();
+    if (selectionFillHelper && restoredRoomId) {
+      const roomPlan = lastPlan?.roomGroups?.find((entry) => entry.specId === restoredRoomId);
+      const floor = roomPlan?.boxes?.find((box) => box.part === 'floor');
+      if (floor) {
+        selectionFillHelper.position.x = floor.position.x;
+        selectionFillHelper.position.z = floor.position.z;
+      }
+    }
     draw();
   }
 
