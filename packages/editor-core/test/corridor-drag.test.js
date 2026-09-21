@@ -64,6 +64,29 @@ test('hovered target room snaps the draft even when the ground projection misses
   assert.deepEqual(preview.points.at(-1), { x: 12, z: 0 });
 });
 
+test('explicit hovered Room stays the target even when the temporary L path crosses another Room', () => {
+  const spec = {
+    rooms: [
+      { id: 'source', x: 0, z: 0, width: 8, depth: 8 },
+      { id: 'middle', x: 12, z: 0, width: 8, depth: 8 },
+      { id: 'target', x: 24, z: 12, width: 8, depth: 8 },
+    ],
+    corridors: [],
+  };
+
+  const preview = buildCorridorDragPreview(spec, {
+    sourceRoomId: 'source',
+    sourceSide: 'east',
+    pointer: { x: 8, z: 2 },
+    targetRoomId: 'target',
+    width: 3,
+  });
+
+  assert.equal(preview.state, 'ready');
+  assert.equal(preview.targetRoomId, 'target');
+  assert.notEqual(preview.targetRoomId, 'middle');
+});
+
 test('dragging without reaching a room remains an open cancellable preview', () => {
   const preview = buildCorridorDragPreview(fixture(), {
     sourceRoomId: 'a',
