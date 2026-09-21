@@ -1241,7 +1241,7 @@ function updatePlayReadout() {
     return;
   }
   const map = derivePlayMap(playSession);
-  const modeName = playSource === 'mystery' ? 'MYSTERY' : 'TEST';
+  const modeName = playSource === 'mystery' ? t('play.mysteryMode') : t('play.testMode');
   if (playModeLabel) {
     playModeLabel.textContent = modeName;
     playModeLabel.hidden = false;
@@ -1254,9 +1254,9 @@ function renderResultMetrics(result) {
   if (!resultMetrics) return;
   const metrics = result?.metrics ?? {};
   const items = [
-    ['ENEMY', metrics.enemiesCleared ?? 0],
-    ['CHEST', metrics.treasuresOpened ?? 0],
-    ['TRAP', metrics.trapsTriggered ?? 0],
+    [t('result.enemy'), metrics.enemiesCleared ?? 0],
+    [t('result.chest'), metrics.treasuresOpened ?? 0],
+    [t('result.trap'), metrics.trapsTriggered ?? 0],
   ];
   resultMetrics.replaceChildren(...items.map(([label, value]) => {
     const item = document.createElement('span');
@@ -1277,7 +1277,7 @@ function finalizePlayIfNeeded() {
   mode = 'result';
   if (moveCount) moveCount.textContent = String(lastPlayResult.moves);
   if (mappedCount) mappedCount.textContent = String(lastPlayResult.visitedRoomIds.length);
-  resultStatus.textContent = lastPlayResult.status === 'cleared' ? '✓ CLEARED' : 'RUN ENDED';
+  resultStatus.textContent = lastPlayResult.status === 'cleared' ? t('result.cleared') : t('result.ended');
   resultStatus.hidden = false;
   renderResultMetrics(lastPlayResult);
   renderActiveSpec();
@@ -1292,7 +1292,7 @@ function beginPlay(spec, source) {
   }
 
   pathCheckResult = null;
-  if (pathStatus) pathStatus.textContent = 'Path not checked.';
+  renderPathStatus();
   adapter.setHighlightedSpecIds([]);
 
   playSession = result.session;
@@ -1453,7 +1453,7 @@ function handleKeyboard(event) {
     event.preventDefault();
 
     if (roomBlocksExit()) {
-      showViewportNotice('Resolve the room event before leaving.');
+      showViewportNotice(t('notice.resolveRoomEvent'));
       return;
     }
 
@@ -1466,9 +1466,9 @@ function handleKeyboard(event) {
     if (matches.length === 1) {
       movePlayToRoom(matches[0].targetRoomId, matches[0].corridorId);
     } else if (matches.length > 1) {
-      showViewportNotice(`Multiple ${direction} exits — choose one on the exit pad.`);
+      showViewportNotice(t('notice.multipleExits', { direction: t(`direction.${direction}`) }));
     } else {
-      showViewportNotice(`No ${direction} exit.`);
+      showViewportNotice(t('notice.noExit', { direction: t(`direction.${direction}`) }));
     }
     return;
   }
