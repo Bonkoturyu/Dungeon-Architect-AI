@@ -24,8 +24,13 @@ import {
 const canvas = document.querySelector('#renderCanvas');
 const status = document.querySelector('#status');
 const modeBadge = document.querySelector('#modeBadge');
+const selectionOverlay = document.querySelector('#selectionOverlay');
 const selectedLabel = document.querySelector('#selected');
 const entitySelectedLabel = document.querySelector('#entitySelected');
+const entityLegend = document.querySelector('#entityLegend');
+const roomContentsOverlay = document.querySelector('#roomContentsOverlay');
+const roomContentsRoom = document.querySelector('#roomContentsRoom');
+const roomContentsItems = document.querySelector('#roomContentsItems');
 const editStatus = document.querySelector('#editStatus');
 const validationStatus = document.querySelector('#validationStatus');
 const playStatus = document.querySelector('#playStatus');
@@ -53,7 +58,6 @@ const roomDepthPlus = document.querySelector('#roomDepthPlus');
 const resizeRoomButton = document.querySelector('#resizeRoom');
 const checkPathButton = document.querySelector('#checkPath');
 const pathStatus = document.querySelector('#pathStatus');
-const entityCards = document.querySelector('#entityCards');
 const entitySelect = document.querySelector('#entitySelect');
 const entityRoom = document.querySelector('#entityRoom');
 const entityType = document.querySelector('#entityType');
@@ -336,43 +340,87 @@ function ensureEntityOptions() {
     return option;
   }));
 
-  entityCards.replaceChildren(...entities.map((entity) => {
-    const presentation = entityDisplay(entity);
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = `entity-card${selectedEntityId === entity.id ? ' is-selected' : ''}`;
-    button.dataset.entityId = entity.id;
-    button.dataset.kind = entity.type;
-
-    const icon = document.createElement('span');
-    icon.className = 'entity-icon';
-    icon.textContent = presentation.icon;
-
-    const main = document.createElement('span');
-    main.className = 'entity-main';
-    const name = document.createElement('span');
-    name.className = 'entity-name';
-    name.textContent = presentation.label;
-    const room = document.createElement('span');
-    room.className = 'entity-room';
-    room.textContent = roomLabel(entity.roomId);
-    main.append(name, room);
-
-    const kind = document.createElement('span');
-    kind.className = 'entity-kind';
-    kind.textContent = entity.type.toUpperCase();
-
-    button.append(icon, main, kind);
-    button.addEventListener('click', () => selectEntity(entity.id));
-    return button;
-  }));
-
   if (selectedEntityId && entities.some((entity) => entity.id === selectedEntityId)) {
     entitySelect.value = selectedEntityId;
   } else {
     selectedEntityId = null;
     entitySelect.selectedIndex = -1;
   }
+}
+
+function renderEditContextHud() {
+  if (!selectionOverlay || !roomContentsOverlay || !roomContentsRoom || !roomContentsItems) return;
+
+  const entity = selectedEntity();
+  const room = entity
+    ? authoringSpec().rooms.find((entry) => entry.id === entity.roomId) ?? null
+    : selectedRoom();
+
+  const showHud = mode === 'edit' && workflowTab === 'edit' && !authoringPreviewConcealed;
+
+  if (!showHud || (!room && !entity)) {
+    selectionOverlay.hidden = true;
+    roomContentsOverlay.hidden = true;
+    selectedLabel.hidden = true;
+    entitySelectedLabel.hidden = true;
+    roomContentsItems.replaceChildren();
+    return;
+  }
+
+  selectionOverlay.hidden = false;
+
+  if (entity) {
+    const presentation = entityDisplay(entity);
+    selectedLabel.textContent = `${presentation.icon} ${presentation.label} · ${entity.id}`;
+    selectedLabel.hidden = false;
+    entitySelectedLabel.textContent = room
+      ? `${t('entities.room')}: ${roomLabel(room.id)} · (${room.x.toFixed(1)}, ${room.z.toFixed(1)}) · ${room.width}×${room.depth}`
+      : '';
+    entitySelectedLabel.hidden = !room;
+  } else if (room) {
+    selectedLabel.textContent = `${roomLabel(room.id)} · (${room.x.toFixed(1)}, ${room.z.toFixed(1)}) · ${room.width}×${room.depth}`;
+    selectedLabel.hidden = false;
+    entitySelectedLabel.textContent = '';
+    entitySelectedLabel.hidden = true;
+  }
+
+  if (!room) {
+    roomContentsOverlay.hidden = true;
+    roomContentsItems.replaceChildren();
+    return;
+  }
+
+  roomContentsOverlay.hidden = false;
+  roomContentsRoom.textContent = roomLabel(room.id);
+
+  const contents = authoringSpec().entities.filter((entry) => entry.roomId === room.id);
+  if (contents.length === 0) {
+    const empty = document.createElement('span');
+    empty.className = 'room-content-empty';
+    empty.textContent = t('overlay.empty');
+    roomContentsItems.replaceChildren(empty);
+    return;
+  }
+
+  roomContentsItems.replaceChildren(...contents.map((entry) => {
+    const presentation = entityDisplay(entry);
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `room-content-item${entry.id === selectedEntityId ? ' is-selected' : ''}`;
+    button.dataset.entityId = entry.id;
+    button.dataset.kind = entry.type;
+
+    const marker = document.createElement('span');
+    marker.className = 'entity-marker';
+    marker.textContent = presentation.icon;
+
+    const label = document.createElement('span');
+    label.textContent = presentation.label;
+
+    button.append(marker, label);
+    button.addEventListener('click', () => selectEntity(entry.id));
+    return button;
+  }));
 }
 
 function setWorkflowTab(nextTab) {
@@ -432,14 +480,7 @@ function updateUi() {
           : t('viewport.resultHelp');
   }
 
-  selectedLabel.textContent = room
-    ? `${roomLabel(room.id)} @ (${room.x.toFixed(1)}, ${room.z.toFixed(1)}) · ${room.width}×${room.depth}`
-    : '';
-  selectedLabel.hidden = !room;
-  entitySelectedLabel.textContent = entity
-    ? `${entityDisplay(entity).icon} ${entityDisplay(entity).label} · ${roomLabel(entity.roomId)}`
-    : '';
-  entitySelectedLabel.hidden = !entity;
+  renderEditContextHud();
 
   if (room) {
     if (document.activeElement !== roomWidth) roomWidth.value = String(room.width);
@@ -1440,6 +1481,7 @@ function refreshLocalizedUi() {
   renderRoomEvents();
   renderPlayExits();
   if (lastPlayResult) renderResultMetrics(lastPlayResult);
+  renderEditContextHud();
   updateUi();
 }
 
