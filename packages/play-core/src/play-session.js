@@ -11,6 +11,14 @@ export const PLAY_FAILURE_REASONS = Object.freeze([
 
 const PLAY_FAILURE_REASON_SET = new Set(PLAY_FAILURE_REASONS);
 
+export const DEFAULT_PLAYER_MAX_HP = 20;
+
+function assertNonNegativeSafeInteger(value, name) {
+  if (!Number.isSafeInteger(value) || value < 0) {
+    throw new RangeError(`${name} must be a non-negative safe integer`);
+  }
+}
+
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
@@ -66,10 +74,17 @@ function gameplayMetrics(session) {
   };
 }
 
-export function startPlaySession(authoringSpec, { startedAt = 0 } = {}) {
+export function startPlaySession(authoringSpec, { startedAt = 0, maxHp = DEFAULT_PLAYER_MAX_HP } = {}) {
   const validation = validateDungeonSpec(authoringSpec);
   if (!validation.valid) {
     return { ok: false, blocked: true, errors: validation.errors };
+  }
+  if (!Number.isSafeInteger(maxHp) || maxHp <= 0) {
+    return {
+      ok: false,
+      blocked: true,
+      errors: [{ code: "PLAYER_MAX_HP_INVALID", path: "playerState.maxHp", message: "maxHp must be a positive safe integer." }]
+    };
   }
 
   const snapshot = clone(authoringSpec);
@@ -89,6 +104,7 @@ export function startPlaySession(authoringSpec, { startedAt = 0 } = {}) {
     goalRoomId: goal.roomId,
     visitedRoomIds: [start.roomId],
     moves: 0,
+    playerState: { hp: maxHp, maxHp },
     gameplayState: createGameplayState({ roomEntries: 1 }),
     events: []
   };
@@ -203,6 +219,111 @@ export function movePlaySession(session, targetRoomId, { at = session?.startedAt
   return { ok: true, session: next };
 }
 
+export function applyPlayerDamage(
+  session,
+  amount,
+  { at = session?.startedAt ?? 0, sourceType = "unknown", sourceId = null } = {}
+) {
+  if (!isPlaying(session)) {
+    return { ok: false, error: { code: "SESSION_NOT_PLAYING", message: "Session is not in playing state." } };
+  }
+
+  try {
+    assertNonNegativeSafeInteger(amount, "damage amount");
+  } catch (error) {
+    return {
+      ok: false,
+      error: { code: "PLAYER_DAMAGE_INVALID", message: error instanceof Error ? error.message : String(error) }
+    };
+  }
+
+  const next = clone(session);
+  const hpBefore = next.playerState?.hp;
+  const maxHp = next.playerState?.maxHp;
+  if (!Number.isSafeInteger(hpBefore) || !Number.isSafeInteger(maxHp) || maxHp <= 0 || hpBefore < 0 || hpBefore > maxHp) {
+    return { ok: false, error: { code: "PLAYER_STATE_INVALID", message: "Player HP state is invalid." } };
+  }
+
+  const applied = Math.min(amount, hpBefore);
+  next.playerState.hp = hpBefore - applied;
+  if (applied > 0) {
+    next.gameplayState = applyGameplayStateCommand(next.gameplayState, {
+      type: "increment-counter",
+      counter: "damageTaken",
+      delta: applied
+    });
+  }
+  next.events.push({
+    type: "player-damaged",
+    amount: applied,
+    requestedAmount: amount,
+    hpBefore,
+    hpAfter: next.playerState.hp,
+    sourceType,
+    sourceId,
+    roomId: next.currentRoomId,
+    at
+  });
+
+  if (next.playerState.hp === 0) {
+    next.status = "failed";
+    next.failureReason = "player-defeated";
+    next.completedAt = at;
+    next.events.push({ type: "session-failed", reason: "player-defeated", roomId: next.currentRoomId, at });
+  }
+
+  return { ok: true, session: next, applied };
+}
+
+export function applyPlayerHealing(
+  session,
+  amount,
+  { at = session?.startedAt ?? 0, sourceType = "unknown", sourceId = null } = {}
+) {
+  if (!isPlaying(session)) {
+    return { ok: false, error: { code: "SESSION_NOT_PLAYING", message: "Session is not in playing state." } };
+  }
+
+  try {
+    assertNonNegativeSafeInteger(amount, "healing amount");
+  } catch (error) {
+    return {
+      ok: false,
+      error: { code: "PLAYER_HEALING_INVALID", message: error instanceof Error ? error.message : String(error) }
+    };
+  }
+
+  const next = clone(session);
+  const hpBefore = next.playerState?.hp;
+  const maxHp = next.playerState?.maxHp;
+  if (!Number.isSafeInteger(hpBefore) || !Number.isSafeInteger(maxHp) || maxHp <= 0 || hpBefore < 0 || hpBefore > maxHp) {
+    return { ok: false, error: { code: "PLAYER_STATE_INVALID", message: "Player HP state is invalid." } };
+  }
+
+  const applied = Math.min(amount, maxHp - hpBefore);
+  next.playerState.hp = hpBefore + applied;
+  if (applied > 0) {
+    next.gameplayState = applyGameplayStateCommand(next.gameplayState, {
+      type: "increment-counter",
+      counter: "healingReceived",
+      delta: applied
+    });
+  }
+  next.events.push({
+    type: "player-healed",
+    amount: applied,
+    requestedAmount: amount,
+    hpBefore,
+    hpAfter: next.playerState.hp,
+    sourceType,
+    sourceId,
+    roomId: next.currentRoomId,
+    at
+  });
+
+  return { ok: true, session: next, applied };
+}
+
 export function failPlaySession(session, reason, { at = session?.startedAt ?? 0 } = {}) {
   if (!isPlaying(session)) {
     return { ok: false, error: { code: "SESSION_NOT_PLAYING", message: "Session is not in playing state." } };
@@ -220,6 +341,7 @@ export function failPlaySession(session, reason, { at = session?.startedAt ?? 0 
   const next = clone(session);
   next.status = "failed";
   next.failureReason = reason;
+  if (reason === "player-defeated" && next.playerState) next.playerState.hp = 0;
   next.completedAt = at;
   next.events.push({ type: "session-failed", reason, roomId: next.currentRoomId, at });
   return { ok: true, session: next };
@@ -267,6 +389,7 @@ export function createPlayResult(session) {
       visitedRoomIds: [...session.visitedRoomIds],
       finalRoomId: session.currentRoomId,
       goalRoomId: session.goalRoomId,
+      playerState: clone(session.playerState),
       metrics: gameplayMetrics(session)
     }
   };
