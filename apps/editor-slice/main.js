@@ -1427,6 +1427,20 @@ function handleCanvasPointerUp(event) {
   if (distance <= 5) handleCanvasPointer(event);
 }
 
+function refreshLocalizedUi() {
+  if (!session || !adapter) return;
+  renderPromptHistory();
+  ensureRoomOptions();
+  ensureEntityOptions();
+  renderPathStatus();
+  refreshGate();
+  updatePlayReadout();
+  renderRoomEvents();
+  renderPlayExits();
+  if (lastPlayResult) renderResultMetrics(lastPlayResult);
+  updateUi();
+}
+
 function isFormControl(target) {
   return target instanceof HTMLElement && ['SELECT', 'INPUT', 'TEXTAREA', 'BUTTON'].includes(target.tagName);
 }
@@ -1505,12 +1519,14 @@ function handleKeyboard(event) {
 
 async function run() {
   try {
+    bindLanguageSwitchers(document);
     const response = await fetch('/spec/dungeon/fixtures/minimal-valid-v1.json', { cache: 'no-store' });
     if (!response.ok) throw new Error(`fixture fetch failed: HTTP ${response.status}`);
     session = new EditSession(await response.json());
     adapter = createThreeRendererAdapter({ canvas });
     resize();
     renderActiveSpec();
+    subscribeLanguage(() => refreshLocalizedUi());
 
     canvasResizeObserver = new ResizeObserver(() => resize());
     canvasResizeObserver.observe(canvas);
