@@ -917,7 +917,6 @@ try {
     touchingCorridorVisiblePoint,
     afterBlockedTouchMove,
     roomOptionText,
-    goalCheckLayout,
     resizedGoal,
     afterWidthStepper,
     afterUnsafeResize,
