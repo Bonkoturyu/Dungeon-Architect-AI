@@ -93,6 +93,15 @@ The repository also retains the frozen ten-case DesignIntent regression corpus a
 
 `spec/design-intent/fixtures/dai-045-prompt-regression-v1.json`
 
+## Generator versions and research
+
+The current production generator is frozen as **Generator Version 1**. Future generation methods are added as Version 2, Version 3, and so on without deleting or silently replacing earlier implementations.
+
+- [Generator version registry / Version 1 specification](docs/architecture/GENERATOR_VERSIONS.md)
+- [Dungeon generation algorithm research](docs/research/DUNGEON_GENERATION_ALGORITHMS.md)
+
+`DungeonSpec schemaVersion` and `Generator Version` are separate concepts: the same DungeonSpec schema may be produced by multiple generator versions.
+
 ## Architecture
 
 - `DesignIntent` represents normalized game-design intent.
