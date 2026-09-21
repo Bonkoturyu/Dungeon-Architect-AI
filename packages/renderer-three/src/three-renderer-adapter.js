@@ -9,6 +9,15 @@ import {
 const DEFAULT_CLEAR_COLOR = 0x202834;
 const DEFAULT_SELECTION_COLOR = 0x66ccff;
 
+export const DEFAULT_MARKER_COLORS = Object.freeze({
+  start: 0x58d68d,
+  goal: 0x7db7ff,
+  enemy: 0xe36d73,
+  treasure: 0xe2b85f,
+  trap: 0xd9825b,
+  recovery: 0x69c9d4,
+});
+
 function applyBoxTransform(mesh, box) {
   mesh.position.set(box.position.x, box.position.y, box.position.z);
   mesh.scale.set(box.size.x, box.size.y, box.size.z);
@@ -76,37 +85,37 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     }),
     corridor: new THREE.MeshStandardMaterial({ color: 0x8d9bb1, roughness: 0.94, metalness: 0 }),
     corridorExplored: new THREE.MeshStandardMaterial({ color: 0x566477, roughness: 0.96, metalness: 0 }),
-    start: new THREE.MeshStandardMaterial({ color: 0x58d68d, roughness: 0.68, metalness: 0 }),
+    start: new THREE.MeshStandardMaterial({ color: DEFAULT_MARKER_COLORS.start, roughness: 0.68, metalness: 0 }),
     goal: new THREE.MeshStandardMaterial({
-      color: 0x7db7ff,
+      color: DEFAULT_MARKER_COLORS.goal,
       roughness: 0.52,
       metalness: 0.04,
       emissive: 0x173f7a,
       emissiveIntensity: 0.42,
     }),
     enemy: new THREE.MeshStandardMaterial({
-      color: 0xe36d73,
+      color: DEFAULT_MARKER_COLORS.enemy,
       roughness: 0.72,
       metalness: 0,
       emissive: 0x4a171d,
       emissiveIntensity: 0.28,
     }),
     treasure: new THREE.MeshStandardMaterial({
-      color: 0xe2b85f,
+      color: DEFAULT_MARKER_COLORS.treasure,
       roughness: 0.58,
       metalness: 0.12,
       emissive: 0x49350f,
       emissiveIntensity: 0.18,
     }),
     trap: new THREE.MeshStandardMaterial({
-      color: 0xd9825b,
+      color: DEFAULT_MARKER_COLORS.trap,
       roughness: 0.8,
       metalness: 0,
       emissive: 0x3d1f12,
       emissiveIntensity: 0.2,
     }),
     recovery: new THREE.MeshStandardMaterial({
-      color: 0x69c9d4,
+      color: DEFAULT_MARKER_COLORS.recovery,
       roughness: 0.64,
       metalness: 0,
       emissive: 0x123c42,
