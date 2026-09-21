@@ -761,6 +761,40 @@ try {
     };
   });
 
+  const playResultCentering = await page.evaluate(() => {
+    const modeBadge = document.querySelector('#modeBadge');
+    const playSummary = document.querySelector('.play-summary');
+    const playMetrics = document.querySelector('#playStatus');
+    const pill = document.querySelector('#playModeLabel');
+    const summaryRect = playSummary?.getBoundingClientRect() ?? null;
+    const visibleChildren = [pill, playMetrics]
+      .filter((element) => element && element.hidden === false)
+      .map((element) => element.getBoundingClientRect())
+      .filter((rect) => rect.width > 0);
+    const groupLeft = visibleChildren.length
+      ? Math.min(...visibleChildren.map((rect) => rect.left))
+      : null;
+    const groupRight = visibleChildren.length
+      ? Math.max(...visibleChildren.map((rect) => rect.right))
+      : null;
+    const groupCenter = groupLeft != null && groupRight != null
+      ? (groupLeft + groupRight) / 2
+      : null;
+    const summaryCenter = summaryRect
+      ? (summaryRect.left + summaryRect.right) / 2
+      : null;
+
+    return {
+      modeBadgeJustify: modeBadge ? getComputedStyle(modeBadge).justifyContent : null,
+      modeBadgeTextAlign: modeBadge ? getComputedStyle(modeBadge).textAlign : null,
+      playSummaryJustify: playSummary ? getComputedStyle(playSummary).justifyContent : null,
+      playSummaryTextAlign: playSummary ? getComputedStyle(playSummary).textAlign : null,
+      playMetricsJustify: playMetrics ? getComputedStyle(playMetrics).justifyContent : null,
+      groupCenter,
+      summaryCenter,
+    };
+  });
+
   await page.click('#returnEdit');
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().mode === 'edit');
 
@@ -975,6 +1009,15 @@ try {
       playAfterKeyboard.play?.moves === playBeforeKeyboard.play.moves + 1 ||
       eventLayout.eventVisible === true,
     playReticleVisible: eventLayout.reticleVisible === true,
+    playAndResultSummaryAreCentered:
+      playResultCentering.modeBadgeJustify === 'center' &&
+      playResultCentering.modeBadgeTextAlign === 'center' &&
+      playResultCentering.playSummaryJustify === 'center' &&
+      playResultCentering.playSummaryTextAlign === 'center' &&
+      playResultCentering.playMetricsJustify === 'center' &&
+      Number.isFinite(playResultCentering.groupCenter) &&
+      Number.isFinite(playResultCentering.summaryCenter) &&
+      Math.abs(playResultCentering.groupCenter - playResultCentering.summaryCenter) <= 2,
     roomEventCommandsAppearBelowReticle:
       eventLayout.eventVisible === false ||
       (Number.isFinite(eventLayout.eventTop) &&
@@ -1059,6 +1102,7 @@ try {
     playBeforeKeyboard,
     playAfterKeyboard,
     eventLayout,
+    playResultCentering,
     sameRoomGateErrors: sameRoomGate.errors,
     consoleErrors,
     pageErrors,
