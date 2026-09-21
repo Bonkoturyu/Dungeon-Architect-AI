@@ -761,7 +761,6 @@ function selectRoom(roomId) {
   ensureEntityOptions();
   adapter.setSelectedSpecId(roomId);
   adapter.setContextSpecId(null);
-  adapter.focusSpecId(roomId, { preserveDistance: true });
   updateUi();
   return true;
 }
@@ -908,16 +907,34 @@ function checkStartGoalPath() {
   if (mode !== 'edit') return false;
   const spec = authoringSpec();
   const path = shortestStartGoalPath(spec);
+  const revealRoute = workflowTab === 'edit' && !authoringPreviewConcealed;
+
   if (!path) {
     pathCheckResult = {
       reachable: false,
+      routeVisible: false,
       roomIds: [],
       corridorIds: [],
       highlightIds: [],
     };
-    pathStatus.textContent = '✕ Unreachable\nStart cannot reach Goal using initially enabled corridors.';
+    pathStatus.textContent = revealRoute
+      ? '✕ Unreachable\nStart cannot reach Goal using initially enabled corridors.'
+      : '✕ Unreachable';
     adapter.setHighlightedSpecIds([]);
     return false;
+  }
+
+  if (!revealRoute) {
+    pathCheckResult = {
+      reachable: true,
+      routeVisible: false,
+      roomIds: [],
+      corridorIds: [],
+      highlightIds: [],
+    };
+    pathStatus.textContent = '✓ Reachable';
+    adapter.setHighlightedSpecIds([]);
+    return true;
   }
 
   const routeText = path.roomIds.map((roomId) => {
@@ -931,6 +948,7 @@ function checkStartGoalPath() {
   const goalEntity = spec.entities.find((entity) => entity.type === 'goal');
   pathCheckResult = {
     reachable: true,
+    routeVisible: true,
     ...path,
     highlightIds: [
       ...path.roomIds,
@@ -1058,6 +1076,8 @@ async function generateDungeonFromPrompt() {
     mode = 'edit';
     authoringPreviewConcealed = true;
     pathCheckResult = null;
+    if (pathStatus) pathStatus.textContent = 'Path not checked.';
+    adapter.setHighlightedSpecIds([]);
     promptHistory = [
       { prompt, roomCount: lastGeneration.roomCount },
       ...promptHistory,
