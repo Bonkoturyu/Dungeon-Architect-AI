@@ -60,8 +60,26 @@ test('hovered target room snaps the draft even when the ground projection misses
 
   assert.equal(preview.state, 'ready');
   assert.equal(preview.targetRoomId, 'b');
-  assert.equal(preview.targetSide, 'west');
+  assert.equal(preview.targetSide, null);
+  assert.equal(preview.previewTargetSide, 'west');
   assert.deepEqual(preview.points.at(-1), { x: 12, z: 0 });
+});
+
+test('explicit target wall keeps its cardinal side instead of Auto', () => {
+  const spec = fixture();
+  const preview = buildCorridorDragPreview(spec, {
+    sourceRoomId: 'a',
+    sourceSide: 'east',
+    pointer: { x: 5, z: 20 },
+    targetRoomId: 'b',
+    targetSide: 'north',
+    width: 3,
+  });
+
+  assert.equal(preview.state, 'ready');
+  assert.equal(preview.targetRoomId, 'b');
+  assert.equal(preview.targetSide, 'north');
+  assert.equal(preview.previewTargetSide, 'north');
 });
 
 test('explicit hovered Room stays the target even when the temporary L path crosses another Room', () => {
