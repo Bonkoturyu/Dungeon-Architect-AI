@@ -73,29 +73,33 @@ try {
   await page.locator('#onboardingBack').click();
   const afterBack = await page.evaluate(() => window.__DAI_ONBOARDING__.getState());
 
-  await page.locator('#onboarding [data-language="ja"]').click();
+  await page.locator('#onboardingLanguageCycle').click();
   const japanese = await page.evaluate(() => ({
     state: window.__DAI_ONBOARDING__.getState(),
     title: document.querySelector('#onboardingTitle')?.textContent ?? '',
     next: document.querySelector('#onboardingNext')?.textContent ?? '',
     htmlLang: document.documentElement.lang,
+    cycleText: document.querySelector('#onboardingLanguageCycle')?.textContent ?? '',
   }));
-  await page.locator('#onboarding [data-language="zh-Hans"]').click();
+  await page.locator('#onboardingLanguageCycle').click();
   const simplified = await page.evaluate(() => ({
     title: document.querySelector('#onboardingTitle')?.textContent ?? '',
     htmlLang: document.documentElement.lang,
+    cycleText: document.querySelector('#onboardingLanguageCycle')?.textContent ?? '',
   }));
-  await page.locator('#onboarding [data-language="zh-Hant"]').click();
+  await page.locator('#onboardingLanguageCycle').click();
   const traditional = await page.evaluate(() => ({
     title: document.querySelector('#onboardingTitle')?.textContent ?? '',
     htmlLang: document.documentElement.lang,
+    cycleText: document.querySelector('#onboardingLanguageCycle')?.textContent ?? '',
   }));
-  await page.locator('#onboarding [data-language="ko"]').click();
+  await page.locator('#onboardingLanguageCycle').click();
   const korean = await page.evaluate(() => ({
     title: document.querySelector('#onboardingTitle')?.textContent ?? '',
     htmlLang: document.documentElement.lang,
+    cycleText: document.querySelector('#onboardingLanguageCycle')?.textContent ?? '',
   }));
-  await page.locator('#onboarding [data-language="en"]').click();
+  await page.locator('#onboardingLanguageCycle').click();
 
   await page.locator('#onboardingClose').click();
   const afterClose = await page.evaluate(() => window.__DAI_ONBOARDING__.getState());
@@ -122,16 +126,20 @@ try {
       japanese.state?.language === 'ja' &&
       japanese.htmlLang === 'ja' &&
       japanese.title === 'ダンジョンを調整' &&
-      japanese.next === '次へ',
+      japanese.next === '次へ' &&
+      japanese.cycleText === '日本語 → 简中',
     simplifiedChineseSwitchWorks:
       simplified.htmlLang === 'zh-Hans' &&
-      simplified.title === '调整地牢',
+      simplified.title === '调整地牢' &&
+      simplified.cycleText === '简中 → 繁中',
     traditionalChineseSwitchWorks:
       traditional.htmlLang === 'zh-Hant' &&
-      traditional.title === '調整地城',
+      traditional.title === '調整地城' &&
+      traditional.cycleText === '繁中 → 한국어',
     koreanSwitchWorks:
       korean.htmlLang === 'ko' &&
-      korean.title === '던전 조정',
+      korean.title === '던전 조정' &&
+      korean.cycleText === '한국어 → EN',
     closeHidesGuide: afterClose.open === false && hiddenAfterClose,
     guideReopensAtWelcome: afterReopen.open === true && afterReopen.step?.id === 'welcome' && afterReopen.stepIndex === 0 && afterReopen.language === 'en',
     finalStepIsPlay: finalStep.step?.id === 'play' && finalStep.stepIndex === 4 && doneLabel === 'Done',
