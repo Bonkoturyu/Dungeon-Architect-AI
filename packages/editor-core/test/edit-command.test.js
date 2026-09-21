@@ -245,9 +245,16 @@ test("corridor side edit rejects unsupported side identifiers", () => {
 test("reconnect-corridor changes endpoints atomically and supports undo/redo", () => {
   const original = fixture();
   const session = new EditSession(original);
-  const corridor = original.corridors[0];
-  const targetRoom = original.rooms.at(-1);
+  const corridor = {
+    id: "rewire-test",
+    fromRoomId: original.rooms[0].id,
+    toRoomId: original.rooms[2].id,
+    width: 3,
+    kind: "manual",
+  };
+  assert.equal(session.apply({ type: "add-corridor", corridor }).ok, true);
 
+  const targetRoom = original.rooms.at(-1);
   const result = session.apply({
     type: "reconnect-corridor",
     corridorId: corridor.id,
@@ -268,8 +275,8 @@ test("reconnect-corridor changes endpoints atomically and supports undo/redo", (
   edited = session.spec.corridors.find((entry) => entry.id === corridor.id);
   assert.equal(edited.fromRoomId, corridor.fromRoomId);
   assert.equal(edited.toRoomId, corridor.toRoomId);
-  assert.equal(edited.fromSide, corridor.fromSide);
-  assert.equal(edited.toSide, corridor.toSide);
+  assert.equal(edited.fromSide, undefined);
+  assert.equal(edited.toSide, undefined);
 
   assert.equal(session.redo().ok, true);
   edited = session.spec.corridors.find((entry) => entry.id === corridor.id);
