@@ -4,31 +4,96 @@
 
 `startPlaySession()` first runs current DungeonSpec validation. Any validation error blocks START and returns `blocked: true`.
 
+A successful START also initializes deterministic player vitality:
+
+- `playerState.hp`
+- `playerState.maxHp`
+- default MaxHP: `20`
+
+`maxHp` must be a positive safe integer.
+
 ## Execution snapshot
 
 A successful START deep-clones the authoring DungeonSpec into an execution snapshot. Later authoring edits cannot mutate the active play session.
 
+Runtime PlayerState, entity states, counters and event history remain separate from the authored DungeonSpec.
+
 ## Session state
 
-Current minimal fields:
+Current fields include:
 
 - dungeonId / dungeonSeed
 - immutable-by-contract snapshot
-- status: `playing` or `cleared` (`failed` reserved for later gameplay)
+- status: `playing`, `cleared`, or `failed`
+- failureReason
 - startedAt / completedAt
 - currentRoomId / goalRoomId
 - visitedRoomIds
 - moves
+- `playerState: { hp, maxHp }`
+- gameplayState
 - event log
+
+## Player vitality
+
+`applyPlayerDamage()` and `applyPlayerHealing()` are immutable PlaySession transitions.
+
+Damage:
+
+- HP never falls below zero;
+- `damageTaken` records the amount actually removed from HP;
+- HP reaching zero transitions immediately to terminal `failed`;
+- terminal reason is `player-defeated`;
+- Result reports one death for that terminal reason.
+
+Healing:
+
+- HP never exceeds MaxHP;
+- `healingReceived` records the amount actually restored;
+- healing cannot revive a finished session.
+
+Current deterministic room-event defaults:
+
+- Enemy combat: `4` damage;
+- triggered Trap: `6` damage;
+- Recovery: `8` healing.
+
+An entity may supply its own numeric `damage` or `healing` value; the runtime otherwise uses the defaults above.
+
+## Enemy / Trap / Recovery outcomes
+
+Enemy combat uses `resolveEnemyCombat()`:
+
+1. record the first encounter;
+2. apply Enemy damage;
+3. if the player survives, defeat the Enemy;
+4. if the damage is lethal, the run ends and the Enemy remains unresolved.
+
+Trap interaction remains a choice:
+
+- AVOID resolves the Trap without damage;
+- RISK / trigger resolves the Trap and applies deterministic damage.
+
+Recovery is one-shot and restores HP up to MaxHP.
+
+All outcomes continue to use the existing gameplay counters and event log rather than creating a second gameplay state system.
 
 ## Movement
 
-The current logical slice permits movement only between rooms connected by a corridor in the execution snapshot.
+Movement is permitted only between rooms connected by a runtime-enabled corridor in the execution snapshot.
 
-This is not the final player-control implementation. Rendering, collision and perspective remain separate evidence-gated decisions.
+Movement, room-event resolution and PlayerState transitions are renderer-independent. Rendering, collision and presentation remain separate adapters.
 
 ## Result
 
-A finished session can produce a basic Result containing status, elapsed time, moves, visited rooms, final room and goal room.
+A finished session produces a Result containing:
 
-Later gameplay tasks will add treasure/trap/enemy/event metrics without changing the authoring/runtime separation invariant.
+- terminal status / failure reason;
+- elapsed time;
+- moves;
+- ordered route and unique visited rooms;
+- final / goal room;
+- final `playerState`;
+- gameplay metrics including interactions, Enemy / Treasure / Trap / Recovery counts, damage, healing and deaths.
+
+The authoring/runtime separation invariant remains unchanged.
