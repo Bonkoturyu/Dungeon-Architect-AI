@@ -40,9 +40,13 @@ export function generateDungeonFromDesignIntent(intent, {
   version = DEFAULT_GENERATOR_VERSION,
   ...options
 } = {}) {
-  switch (normalizeGeneratorVersion(version)) {
+  const normalizedVersion = normalizeGeneratorVersion(version);
+  switch (normalizedVersion) {
     case GENERATOR_VERSION_V1:
-      return generateDungeonFromDesignIntentV1(intent, options);
+      return {
+        ...generateDungeonFromDesignIntentV1(intent, options),
+        generatorVersion: normalizedVersion,
+      };
     default:
       throw new RangeError(`Unsupported generator version: ${version}`);
   }
