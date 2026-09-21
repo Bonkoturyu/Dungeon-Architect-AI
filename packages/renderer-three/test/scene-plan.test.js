@@ -213,3 +213,43 @@ test('touching connected rooms remove the shared wall and use the combined outer
   assert.equal(a.doorOpenings.find((opening) => opening.corridorId === 'ab').width, 8);
   assert.equal(b.doorOpenings.find((opening) => opening.corridorId === 'ab').width, 8);
 });
+
+
+test('scene plan remains renderable after large outward room moves', () => {
+  const spec = {
+    schemaVersion: '1.0',
+    id: 'outward-edit-routing',
+    seed: 91,
+    rooms: [
+      { id: 'start-room', x: 0, z: 0, width: 8, depth: 8 },
+      { id: 'north-room', x: 12, z: 0, width: 8, depth: 8 },
+      { id: 'middle-room', x: 24, z: 0, width: 8, depth: 8 },
+      { id: 'south-room', x: 24, z: 12, width: 8, depth: 8 },
+      { id: 'goal-room', x: 36, z: 12, width: 8, depth: 8 },
+    ],
+    corridors: [
+      { id: 'c1', fromRoomId: 'start-room', toRoomId: 'north-room', width: 3, kind: 'backbone' },
+      { id: 'c2', fromRoomId: 'north-room', toRoomId: 'middle-room', width: 3, kind: 'backbone' },
+      { id: 'c3', fromRoomId: 'middle-room', toRoomId: 'south-room', width: 3, kind: 'backbone' },
+      { id: 'c4', fromRoomId: 'south-room', toRoomId: 'goal-room', width: 3, kind: 'backbone' },
+      { id: 'c5', fromRoomId: 'start-room', toRoomId: 'south-room', width: 3, kind: 'alternate' },
+      { id: 'c6', fromRoomId: 'north-room', toRoomId: 'goal-room', width: 3, kind: 'alternate' },
+    ],
+    entities: [
+      { id: 'start', type: 'start', roomId: 'start-room' },
+      { id: 'goal', type: 'goal', roomId: 'goal-room' },
+    ],
+    events: [],
+  };
+
+  const initial = createDungeonScenePlan(spec);
+  assert.equal(initial.roomGroups.length, 5);
+
+  spec.rooms.find((room) => room.id === 'start-room').x -= 24;
+  spec.rooms.find((room) => room.id === 'goal-room').z += 24;
+
+  const moved = createDungeonScenePlan(spec);
+  assert.equal(moved.roomGroups.length, 5);
+  assert.equal(moved.corridorGroups.length, 6);
+  assert.ok(moved.corridorGroups.every((group) => Array.isArray(group.route) && group.route.length >= 1));
+});
