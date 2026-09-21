@@ -23,6 +23,10 @@ import {
   triggerTrap,
   useRecovery,
 } from '../../packages/play-core/src/interaction-runtime.js';
+import {
+  deterministicEnemyReward,
+  deterministicTreasureReward,
+} from '../../packages/play-core/src/progression-runtime.js';
 import { createDungeonScenePlan, createThreeRendererAdapter } from '../../packages/renderer-three/src/index.js';
 import { generateDungeonFromDesignIntent } from '../../packages/generator/src/design-intent-generator.js';
 import { DEFAULT_GENERATOR_VERSION } from '../../packages/generator/src/generator-versions.js';
@@ -61,6 +65,8 @@ const playModeLabel = document.querySelector('#playModeLabel');
 const moveCount = document.querySelector('#moveCount');
 const mappedCount = document.querySelector('#mappedCount');
 const hpCount = document.querySelector('#hpCount');
+const levelCount = document.querySelector('#levelCount');
+const goldCount = document.querySelector('#goldCount');
 const roomSelect = document.querySelector('#roomSelect');
 const roomWidth = document.querySelector('#roomWidth');
 const roomDepth = document.querySelector('#roomDepth');
@@ -189,6 +195,8 @@ function currentPlayState() {
     moves: playSession.moves,
     visitedRoomIds: [...playSession.visitedRoomIds],
     map: clone(derivePlayMap(playSession)),
+    playerState: clone(playSession.playerState),
+    gameplayCounters: clone(playSession.gameplayState?.counters ?? {}),
     source: playSource,
     events: clone(playSession.events ?? []),
     snapshot: clone(playSession.snapshot),
@@ -811,7 +819,8 @@ function renderRoomEvents() {
 
     const note = document.createElement('span');
     note.className = 'room-event-note';
-    note.textContent = `${t('roomEvent.blocks')} · -${enemy.damage ?? DEFAULT_ENEMY_DAMAGE} HP`;
+    const reward = deterministicEnemyReward(playSession, enemy.id);
+    note.textContent = `${t('roomEvent.blocks')} · -${enemy.damage ?? DEFAULT_ENEMY_DAMAGE} HP · +${reward.xp} XP · +${reward.gold}G`;
 
     const actions = document.createElement('div');
     actions.className = 'room-event-actions';
@@ -849,7 +858,10 @@ function renderRoomEvents() {
       const base = warning === 'floor-cracks' ? t('roomEvent.cracked') : t('roomEvent.off');
       note.textContent = `${base} · -${entity.damage ?? DEFAULT_TRAP_DAMAGE} HP`;
     } else if (entity.type === 'treasure') {
-      note.textContent = warning === 'suspicious-glow' ? t('roomEvent.suspicious') : t('roomEvent.optional');
+      const reward = deterministicTreasureReward(playSession, entity.id);
+      const rewardIcon = reward.item.slot === 'weapon' ? '⚔' : '▰';
+      const base = warning === 'suspicious-glow' ? t('roomEvent.suspicious') : t('roomEvent.optional');
+      note.textContent = `${base} · +${reward.gold}G · ${rewardIcon} T${reward.item.tier}`;
     } else {
       note.textContent = `${t('roomEvent.optional')} · +${entity.healing ?? DEFAULT_RECOVERY_HEALING} HP`;
     }
@@ -1720,6 +1732,8 @@ function updatePlayReadout() {
     if (moveCount) moveCount.textContent = '0';
     if (mappedCount) mappedCount.textContent = '0';
     if (hpCount) hpCount.textContent = '0/0';
+    if (levelCount) levelCount.textContent = '1';
+    if (goldCount) goldCount.textContent = '0';
     resultStatus.textContent = '';
     resultStatus.hidden = true;
     if (playModeLabel) {
@@ -1737,13 +1751,22 @@ function updatePlayReadout() {
   if (moveCount) moveCount.textContent = String(playSession.moves);
   if (mappedCount) mappedCount.textContent = String(map.exploredRoomIds.length);
   if (hpCount) hpCount.textContent = `${playSession.playerState?.hp ?? 0}/${playSession.playerState?.maxHp ?? 0}`;
+  if (levelCount) levelCount.textContent = String(playSession.playerState?.level ?? 1);
+  if (goldCount) goldCount.textContent = String(playSession.playerState?.gold ?? 0);
 }
 
 function renderResultMetrics(result) {
   if (!resultMetrics) return;
   const metrics = result?.metrics ?? {};
+  const player = result?.playerState ?? {};
   const items = [
-    ['HP', `${result?.playerState?.hp ?? 0}/${result?.playerState?.maxHp ?? 0}`],
+    ['HP', `${player.hp ?? 0}/${player.maxHp ?? 0}`],
+    ['LV', player.level ?? 1],
+    ['XP', `${player.xp ?? 0}`],
+    ['G', player.gold ?? 0],
+    ['LOOT', metrics.lootCollected ?? 0],
+    ['WPN', player.equipment?.weapon ? `T${player.equipment.weapon.tier}` : '—'],
+    ['ARM', player.equipment?.armor ? `T${player.equipment.armor.tier}` : '—'],
     ['DMG', metrics.damageTaken ?? 0],
     ['HEAL', metrics.healingReceived ?? 0],
     [t('result.enemy'), metrics.enemiesCleared ?? 0],
@@ -1908,6 +1931,8 @@ function returnToEdit() {
   if (moveCount) moveCount.textContent = '0';
   if (mappedCount) mappedCount.textContent = '0';
   if (hpCount) hpCount.textContent = '0/0';
+  if (levelCount) levelCount.textContent = '1';
+  if (goldCount) goldCount.textContent = '0';
   resultStatus.textContent = '';
   resultStatus.hidden = true;
   if (resultMetrics) {
