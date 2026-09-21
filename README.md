@@ -61,7 +61,8 @@ Then confirm `✓ Valid`, open **Play**, choose **▶ Test** (current authored d
 | Natural-language generation | OpenAI Responses cloud path + deterministic fallback → validated DesignIntent → bounded DungeonSpec mapping |
 | Play core | Session snapshot, Fog of War / auto-map, directional exits, enemy/treasure/trap/recovery Room Events, Test/Mystery play, clear/failure Result |
 | Natural-language edit | Live-tested constrained `move-entity` translation through server-side OpenAI path |
-| Edit mode | Room selection/movement, entity add/move/remove, Undo/Redo |
+| Edit mode | Room selection/movement/resize, entity add/move/remove, Undo/Redo, Start→Goal route check |
+| UI languages | English (default), Japanese, Simplified Chinese, Traditional Chinese, Korean; live switching also available in onboarding |
 | Validation | Critical Play gate with structural/reachability checks |
 | Simulation | Deterministic simulator, shortest/greedy/cautious agents, metrics, intent-fit and explainable summary |
 | Hosting | Cloudflare Pages + Pages Functions / ADR-002 |
