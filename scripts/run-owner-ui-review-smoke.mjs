@@ -467,8 +467,8 @@ try {
       languageSamples.en.dialogButtonCount === 1 &&
       languageSamples.en.legacyHeaderLanguageButtons === 0 &&
       languageSamples.en.legacyDialogLanguageButtons === 0 &&
-      languageSamples.en.headerCycleText === 'EN → 日本語' &&
-      languageSamples.en.dialogCycleText === 'EN → 日本語',
+      languageSamples.en.headerCycleText === 'EN ▶ 日本語' &&
+      languageSamples.en.dialogCycleText === 'EN ▶ 日本語',
     editPanelsOrderedAiEntityRoom:
       editPanelOrder.length === 3 &&
       editPanelOrder[0] === '✦ AI Request' &&
