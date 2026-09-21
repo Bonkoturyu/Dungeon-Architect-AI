@@ -344,7 +344,6 @@ try {
   const pathText = await page.locator('#pathStatus').innerText();
 
   // Viewport HUD replaces the previous right-side entity card wall.
-  const entityCount = generated.entities.length;
   const rightEntityCardCount = await page.locator('aside .entity-card').count();
   const legendState = await page.evaluate(() => {
     const items = [...document.querySelectorAll('#entityLegend .legend-item')];
@@ -380,6 +379,19 @@ try {
     hasStart: [...document.querySelectorAll('#roomContentsItems .room-content-item')]
       .some((button) => button.dataset.entityId === startId),
   }), startEntityId);
+
+  const editHudLayout = await page.evaluate(() => {
+    const viewport = document.querySelector('.viewport-shell').getBoundingClientRect();
+    const selection = document.querySelector('#selectionOverlay').getBoundingClientRect();
+    const legend = document.querySelector('#entityLegend').getBoundingClientRect();
+    const contents = document.querySelector('#roomContentsOverlay').getBoundingClientRect();
+    return {
+      viewport: { left: viewport.left, right: viewport.right, top: viewport.top, width: viewport.width },
+      selection: { left: selection.left, right: selection.right, top: selection.top, bottom: selection.bottom },
+      legend: { left: legend.left, top: legend.top, bottom: legend.bottom },
+      contents: { left: contents.left, right: contents.right, top: contents.top, bottom: contents.bottom },
+    };
+  });
 
   const startPoint = await page.evaluate((id) =>
     window.__DAI_EDITOR_SLICE__.getScreenPositionForSpecId(id), startEntityId);
@@ -583,6 +595,14 @@ try {
       roomContentsBeforeEntityClick.roomText.includes(startRoomId) &&
       roomContentsBeforeEntityClick.itemCount >= 1 &&
       roomContentsBeforeEntityClick.hasStart === true,
+    editHudMatchesRequestedPlacement:
+      editHudLayout.selection.left >= editHudLayout.viewport.left &&
+      editHudLayout.selection.left <= editHudLayout.viewport.left + 32 &&
+      editHudLayout.legend.left === editHudLayout.selection.left &&
+      editHudLayout.legend.top >= editHudLayout.selection.bottom &&
+      editHudLayout.contents.right <= editHudLayout.viewport.right &&
+      editHudLayout.contents.right >= editHudLayout.viewport.right - 32 &&
+      editHudLayout.contents.left > editHudLayout.viewport.left + editHudLayout.viewport.width * 0.55,
     clicking3dEntitySelectsAndHighlights:
       selectedEntityState.state.selectedEntityId === startEntityId &&
       selectedEntityState.renderedSelection === startEntityId,
@@ -652,6 +672,7 @@ try {
     rightEntityCardCount,
     legendState,
     roomContentsBeforeEntityClick,
+    editHudLayout,
     selectedEntityId: selectedEntityState.state.selectedEntityId,
     renderedSelection: selectedEntityState.renderedSelection,
     selectedEntityRoomListValue: selectedEntityState.roomListValue,
