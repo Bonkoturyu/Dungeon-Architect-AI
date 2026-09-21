@@ -145,6 +145,12 @@ The owner review replaces the previous left-drag orbit interaction with an edito
 - Collision with an existing Corridor / invalid target produces an error instead of silently creating invalid geometry.
 - Dragging from an existing Corridor endpoint temporarily replaces its rendered Corridor with the draft appearance; successful release reconnects the same Corridor ID as one undoable edit.
 
+Result/Play summary alignment:
+
+- the header mode badge label is visually centered inside its pill while the status dot is positioned independently;
+- the Play/Result summary row centers the mode label together with MOVE/MAP metrics within the floating result card;
+- the result banner and result metrics remain centered below that summary row.
+
 The temporary Corridor uses distinct visual states:
 
 - cyan: drafting / no Room reached yet;
