@@ -57,7 +57,7 @@ Rate limits shown for `gpt-5.6-luna` at Tier 1:
 
 The displayed `$0.00` should be treated as dashboard rounding / presentation for a very small current spend, not as evidence that provider usage has literally incurred zero cost. Token usage and requests are non-zero.
 
-At the captured usage level, the project was far below the visible Tier 1 request/token ceilings.
+The dashboard snapshot does not show peak per-minute request/token consumption, so a precise percentage utilization of the 500 RPM / 500,000 TPM burst limits cannot be calculated from the seven-day aggregate. The observed total volume is nevertheless very small relative to the available rate-limit envelope.
 
 ## Cloudflare
 
@@ -95,17 +95,19 @@ Observed period: **September 1–September 21, 2026**
 
 Current visible quota counters:
 
-| Feature | Usage | Limit |
-|---|---:|---:|
-| Requests today | 137 | 100,000 |
-| Observability events today | 0 | 200,000 |
-| Workers build minutes this month | 154 | 3,000 |
+| Feature | Usage | Limit | Utilization |
+|---|---:|---:|---:|
+| Requests today | 137 | 100,000 | **0.137%** |
+| Observability events today | 0 | 200,000 | **0%** |
+| Workers build minutes this month | 154 | 3,000 | **5.13%** |
 
 ### Interpretation
 
 The account-wide request count must not be confused with Dungeon Architect AI traffic. The project-specific Production view showed only 8 successful requests / 0 errors for the last 24 hours, while the Workers & Pages account view aggregated activity from multiple applications.
 
 At capture time, the visible Cloudflare request and build-minute quotas had substantial remaining headroom.
+
+The screenshots expose the quota values but do not explicitly display the Cloudflare billing plan name. Exact plan identification is therefore intentionally not inferred here.
 
 ## Operational conclusion
 
