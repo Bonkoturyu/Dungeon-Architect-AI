@@ -1,4 +1,4 @@
-const DEFAULT_LANGUAGE = 'en';
+export const DEFAULT_LANGUAGE = 'en';
 
 export const LANGUAGE_OPTIONS = Object.freeze([
   Object.freeze({ id: 'en', label: 'EN', htmlLang: 'en' }),
@@ -8,7 +8,7 @@ export const LANGUAGE_OPTIONS = Object.freeze([
   Object.freeze({ id: 'ko', label: '한국어', htmlLang: 'ko' }),
 ]);
 
-const TRANSLATIONS = Object.freeze({
+export const MESSAGE_CATALOGS = Object.freeze({
   en: Object.freeze({
     'app.tagline': 'Describe · Build · Explore',
     'language.label': 'Language',
@@ -702,15 +702,31 @@ export function getLanguage() {
   return currentLanguage;
 }
 
-export function getMessage(language, key, variables = {}) {
-  const normalized = normalizeLanguage(language);
-  const dictionary = TRANSLATIONS[normalized] ?? TRANSLATIONS[DEFAULT_LANGUAGE];
-  const fallback = TRANSLATIONS[DEFAULT_LANGUAGE];
-  let value = dictionary[key] ?? fallback[key] ?? key;
+export function resolveMessageFromCatalogs(
+  catalogs,
+  language,
+  key,
+  variables = {},
+  { defaultLanguage = DEFAULT_LANGUAGE } = {},
+) {
+  const defaultCatalog = catalogs?.[defaultLanguage] ?? {};
+  const requestedCatalog = catalogs?.[language] ?? defaultCatalog;
+  let value = requestedCatalog?.[key] ?? defaultCatalog?.[key] ?? key;
   for (const [name, replacement] of Object.entries(variables)) {
     value = value.replaceAll(`{${name}}`, String(replacement));
   }
   return value;
+}
+
+export function getMessage(language, key, variables = {}) {
+  const normalized = normalizeLanguage(language);
+  return resolveMessageFromCatalogs(
+    MESSAGE_CATALOGS,
+    normalized,
+    key,
+    variables,
+    { defaultLanguage: DEFAULT_LANGUAGE },
+  );
 }
 
 export function t(key, variables = {}) {
