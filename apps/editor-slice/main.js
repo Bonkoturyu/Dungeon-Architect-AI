@@ -1561,6 +1561,8 @@ async function applyNaturalEdit() {
     if (command.type === 'move-entity') {
       selectedEntityId = command.entityId;
       selectedRoomId = null;
+      selectedCorridorId = null;
+      setInspectorTab('entities');
     }
     naturalEditInput.value = '';
     clearPathCheck();
