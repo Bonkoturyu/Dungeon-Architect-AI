@@ -1,6 +1,7 @@
 import { applyGameplayStateCommand } from "./gameplay-state.js";
 import { dispatchSupportedEvents } from "./event-runtime.js";
 import { applyPlayerDamage, applyPlayerHealing } from "./play-session.js";
+import { grantTreasureReward } from "./progression-runtime.js";
 
 export const DEFAULT_TRAP_DAMAGE = 6;
 export const DEFAULT_RECOVERY_HEALING = 8;
@@ -202,7 +203,11 @@ export function openTreasure(session, treasureId, { at = session?.startedAt ?? 0
   incrementCounter(next, "treasuresOpened", 1);
   incrementInteraction(next);
   next.events.push({ type: "treasure-opened", treasureId, roomId: validation.entity.roomId, at });
-  return dispatchEntityTriggers(next, treasureId, ["on_interact_entity", "on_open_treasure"], at);
+  const dispatched = dispatchEntityTriggers(next, treasureId, ["on_interact_entity", "on_open_treasure"], at);
+  if (!dispatched.ok) return dispatched;
+  const rewarded = grantTreasureReward(dispatched.session, treasureId, { at });
+  if (!rewarded.ok) return rewarded;
+  return { ok: true, session: rewarded.session, reward: rewarded.reward };
 }
 
 export function inspectTrap(session, trapId, { at = session?.startedAt ?? 0 } = {}) {
