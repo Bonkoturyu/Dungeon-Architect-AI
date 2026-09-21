@@ -89,6 +89,8 @@ const hint = document.querySelector('#hint');
 const viewportHelp = document.querySelector('#viewportHelp');
 const viewportTitle = document.querySelector('#viewportTitle');
 const workflowTabButtons = [...document.querySelectorAll('.workflow-tab[data-workflow-tab]')];
+const inspectorShell = document.querySelector('#editInspector');
+const inspectorTabButtons = [...document.querySelectorAll('.inspector-tab[data-inspector-tab-target]')];
 
 let adapter;
 let session;
@@ -106,6 +108,7 @@ let playSession = null;
 let playSource = null;
 let lastPlayResult = null;
 let workflowTab = 'create';
+let inspectorTab = 'entities';
 let playActionClock = 0;
 let canvasResizeObserver = null;
 let promptHistory = [];
@@ -177,6 +180,7 @@ function snapshotState() {
   return {
     mode,
     workflowTab,
+    inspectorTab,
     language: getLanguage(),
     selectedRoomId,
     selectedEntityId,
@@ -452,9 +456,9 @@ function selectCorridor(corridorId) {
   selectedRoomId = null;
   selectedEntityId = null;
   setWorkflowTab('edit');
+  setInspectorTab('corridors');
   ensureRoomOptions();
   ensureEntityOptions();
-  ensureCorridorOptions();
   ensureCorridorOptions();
   adapter.setSelectedSpecId(corridor.id);
   adapter.setContextSpecId(null);
@@ -543,6 +547,18 @@ function renderEditContextHud() {
   }));
 }
 
+function setInspectorTab(nextTab) {
+  if (!['entities', 'rooms', 'corridors'].includes(nextTab)) return false;
+  inspectorTab = nextTab;
+  if (inspectorShell) inspectorShell.dataset.inspectorTab = nextTab;
+  for (const button of inspectorTabButtons) {
+    const active = button.dataset.inspectorTabTarget === nextTab;
+    button.classList.toggle('is-active', active);
+    button.setAttribute('aria-selected', String(active));
+  }
+  return true;
+}
+
 function setWorkflowTab(nextTab) {
   if (!['create', 'edit', 'play'].includes(nextTab)) return false;
   const revealsAuthoring = nextTab === 'edit' && authoringPreviewConcealed;
@@ -569,6 +585,7 @@ function updateUi() {
 
   document.body.dataset.mode = mode;
   document.body.dataset.workflowTab = workflowTab;
+  if (inspectorShell) inspectorShell.dataset.inspectorTab = inspectorTab;
   if (hint) hint.hidden = true;
 
   if (authoringPreviewCover) authoringPreviewCover.hidden = !concealed;
@@ -964,6 +981,7 @@ function selectRoom(roomId) {
   selectedCorridorId = null;
   entityRoom.value = roomId;
   setWorkflowTab('edit');
+  setInspectorTab('rooms');
   ensureRoomOptions();
   ensureEntityOptions();
   ensureCorridorOptions();
@@ -991,6 +1009,7 @@ function selectEntity(entityId) {
   entitySelect.value = entity.id;
   entityRoom.value = entity.roomId;
   setWorkflowTab('edit');
+  setInspectorTab('entities');
   ensureRoomOptions();
   ensureEntityOptions();
   adapter.setSelectedSpecId(entity.id);
@@ -1060,8 +1079,13 @@ function applyCommand(command, successMessage) {
     try {
       createDungeonScenePlan(preview.spec);
     } catch {
-      setEditStatus('error: LAYOUT_NOT_RENDERABLE');
-      showViewportNotice(t('notice.route'));
+      if (command.type === 'move-room') {
+        setEditStatus(t('notice.routeMoveShort'));
+        showViewportNotice(t('notice.routeMove'), { timeoutMs: 5200 });
+      } else {
+        setEditStatus(t('notice.routeShort'));
+        showViewportNotice(t('notice.route'), { timeoutMs: 4200 });
+      }
       return false;
     }
   }
@@ -1286,6 +1310,7 @@ function addRoom() {
   selectedRoomId = room.id;
   selectedEntityId = null;
   selectedCorridorId = null;
+  setInspectorTab('rooms');
   renderActiveSpec();
   return true;
 }
@@ -1324,6 +1349,7 @@ function addCorridor() {
   selectedCorridorId = corridor.id;
   selectedRoomId = null;
   selectedEntityId = null;
+  setInspectorTab('corridors');
   renderActiveSpec();
   return true;
 }
@@ -1892,6 +1918,10 @@ async function run() {
     for (const button of workflowTabButtons) {
       button.addEventListener('click', () => setWorkflowTab(button.dataset.workflowTab));
     }
+    for (const button of inspectorTabButtons) {
+      button.addEventListener('click', () => setInspectorTab(button.dataset.inspectorTabTarget));
+    }
+    setInspectorTab(inspectorTab);
     startButton.addEventListener('click', startDungeon);
     mysteryPlayButton.addEventListener('click', startMysteryDungeon);
     returnEditButton.addEventListener('click', returnToEdit);
@@ -1939,6 +1969,7 @@ async function run() {
       selectRoom,
       selectEntity,
       selectCorridor,
+      setInspectorTab,
       addRoom,
       removeSelectedRoom,
       addCorridor,
