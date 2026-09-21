@@ -1,4 +1,7 @@
-import { validateDungeonSpec } from "../../core/src/dungeon-spec.js";
+import {
+  CORRIDOR_SIDES,
+  validateDungeonSpec,
+} from "../../core/src/dungeon-spec.js";
 
 function cloneSpec(spec) {
   return JSON.parse(JSON.stringify(spec));
@@ -14,6 +17,35 @@ function validateResult(spec) {
     return fail("EDIT_RESULT_INVALID", JSON.stringify(validation.errors));
   }
   return null;
+}
+
+const CORRIDOR_SIDE_SET = new Set(CORRIDOR_SIDES);
+
+function normalizeCorridorSide(value) {
+  if (value == null || value === "" || value === "auto") return null;
+  return CORRIDOR_SIDE_SET.has(value) ? value : undefined;
+}
+
+function eventReferences(event, {
+  roomIds = new Set(),
+  corridorIds = new Set(),
+  entityIds = new Set(),
+} = {}) {
+  const trigger = event?.trigger ?? {};
+  if (typeof trigger.roomId === "string" && roomIds.has(trigger.roomId)) return true;
+  if (typeof trigger.entityId === "string" && entityIds.has(trigger.entityId)) return true;
+  if (Array.isArray(trigger.enemyIds) && trigger.enemyIds.some((id) => entityIds.has(id))) return true;
+
+  for (const condition of event?.conditions ?? []) {
+    if (Array.isArray(condition?.enemyIds) && condition.enemyIds.some((id) => entityIds.has(id))) return true;
+  }
+
+  for (const action of event?.actions ?? []) {
+    if (typeof action?.corridorId === "string" && corridorIds.has(action.corridorId)) return true;
+    if (Array.isArray(action?.enemyIds) && action.enemyIds.some((id) => entityIds.has(id))) return true;
+  }
+
+  return false;
 }
 
 export function applyEditCommand(spec, command) {
@@ -34,6 +66,139 @@ export function applyEditCommand(spec, command) {
       inverse = { type: "move-room", roomId: room.id, x: room.x, z: room.z };
       room.x = command.x;
       room.z = command.z;
+      break;
+    }
+
+    case "add-room": {
+      const room = command.room;
+      if (!room || typeof room !== "object" || Array.isArray(room)) {
+        return fail("ROOM_INVALID", "add-room requires a room object.");
+      }
+      if (next.rooms.some((item) => item.id === room.id)) {
+        return fail("DUPLICATE_ID", `Duplicate room ID: ${room.id}`);
+      }
+      next.rooms.push(cloneSpec(room));
+      inverse = { type: "remove-room", roomId: room.id };
+      break;
+    }
+
+    case "remove-room": {
+      const roomIndex = next.rooms.findIndex((item) => item.id === command.roomId);
+      if (roomIndex < 0) return fail("ROOM_NOT_FOUND", `Unknown room: ${command.roomId}`);
+      const protectedEntity = next.entities.find((entity) =>
+        entity.roomId === command.roomId && ["start", "goal"].includes(entity.type));
+      if (protectedEntity) {
+        return fail(
+          "PROTECTED_ROOM",
+          `Room ${command.roomId} contains protected ${protectedEntity.type} entity ${protectedEntity.id}.`
+        );
+      }
+
+      const removedRoom = next.rooms[roomIndex];
+      const removedCorridors = next.corridors.filter((corridor) =>
+        corridor.fromRoomId === command.roomId || corridor.toRoomId === command.roomId);
+      const removedCorridorIds = new Set(removedCorridors.map((corridor) => corridor.id));
+      const removedEntities = next.entities.filter((entity) => entity.roomId === command.roomId);
+      const removedEntityIds = new Set(removedEntities.map((entity) => entity.id));
+      const removedEvents = next.events.filter((event) => eventReferences(event, {
+        roomIds: new Set([command.roomId]),
+        corridorIds: removedCorridorIds,
+        entityIds: removedEntityIds,
+      }));
+
+      next.rooms.splice(roomIndex, 1);
+      next.corridors = next.corridors.filter((corridor) => !removedCorridorIds.has(corridor.id));
+      next.entities = next.entities.filter((entity) => !removedEntityIds.has(entity.id));
+      const removedEventIds = new Set(removedEvents.map((event) => event.id));
+      next.events = next.events.filter((event) => !removedEventIds.has(event.id));
+
+      inverse = {
+        type: "restore-room",
+        room: cloneSpec(removedRoom),
+        corridors: cloneSpec(removedCorridors),
+        entities: cloneSpec(removedEntities),
+        events: cloneSpec(removedEvents),
+      };
+      break;
+    }
+
+    case "restore-room": {
+      if (!command.room || typeof command.room !== "object") {
+        return fail("ROOM_INVALID", "restore-room requires a room object.");
+      }
+      next.rooms.push(cloneSpec(command.room));
+      next.corridors.push(...cloneSpec(command.corridors ?? []));
+      next.entities.push(...cloneSpec(command.entities ?? []));
+      next.events.push(...cloneSpec(command.events ?? []));
+      inverse = { type: "remove-room", roomId: command.room.id };
+      break;
+    }
+
+    case "add-corridor": {
+      const corridor = command.corridor;
+      if (!corridor || typeof corridor !== "object" || Array.isArray(corridor)) {
+        return fail("CORRIDOR_INVALID", "add-corridor requires a corridor object.");
+      }
+      if (next.corridors.some((item) => item.id === corridor.id)) {
+        return fail("DUPLICATE_ID", `Duplicate corridor ID: ${corridor.id}`);
+      }
+      next.corridors.push(cloneSpec(corridor));
+      inverse = { type: "remove-corridor", corridorId: corridor.id };
+      break;
+    }
+
+    case "remove-corridor": {
+      const corridorIndex = next.corridors.findIndex((item) => item.id === command.corridorId);
+      if (corridorIndex < 0) return fail("CORRIDOR_NOT_FOUND", `Unknown corridor: ${command.corridorId}`);
+      const removedCorridor = next.corridors[corridorIndex];
+      const removedEvents = next.events.filter((event) => eventReferences(event, {
+        corridorIds: new Set([command.corridorId]),
+      }));
+      const removedEventIds = new Set(removedEvents.map((event) => event.id));
+      next.corridors.splice(corridorIndex, 1);
+      next.events = next.events.filter((event) => !removedEventIds.has(event.id));
+      inverse = {
+        type: "restore-corridor",
+        corridor: cloneSpec(removedCorridor),
+        events: cloneSpec(removedEvents),
+      };
+      break;
+    }
+
+    case "restore-corridor": {
+      if (!command.corridor || typeof command.corridor !== "object") {
+        return fail("CORRIDOR_INVALID", "restore-corridor requires a corridor object.");
+      }
+      next.corridors.push(cloneSpec(command.corridor));
+      next.events.push(...cloneSpec(command.events ?? []));
+      inverse = { type: "remove-corridor", corridorId: command.corridor.id };
+      break;
+    }
+
+    case "set-corridor-doors": {
+      const corridor = next.corridors.find((item) => item.id === command.corridorId);
+      if (!corridor) return fail("CORRIDOR_NOT_FOUND", `Unknown corridor: ${command.corridorId}`);
+
+      const fromSide = normalizeCorridorSide(command.fromSide);
+      const toSide = normalizeCorridorSide(command.toSide);
+      if (fromSide === undefined || toSide === undefined) {
+        return fail(
+          "CORRIDOR_SIDE_INVALID",
+          `Corridor side must be auto or one of: ${CORRIDOR_SIDES.join(", ")}.`
+        );
+      }
+
+      inverse = {
+        type: "set-corridor-doors",
+        corridorId: corridor.id,
+        fromSide: corridor.fromSide ?? null,
+        toSide: corridor.toSide ?? null,
+      };
+
+      if (fromSide == null) delete corridor.fromSide;
+      else corridor.fromSide = fromSide;
+      if (toSide == null) delete corridor.toSide;
+      else corridor.toSide = toSide;
       break;
     }
 
