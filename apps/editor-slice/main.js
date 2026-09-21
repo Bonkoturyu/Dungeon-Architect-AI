@@ -410,15 +410,16 @@ function ensureCorridorOptions() {
     corridorToSide.value = 'auto';
   }
 
-  if (selectedRoomId && rooms.some((room) => room.id === selectedRoomId)) {
+  if (corridor) {
+    corridorFromRoom.value = corridor.fromRoomId;
+    corridorToRoom.value = corridor.toRoomId;
+  } else if (selectedRoomId && rooms.some((room) => room.id === selectedRoomId)) {
     corridorFromRoom.value = selectedRoomId;
+    const alternative = rooms.find((room) => room.id !== selectedRoomId);
+    corridorToRoom.value = alternative?.id ?? selectedRoomId;
   } else if (rooms.length > 0) {
     corridorFromRoom.value = rooms[0].id;
-  }
-
-  if (!corridorToRoom.value || corridorToRoom.value === corridorFromRoom.value) {
-    const alternative = rooms.find((room) => room.id !== corridorFromRoom.value);
-    corridorToRoom.value = alternative?.id ?? corridorFromRoom.value ?? '';
+    corridorToRoom.value = rooms.find((room) => room.id !== rooms[0].id)?.id ?? rooms[0].id;
   }
 }
 
@@ -1030,12 +1031,22 @@ function applyCommand(command, successMessage) {
     return false;
   }
 
-  if (command.type === 'move-room' || command.type === 'resize-room') {
+  if ([
+    'move-room',
+    'resize-room',
+    'add-room',
+    'remove-room',
+    'restore-room',
+    'add-corridor',
+    'remove-corridor',
+    'restore-corridor',
+    'set-corridor-doors',
+  ].includes(command.type)) {
     try {
       createDungeonScenePlan(preview.spec);
     } catch {
       setEditStatus('error: LAYOUT_NOT_RENDERABLE');
-      showViewportNotice('Blocked: corridors cannot be routed cleanly from that layout.');
+      showViewportNotice(t('notice.route'));
       return false;
     }
   }
@@ -1185,6 +1196,149 @@ function stepRoomSize(axis, delta) {
   const next = Math.max(1, current + delta);
   input.value = String(next);
   return resizeSelectedRoom();
+}
+
+function nextRoomId() {
+  const used = new Set(authoringSpec().rooms.map((room) => room.id));
+  for (let index = 1; index < 10_000; index += 1) {
+    const candidate = `room-editor-${String(index).padStart(3, '0')}`;
+    if (!used.has(candidate)) return candidate;
+  }
+  throw new Error('Unable to allocate room ID');
+}
+
+function nextCorridorId() {
+  const used = new Set(authoringSpec().corridors.map((corridor) => corridor.id));
+  for (let index = 1; index < 10_000; index += 1) {
+    const candidate = `corridor-editor-${String(index).padStart(3, '0')}`;
+    if (!used.has(candidate)) return candidate;
+  }
+  throw new Error('Unable to allocate corridor ID');
+}
+
+function roomInteriorsOverlap(left, right) {
+  const overlapX =
+    Math.min(left.x + left.width / 2, right.x + right.width / 2) -
+    Math.max(left.x - left.width / 2, right.x - right.width / 2);
+  const overlapZ =
+    Math.min(left.z + left.depth / 2, right.z + right.depth / 2) -
+    Math.max(left.z - left.depth / 2, right.z - right.depth / 2);
+  return overlapX > 1e-9 && overlapZ > 1e-9;
+}
+
+function addRoom() {
+  if (mode !== 'edit' || generationBusy || naturalEditBusy) return false;
+
+  const rooms = authoringSpec().rooms;
+  const anchor = selectedRoom() ?? rooms.at(-1) ?? { x: 0, z: 0, width: 8, depth: 8 };
+  const direction = roomAddDirection.value || 'east';
+  const size = 8;
+  const gap = 4;
+  const vector = {
+    north: [0, -1],
+    east: [1, 0],
+    south: [0, 1],
+    west: [-1, 0],
+  }[direction] ?? [1, 0];
+
+  const axisDistance = vector[0] !== 0
+    ? anchor.width / 2 + gap + size / 2
+    : anchor.depth / 2 + gap + size / 2;
+
+  let room = {
+    id: nextRoomId(),
+    x: anchor.x + vector[0] * axisDistance,
+    z: anchor.z + vector[1] * axisDistance,
+    width: size,
+    depth: size,
+  };
+
+  for (let step = 0; step < 50 && rooms.some((other) => roomInteriorsOverlap(room, other)); step += 1) {
+    room = {
+      ...room,
+      x: room.x + vector[0] * (size + gap),
+      z: room.z + vector[1] * (size + gap),
+    };
+  }
+
+  if (rooms.some((other) => roomInteriorsOverlap(room, other))) {
+    showViewportNotice(t('notice.noRoomSpace'));
+    return false;
+  }
+
+  const added = applyCommand({ type: 'add-room', room }, `added ${room.id}`);
+  if (!added) return false;
+  selectedRoomId = room.id;
+  selectedEntityId = null;
+  selectedCorridorId = null;
+  renderActiveSpec();
+  return true;
+}
+
+function removeSelectedRoom() {
+  const room = selectedRoom();
+  if (!room || mode !== 'edit' || generationBusy || naturalEditBusy) return false;
+  const removed = applyCommand({ type: 'remove-room', roomId: room.id }, `removed ${room.id}`);
+  if (!removed) return false;
+  selectedRoomId = null;
+  selectedEntityId = null;
+  selectedCorridorId = null;
+  renderActiveSpec();
+  return true;
+}
+
+function addCorridor() {
+  if (mode !== 'edit' || generationBusy || naturalEditBusy) return false;
+  const fromRoomId = corridorFromRoom.value;
+  const toRoomId = corridorToRoom.value;
+  if (!fromRoomId || !toRoomId || fromRoomId === toRoomId) {
+    showViewportNotice(t('notice.corridorRooms'));
+    return false;
+  }
+
+  const corridor = {
+    id: nextCorridorId(),
+    fromRoomId,
+    toRoomId,
+    width: 3,
+    kind: 'manual',
+  };
+
+  const added = applyCommand({ type: 'add-corridor', corridor }, `added ${corridor.id}`);
+  if (!added) return false;
+  selectedCorridorId = corridor.id;
+  selectedRoomId = null;
+  selectedEntityId = null;
+  renderActiveSpec();
+  return true;
+}
+
+function applyCorridorSides() {
+  const corridor = selectedCorridor();
+  if (!corridor || mode !== 'edit' || generationBusy || naturalEditBusy) return false;
+  const changed = applyCommand({
+    type: 'set-corridor-doors',
+    corridorId: corridor.id,
+    fromSide: corridorFromSide.value,
+    toSide: corridorToSide.value,
+  }, `door sides ${corridor.id}`);
+  if (!changed) return false;
+  selectedCorridorId = corridor.id;
+  renderActiveSpec();
+  return true;
+}
+
+function removeSelectedCorridor() {
+  const corridor = selectedCorridor();
+  if (!corridor || mode !== 'edit' || generationBusy || naturalEditBusy) return false;
+  const removed = applyCommand(
+    { type: 'remove-corridor', corridorId: corridor.id },
+    `removed ${corridor.id}`,
+  );
+  if (!removed) return false;
+  selectedCorridorId = null;
+  renderActiveSpec();
+  return true;
 }
 
 function nextEntityId(type) {
