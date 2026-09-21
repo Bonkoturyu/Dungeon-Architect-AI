@@ -1493,6 +1493,11 @@ async function run() {
       getScreenPositionForSpecId: (id) => adapter.getScreenPositionForSpecId(id),
       getCameraState: () => adapter.getCameraState(),
       getRenderedSelection: () => adapter.selectedSpecId,
+      getCurrentRoomPlan: () => {
+        const roomId = playSession?.currentRoomId ?? selectedRoomId;
+        const group = adapter.plan?.roomGroups.find((room) => room.specId === roomId) ?? null;
+        return group ? clone(group) : null;
+      },
       selectRoom,
       selectEntity,
       resizeSelectedRoom,
