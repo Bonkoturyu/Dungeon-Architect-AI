@@ -555,9 +555,13 @@ try {
   const centeredRoomId = centeredAddState.selectedRoomId;
   if (!centeredRoomId) throw new Error('Centered room add did not select the new room.');
 
-  const centeredRoomScreen = await page.evaluate((roomId) =>
-    window.__DAI_EDITOR_SLICE__.getScreenPositionForSpecId(roomId), centeredRoomId);
-  if (!centeredRoomScreen) throw new Error('Centered room screen point unavailable.');
+  const centeredRoomScreen = await page.evaluate((roomId) => {
+    const room = window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === roomId);
+    return room
+      ? window.__DAI_EDITOR_SLICE__.getScreenPositionForWorldPoint({ x: room.x, y: 0, z: room.z })
+      : null;
+  }, centeredRoomId);
+  if (!centeredRoomScreen) throw new Error('Centered room floor screen point unavailable.');
 
   const centeredRoomDragPlan = await page.evaluate((roomId) => {
     const state = window.__DAI_EDITOR_SLICE__.getState();
