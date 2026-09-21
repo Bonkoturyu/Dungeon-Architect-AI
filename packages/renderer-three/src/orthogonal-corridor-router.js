@@ -310,8 +310,11 @@ export function planOrthogonalCorridors(spec, {
     const clearance = corridor.width / 2 + clearancePadding;
     let best = null;
 
-    for (const fromSide of SIDES) {
-      for (const toSide of SIDES) {
+    const fromSides = corridor.fromSide ? [corridor.fromSide] : SIDES;
+    const toSides = corridor.toSide ? [corridor.toSide] : SIDES;
+
+    for (const fromSide of fromSides) {
+      for (const toSide of toSides) {
         const fromDoor = doorPoint(fromRoom, fromSide);
         const toDoor = doorPoint(toRoom, toSide);
         const fromOutside = outsidePoint(fromRoom, fromSide, clearance);
