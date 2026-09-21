@@ -15,7 +15,7 @@ export const DEFAULT_MARKER_COLORS = Object.freeze({
   enemy: 0xef4444,
   treasure: 0xeab308,
   trap: 0x8b5cf6,
-  recovery: 0xf472b6,
+  recovery: 0xf8fafc,
 });
 
 function applyBoxTransform(mesh, box) {
@@ -118,8 +118,8 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
       color: DEFAULT_MARKER_COLORS.recovery,
       roughness: 0.64,
       metalness: 0,
-      emissive: 0x5c1f45,
-      emissiveIntensity: 0.24,
+      emissive: 0x315f73,
+      emissiveIntensity: 0.42,
     }),
   };
 
