@@ -103,11 +103,13 @@
       letter-spacing: -0.01em;
     }
     .mode-badge {
+      position: relative;
       display: inline-flex;
       align-items: center;
-      gap: 7px;
+      justify-content: center;
       min-width: 84px;
-      padding: 5px 9px;
+      padding: 5px 24px;
+      text-align: center;
       border: 1px solid var(--line);
       border-radius: 999px;
       background: var(--surface-2);
@@ -118,6 +120,8 @@
     }
     .mode-badge::before {
       content: "";
+      position: absolute;
+      left: 10px;
       width: 7px;
       height: 7px;
       border-radius: 50%;
@@ -663,9 +667,13 @@
     .play-summary {
       display: flex;
       align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
       gap: 8px;
+      width: 100%;
       margin-top: 10px;
       min-height: 34px;
+      text-align: center;
     }
     .play-mode-pill {
       flex: 0 0 auto;
@@ -681,6 +689,7 @@
     .play-metrics {
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 10px;
       margin: 0;
       color: var(--text-soft);
