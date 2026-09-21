@@ -811,9 +811,39 @@ function selectEntity(entityId) {
   return true;
 }
 
+function renderPathStatus() {
+  if (!pathStatus) return;
+  if (!pathCheckResult) {
+    pathStatus.textContent = t('goal.none');
+    return;
+  }
+  if (!pathCheckResult.reachable) {
+    pathStatus.textContent = pathCheckResult.routeVisible
+      ? `${t('goal.unreachable')}\n${t('goal.unreachableDetail')}`
+      : t('goal.unreachable');
+    return;
+  }
+  if (!pathCheckResult.routeVisible) {
+    pathStatus.textContent = t('goal.reachable');
+    return;
+  }
+
+  const routeText = pathCheckResult.roomIds.map((roomId) => {
+    const role = roomRole(roomId);
+    if (role === 'start') return t('entity.start').toUpperCase();
+    if (role === 'goal') return t('entity.goal').toUpperCase();
+    return roomId;
+  }).join(' → ');
+  const moveText = t('goal.moves', {
+    count: pathCheckResult.moves,
+    s: pathCheckResult.moves === 1 ? '' : 's',
+  });
+  pathStatus.textContent = `${t('goal.reachable')} · ${moveText}\n${routeText}`;
+}
+
 function clearPathCheck() {
   pathCheckResult = null;
-  if (pathStatus) pathStatus.textContent = 'Path not checked.';
+  renderPathStatus();
   adapter?.setHighlightedSpecIds([]);
 }
 
@@ -934,14 +964,12 @@ function checkStartGoalPath() {
   if (!path) {
     pathCheckResult = {
       reachable: false,
-      routeVisible: false,
+      routeVisible: revealRoute,
       roomIds: [],
       corridorIds: [],
       highlightIds: [],
     };
-    pathStatus.textContent = revealRoute
-      ? '✕ Unreachable\nStart cannot reach Goal using initially enabled corridors.'
-      : '✕ Unreachable';
+    renderPathStatus();
     adapter.setHighlightedSpecIds([]);
     return false;
   }
@@ -954,17 +982,10 @@ function checkStartGoalPath() {
       corridorIds: [],
       highlightIds: [],
     };
-    pathStatus.textContent = '✓ Reachable';
+    renderPathStatus();
     adapter.setHighlightedSpecIds([]);
     return true;
   }
-
-  const routeText = path.roomIds.map((roomId) => {
-    const role = roomRole(roomId);
-    if (role === 'start') return 'START';
-    if (role === 'goal') return 'GOAL';
-    return roomId;
-  }).join(' → ');
 
   const startEntity = spec.entities.find((entity) => entity.type === 'start');
   const goalEntity = spec.entities.find((entity) => entity.type === 'goal');
@@ -979,7 +1000,7 @@ function checkStartGoalPath() {
       goalEntity?.id,
     ].filter(Boolean),
   };
-  pathStatus.textContent = `✓ Reachable · ${path.moves} move${path.moves === 1 ? '' : 's'}\n${routeText}`;
+  renderPathStatus();
   adapter.setHighlightedSpecIds(pathCheckResult.highlightIds);
   return true;
 }
@@ -1054,7 +1075,7 @@ async function generateDungeonFromPrompt() {
   if (!prompt || generationBusy || naturalEditBusy || mode !== 'edit') return false;
 
   generationBusy = true;
-  setGenerationStatus('translating intent…');
+  setGenerationStatus(t('generation.translating'));
   updateUi();
 
   try {
@@ -1098,7 +1119,7 @@ async function generateDungeonFromPrompt() {
     mode = 'edit';
     authoringPreviewConcealed = true;
     pathCheckResult = null;
-    if (pathStatus) pathStatus.textContent = 'Path not checked.';
+    renderPathStatus();
     adapter.setHighlightedSpecIds([]);
     promptHistory = [
       { prompt, roomCount: lastGeneration.roomCount },
@@ -1111,11 +1132,11 @@ async function generateDungeonFromPrompt() {
     resultStatus.textContent = '';
     resultStatus.hidden = true;
     renderActiveSpec();
-    setGenerationStatus(`✓ Generated · ${lastGeneration.roomCount} rooms · layout hidden`);
+    setGenerationStatus(t('generation.generated', { count: lastGeneration.roomCount }));
     setEditStatus('generated new dungeon');
     return true;
   } catch {
-    setGenerationStatus('error: GENERATION_UNAVAILABLE');
+    setGenerationStatus(t('generation.unavailable'));
     return false;
   } finally {
     generationBusy = false;
@@ -1136,7 +1157,7 @@ async function applyNaturalEdit() {
 
   naturalEditBusy = true;
   lastNaturalEditCommand = null;
-  setNaturalEditStatus('translating…');
+  setNaturalEditStatus(t('natural.translating'));
   updateUi();
 
   try {
@@ -1163,7 +1184,7 @@ async function applyNaturalEdit() {
     const command = payload.command;
     const result = session.apply(command);
     if (!result.ok) {
-      setNaturalEditStatus(`rejected: ${result.error.code}`);
+      setNaturalEditStatus(t('natural.rejected', { code: result.error.code }));
       return false;
     }
 
@@ -1175,11 +1196,11 @@ async function applyNaturalEdit() {
     naturalEditInput.value = '';
     clearPathCheck();
     renderActiveSpec();
-    setNaturalEditStatus(`applied: ${command.type}`);
+    setNaturalEditStatus(t('natural.applied', { command: command.type }));
     setEditStatus(`natural edit: ${command.type}`);
     return true;
   } catch {
-    setNaturalEditStatus('error: NATURAL_EDIT_UNAVAILABLE');
+    setNaturalEditStatus(t('natural.unavailable'));
     return false;
   } finally {
     naturalEditBusy = false;
