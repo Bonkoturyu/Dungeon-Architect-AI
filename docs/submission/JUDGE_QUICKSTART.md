@@ -25,7 +25,7 @@ https://dungeon-architect-ai.pages.dev/
    Move the treasure to the room that contains the goal.
    ```
 7. Confirm the AI edit applies one constrained `move-entity` command.
-8. Select **Play**, then press **▶ Test** to play the current authored dungeon. **🎲 Mystery** instead generates a fresh hidden dungeon from the same DesignIntent.
+8. Select **Play**, then press **▶ Test** to play the current authored dungeon. **🎲 Mystery** instead uses a fresh Seed to reroll routes/content without exposing the authored map. Generator V1 can still produce a similar room layout because its spatial embedding is fixed for a given room count.
 9. Play begins with Fog of War. If a Room Event blocks exits, resolve it first (for example **CLEAR** an Enemy or **AVOID / RISK** a Trap).
 10. Move using the directional **CHOOSE EXIT** pad. Explored rooms and traversed corridors remain mapped; hidden topology and the Goal stay concealed until discovered.
 11. Reach the Goal and confirm Result shows `✓ CLEARED` with compact run metrics.
