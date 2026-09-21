@@ -48,7 +48,7 @@ Suggested natural-language edit:
 Move the treasure to the room that contains the goal.
 ```
 
-Then confirm `✓ Valid`, open **Play**, choose **▶ Test** (current authored dungeon) or **🎲 Mystery** (fresh hidden dungeon from the same DesignIntent), resolve any blocking Room Events, navigate with the directional **CHOOSE EXIT** pad until Goal, inspect `✓ CLEARED`, and use **← Edit**.
+Then confirm `✓ Valid`, open **Play**, choose **▶ Test** (current authored dungeon) or **🎲 Mystery** (fresh Seed that rerolls routes/content without revealing the authored map), resolve any blocking Room Events, navigate with the directional **CHOOSE EXIT** pad until Goal, inspect `✓ CLEARED`, and use **← Edit**. Generator V1 may still produce a similar room layout because its spatial embedding is fixed for a given room count.
 
 ## What is production-backed today
 
@@ -108,7 +108,7 @@ The current production generator is frozen as **Generator Version 1**. Future ge
 - `DungeonSpec` is renderer-independent serialized dungeon data.
 - Generator/Core produces deterministic structure and bounded intent-driven entities.
 - Editor mutations go through explicit `EditCommand` operations.
-- `▶ Test` creates a fixed execution snapshot of the current authored dungeon; `🎲 Mystery` creates a fresh hidden snapshot from the same validated DesignIntent.
+- `▶ Test` creates a fixed execution snapshot of the current authored dungeon; `🎲 Mystery` uses a fresh Seed so route/content choices can change without exposing the authoring map. Generator V1 can still keep a similar room layout; spatial variability is a future Generator Version concern.
 - Play Core does not directly mutate authoring state.
 - Three.js consumes the spec/snapshot through a disposable renderer adapter.
 - Cloudflare Pages Functions hold provider credentials server-side.
