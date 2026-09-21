@@ -379,7 +379,6 @@ function ensureEntityOptions() {
     entitySelect.value = selectedEntityId;
   } else {
     selectedEntityId = null;
-    selectedCorridorId = null;
     entitySelect.selectedIndex = -1;
   }
 }
@@ -967,6 +966,7 @@ function selectRoom(roomId) {
   setWorkflowTab('edit');
   ensureRoomOptions();
   ensureEntityOptions();
+  ensureCorridorOptions();
   adapter.setSelectedSpecId(roomId);
   adapter.setContextSpecId(null);
   updateUi();
