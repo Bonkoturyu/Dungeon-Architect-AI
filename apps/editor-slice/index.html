@@ -147,25 +147,6 @@
     body[data-mode="result"] #editStatus,
     body[data-mode="play"] #hint,
     body[data-mode="result"] #hint { display: none !important; }
-    .selection-strip {
-      display: flex;
-      gap: 8px;
-      margin-left: auto;
-      min-width: 0;
-      overflow: hidden;
-    }
-    .selection-chip {
-      max-width: 270px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      padding: 5px 9px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      background: #1b202a;
-      color: var(--text-muted);
-      font-size: 0.73rem;
-    }
 
     .header-actions {
       display: flex;
@@ -503,63 +484,140 @@
     }
     #roomSelect { width: 100%; min-height: 118px; padding: 5px; }
     #entitySelect { min-height: 36px; }
-    .entity-card-list { display: grid; gap: 6px; margin: 7px 0 10px; }
-    .entity-card {
-      display: grid;
-      grid-template-columns: 28px minmax(0, 1fr) auto;
-      align-items: center;
-      gap: 8px;
-      width: 100%;
-      min-height: 40px;
-      padding: 6px 8px;
-      text-align: left;
-      border-color: rgba(91, 104, 130, 0.64);
-      background: rgba(35, 43, 56, 0.72);
+
+    .edit-hud {
+      position: absolute;
+      z-index: 3;
+      display: none;
+      pointer-events: none;
     }
-    .entity-card.is-selected {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 2px rgba(145, 167, 255, 0.12);
-      background: rgba(58, 69, 91, 0.86);
+    body[data-mode="edit"][data-workflow-tab="edit"] .edit-hud { display: block; }
+
+    .selection-overlay {
+      top: 54px;
+      left: 16px;
+      width: min(300px, calc(50% - 28px));
+      padding: 10px 11px;
+      border: 1px solid rgba(145, 167, 255, 0.48);
+      border-radius: 10px;
+      background: rgba(25, 31, 40, 0.86);
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.20);
+      backdrop-filter: blur(7px);
     }
-    .entity-icon {
-      display: grid;
-      place-items: center;
-      width: 26px;
-      height: 26px;
-      border-radius: 8px;
-      background: rgba(145, 167, 255, 0.1);
-      font-size: 0.95rem;
-    }
-    .entity-card[data-kind="start"] .entity-icon { color: #22c55e; background: rgba(34, 197, 94, 0.12); }
-    .entity-card[data-kind="goal"] .entity-icon { color: #3b82f6; background: rgba(59, 130, 246, 0.14); }
-    .entity-card[data-kind="enemy"] .entity-icon { color: #ef4444; background: rgba(239, 68, 68, 0.13); }
-    .entity-card[data-kind="treasure"] .entity-icon { color: #eab308; background: rgba(234, 179, 8, 0.13); }
-    .entity-card[data-kind="trap"] .entity-icon { color: #8b5cf6; background: rgba(139, 92, 246, 0.14); }
-    .entity-card[data-kind="recovery"] .entity-icon { color: #f8fafc; background: rgba(248, 250, 252, 0.12); }
-    .entity-main { min-width: 0; }
-    .entity-name {
+    .selection-overlay .overlay-heading,
+    .room-contents-overlay .overlay-heading,
+    .entity-legend .overlay-heading {
       display: block;
-      overflow: hidden;
-      color: var(--text);
-      font-size: 0.72rem;
-      font-weight: 800;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .entity-room {
-      display: block;
-      overflow: hidden;
+      margin-bottom: 6px;
       color: var(--text-muted);
-      font: 0.64rem ui-monospace, SFMono-Regular, Consolas, monospace;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .entity-kind {
-      color: var(--text-muted);
-      font-size: 0.58rem;
+      font-size: 0.60rem;
       font-weight: 850;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
     }
+    .selection-chip {
+      display: block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--text);
+      font-size: 0.73rem;
+      line-height: 1.45;
+    }
+    #entitySelected {
+      margin-top: 2px;
+      color: var(--text-muted);
+      font-size: 0.66rem;
+    }
+
+    .entity-legend {
+      top: 142px;
+      left: 16px;
+      width: min(300px, calc(50% - 28px));
+      padding: 8px 10px;
+      border: 1px solid rgba(83, 97, 118, 0.66);
+      border-radius: 10px;
+      background: rgba(25, 31, 40, 0.72);
+      backdrop-filter: blur(6px);
+    }
+    .legend-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px 8px;
+    }
+    .legend-item,
+    .room-content-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      min-width: 0;
+      color: var(--text-soft);
+      font-size: 0.64rem;
+      line-height: 1.2;
+    }
+
+    .room-contents-overlay {
+      top: 16px;
+      right: 16px;
+      width: min(270px, 32%);
+      padding: 10px 11px;
+      border: 1px solid rgba(120, 216, 154, 0.42);
+      border-radius: 11px;
+      background: rgba(25, 31, 40, 0.86);
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.18);
+      backdrop-filter: blur(7px);
+      pointer-events: auto;
+    }
+    #roomContentsRoom {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--text);
+      font: 0.70rem ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-weight: 760;
+    }
+    #roomContentsItems {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .room-content-item {
+      min-height: 27px;
+      padding: 4px 7px;
+      border: 1px solid rgba(83, 97, 118, 0.72);
+      border-radius: 8px;
+      background: rgba(48, 58, 73, 0.64);
+      cursor: pointer;
+      pointer-events: auto;
+    }
+    .room-content-item.is-selected {
+      border-color: var(--accent);
+      background: rgba(72, 84, 110, 0.88);
+      box-shadow: 0 0 0 2px rgba(145, 167, 255, 0.10);
+    }
+    .room-content-empty {
+      color: var(--text-muted);
+      font-size: 0.66rem;
+    }
+
+    .entity-marker {
+      display: inline-grid;
+      place-items: center;
+      width: 18px;
+      height: 18px;
+      flex: 0 0 18px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 900;
+      border: 1px solid currentColor;
+      background: rgba(255, 255, 255, 0.03);
+    }
+    [data-kind="start"] .entity-marker { color: #22c55e; background: rgba(34, 197, 94, 0.12); }
+    [data-kind="goal"] .entity-marker { color: #3b82f6; background: rgba(59, 130, 246, 0.14); }
+    [data-kind="enemy"] .entity-marker { color: #ef4444; background: rgba(239, 68, 68, 0.13); }
+    [data-kind="treasure"] .entity-marker { color: #eab308; background: rgba(234, 179, 8, 0.13); }
+    [data-kind="trap"] .entity-marker { color: #8b5cf6; background: rgba(139, 92, 246, 0.14); }
+    [data-kind="recovery"] .entity-marker { color: #f8fafc; background: rgba(248, 250, 252, 0.12); }
     .path-status {
       margin: 8px 0 0;
       padding: 8px 9px;
@@ -895,8 +953,6 @@
     .play-choice-row button { min-height: 44px; }
     .mystery-action { border-color: #7b6b9f; background: rgba(99, 79, 137, 0.28); color: #f1eaff; }
     .mode-note { margin: 8px 0 0; color: var(--text-muted); font-size: 0.68rem; }
-    body[data-mode="play"] .selection-strip,
-    body[data-mode="result"] .selection-strip { display: none; }
 
     [hidden] { display: none !important; }
 
@@ -943,8 +999,6 @@
         grid-template-rows: auto auto auto auto;
       }
       .app-header { flex-wrap: wrap; gap: 8px 12px; }
-      .selection-strip { width: 100%; margin-left: 0; }
-      .selection-chip { max-width: calc(50vw - 22px); }
       .toolbar { grid-template-columns: 1fr; align-items: stretch; }
       .toolbar-group { flex-wrap: wrap; }
       .toolbar-divider { display: none; }
@@ -968,6 +1022,18 @@
         background: var(--surface-1);
       }
       .viewport-label { top: 10px; left: 10px; }
+      .selection-overlay,
+      .entity-legend {
+        left: 10px;
+        width: min(290px, calc(100% - 20px));
+      }
+      .selection-overlay { top: 50px; }
+      .entity-legend { top: 138px; }
+      .room-contents-overlay {
+        top: 10px;
+        right: 10px;
+        width: min(260px, calc(100% - 20px));
+      }
       .room-events {
         left: 50%;
         right: auto;
@@ -988,10 +1054,6 @@
       </div>
       <span id="modeBadge" class="mode-badge" aria-live="polite">Edit mode</span>
       <span id="status">loading</span>
-      <div class="selection-strip" aria-label="Current selection">
-        <span id="selected" class="selection-chip">room: none</span>
-        <span id="entitySelected" class="selection-chip">entity: none</span>
-      </div>
       <div class="header-actions">
         <button id="returnEdit" type="button" disabled data-i18n="action.returnEdit">← Edit</button>
         <button id="languageCycle" class="language-cycle" type="button" data-language-cycle>EN ▶ 日本語</button>
@@ -1017,6 +1079,27 @@
           <span id="viewportHelp" data-i18n="viewport.editHelp">Drag orbit · Wheel zoom · WASD / Arrow keys move</span>
         </div>
         <canvas id="renderCanvas" tabindex="0"></canvas>
+        <div id="selectionOverlay" class="selection-overlay edit-hud" hidden>
+          <span class="overlay-heading" data-i18n="overlay.selected">Selected</span>
+          <span id="selected" class="selection-chip"></span>
+          <span id="entitySelected" class="selection-chip"></span>
+        </div>
+        <div id="entityLegend" class="entity-legend edit-hud" aria-label="Entity legend">
+          <span class="overlay-heading" data-i18n="overlay.legend">Legend</span>
+          <div class="legend-items">
+            <span class="legend-item" data-kind="start"><span class="entity-marker">◆</span><span data-i18n="entity.start">Start</span></span>
+            <span class="legend-item" data-kind="goal"><span class="entity-marker">★</span><span data-i18n="entity.goal">Goal</span></span>
+            <span class="legend-item" data-kind="enemy"><span class="entity-marker">⚔</span><span data-i18n="entity.enemy">Enemy</span></span>
+            <span class="legend-item" data-kind="treasure"><span class="entity-marker">▣</span><span data-i18n="entity.treasure">Chest</span></span>
+            <span class="legend-item" data-kind="trap"><span class="entity-marker">⚠</span><span data-i18n="entity.trap">Trap</span></span>
+            <span class="legend-item" data-kind="recovery"><span class="entity-marker">✚</span><span data-i18n="entity.recovery">Recovery</span></span>
+          </div>
+        </div>
+        <div id="roomContentsOverlay" class="room-contents-overlay edit-hud" hidden>
+          <span class="overlay-heading" data-i18n="overlay.roomContents">Room contents</span>
+          <span id="roomContentsRoom"></span>
+          <div id="roomContentsItems"></div>
+        </div>
         <div id="viewportNotice" class="viewport-notice" hidden></div>
         <div id="playReticle" class="play-reticle" hidden aria-hidden="true"></div>
         <div id="authoringPreviewCover" class="preview-cover" hidden>
@@ -1097,8 +1180,7 @@
 
         <fieldset class="editor-only" data-workflow-panel="edit">
           <legend data-i18n="entities.title">✦ Entities</legend>
-          <p class="panel-kicker" data-i18n="entities.help">Select an entity card to highlight it and its room in 3D.</p>
-          <div id="entityCards" class="entity-card-list" aria-label="Entity cards"></div>
+          <p class="panel-kicker" data-i18n="entities.help">Select an entity in 3D, Room contents, or the dropdown below.</p>
           <label>
             <span data-i18n="entities.selected">Selected entity</span>
             <select id="entitySelect" aria-label="Existing entities"></select>
