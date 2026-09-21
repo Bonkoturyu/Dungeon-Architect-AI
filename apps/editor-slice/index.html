@@ -1138,6 +1138,20 @@
       padding: var(--ui-space-3);
       border-radius: 14px;
     }
+    fieldset.panel-ai {
+      border-color: rgba(102, 117, 142, 0.68);
+      background: linear-gradient(180deg, rgba(40, 48, 62, 0.76), rgba(29, 35, 46, 0.88));
+      box-shadow: 0 1px 0 rgba(255,255,255,0.025) inset;
+    }
+    fieldset.panel-ai legend {
+      color: #dce3f0;
+    }
+    #naturalEditInput {
+      min-height: 76px;
+    }
+    .panel-ai #applyNaturalEdit {
+      min-height: 42px;
+    }
     .goal-check-top {
       gap: var(--ui-space-1);
       margin-bottom: var(--ui-space-2);
@@ -1212,33 +1226,103 @@
 
     .inspector-shell {
       margin: 0 0 var(--ui-space-3);
+      overflow: hidden;
+      border: 1px solid rgba(102, 117, 142, 0.72);
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(38, 46, 59, 0.78), rgba(27, 33, 43, 0.9));
+      box-shadow: 0 1px 0 rgba(255,255,255,0.025) inset;
     }
     .inspector-tabs {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: var(--ui-space-1);
-      margin: 0 0 var(--ui-space-2);
-      padding: 5px;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: rgba(18, 22, 29, 0.62);
+      gap: 0;
+      margin: 0;
+      padding: 0 10px;
+      border: 0;
+      border-bottom: 1px solid rgba(102, 117, 142, 0.48);
+      border-radius: 0;
+      background: rgba(18, 22, 29, 0.28);
     }
     .inspector-tab {
+      position: relative;
       min-width: 0;
-      min-height: var(--ui-control-h);
-      padding: 7px 8px;
-      border-color: transparent;
+      min-height: 46px;
+      padding: 10px 8px 9px;
+      border: 0;
+      border-radius: 0;
       background: transparent;
       color: var(--text-muted);
       font-size: 0.8125rem;
+      font-weight: 700;
       white-space: nowrap;
+      box-shadow: none;
+    }
+    .inspector-tab:hover:not(:disabled) {
+      border: 0;
+      background: rgba(145, 167, 255, 0.055);
+      color: var(--text-soft);
+    }
+    .inspector-tab::after {
+      content: "";
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 0;
+      height: 2px;
+      border-radius: 2px 2px 0 0;
+      background: transparent;
+      transform: scaleX(0.45);
+      opacity: 0;
+      transition: transform 120ms ease, opacity 120ms ease, background 120ms ease;
     }
     .inspector-tab.is-active {
-      border-color: #687796;
-      background: #343d4d;
+      border: 0;
+      background: transparent;
       color: var(--text);
     }
-    .inspector-panel { display: none; margin: 0; }
+    .inspector-tab.is-active::after {
+      background: var(--accent);
+      transform: scaleX(1);
+      opacity: 1;
+    }
+    .inspector-panel {
+      display: none;
+      margin: 0;
+      padding: 16px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+    .inspector-panel > legend {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    .inspector-panel .panel-kicker {
+      margin: 0 0 14px;
+      padding: 0;
+      color: #9da8b8;
+    }
+    .inspector-panel label {
+      margin-bottom: 11px;
+    }
+    .inspector-panel .wide-action + .danger-wide,
+    .inspector-panel .danger-wide + .section-caption {
+      margin-top: 8px;
+    }
+    .inspector-panel .section-caption {
+      margin-top: 14px;
+      margin-bottom: 8px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(102, 117, 142, 0.32);
+    }
     .inspector-shell[data-inspector-tab="entities"] [data-inspector-panel="entities"],
     .inspector-shell[data-inspector-tab="rooms"] [data-inspector-panel="rooms"],
     .inspector-shell[data-inspector-tab="corridors"] [data-inspector-panel="corridors"] {
