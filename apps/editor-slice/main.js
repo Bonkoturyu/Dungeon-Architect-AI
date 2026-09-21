@@ -405,23 +405,30 @@ function updateUi() {
   if (playReticle) playReticle.hidden = mode !== 'play';
   canvas.style.visibility = concealed ? 'hidden' : 'visible';
 
+  if (modeBadge) {
+    modeBadge.textContent = mode === 'play'
+      ? t('mode.play')
+      : mode === 'result'
+        ? t('mode.result')
+        : t('mode.edit');
+  }
   if (viewportTitle) {
     viewportTitle.textContent = concealed
-      ? 'Dungeon Ready'
+      ? t('viewport.hiddenTitle')
       : editing
-        ? '3D Dungeon'
+        ? t('viewport.editTitle')
         : mode === 'play'
-          ? 'Explore'
-          : 'Cleared';
+          ? t('viewport.playTitle')
+          : t('viewport.resultTitle');
   }
   if (viewportHelp) {
     viewportHelp.textContent = concealed
-      ? 'Layout hidden · choose Edit, Test, or Mystery'
+      ? t('viewport.hiddenHelp')
       : editing
-        ? 'Drag orbit · Wheel zoom · WASD / Arrow keys move'
+        ? t('viewport.editHelp')
         : mode === 'play'
-          ? 'WASD / Arrow keys · Auto-map'
-          : 'Run complete';
+          ? t('viewport.playHelp')
+          : t('viewport.resultHelp');
   }
 
   selectedLabel.textContent = room
@@ -469,7 +476,7 @@ function updateUi() {
   entityRoom.disabled = !editing || authoringBusy;
   entityType.disabled = !editing || authoringBusy;
   moveEntityButton.disabled = !editing || authoringBusy || !entity || !entityRoom.value || targetForbidden;
-  moveEntityButton.title = targetForbidden ? 'Start and Goal must be in different rooms.' : '';
+  moveEntityButton.title = targetForbidden ? t('notice.sameRoom') : '';
   removeEntityButton.disabled = !editing || authoringBusy || !entity || entity.type === 'start' || entity.type === 'goal';
   addEntityButton.disabled = !editing || authoringBusy || !entityRoom.value;
   generationPrompt.disabled = !editing || authoringBusy;
@@ -479,10 +486,10 @@ function updateUi() {
   startButton.disabled = !editing || authoringBusy || !gate.allowed;
   mysteryPlayButton.disabled = !editing || authoringBusy || !lastDesignIntent;
   mysteryPlayButton.title = authoringBusy
-    ? 'Wait for the current AI request to finish.'
+    ? t('play.mysteryTitleBusy')
     : lastDesignIntent
-      ? 'Generate a fresh hidden dungeon from the same design intent.'
-      : 'Generate a dungeon first to unlock Mystery Play.';
+      ? t('play.mysteryTitleReady')
+      : t('play.mysteryTitleLocked');
   returnEditButton.disabled = editing;
 }
 
@@ -559,11 +566,11 @@ function renderRoomEvents() {
 
     const type = document.createElement('span');
     type.className = 'room-event-type';
-    type.textContent = 'ENEMY';
+    type.textContent = t('entity.enemy').toUpperCase();
 
     const note = document.createElement('span');
     note.className = 'room-event-note';
-    note.textContent = 'blocks exits';
+    note.textContent = t('roomEvent.blocks');
 
     const actions = document.createElement('div');
     actions.className = 'room-event-actions';
@@ -571,7 +578,7 @@ function renderRoomEvents() {
     clear.type = 'button';
     clear.className = 'safe-action';
     clear.dataset.action = 'clear-enemy';
-    clear.textContent = 'CLEAR';
+    clear.textContent = t('action.clear');
     clear.addEventListener('click', () => clearEnemy(enemy.id));
     actions.append(clear);
 
@@ -590,16 +597,16 @@ function renderRoomEvents() {
     const type = document.createElement('span');
     type.className = 'room-event-type';
     type.textContent = entity.type === 'treasure'
-      ? 'CHEST'
+      ? t('entity.treasure').toUpperCase()
       : entity.type === 'trap'
-        ? 'TRAP'
-        : 'REST';
+        ? t('entity.trap').toUpperCase()
+        : t('roomEvent.rest').toUpperCase();
 
     const note = document.createElement('span');
     note.className = 'room-event-note';
-    if (entity.type === 'trap') note.textContent = warning === 'floor-cracks' ? 'cracked floor' : 'something feels off';
-    else if (entity.type === 'treasure') note.textContent = warning === 'suspicious-glow' ? 'suspicious glow' : 'optional';
-    else note.textContent = 'optional';
+    if (entity.type === 'trap') note.textContent = warning === 'floor-cracks' ? t('roomEvent.cracked') : t('roomEvent.off');
+    else if (entity.type === 'treasure') note.textContent = warning === 'suspicious-glow' ? t('roomEvent.suspicious') : t('roomEvent.optional');
+    else note.textContent = t('roomEvent.optional');
 
     const actions = document.createElement('div');
     actions.className = 'room-event-actions';
@@ -608,7 +615,7 @@ function renderRoomEvents() {
       const open = document.createElement('button');
       open.type = 'button';
       open.dataset.action = 'open-treasure';
-      open.textContent = 'OPEN';
+      open.textContent = t('action.open');
       open.addEventListener('click', () => interactWithRoomEntity('open-treasure', entity.id));
       actions.append(open);
     } else if (entity.type === 'trap') {
@@ -616,14 +623,14 @@ function renderRoomEvents() {
       avoid.type = 'button';
       avoid.className = 'safe-action';
       avoid.dataset.action = 'avoid-trap';
-      avoid.textContent = 'AVOID';
+      avoid.textContent = t('action.avoid');
       avoid.addEventListener('click', () => interactWithRoomEntity('avoid-trap', entity.id));
 
       const risk = document.createElement('button');
       risk.type = 'button';
       risk.className = 'risk-action';
       risk.dataset.action = 'trigger-trap';
-      risk.textContent = 'RISK';
+      risk.textContent = t('action.risk');
       risk.addEventListener('click', () => interactWithRoomEntity('trigger-trap', entity.id));
       actions.append(avoid, risk);
     } else if (entity.type === 'recovery') {
@@ -631,7 +638,7 @@ function renderRoomEvents() {
       use.type = 'button';
       use.className = 'safe-action';
       use.dataset.action = 'use-recovery';
-      use.textContent = 'USE';
+      use.textContent = t('action.use');
       use.addEventListener('click', () => interactWithRoomEntity('use-recovery', entity.id));
       actions.append(use);
     }
@@ -701,9 +708,14 @@ function renderPlayExits() {
       button.dataset.explored = String(exit.explored);
       const icon = sideIcon(exit.side);
       button.textContent = sideExits.length > 1 ? `${icon}${index + 1}` : icon;
-      const direction = exit.side ?? 'unknown';
-      button.setAttribute('aria-label', exit.explored ? `Return through ${direction} exit` : `Explore ${direction} exit`);
-      button.title = exit.explored ? `Known ${direction} passage` : `Explore ${direction}`;
+      const directionKey = exit.side ?? 'unknown';
+      const direction = t(`direction.${directionKey}`);
+      button.setAttribute('aria-label', exit.explored
+        ? t('exit.return', { direction })
+        : t('exit.explore', { direction }));
+      button.title = exit.explored
+        ? t('exit.known', { direction })
+        : t('exit.explore', { direction });
       button.addEventListener('click', () => movePlayToRoom(exit.targetRoomId, exit.corridorId));
       slot.append(button);
     });
