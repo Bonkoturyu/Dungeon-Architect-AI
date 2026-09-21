@@ -127,19 +127,19 @@ try {
       japanese.htmlLang === 'ja' &&
       japanese.title === 'ダンジョンを調整' &&
       japanese.next === '次へ' &&
-      japanese.cycleText === '日本語 → 简中',
+      japanese.cycleText === '日本語 ▶ 简中',
     simplifiedChineseSwitchWorks:
       simplified.htmlLang === 'zh-Hans' &&
       simplified.title === '调整地牢' &&
-      simplified.cycleText === '简中 → 繁中',
+      simplified.cycleText === '简中 ▶ 繁中',
     traditionalChineseSwitchWorks:
       traditional.htmlLang === 'zh-Hant' &&
       traditional.title === '調整地城' &&
-      traditional.cycleText === '繁中 → 한국어',
+      traditional.cycleText === '繁中 ▶ 한국어',
     koreanSwitchWorks:
       korean.htmlLang === 'ko' &&
       korean.title === '던전 조정' &&
-      korean.cycleText === '한국어 → EN',
+      korean.cycleText === '한국어 ▶ EN',
     closeHidesGuide: afterClose.open === false && hiddenAfterClose,
     guideReopensAtWelcome: afterReopen.open === true && afterReopen.step?.id === 'welcome' && afterReopen.stepIndex === 0 && afterReopen.language === 'en',
     finalStepIsPlay: finalStep.step?.id === 'play' && finalStep.stepIndex === 4 && doneLabel === 'Done',
