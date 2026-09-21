@@ -83,7 +83,7 @@ GitHub Issues are not created unless explicitly authorized.
 
 ## M8.6 — Submission gameplay expansion
 - DAI-093 Player stats / meaningful Room Events — DONE (2026-09-22 JST: HP / MaxHP added to PlaySession/Result; deterministic Enemy damage, Trap damage, Recovery healing, HP=0 → `player-defeated`, Play/Result HP UI, and regression coverage complete. Acceptance passed: `npm run test:play` 42/42, `npm run test:simulation` 24/24, `npm run validate:player-stats`, `npm run smoke:room-events`, and `npm run smoke:owner-ui-review`.)
-- DAI-094 Level / XP / Equipment / Loot — PLANNED (Level/XP progression, Gold, Weapon + Armor slots, Enemy rewards, Treasure loot, deterministic tables/seed behavior, and Result/Simulator metrics.)
+- DAI-094 Level / XP / Equipment / Loot — IN PROGRESS (branch `feat/dai-094-progression-loot`: Level/XP/Gold PlayerState, Weapon + Armor slots, deterministic seed+entity reward table, Enemy XP/Gold, Treasure Gold+Tier loot, inventory + auto-equip upgrades, Play/Result progression UI, Result/Simulator metrics, tests, and `validate:progression-loot` added. Local regression/acceptance remains pending before DONE.)
 - DAI-095 Multi-floor DungeonRunSpec — PLANNED (sequential 1–10 floor run; one DungeonSpec rendered at a time; per-floor Start→Goal; Floor selector in Edit; PlayerState carried between floors; whole-building simultaneous 3D view remains deferred.)
 - DAI-096 Programmatic player/enemy presentation — PLANNED (project-authored low-poly Three.js geometry/models replacing abstract pins where useful; no external model asset required.)
 - DAI-097 Audio presentation — PLANNED (BGM/SE for Edit/Play/Result and gameplay events; any external creative asset must satisfy the project provenance/license policy before inclusion.)
