@@ -1496,14 +1496,50 @@
     }
     .room-direction-actions {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-areas:
+        ". north ."
+        "west center east"
+        ". south .";
+      gap: 7px;
+      align-items: stretch;
     }
     .room-direction-actions button {
       min-width: 0;
       min-height: 40px;
       padding: 7px 8px;
       background: rgba(57, 69, 86, 0.72);
+    }
+    .room-direction-actions [data-room-add-direction="north"] { grid-area: north; }
+    .room-direction-actions [data-room-add-direction="east"] { grid-area: east; }
+    .room-direction-actions [data-room-add-direction="south"] { grid-area: south; }
+    .room-direction-actions [data-room-add-direction="west"] { grid-area: west; }
+    .room-direction-center {
+      grid-area: center;
+      display: grid;
+      place-items: center;
+      min-height: 40px;
+      padding: 6px;
+      border: 1px dashed rgba(145, 167, 255, 0.4);
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-align: center;
+      background: rgba(18, 22, 29, 0.26);
+    }
+    .room-add-without-selection {
+      display: grid;
+      gap: 8px;
+    }
+    .room-add-without-selection p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 0.8125rem;
+      line-height: 1.45;
+    }
+    #addRoomAtViewCenter {
+      width: 100%;
+      min-height: 44px;
     }
     .room-remove-action {
       margin-top: 10px;
@@ -1757,12 +1793,19 @@
             <button id="resizeRoom" class="wide-action" type="button" disabled data-i18n="rooms.apply">Apply room size</button>
 
             <section class="room-actions" aria-label="Room actions">
-              <p class="section-caption" data-i18n="rooms.addDirection">Add room from selected room</p>
-              <div class="room-direction-actions">
-                <button type="button" data-room-add-direction="north" title="Add room north">↑ <span data-i18n="side.north">North</span></button>
-                <button type="button" data-room-add-direction="east" title="Add room east">→ <span data-i18n="side.east">East</span></button>
-                <button type="button" data-room-add-direction="south" title="Add room south">↓ <span data-i18n="side.south">South</span></button>
-                <button type="button" data-room-add-direction="west" title="Add room west">← <span data-i18n="side.west">West</span></button>
+              <div id="roomAddFromSelection">
+                <p class="section-caption" data-i18n="rooms.addDirection">Add room from selected room</p>
+                <div class="room-direction-actions">
+                  <button type="button" data-room-add-direction="north" title="Add room north">↑ <span data-i18n="side.north">North</span></button>
+                  <button type="button" data-room-add-direction="east" title="Add room east">→ <span data-i18n="side.east">East</span></button>
+                  <button type="button" data-room-add-direction="south" title="Add room south">↓ <span data-i18n="side.south">South</span></button>
+                  <button type="button" data-room-add-direction="west" title="Add room west">← <span data-i18n="side.west">West</span></button>
+                  <div class="room-direction-center" data-i18n="rooms.selectedCenter">Selected room</div>
+                </div>
+              </div>
+              <div id="roomAddWithoutSelection" class="room-add-without-selection" hidden>
+                <p data-i18n="rooms.noSelectionAddHelp">No room selected. Add a new room near the center of the current view.</p>
+                <button id="addRoomAtViewCenter" type="button" data-i18n="rooms.addAtViewCenter">＋ Add room near view center</button>
               </div>
               <div hidden>
                 <select id="roomAddDirection" aria-label="New room direction">
