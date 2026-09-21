@@ -343,20 +343,44 @@ try {
   const pathState = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState().pathCheckResult);
   const pathText = await page.locator('#pathStatus').innerText();
 
-  // Entity cards + direct 3D selection.
+  // Viewport HUD replaces the previous right-side entity card wall.
   const entityCount = generated.entities.length;
-  const entityCardCount = await page.locator('#entityCards .entity-card').count();
-  const entityIconCount = await page.locator('#entityCards .entity-icon').count();
-  const entityCardColors = await page.evaluate(() => {
-    const kinds = ['goal', 'enemy', 'treasure', 'trap', 'recovery'];
-    return Object.fromEntries(kinds.map((kind) => {
-      const icon = document.querySelector(`.entity-card[data-kind="${kind}"] .entity-icon`);
-      return [kind, icon ? getComputedStyle(icon).color : null];
-    }));
+  const rightEntityCardCount = await page.locator('aside .entity-card').count();
+  const legendState = await page.evaluate(() => {
+    const items = [...document.querySelectorAll('#entityLegend .legend-item')];
+    return {
+      visible: document.querySelector('#entityLegend')?.hidden === false &&
+        getComputedStyle(document.querySelector('#entityLegend')).display !== 'none',
+      count: items.length,
+      kinds: items.map((item) => item.dataset.kind),
+      markerColors: Object.fromEntries(items.map((item) => {
+        const marker = item.querySelector('.entity-marker');
+        return [item.dataset.kind, marker ? getComputedStyle(marker).color : null];
+      })),
+    };
   });
+
   const startEntityId = await page.evaluate(() =>
     window.__DAI_EDITOR_SLICE__.getState().entities.find((entity) => entity.type === 'start')?.id ?? null);
   if (!startEntityId) throw new Error('Start entity missing.');
+
+  // Selecting a room shows its current entity contents in the upper-right HUD.
+  await page.locator('#roomSelect').selectOption(startRoomId);
+  await page.waitForFunction((roomId) => {
+    const overlay = document.querySelector('#roomContentsOverlay');
+    const room = document.querySelector('#roomContentsRoom')?.textContent ?? '';
+    return overlay?.hidden === false && room.includes(roomId);
+  }, startRoomId);
+  const roomContentsBeforeEntityClick = await page.evaluate((startId) => ({
+    overlayVisible: document.querySelector('#roomContentsOverlay')?.hidden === false,
+    roomText: document.querySelector('#roomContentsRoom')?.textContent ?? '',
+    entityIds: [...document.querySelectorAll('#roomContentsItems .room-content-item')]
+      .map((button) => button.dataset.entityId),
+    itemCount: document.querySelectorAll('#roomContentsItems .room-content-item').length,
+    hasStart: [...document.querySelectorAll('#roomContentsItems .room-content-item')]
+      .some((button) => button.dataset.entityId === startId),
+  }), startEntityId);
+
   const startPoint = await page.evaluate((id) =>
     window.__DAI_EDITOR_SLICE__.getScreenPositionForSpecId(id), startEntityId);
   if (!startPoint) throw new Error('Start marker screen point unavailable.');
@@ -367,7 +391,11 @@ try {
     state: window.__DAI_EDITOR_SLICE__.getState(),
     renderedSelection: window.__DAI_EDITOR_SLICE__.getRenderedSelection(),
     roomListValue: document.querySelector('#roomSelect')?.value ?? null,
-    selectedEntityChip: document.querySelector('#entitySelected')?.textContent ?? '',
+    selectionOverlayVisible: document.querySelector('#selectionOverlay')?.hidden === false,
+    selectionText: document.querySelector('#selected')?.textContent ?? '',
+    containingRoomText: document.querySelector('#entitySelected')?.textContent ?? '',
+    roomContentsVisible: document.querySelector('#roomContentsOverlay')?.hidden === false,
+    selectedRoomContentId: document.querySelector('#roomContentsItems .room-content-item.is-selected')?.dataset.entityId ?? null,
   }));
 
   // Same-room Start/Goal protection in UI and validation.
@@ -536,21 +564,36 @@ try {
       pathText.includes('Reachable') &&
       pathText.includes('START') &&
       pathText.includes('GOAL'),
-    entityCardsReplaceTextWall:
-      entityCardCount === entityCount &&
-      entityIconCount === entityCount,
-    entityCardPaletteSeparated:
-      entityCardColors.goal === 'rgb(59, 130, 246)' &&
-      entityCardColors.enemy === 'rgb(239, 68, 68)' &&
-      entityCardColors.treasure === 'rgb(234, 179, 8)' &&
-      entityCardColors.trap === 'rgb(139, 92, 246)' &&
-      entityCardColors.recovery === 'rgb(248, 250, 252)',
+    rightEntityCardWallRemoved:
+      rightEntityCardCount === 0,
+    editLegendVisibleAndComplete:
+      legendState.visible === true &&
+      legendState.count === 6 &&
+      ['start', 'goal', 'enemy', 'treasure', 'trap', 'recovery']
+        .every((kind) => legendState.kinds.includes(kind)),
+    editLegendPaletteSeparated:
+      legendState.markerColors.start === 'rgb(34, 197, 94)' &&
+      legendState.markerColors.goal === 'rgb(59, 130, 246)' &&
+      legendState.markerColors.enemy === 'rgb(239, 68, 68)' &&
+      legendState.markerColors.treasure === 'rgb(234, 179, 8)' &&
+      legendState.markerColors.trap === 'rgb(139, 92, 246)' &&
+      legendState.markerColors.recovery === 'rgb(248, 250, 252)',
+    roomSelectionShowsCurrentRoomEntities:
+      roomContentsBeforeEntityClick.overlayVisible === true &&
+      roomContentsBeforeEntityClick.roomText.includes(startRoomId) &&
+      roomContentsBeforeEntityClick.itemCount >= 1 &&
+      roomContentsBeforeEntityClick.hasStart === true,
     clicking3dEntitySelectsAndHighlights:
       selectedEntityState.state.selectedEntityId === startEntityId &&
       selectedEntityState.renderedSelection === startEntityId,
+    entitySelectionMovesSummaryIntoViewport:
+      selectedEntityState.selectionOverlayVisible === true &&
+      selectedEntityState.selectionText.includes(startEntityId) &&
+      selectedEntityState.containingRoomText.includes(startRoomId),
     entitySelectionShowsContainingRoom:
       selectedEntityState.roomListValue === startRoomId &&
-      /start/i.test(selectedEntityState.selectedEntityChip),
+      selectedEntityState.roomContentsVisible === true &&
+      selectedEntityState.selectedRoomContentId === startEntityId,
     playKeyboardMovesOrReachesRoomEvent:
       playAfterKeyboard.play?.moves === playBeforeKeyboard.play.moves + 1 ||
       eventLayout.eventVisible === true,
@@ -606,7 +649,9 @@ try {
     middleAfterRestore,
     pathState,
     pathText,
-    entityCardColors,
+    rightEntityCardCount,
+    legendState,
+    roomContentsBeforeEntityClick,
     selectedEntityId: selectedEntityState.state.selectedEntityId,
     renderedSelection: selectedEntityState.renderedSelection,
     selectedEntityRoomListValue: selectedEntityState.roomListValue,
