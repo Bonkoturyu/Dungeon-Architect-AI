@@ -81,5 +81,14 @@ GitHub Issues are not created unless explicitly authorized.
 - DAI-088 3D gameplay entity presentation — DONE (same Three.js renderer now projects low-poly Enemy/Chest/Trap/Recovery markers from the shared scene plan; unexplored markers remain hidden, resolved Play entities disappear, and renderer tests cover all marker types. Human review visually confirmed Enemy/Chest/Recovery presentation in the accepted DAI-087 captures; the reviewed run recorded TRAP 0, so Trap geometry remains covered by automated renderer evidence rather than that screenshot set.)
 - DAI-089 Generator versioning / algorithm research — DONE (current generator archived as immutable Version 1 under `packages/generator/src/versions/v1/`; version registry + fail-closed dispatch added; V1/default equivalence regression added; local generator suite passed 18/18 on 2026-09-21; Web research rechecked current V1 plus BSP, random walk, cellular automata, maze carving, Rooms+Mazes, Delaunay+MST, graph/gameplay grammar, WFC and hybrid approaches with academic/practical sources recorded. Future generation changes must be added as Version 2, Version 3, etc. without silently replacing V1.)
 
-## M9
+## M8.6 — Submission gameplay expansion
+- DAI-093 Player stats / meaningful Room Events — PLANNED (HP / MaxHP, damage, healing, player defeat, Enemy/Trap/Recovery outcomes wired into the existing PlaySession/Result contracts.)
+- DAI-094 Level / XP / Equipment / Loot — PLANNED (Level/XP progression, Gold, Weapon + Armor slots, Enemy rewards, Treasure loot, deterministic tables/seed behavior, and Result/Simulator metrics.)
+- DAI-095 Multi-floor DungeonRunSpec — PLANNED (sequential 1–10 floor run; one DungeonSpec rendered at a time; per-floor Start→Goal; Floor selector in Edit; PlayerState carried between floors; whole-building simultaneous 3D view remains deferred.)
+- DAI-096 Programmatic player/enemy presentation — PLANNED (project-authored low-poly Three.js geometry/models replacing abstract pins where useful; no external model asset required.)
+- DAI-097 Audio presentation — PLANNED (BGM/SE for Edit/Play/Result and gameplay events; any external creative asset must satisfy the project provenance/license policy before inclusion.)
+- DAI-098 Multi-floor simulation / balance — PLANNED (run-level simulator, difficulty progression, HP/XP/equipment carry-over, floor-by-floor and whole-run metrics, DesignIntent fit.)
+- DAI-099 Refreshed submission candidate — PLANNED (public E2E after expansion, updated docs/known limitations, new <=3-minute demo video, legal/security re-audits, refreshed candidate freeze/rollback point.)
+
+## M9 — Final submission
 DAI-090 unexpected prompts; DAI-091 final compliance; DAI-092 submit.
