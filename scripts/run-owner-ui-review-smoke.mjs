@@ -159,6 +159,12 @@ try {
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().mode === 'edit');
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().workflowTab === 'edit');
 
+  const goalCheckLayout = await page.evaluate(() => {
+    const card = document.querySelector('.goal-check-card').getBoundingClientRect();
+    const tabs = document.querySelector('.workflow-tabs').getBoundingClientRect();
+    return { cardTop: card.top, cardBottom: card.bottom, tabsTop: tabs.top };
+  });
+
   // Room labels, all-room resize, and WASD.
   const roomOptionText = await page.locator('#roomSelect option').allTextContents();
   const goalRoomId = await page.evaluate(() => {
@@ -181,6 +187,17 @@ try {
   }, goalRoomId);
   const resizedGoal = await page.evaluate((id) =>
     window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === id), goalRoomId);
+
+  await page.click('#roomWidthPlus');
+  await page.waitForFunction((id) =>
+    window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === id)?.width === 11,
+  goalRoomId);
+  const afterWidthStepper = await page.evaluate((id) =>
+    window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === id), goalRoomId);
+  await page.click('#roomWidthMinus');
+  await page.waitForFunction((id) =>
+    window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === id)?.width === 10,
+  goalRoomId);
 
   await page.fill('#roomWidth', '100');
   await page.fill('#roomDepth', '100');
@@ -208,6 +225,30 @@ try {
   const middleAfterW = await page.evaluate((id) =>
     window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === id), middleRoomId);
   await page.keyboard.press('s');
+  await page.waitForFunction(({ id, z }) =>
+    window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === id)?.z === z,
+  { id: middleRoomId, z: middleBefore.z });
+
+  const middleAfterRestore = await page.evaluate((id) =>
+    window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === id), middleRoomId);
+  const cameraAfterRoomSelect = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getCameraState());
+
+  // Force a move toward a room until overlap is blocked, then confirm visible feedback and no mutation.
+  let blockedMoveObserved = false;
+  let blockedMoveNotice = '';
+  for (let attempt = 0; attempt < 20 && !blockedMoveObserved; attempt += 1) {
+    const before = await page.evaluate((id) =>
+      window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === id), middleRoomId);
+    await canvas.focus();
+    await page.keyboard.press('d');
+    await page.waitForTimeout(30);
+    const after = await page.evaluate((id) =>
+      window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === id), middleRoomId);
+    if (after.x === before.x) {
+      blockedMoveObserved = true;
+      blockedMoveNotice = await page.locator('#viewportNotice').innerText();
+    }
+  }
 
   // Start -> Goal path check.
   await page.click('#checkPath');
@@ -230,6 +271,8 @@ try {
   const selectedEntityState = await page.evaluate(() => ({
     state: window.__DAI_EDITOR_SLICE__.getState(),
     renderedSelection: window.__DAI_EDITOR_SLICE__.getRenderedSelection(),
+    roomListValue: document.querySelector('#roomSelect')?.value ?? null,
+    selectedEntityChip: document.querySelector('#entitySelected')?.textContent ?? '',
   }));
 
   // Same-room Start/Goal protection in UI and validation.
@@ -250,6 +293,59 @@ try {
   });
 
   await page.screenshot({ path: path.join(outputDir, 'edit-owner-review.png'), fullPage: true });
+
+  // Play keyboard navigation and centered room-event controls.
+  await page.click('[data-workflow-tab="play"]');
+  await page.click('#start');
+  await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().mode === 'play');
+
+  const playBeforeKeyboard = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
+  let keyboardExit = null;
+  const directionKeys = {
+    north: 'ArrowUp',
+    east: 'd',
+    south: 's',
+    west: 'a',
+  };
+  const planExits = await page.evaluate(() => {
+    const state = window.__DAI_EDITOR_SLICE__.getState();
+    const roomPlan = window.__DAI_EDITOR_SLICE__.getCurrentRoomPlan?.() ?? null;
+    return {
+      exits: state.play?.map?.currentExits ?? [],
+      openings: roomPlan?.doorOpenings ?? [],
+    };
+  });
+  for (const exit of planExits.exits) {
+    const side = planExits.openings.find((opening) => opening.corridorId === exit.corridorId)?.side;
+    if (side && directionKeys[side]) {
+      keyboardExit = { ...exit, side, key: directionKeys[side] };
+      break;
+    }
+  }
+  if (!keyboardExit) throw new Error('No directional Play exit found for keyboard smoke.');
+
+  await canvas.focus();
+  await page.keyboard.press(keyboardExit.key);
+  await page.waitForFunction((beforeMoves) => {
+    const state = window.__DAI_EDITOR_SLICE__.getState();
+    return state.play?.moves === beforeMoves + 1 || document.querySelector('#roomEventBar')?.hidden === false;
+  }, playBeforeKeyboard.play.moves);
+
+  const playAfterKeyboard = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
+  const eventLayout = await page.evaluate(() => {
+    const reticle = document.querySelector('#playReticle')?.getBoundingClientRect();
+    const events = document.querySelector('#roomEventBar')?.getBoundingClientRect();
+    const eventVisible = document.querySelector('#roomEventBar')?.hidden === false;
+    return {
+      reticleVisible: document.querySelector('#playReticle')?.hidden === false,
+      eventVisible,
+      reticleCenterY: reticle ? reticle.top + reticle.height / 2 : null,
+      eventTop: events?.top ?? null,
+    };
+  });
+
+  await page.click('#returnEdit');
+  await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().mode === 'edit');
 
   const checks = {
     mouseOrbitChangesCamera: distance3(cameraBefore.position, cameraAfterOrbit.position) > 0.1,
@@ -277,12 +373,22 @@ try {
     roomListMarksStartAndGoal:
       roomOptionText.some((text) => text.includes('START')) &&
       roomOptionText.some((text) => text.includes('GOAL')),
+    goalCheckIsTopLevelCard:
+      goalCheckLayout.cardTop < goalCheckLayout.tabsTop &&
+      goalCheckLayout.cardBottom <= goalCheckLayout.tabsTop,
     anyRoomCanBeResized: resizedGoal?.width === 10 && resizedGoal?.depth === 9,
+    roomResizeStepperWorks: afterWidthStepper?.width === 11,
     unsafeRoomResizeRejected:
       afterUnsafeResize.room?.width === 10 &&
       afterUnsafeResize.room?.depth === 9 &&
       afterUnsafeResize.editStatus.includes('EDIT_RESULT_INVALID'),
     wasdMovesSelectedRoom: middleAfterW?.z === middleBefore.z - 1,
+    roomSelectionCentersCamera:
+      Math.abs(cameraAfterRoomSelect.target.x - middleAfterRestore.x) < 0.01 &&
+      Math.abs(cameraAfterRoomSelect.target.z - middleAfterRestore.z) < 0.01,
+    blockedRoomMoveShowsReason:
+      blockedMoveObserved === true &&
+      /Blocked:/.test(blockedMoveNotice),
     pathCheckShowsReachableRoute:
       pathState?.reachable === true &&
       pathState.roomIds?.[0] === startRoomId &&
@@ -294,6 +400,18 @@ try {
     clicking3dEntitySelectsAndHighlights:
       selectedEntityState.state.selectedEntityId === startEntityId &&
       selectedEntityState.renderedSelection === startEntityId,
+    entitySelectionShowsContainingRoom:
+      selectedEntityState.roomListValue === startRoomId &&
+      selectedEntityState.selectedEntityChip.includes('START'),
+    playKeyboardMovesOrReachesRoomEvent:
+      playAfterKeyboard.play?.moves === playBeforeKeyboard.play.moves + 1 ||
+      eventLayout.eventVisible === true,
+    playReticleVisible: eventLayout.reticleVisible === true,
+    roomEventCommandsAppearBelowReticle:
+      eventLayout.eventVisible === false ||
+      (Number.isFinite(eventLayout.eventTop) &&
+       Number.isFinite(eventLayout.reticleCenterY) &&
+       eventLayout.eventTop > eventLayout.reticleCenterY),
     goalRoomDisabledForStartEntity: goalOptionDisabledForStart === true,
     sameRoomStartGoalFailsValidation:
       sameRoomGate.allowed === false &&
@@ -320,14 +438,25 @@ try {
     touchingRoomMiddle: touchingState.rooms.find((room) => room.id === 'room-middle'),
     touchingCorridorVisiblePoint,
     roomOptionText,
+    goalCheckLayout,
     resizedGoal,
+    afterWidthStepper,
     afterUnsafeResize,
     middleBefore,
     middleAfterW,
+    middleAfterRestore,
+    cameraAfterRoomSelect,
+    blockedMoveObserved,
+    blockedMoveNotice,
     pathState,
     pathText,
     selectedEntityId: selectedEntityState.state.selectedEntityId,
     renderedSelection: selectedEntityState.renderedSelection,
+    selectedEntityRoomListValue: selectedEntityState.roomListValue,
+    keyboardExit,
+    playBeforeKeyboard,
+    playAfterKeyboard,
+    eventLayout,
     sameRoomGateErrors: sameRoomGate.errors,
     consoleErrors,
     pageErrors,
