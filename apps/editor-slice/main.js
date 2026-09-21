@@ -2209,6 +2209,8 @@ async function run() {
       failed: false,
       getState: snapshotState,
       getScreenPositionForSpecId: (id) => adapter.getScreenPositionForSpecId(id),
+      getScreenPositionForRoomWall: (roomId, side) => adapter.getScreenPositionForRoomWall(roomId, side),
+      getScreenPositionForWorldPoint: (point) => adapter.getScreenPositionForWorldPoint(point),
       getCameraState: () => adapter.getCameraState(),
       getRenderedSelection: () => adapter.selectedSpecId,
       getCurrentRoomPlan: () => {
