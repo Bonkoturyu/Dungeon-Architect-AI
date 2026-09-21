@@ -26,6 +26,7 @@ import {
 import {
   deterministicEnemyReward,
   deterministicTreasureReward,
+  xpRequiredForNextLevel,
 } from '../../packages/play-core/src/progression-runtime.js';
 import { createDungeonScenePlan, createThreeRendererAdapter } from '../../packages/renderer-three/src/index.js';
 import { generateDungeonFromDesignIntent } from '../../packages/generator/src/design-intent-generator.js';
@@ -66,6 +67,7 @@ const moveCount = document.querySelector('#moveCount');
 const mappedCount = document.querySelector('#mappedCount');
 const hpCount = document.querySelector('#hpCount');
 const levelCount = document.querySelector('#levelCount');
+const xpCount = document.querySelector('#xpCount');
 const goldCount = document.querySelector('#goldCount');
 const roomSelect = document.querySelector('#roomSelect');
 const roomWidth = document.querySelector('#roomWidth');
@@ -1733,6 +1735,7 @@ function updatePlayReadout() {
     if (mappedCount) mappedCount.textContent = '0';
     if (hpCount) hpCount.textContent = '0/0';
     if (levelCount) levelCount.textContent = '1';
+    if (xpCount) xpCount.textContent = '0/20';
     if (goldCount) goldCount.textContent = '0';
     resultStatus.textContent = '';
     resultStatus.hidden = true;
@@ -1751,7 +1754,9 @@ function updatePlayReadout() {
   if (moveCount) moveCount.textContent = String(playSession.moves);
   if (mappedCount) mappedCount.textContent = String(map.exploredRoomIds.length);
   if (hpCount) hpCount.textContent = `${playSession.playerState?.hp ?? 0}/${playSession.playerState?.maxHp ?? 0}`;
-  if (levelCount) levelCount.textContent = String(playSession.playerState?.level ?? 1);
+  const level = playSession.playerState?.level ?? 1;
+  if (levelCount) levelCount.textContent = String(level);
+  if (xpCount) xpCount.textContent = `${playSession.playerState?.xp ?? 0}/${xpRequiredForNextLevel(level)}`;
   if (goldCount) goldCount.textContent = String(playSession.playerState?.gold ?? 0);
 }
 
@@ -1762,7 +1767,7 @@ function renderResultMetrics(result) {
   const items = [
     ['HP', `${player.hp ?? 0}/${player.maxHp ?? 0}`],
     ['LV', player.level ?? 1],
-    ['XP', `${player.xp ?? 0}`],
+    ['XP', `${player.xp ?? 0}/${xpRequiredForNextLevel(player.level ?? 1)}`],
     ['G', player.gold ?? 0],
     ['LOOT', metrics.lootCollected ?? 0],
     ['WPN', player.equipment?.weapon ? `T${player.equipment.weapon.tier}` : '—'],
@@ -1932,6 +1937,7 @@ function returnToEdit() {
   if (mappedCount) mappedCount.textContent = '0';
   if (hpCount) hpCount.textContent = '0/0';
   if (levelCount) levelCount.textContent = '1';
+  if (xpCount) xpCount.textContent = '0/20';
   if (goldCount) goldCount.textContent = '0';
   resultStatus.textContent = '';
   resultStatus.hidden = true;
