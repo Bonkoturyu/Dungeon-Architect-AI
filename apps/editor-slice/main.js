@@ -367,6 +367,7 @@ function ensureEntityOptions() {
     entitySelect.value = selectedEntityId;
   } else {
     selectedEntityId = null;
+    selectedCorridorId = null;
     entitySelect.selectedIndex = -1;
   }
 }
@@ -442,6 +443,7 @@ function selectCorridor(corridorId) {
   ensureRoomOptions();
   ensureEntityOptions();
   ensureCorridorOptions();
+  ensureCorridorOptions();
   adapter.setSelectedSpecId(corridor.id);
   adapter.setContextSpecId(null);
   updateUi();
@@ -452,13 +454,14 @@ function renderEditContextHud() {
   if (!selectionOverlay || !roomContentsOverlay || !roomContentsRoom || !roomContentsItems) return;
 
   const entity = selectedEntity();
+  const corridor = selectedCorridor();
   const room = entity
     ? authoringSpec().rooms.find((entry) => entry.id === entity.roomId) ?? null
     : selectedRoom();
 
   const showHud = mode === 'edit' && workflowTab === 'edit' && !authoringPreviewConcealed;
 
-  if (!showHud || (!room && !entity)) {
+  if (!showHud || (!room && !entity && !corridor)) {
     selectionOverlay.hidden = true;
     roomContentsOverlay.hidden = true;
     selectedLabel.hidden = true;
@@ -479,6 +482,11 @@ function renderEditContextHud() {
     entitySelectedLabel.hidden = !room;
   } else if (room) {
     selectedLabel.textContent = `${roomLabel(room.id)} · (${room.x.toFixed(1)}, ${room.z.toFixed(1)}) · ${room.width}×${room.depth}`;
+    selectedLabel.hidden = false;
+    entitySelectedLabel.textContent = '';
+    entitySelectedLabel.hidden = true;
+  } else if (corridor) {
+    selectedLabel.textContent = `⇄ ${corridorLabel(corridor)}`;
     selectedLabel.hidden = false;
     entitySelectedLabel.textContent = '';
     entitySelectedLabel.hidden = true;
@@ -542,6 +550,7 @@ function setWorkflowTab(nextTab) {
 function updateUi() {
   const room = selectedRoom();
   const entity = selectedEntity();
+  const corridor = selectedCorridor();
   const editing = mode === 'edit';
   const authoringBusy = generationBusy || naturalEditBusy;
   const concealed = editing && authoringPreviewConcealed;
@@ -613,6 +622,24 @@ function updateUi() {
   roomWidthPlus.disabled = !editing || authoringBusy || !room;
   roomDepthMinus.disabled = !editing || authoringBusy || !room;
   roomDepthPlus.disabled = !editing || authoringBusy || !room;
+  roomAddDirection.disabled = !editing || authoringBusy;
+  addRoomButton.disabled = !editing || authoringBusy;
+  const protectedRoom = room && authoringSpec().entities.some((item) =>
+    item.roomId === room.id && ['start', 'goal'].includes(item.type));
+  removeRoomButton.disabled = !editing || authoringBusy || !room || protectedRoom;
+  corridorSelect.disabled = !editing || authoringBusy;
+  corridorFromSide.disabled = !editing || authoringBusy || !corridor;
+  corridorToSide.disabled = !editing || authoringBusy || !corridor;
+  applyCorridorSidesButton.disabled = !editing || authoringBusy || !corridor;
+  removeCorridorButton.disabled = !editing || authoringBusy || !corridor;
+  corridorFromRoom.disabled = !editing || authoringBusy;
+  corridorToRoom.disabled = !editing || authoringBusy;
+  addCorridorButton.disabled =
+    !editing ||
+    authoringBusy ||
+    !corridorFromRoom.value ||
+    !corridorToRoom.value ||
+    corridorFromRoom.value === corridorToRoom.value;
   checkPathButton.disabled = !editing || authoringBusy;
   entitySelect.disabled = !editing || authoringBusy;
   entityRoom.disabled = !editing || authoringBusy;
@@ -882,7 +909,7 @@ function renderActiveSpec() {
   ensureEntityOptions();
 
   const highlightId = mode === 'edit'
-    ? (selectedEntityId ?? selectedRoomId)
+    ? (selectedEntityId ?? selectedRoomId ?? selectedCorridorId)
     : playSession?.currentRoomId ?? null;
   if (highlightId && (
     spec.rooms.some((room) => room.id === highlightId) ||
@@ -910,6 +937,7 @@ function selectRoom(roomId) {
   if (roomId == null) {
     selectedRoomId = null;
     selectedEntityId = null;
+    selectedCorridorId = null;
     adapter.setSelectedSpecId(null);
     ensureEntityOptions();
     updateUi();
@@ -919,6 +947,7 @@ function selectRoom(roomId) {
   if (!authoringSpec().rooms.some((room) => room.id === roomId)) return false;
   selectedRoomId = roomId;
   selectedEntityId = null;
+  selectedCorridorId = null;
   entityRoom.value = roomId;
   setWorkflowTab('edit');
   ensureRoomOptions();
@@ -942,6 +971,7 @@ function selectEntity(entityId) {
 
   selectedEntityId = entity.id;
   selectedRoomId = null;
+  selectedCorridorId = null;
   entitySelect.value = entity.id;
   entityRoom.value = entity.roomId;
   setWorkflowTab('edit');
