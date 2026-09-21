@@ -36,6 +36,14 @@ function outwardNormal(side) {
   }
 }
 
+export function facingRoomSide(room, sourceRoom) {
+  if (!room || !sourceRoom) return null;
+  const dx = sourceRoom.x - room.x;
+  const dz = sourceRoom.z - room.z;
+  if (Math.abs(dx) >= Math.abs(dz)) return dx < 0 ? 'west' : 'east';
+  return dz < 0 ? 'north' : 'south';
+}
+
 function samePoint(a, b) {
   return Math.abs(a.x - b.x) <= EPSILON && Math.abs(a.z - b.z) <= EPSILON;
 }
@@ -267,6 +275,8 @@ export function buildCorridorDragPreview(spec, {
   width = 3,
   existingCorridorId = null,
   corridorRoutes = [],
+  targetRoomId = null,
+  targetSide = null,
 } = {}) {
   if (!spec || !Array.isArray(spec.rooms) || !Array.isArray(spec.corridors)) {
     throw new TypeError('buildCorridorDragPreview requires a DungeonSpec-like object.');
@@ -274,15 +284,26 @@ export function buildCorridorDragPreview(spec, {
   if (!CARDINAL_SIDES.includes(sourceSide)) {
     throw new RangeError(`Unsupported source side: ${sourceSide}`);
   }
-  if (!pointer || !Number.isFinite(pointer.x) || !Number.isFinite(pointer.z)) {
-    throw new TypeError('pointer must contain finite x/z values.');
-  }
-
   const sourceRoom = spec.rooms.find((room) => room.id === sourceRoomId);
   if (!sourceRoom) throw new RangeError(`Unknown source room: ${sourceRoomId}`);
 
+  let effectivePointer = pointer;
+  if (targetRoomId && targetRoomId !== sourceRoomId) {
+    const targetRoom = spec.rooms.find((room) => room.id === targetRoomId);
+    if (targetRoom) {
+      const effectiveTargetSide = CARDINAL_SIDES.includes(targetSide)
+        ? targetSide
+        : facingRoomSide(targetRoom, sourceRoom);
+      effectivePointer = roomDoorPoint(targetRoom, effectiveTargetSide);
+    }
+  }
+
+  if (!effectivePointer || !Number.isFinite(effectivePointer.x) || !Number.isFinite(effectivePointer.z)) {
+    throw new TypeError('pointer must contain finite x/z values.');
+  }
+
   const sourceDoor = roomDoorPoint(sourceRoom, sourceSide);
-  const rawPoints = buildPointerPath(sourceDoor, sourceSide, pointer, width);
+  const rawPoints = buildPointerPath(sourceDoor, sourceSide, effectivePointer, width);
   const roomCollision = firstRoomCollision(rawPoints, spec.rooms, sourceRoomId);
   const points = truncateAtRoomCollision(rawPoints, roomCollision);
 
@@ -321,18 +342,6 @@ export function buildCorridorDragPreview(spec, {
   }
 
   const corridorCollision = firstCorridorConflict(points, corridorRoutes, existingCorridorId);
-  if (corridorCollision) {
-    return {
-      points,
-      sourceRoomId,
-      sourceSide,
-      targetRoomId: roomCollision.roomId,
-      targetSide: roomCollision.side,
-      state: 'blocked',
-      blockedCode: 'CORRIDOR_COLLISION',
-      blockedCorridorId: corridorCollision.corridorId,
-    };
-  }
 
   return {
     points,
@@ -343,6 +352,7 @@ export function buildCorridorDragPreview(spec, {
     state: 'ready',
     blockedCode: null,
     blockedCorridorId: null,
+    crossesCorridorId: corridorCollision?.corridorId ?? null,
   };
 }
 
