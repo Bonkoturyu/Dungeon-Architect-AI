@@ -482,6 +482,14 @@
       font-size: 0.66rem;
       line-height: 1.35;
     }
+    .compact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      align-items: end;
+    }
+    .compact-grid > label { min-width: 0; }
+    .danger-wide { width: 100%; }
     #roomSelect { width: 100%; min-height: 118px; padding: 5px; }
     #entitySelect { min-height: 36px; }
 
@@ -1232,6 +1240,66 @@
           </div>
           <p class="resize-note" data-i18n="rooms.resizeNote">Use − / ＋ for 1-unit steps, or type a size, then Apply. Overlapping rooms are blocked.</p>
           <button id="resizeRoom" class="wide-action" type="button" disabled data-i18n="rooms.apply">Apply room size</button>
+
+          <div class="compact-grid">
+            <label>
+              <span data-i18n="rooms.newDirection">New room direction</span>
+              <select id="roomAddDirection" aria-label="New room direction">
+                <option value="east" data-i18n="direction.east">east</option>
+                <option value="south" data-i18n="direction.south">south</option>
+                <option value="west" data-i18n="direction.west">west</option>
+                <option value="north" data-i18n="direction.north">north</option>
+              </select>
+            </label>
+            <button id="addRoom" type="button" data-i18n="rooms.add">＋ Add room</button>
+          </div>
+          <button id="removeRoom" class="danger-action danger-wide" type="button" disabled data-i18n="rooms.remove">Remove selected room</button>
+        </fieldset>
+
+        <fieldset class="editor-only" data-workflow-panel="edit">
+          <legend data-i18n="corridors.title">⇄ Corridors</legend>
+          <p class="panel-kicker" data-i18n="corridors.help">Select a corridor and choose which wall side each endpoint uses.</p>
+          <label>
+            <span data-i18n="corridors.selected">Selected corridor</span>
+            <select id="corridorSelect" aria-label="Existing corridors"></select>
+          </label>
+          <div class="compact-grid">
+            <label>
+              <span data-i18n="corridors.fromSide">From side</span>
+              <select id="corridorFromSide" aria-label="Corridor from side">
+                <option value="auto" data-i18n="corridors.auto">Auto</option>
+                <option value="north" data-i18n="direction.north">north</option>
+                <option value="east" data-i18n="direction.east">east</option>
+                <option value="south" data-i18n="direction.south">south</option>
+                <option value="west" data-i18n="direction.west">west</option>
+              </select>
+            </label>
+            <label>
+              <span data-i18n="corridors.toSide">To side</span>
+              <select id="corridorToSide" aria-label="Corridor to side">
+                <option value="auto" data-i18n="corridors.auto">Auto</option>
+                <option value="north" data-i18n="direction.north">north</option>
+                <option value="east" data-i18n="direction.east">east</option>
+                <option value="south" data-i18n="direction.south">south</option>
+                <option value="west" data-i18n="direction.west">west</option>
+              </select>
+            </label>
+          </div>
+          <button id="applyCorridorSides" class="wide-action" type="button" disabled data-i18n="corridors.applySides">Apply doorway sides</button>
+          <button id="removeCorridor" class="danger-action danger-wide" type="button" disabled data-i18n="corridors.remove">Remove selected corridor</button>
+
+          <p class="section-caption" data-i18n="corridors.new">New corridor</p>
+          <div class="compact-grid">
+            <label>
+              <span data-i18n="corridors.fromRoom">From room</span>
+              <select id="corridorFromRoom" aria-label="New corridor from room"></select>
+            </label>
+            <label>
+              <span data-i18n="corridors.toRoom">To room</span>
+              <select id="corridorToRoom" aria-label="New corridor to room"></select>
+            </label>
+          </div>
+          <button id="addCorridor" class="wide-action" type="button" data-i18n="corridors.add">＋ Add corridor</button>
         </fieldset>
       </aside>
     </div>
