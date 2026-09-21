@@ -202,6 +202,47 @@ export function applyEditCommand(spec, command) {
       break;
     }
 
+    case "reconnect-corridor": {
+      const corridor = next.corridors.find((item) => item.id === command.corridorId);
+      if (!corridor) return fail("CORRIDOR_NOT_FOUND", `Unknown corridor: ${command.corridorId}`);
+
+      if (!next.rooms.some((room) => room.id === command.fromRoomId)) {
+        return fail("ROOM_NOT_FOUND", `Unknown room: ${command.fromRoomId}`);
+      }
+      if (!next.rooms.some((room) => room.id === command.toRoomId)) {
+        return fail("ROOM_NOT_FOUND", `Unknown room: ${command.toRoomId}`);
+      }
+      if (command.fromRoomId === command.toRoomId) {
+        return fail("CORRIDOR_ROOMS_INVALID", "Corridor endpoints must use different rooms.");
+      }
+
+      const fromSide = normalizeCorridorSide(command.fromSide);
+      const toSide = normalizeCorridorSide(command.toSide);
+      if (fromSide === undefined || toSide === undefined) {
+        return fail(
+          "CORRIDOR_SIDE_INVALID",
+          `Corridor side must be auto or one of: ${CORRIDOR_SIDES.join(", ")}.`
+        );
+      }
+
+      inverse = {
+        type: "reconnect-corridor",
+        corridorId: corridor.id,
+        fromRoomId: corridor.fromRoomId,
+        toRoomId: corridor.toRoomId,
+        fromSide: corridor.fromSide ?? null,
+        toSide: corridor.toSide ?? null,
+      };
+
+      corridor.fromRoomId = command.fromRoomId;
+      corridor.toRoomId = command.toRoomId;
+      if (fromSide == null) delete corridor.fromSide;
+      else corridor.fromSide = fromSide;
+      if (toSide == null) delete corridor.toSide;
+      else corridor.toSide = toSide;
+      break;
+    }
+
     case "move-entity": {
       const entity = next.entities.find((item) => item.id === command.entityId);
       if (!entity) return fail("ENTITY_NOT_FOUND", `Unknown entity: ${command.entityId}`);
