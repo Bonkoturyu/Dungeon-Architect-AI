@@ -304,6 +304,59 @@ export function buildCorridorDragPreview(spec, {
 
   const sourceDoor = roomDoorPoint(sourceRoom, sourceSide);
   const rawPoints = buildPointerPath(sourceDoor, sourceSide, effectivePointer, width);
+
+  // When the pointer is directly over a specific Room, that explicit 3D hit is
+  // authoritative. The temporary orthogonal preview may visually cross another
+  // Room/Corridor, but the final renderer can still find a clean routed path.
+  // Only duplicate logical connections are rejected here; final geometry is
+  // validated by the normal scene-plan preflight before the edit is committed.
+  if (targetRoomId && targetRoomId !== sourceRoomId) {
+    const targetRoom = spec.rooms.find((room) => room.id === targetRoomId);
+    if (targetRoom) {
+      const effectiveTargetSide = CARDINAL_SIDES.includes(targetSide)
+        ? targetSide
+        : facingRoomSide(targetRoom, sourceRoom);
+      const targetDoor = roomDoorPoint(targetRoom, effectiveTargetSide);
+      const targetedPoints = buildPointerPath(sourceDoor, sourceSide, targetDoor, width);
+      const duplicate = spec.corridors.find((corridor) =>
+        corridor.id !== existingCorridorId &&
+        (
+          (corridor.fromRoomId === sourceRoomId && corridor.toRoomId === targetRoom.id) ||
+          (corridor.toRoomId === sourceRoomId && corridor.fromRoomId === targetRoom.id)
+        ));
+
+      if (duplicate) {
+        return {
+          points: targetedPoints,
+          sourceRoomId,
+          sourceSide,
+          targetRoomId: targetRoom.id,
+          targetSide: effectiveTargetSide,
+          state: 'blocked',
+          blockedCode: 'DUPLICATE_CORRIDOR',
+          blockedCorridorId: duplicate.id,
+        };
+      }
+
+      const corridorCollision = firstCorridorConflict(
+        targetedPoints,
+        corridorRoutes,
+        existingCorridorId,
+      );
+      return {
+        points: targetedPoints,
+        sourceRoomId,
+        sourceSide,
+        targetRoomId: targetRoom.id,
+        targetSide: effectiveTargetSide,
+        state: 'ready',
+        blockedCode: null,
+        blockedCorridorId: null,
+        crossesCorridorId: corridorCollision?.corridorId ?? null,
+      };
+    }
+  }
+
   const roomCollision = firstRoomCollision(rawPoints, spec.rooms, sourceRoomId);
   const points = truncateAtRoomCollision(rawPoints, roomCollision);
 
