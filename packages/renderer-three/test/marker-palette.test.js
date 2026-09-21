@@ -27,10 +27,12 @@ test('gameplay marker palette keeps all primary meanings visually separated', ()
     enemy: 0xef4444,
     treasure: 0xeab308,
     trap: 0x8b5cf6,
-    recovery: 0xf472b6,
+    recovery: 0xf8fafc,
   });
 
   assert.ok(distance(DEFAULT_MARKER_COLORS.goal, DEFAULT_MARKER_COLORS.recovery) >= 150);
   assert.ok(distance(DEFAULT_MARKER_COLORS.enemy, DEFAULT_MARKER_COLORS.trap) >= 150);
   assert.ok(distance(DEFAULT_MARKER_COLORS.goal, DEFAULT_MARKER_COLORS.treasure) >= 150);
+  assert.ok(distance(DEFAULT_MARKER_COLORS.enemy, DEFAULT_MARKER_COLORS.recovery) >= 150);
+  assert.ok(distance(DEFAULT_MARKER_COLORS.goal, DEFAULT_MARKER_COLORS.recovery) >= 150);
 });
