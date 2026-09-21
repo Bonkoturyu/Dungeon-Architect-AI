@@ -77,7 +77,13 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     corridor: new THREE.MeshStandardMaterial({ color: 0x8d9bb1, roughness: 0.94, metalness: 0 }),
     corridorExplored: new THREE.MeshStandardMaterial({ color: 0x566477, roughness: 0.96, metalness: 0 }),
     start: new THREE.MeshStandardMaterial({ color: 0x58d68d, roughness: 0.68, metalness: 0 }),
-    goal: new THREE.MeshStandardMaterial({ color: 0xf1c75b, roughness: 0.62, metalness: 0 }),
+    goal: new THREE.MeshStandardMaterial({
+      color: 0x7db7ff,
+      roughness: 0.52,
+      metalness: 0.04,
+      emissive: 0x173f7a,
+      emissiveIntensity: 0.42,
+    }),
     enemy: new THREE.MeshStandardMaterial({
       color: 0xe36d73,
       roughness: 0.72,
@@ -117,6 +123,7 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
   let lastPlan = null;
   let selectedSpecId = null;
   let selectionHelper = null;
+  let contextHelper = null;
   let pathHelpers = [];
 
   function assertAlive() {
@@ -137,6 +144,14 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     selectionHelper = null;
   }
 
+  function clearContextHelper() {
+    if (!contextHelper) return;
+    scene.remove(contextHelper);
+    contextHelper.geometry?.dispose();
+    contextHelper.material?.dispose();
+    contextHelper = null;
+  }
+
   function clearPathHelpers() {
     for (const helper of pathHelpers) {
       scene.remove(helper);
@@ -148,6 +163,7 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
 
   function clearRenderedSpec() {
     clearSelectionHelper();
+    clearContextHelper();
     clearPathHelpers();
     selectedSpecId = null;
     for (const child of [...root.children]) {
@@ -381,6 +397,43 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     draw();
   }
 
+  function setContextSpecId(id) {
+    assertAlive();
+    clearContextHelper();
+    if (id == null) {
+      draw();
+      return;
+    }
+    const target = runtimeBySpecId.get(id);
+    if (!target) return;
+    const targetBounds = new THREE.Box3().setFromObject(target);
+    if (targetBounds.isEmpty()) return;
+    contextHelper = new THREE.BoxHelper(target, 0x8bdcff);
+    contextHelper.name = `context:${id}`;
+    scene.add(contextHelper);
+    draw();
+  }
+
+  function focusSpecId(id, { preserveDistance = true } = {}) {
+    assertAlive();
+    const target = runtimeBySpecId.get(id);
+    if (!target) return false;
+    target.updateWorldMatrix(true, true);
+    const box = new THREE.Box3().setFromObject(target);
+    if (box.isEmpty()) return false;
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+    const offset = camera.position.clone().sub(controls.target);
+    const distance = Math.max(controls.minDistance, offset.length());
+    if (offset.lengthSq() <= 1e-9) offset.set(1, 1, 1).normalize();
+    else offset.normalize();
+    controls.target.copy(center);
+    camera.position.copy(center).add(offset.multiplyScalar(preserveDistance ? distance : Math.max(8, distance)));
+    controls.update();
+    draw();
+    return true;
+  }
+
   function setHighlightedSpecIds(ids = []) {
     assertAlive();
     clearPathHelpers();
@@ -442,6 +495,8 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     getObjectBySpecId,
     pickSpecAt,
     setSelectedSpecId,
+    setContextSpecId,
+    focusSpecId,
     setHighlightedSpecIds,
     getCameraState,
     getScreenPositionForSpecId,
