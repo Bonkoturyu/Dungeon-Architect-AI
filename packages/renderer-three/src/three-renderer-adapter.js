@@ -132,6 +132,7 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
   let lastPlan = null;
   let selectedSpecId = null;
   let selectionHelper = null;
+  let selectionFillHelper = null;
   let contextHelper = null;
   let pathHelpers = [];
 
@@ -146,11 +147,18 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
   }
 
   function clearSelectionHelper() {
-    if (!selectionHelper) return;
-    scene.remove(selectionHelper);
-    selectionHelper.geometry?.dispose();
-    selectionHelper.material?.dispose();
-    selectionHelper = null;
+    if (selectionHelper) {
+      scene.remove(selectionHelper);
+      selectionHelper.geometry?.dispose();
+      selectionHelper.material?.dispose();
+      selectionHelper = null;
+    }
+    if (selectionFillHelper) {
+      scene.remove(selectionFillHelper);
+      selectionFillHelper.geometry?.dispose();
+      selectionFillHelper.material?.dispose();
+      selectionFillHelper = null;
+    }
   }
 
   function clearContextHelper() {
@@ -402,6 +410,31 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     selectionHelper = new THREE.BoxHelper(target, DEFAULT_SELECTION_COLOR);
     selectionHelper.name = `selection:${id}`;
     scene.add(selectionHelper);
+
+    if (target.userData?.kind === 'room') {
+      const box = new THREE.Box3().setFromObject(target);
+      if (!box.isEmpty()) {
+        const size = new THREE.Vector3();
+        const center = new THREE.Vector3();
+        box.getSize(size);
+        box.getCenter(center);
+        selectionFillHelper = new THREE.Mesh(
+          new THREE.PlaneGeometry(Math.max(0.5, size.x + 0.4), Math.max(0.5, size.z + 0.4)),
+          new THREE.MeshBasicMaterial({
+            color: DEFAULT_SELECTION_COLOR,
+            transparent: true,
+            opacity: 0.18,
+            side: THREE.DoubleSide,
+            depthWrite: false,
+          }),
+        );
+        selectionFillHelper.name = `selection-fill:${id}`;
+        selectionFillHelper.rotation.x = -Math.PI / 2;
+        selectionFillHelper.position.set(center.x, 0.045, center.z);
+        scene.add(selectionFillHelper);
+      }
+    }
+
     selectedSpecId = id;
     draw();
   }
