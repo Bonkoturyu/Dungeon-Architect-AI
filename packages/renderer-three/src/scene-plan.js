@@ -454,20 +454,39 @@ export function createDungeonScenePlan(spec, style = {}) {
 
   let corridorRoutes;
   let routingFallbackUsed = false;
-  try {
-    corridorRoutes = planOrthogonalCorridors({
-      ...spec,
-      corridors: routedCorridors,
-    });
-  } catch {
-    corridorRoutes = planOrthogonalCorridors({
-      ...spec,
-      corridors: routedCorridors,
-    }, {
-      allowCrossings: true,
-      outerMargin: 14,
-    });
-    routingFallbackUsed = true;
+  let routingFallbackMode = 'strict';
+
+  const routedSpec = {
+    ...spec,
+    corridors: routedCorridors,
+  };
+
+  const strictMargins = [8, 16, 32];
+  let strictError = null;
+  for (const outerMargin of strictMargins) {
+    try {
+      corridorRoutes = planOrthogonalCorridors(routedSpec, { outerMargin });
+      if (outerMargin !== strictMargins[0]) {
+        routingFallbackUsed = true;
+        routingFallbackMode = `strict-expanded-${outerMargin}`;
+      }
+      break;
+    } catch (error) {
+      strictError = error;
+    }
+  }
+
+  if (!corridorRoutes) {
+    try {
+      corridorRoutes = planOrthogonalCorridors(routedSpec, {
+        allowCrossings: true,
+        outerMargin: 32,
+      });
+      routingFallbackUsed = true;
+      routingFallbackMode = 'crossing-fallback';
+    } catch {
+      throw strictError;
+    }
   }
 
   for (const corridor of spec.corridors) {
@@ -614,5 +633,6 @@ export function createDungeonScenePlan(spec, style = {}) {
     markers,
     bounds: makeBounds(spec.rooms, corridorRoutes),
     routingFallbackUsed,
+    routingFallbackMode,
   };
 }
