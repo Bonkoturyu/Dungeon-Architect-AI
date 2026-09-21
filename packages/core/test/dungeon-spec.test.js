@@ -86,3 +86,18 @@ test("overlapping room interiors are rejected while touching edges remain valid"
   assert.equal(touchingResult.valid, true);
   assert.ok(!touchingResult.errors.some((error) => error.code === "ROOM_OVERLAP"));
 });
+
+
+test("corridor doorway side preferences accept cardinal sides and reject invalid values", async () => {
+  const valid = await loadFixture();
+  valid.corridors[0].fromSide = "east";
+  valid.corridors[0].toSide = "west";
+  const validResult = validateDungeonSpec(valid);
+  assert.equal(validResult.valid, true);
+
+  const invalid = await loadFixture();
+  invalid.corridors[0].fromSide = "up-left";
+  const invalidResult = validateDungeonSpec(invalid);
+  assert.equal(invalidResult.valid, false);
+  assert.ok(invalidResult.errors.some((error) => error.code === "CORRIDOR_SIDE_INVALID"));
+});
