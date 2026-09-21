@@ -240,3 +240,55 @@ test("corridor side edit rejects unsupported side identifiers", () => {
   assert.equal(result.ok, false);
   assert.equal(result.error.code, "CORRIDOR_SIDE_INVALID");
 });
+
+
+test("reconnect-corridor changes endpoints atomically and supports undo/redo", () => {
+  const original = fixture();
+  const session = new EditSession(original);
+  const corridor = original.corridors[0];
+  const targetRoom = original.rooms.at(-1);
+
+  const result = session.apply({
+    type: "reconnect-corridor",
+    corridorId: corridor.id,
+    fromRoomId: corridor.fromRoomId,
+    toRoomId: targetRoom.id,
+    fromSide: "east",
+    toSide: "west",
+  });
+
+  assert.equal(result.ok, true);
+  let edited = session.spec.corridors.find((entry) => entry.id === corridor.id);
+  assert.equal(edited.fromRoomId, corridor.fromRoomId);
+  assert.equal(edited.toRoomId, targetRoom.id);
+  assert.equal(edited.fromSide, "east");
+  assert.equal(edited.toSide, "west");
+
+  assert.equal(session.undo().ok, true);
+  edited = session.spec.corridors.find((entry) => entry.id === corridor.id);
+  assert.equal(edited.fromRoomId, corridor.fromRoomId);
+  assert.equal(edited.toRoomId, corridor.toRoomId);
+  assert.equal(edited.fromSide, corridor.fromSide);
+  assert.equal(edited.toSide, corridor.toSide);
+
+  assert.equal(session.redo().ok, true);
+  edited = session.spec.corridors.find((entry) => entry.id === corridor.id);
+  assert.equal(edited.toRoomId, targetRoom.id);
+  assert.equal(edited.fromSide, "east");
+  assert.equal(edited.toSide, "west");
+});
+
+test("reconnect-corridor rejects identical endpoint rooms", () => {
+  const original = fixture();
+  const corridor = original.corridors[0];
+  const result = applyEditCommand(original, {
+    type: "reconnect-corridor",
+    corridorId: corridor.id,
+    fromRoomId: corridor.fromRoomId,
+    toRoomId: corridor.fromRoomId,
+    fromSide: "east",
+    toSide: "west",
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.error.code, "CORRIDOR_ROOMS_INVALID");
+});
