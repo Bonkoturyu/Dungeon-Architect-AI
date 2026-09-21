@@ -177,7 +177,34 @@ try {
   await page.evaluate(() => window.__DAI_EDITOR_SLICE__.selectRoom('room-middle'));
   const cameraAfterSelection = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getCameraState());
 
+  // Owner regression: from the fixed fixture, move Goal to (27, 4) and then one
+  // step upward. This exact neighborhood previously produced LAYOUT_NOT_RENDERABLE.
+  await page.evaluate(() => window.__DAI_EDITOR_SLICE__.selectRoom('room-goal'));
+  const goalInspectorAfterSelection = await page.evaluate(() =>
+    window.__DAI_EDITOR_SLICE__.getState().inspectorTab);
+  await canvas.focus();
+  for (let index = 0; index < 3; index += 1) await page.keyboard.press('d');
+  for (let index = 0; index < 4; index += 1) await page.keyboard.press('s');
+  const goalBeforeOwnerUp = await page.evaluate(() =>
+    window.__DAI_EDITOR_SLICE__.getState().rooms.find((room) => room.id === 'room-goal'));
+  await page.keyboard.press('w');
+  await page.waitForFunction(() => {
+    const room = window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === 'room-goal');
+    return room?.x === 27 && room?.z === 3;
+  });
+  const goalAfterOwnerUp = await page.evaluate(() =>
+    window.__DAI_EDITOR_SLICE__.getState().rooms.find((room) => room.id === 'room-goal'));
+
+  // Restore the fixture coordinates before the touching-room regression.
+  for (let index = 0; index < 3; index += 1) await page.keyboard.press('a');
+  for (let index = 0; index < 3; index += 1) await page.keyboard.press('w');
+  await page.waitForFunction(() => {
+    const room = window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === 'room-goal');
+    return room?.x === 24 && room?.z === 0;
+  });
+
   // Touch two connected rooms and verify their shared wall/corridor gap collapses into one outer shell.
+  await page.evaluate(() => window.__DAI_EDITOR_SLICE__.selectRoom('room-middle'));
   await canvas.focus();
   for (let index = 0; index < 4; index += 1) await page.keyboard.press('a');
   const touchingState = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
@@ -236,14 +263,34 @@ try {
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().mode === 'edit');
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().workflowTab === 'edit');
 
-  const goalCheckLayout = await page.evaluate(() => {
-    const card = document.querySelector('.goal-check-card').getBoundingClientRect();
-    const tabs = document.querySelector('.workflow-tabs').getBoundingClientRect();
-    return { cardTop: card.top, cardBottom: card.bottom, tabsTop: tabs.top };
+  const sidebarHierarchy = await page.evaluate(() => {
+    const goal = document.querySelector('.goal-check-card').getBoundingClientRect();
+    const modes = document.querySelector('.workflow-tabs').getBoundingClientRect();
+    const ai = document.querySelector('fieldset.panel-ai').getBoundingClientRect();
+    const inspector = document.querySelector('#editInspector').getBoundingClientRect();
+    return {
+      goal: { top: goal.top, bottom: goal.bottom },
+      modes: { top: modes.top, bottom: modes.bottom },
+      ai: { top: ai.top, bottom: ai.bottom },
+      inspector: { top: inspector.top, bottom: inspector.bottom },
+      inspectorLabels: [...document.querySelectorAll('.inspector-tab')]
+        .map((button) => button.textContent.trim()),
+    };
   });
-  const editPanelOrder = await page.evaluate(() =>
-    [...document.querySelectorAll('fieldset[data-workflow-panel="edit"]')]
-      .map((fieldset) => fieldset.querySelector('legend')?.textContent?.trim() ?? ''));
+  const uiScale = await page.evaluate(() => {
+    const button = document.querySelector('#checkPath').getBoundingClientRect();
+    const workflow = document.querySelector('.workflow-tab').getBoundingClientRect();
+    const select = document.querySelector('#entityRoom').getBoundingClientRect();
+    const helper = getComputedStyle(document.querySelector('.panel-kicker'));
+    const label = getComputedStyle(document.querySelector('label'));
+    return {
+      buttonHeight: button.height,
+      workflowHeight: workflow.height,
+      selectHeight: select.height,
+      helperFontPx: Number.parseFloat(helper.fontSize),
+      labelFontPx: Number.parseFloat(label.fontSize),
+    };
+  });
 
   // Room labels, all-room resize, and WASD.
   const roomOptionText = await page.locator('#roomSelect option').allTextContents();
@@ -258,6 +305,8 @@ try {
   if (!goalRoomId || !startRoomId) throw new Error('Start/Goal room missing.');
 
   await page.locator('#roomSelect').selectOption(goalRoomId);
+  const generatedGoalRoomInspectorTab = await page.evaluate(() =>
+    window.__DAI_EDITOR_SLICE__.getState().inspectorTab);
   await page.fill('#roomWidth', '10');
   await page.fill('#roomDepth', '9');
   await page.click('#resizeRoom');
@@ -437,8 +486,8 @@ try {
     const contents = document.querySelector('#roomContentsOverlay').getBoundingClientRect();
     return {
       viewport: { left: viewport.left, right: viewport.right, top: viewport.top, width: viewport.width },
-      selection: { left: selection.left, right: selection.right, top: selection.top, bottom: selection.bottom },
-      legend: { left: legend.left, top: legend.top, bottom: legend.bottom },
+      selection: { left: selection.left, right: selection.right, top: selection.top, bottom: selection.bottom, width: selection.width },
+      legend: { left: legend.left, right: legend.right, top: legend.top, bottom: legend.bottom, width: legend.width },
       contents: { left: contents.left, right: contents.right, top: contents.top, bottom: contents.bottom },
     };
   });
@@ -559,12 +608,20 @@ try {
       languageSamples.en.legacyDialogLanguageButtons === 0 &&
       languageSamples.en.headerCycleText === 'EN ▶ 日本語' &&
       languageSamples.en.dialogCycleText === 'EN ▶ 日本語',
-    editPanelsOrderedAiEntityRoom:
-      editPanelOrder.length === 4 &&
-      editPanelOrder[0] === '✦ AI Request' &&
-      editPanelOrder[1] === '✦ Entities' &&
-      editPanelOrder[2] === '▦ Rooms' &&
-      editPanelOrder[3] === '⇄ Corridors',
+    sidebarHierarchyMatchesAiFirstWorkflow:
+      sidebarHierarchy.goal.bottom <= sidebarHierarchy.modes.top &&
+      sidebarHierarchy.modes.bottom <= sidebarHierarchy.ai.top &&
+      sidebarHierarchy.ai.bottom <= sidebarHierarchy.inspector.top &&
+      sidebarHierarchy.inspectorLabels.length === 3 &&
+      /Entities/.test(sidebarHierarchy.inspectorLabels[0]) &&
+      /Rooms/.test(sidebarHierarchy.inspectorLabels[1]) &&
+      /Corridors/.test(sidebarHierarchy.inspectorLabels[2]),
+    controlsAndTypographyUseReadableScale:
+      uiScale.buttonHeight >= 44 &&
+      uiScale.workflowHeight >= 44 &&
+      uiScale.selectHeight >= 40 &&
+      uiScale.helperFontPx >= 13 &&
+      uiScale.labelFontPx >= 14,
     mouseOrbitChangesCamera: distance3(cameraBefore.position, cameraAfterOrbit.position) > 0.1,
     mouseWheelZoomChangesDistance: cameraAfterZoom.distance < cameraAfterOrbit.distance - 0.1,
     roomSelectionDoesNotRecenterCamera:
@@ -599,8 +656,16 @@ try {
       roomOptionText.some((text) => /start/i.test(text)) &&
       roomOptionText.some((text) => /goal/i.test(text)),
     goalCheckIsTopLevelCard:
-      goalCheckLayout.cardTop < goalCheckLayout.tabsTop &&
-      goalCheckLayout.cardBottom <= goalCheckLayout.tabsTop,
+      sidebarHierarchy.goal.top < sidebarHierarchy.modes.top &&
+      sidebarHierarchy.goal.bottom <= sidebarHierarchy.modes.top,
+    ownerGoalUpwardMoveIsRenderable:
+      goalBeforeOwnerUp?.x === 27 &&
+      goalBeforeOwnerUp?.z === 4 &&
+      goalAfterOwnerUp?.x === 27 &&
+      goalAfterOwnerUp?.z === 3,
+    roomSelectionAutoSwitchesInspector:
+      goalInspectorAfterSelection === 'rooms' &&
+      generatedGoalRoomInspectorTab === 'rooms',
     anyRoomCanBeResized: resizedGoal?.width === 10 && resizedGoal?.depth === 9,
     roomResizeStepperWorks: afterWidthStepper?.width === 11,
     unsafeRoomResizeRejected:
@@ -614,9 +679,11 @@ try {
     wasdMovesSelectedRoom: middleAfterW?.z === middleBefore.z - 1,
     roomAddRemoveWorks:
       structuralAfterAddRoom.rooms.length === structuralBefore.rooms.length + 1 &&
+      structuralAfterAddRoom.inspectorTab === 'rooms' &&
       structuralAfterCleanup.rooms.length === structuralBefore.rooms.length,
     corridorAddRemoveWorks:
       structuralAfterAddCorridor.corridors.length === structuralBefore.corridors.length + 1 &&
+      structuralAfterAddCorridor.inspectorTab === 'corridors' &&
       structuralAfterCleanup.corridors.length === structuralBefore.corridors.length,
     corridorCardinalDoorSidesWork:
       structuralAfterSides.corridor?.fromSide === 'north' &&
@@ -658,15 +725,18 @@ try {
       roomContentsBeforeEntityClick.itemCount >= 1 &&
       roomContentsBeforeEntityClick.hasStart === true,
     editHudMatchesRequestedPlacement:
-      editHudLayout.selection.left >= editHudLayout.viewport.left &&
-      editHudLayout.selection.left <= editHudLayout.viewport.left + 32 &&
-      editHudLayout.legend.left === editHudLayout.selection.left &&
-      editHudLayout.legend.top >= editHudLayout.selection.bottom &&
+      editHudLayout.legend.left >= editHudLayout.viewport.left &&
+      editHudLayout.legend.left <= editHudLayout.viewport.left + 32 &&
+      editHudLayout.selection.left === editHudLayout.legend.left &&
+      editHudLayout.legend.top < editHudLayout.selection.top &&
+      editHudLayout.legend.bottom <= editHudLayout.selection.top &&
+      Math.abs(editHudLayout.legend.width - editHudLayout.selection.width) < 1 &&
       editHudLayout.contents.right <= editHudLayout.viewport.right &&
       editHudLayout.contents.right >= editHudLayout.viewport.right - 32 &&
       editHudLayout.contents.left > editHudLayout.viewport.left + editHudLayout.viewport.width * 0.55,
     clicking3dEntitySelectsAndHighlights:
       selectedEntityState.state.selectedEntityId === startEntityId &&
+      selectedEntityState.state.inspectorTab === 'entities' &&
       selectedEntityState.renderedSelection === startEntityId,
     entitySelectionMovesSummaryIntoViewport:
       selectedEntityState.selectionOverlayVisible === true &&
@@ -705,12 +775,17 @@ try {
     checks,
     languageSamples,
     englishRestored,
-    editPanelOrder,
+    sidebarHierarchy,
+    uiScale,
     falseChecks,
     cameraBefore,
     cameraAfterOrbit,
     cameraAfterZoom,
     cameraAfterSelection,
+    goalInspectorAfterSelection,
+    goalBeforeOwnerUp,
+    goalAfterOwnerUp,
+    generatedGoalRoomInspectorTab,
     concealedGoalCheck,
     touchingRoomMiddle: touchingState.rooms.find((room) => room.id === 'room-middle'),
     touchingCorridorVisiblePoint,
