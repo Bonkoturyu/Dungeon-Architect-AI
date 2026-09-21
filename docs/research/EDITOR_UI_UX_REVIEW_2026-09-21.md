@@ -131,6 +131,28 @@ Automatic switching:
 
 Manual tab switching remains possible and does not change selection.
 
+## Direct 3D authoring controls
+
+The owner review replaces the previous left-drag orbit interaction with an editor-oriented mouse model:
+
+- **Left click**: select Room / Entity / Corridor when the pointer is released without a meaningful drag.
+- **Left drag on empty/floor space**: pan the camera across large dungeons.
+- **Right drag**: orbit / rotate the 3D camera.
+- **Mouse wheel**: zoom.
+- **Left drag from a selected Room wall**: begin a temporary Corridor draft.
+- If the drafted Corridor reaches another Room, the target becomes a valid connection candidate.
+- Releasing without reaching a Room cancels the draft without modifying DungeonSpec.
+- Collision with an existing Corridor / invalid target produces an error instead of silently creating invalid geometry.
+- Dragging from an existing Corridor endpoint temporarily replaces its rendered Corridor with the draft appearance; successful release reconnects the same Corridor ID as one undoable edit.
+
+The temporary Corridor uses distinct visual states:
+
+- cyan: drafting / no Room reached yet;
+- green: valid Room connection candidate;
+- red: blocked collision or invalid connection.
+
+Room creation in the inspector uses four direct cardinal action buttons rather than a direction dropdown followed by a separate Add action.
+
 ## Layout-not-renderable feedback
 
 Internal renderer/preflight failures must not be presented as only `LAYOUT_NOT_RENDERABLE`.
