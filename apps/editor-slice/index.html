@@ -1475,6 +1475,56 @@
     .result-banner { font-size: 1rem; }
     .result-metric { font-size: 0.8125rem; }
 
+    canvas {
+      cursor: grab;
+    }
+    canvas:active {
+      cursor: grabbing;
+    }
+    canvas.is-corridor-drafting,
+    canvas.is-corridor-drafting:active {
+      cursor: crosshair;
+    }
+
+    .room-actions {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(102, 117, 142, 0.32);
+    }
+    .room-actions .section-caption {
+      margin: 0 0 9px;
+    }
+    .room-direction-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .room-direction-actions button {
+      min-width: 0;
+      min-height: 40px;
+      padding: 7px 8px;
+      background: rgba(57, 69, 86, 0.72);
+    }
+    .room-remove-action {
+      margin-top: 10px;
+    }
+
+    .corridor-drag-callout {
+      display: grid;
+      gap: 4px;
+      margin-top: 14px;
+      padding: 11px 12px;
+      border-top: 1px solid rgba(102, 117, 142, 0.32);
+      background: rgba(102, 117, 142, 0.06);
+      color: var(--text-soft);
+      font-size: 0.8125rem;
+      line-height: 1.45;
+    }
+    .corridor-drag-callout strong {
+      color: var(--accent-strong);
+      font-size: 0.8125rem;
+    }
+
     .viewport-notice {
       top: auto;
       bottom: 28px;
@@ -1541,7 +1591,7 @@
       <section class="viewport-shell" aria-label="Dungeon viewport">
         <div class="viewport-label">
           <strong id="viewportTitle" data-i18n="viewport.editTitle">3D Dungeon</strong>
-          <span id="viewportHelp" data-i18n="viewport.editHelp">Drag orbit · Wheel zoom · WASD / Arrow keys move</span>
+          <span id="viewportHelp" data-i18n="viewport.editHelp">Left drag pan · Right drag orbit · Wheel zoom · Drag a room wall to create a corridor</span>
         </div>
         <canvas id="renderCanvas" tabindex="0"></canvas>
         <div class="left-hud-stack edit-hud-stack">
@@ -1706,24 +1756,30 @@
             <p class="resize-note" data-i18n="rooms.resizeNote">Use − / ＋ for 1-unit steps, or type a size, then Apply. Overlapping rooms are blocked.</p>
             <button id="resizeRoom" class="wide-action" type="button" disabled data-i18n="rooms.apply">Apply room size</button>
 
-            <div class="compact-grid">
-              <label>
-                <span data-i18n="rooms.newDirection">New room direction</span>
+            <section class="room-actions" aria-label="Room actions">
+              <p class="section-caption" data-i18n="rooms.addDirection">Add room from selected room</p>
+              <div class="room-direction-actions">
+                <button type="button" data-room-add-direction="north" title="Add room north">↑ <span data-i18n="side.north">North</span></button>
+                <button type="button" data-room-add-direction="east" title="Add room east">→ <span data-i18n="side.east">East</span></button>
+                <button type="button" data-room-add-direction="south" title="Add room south">↓ <span data-i18n="side.south">South</span></button>
+                <button type="button" data-room-add-direction="west" title="Add room west">← <span data-i18n="side.west">West</span></button>
+              </div>
+              <div hidden>
                 <select id="roomAddDirection" aria-label="New room direction">
-                  <option value="east" data-i18n="side.east">East</option>
-                  <option value="south" data-i18n="side.south">South</option>
-                  <option value="west" data-i18n="side.west">West</option>
-                  <option value="north" data-i18n="side.north">North</option>
+                  <option value="east">East</option>
+                  <option value="south">South</option>
+                  <option value="west">West</option>
+                  <option value="north">North</option>
                 </select>
-              </label>
-              <button id="addRoom" type="button" data-i18n="rooms.add">＋ Add room</button>
-            </div>
-            <button id="removeRoom" class="danger-action danger-wide" type="button" disabled data-i18n="rooms.remove">Remove selected room</button>
+                <button id="addRoom" type="button">Add room</button>
+              </div>
+              <button id="removeRoom" class="danger-action danger-wide room-remove-action" type="button" disabled data-i18n="rooms.remove">Remove selected room</button>
+            </section>
           </fieldset>
 
           <fieldset class="inspector-panel" data-inspector-panel="corridors">
             <legend data-i18n="corridors.title">⇄ Corridors</legend>
-            <p class="panel-kicker" data-i18n="corridors.help">Select a corridor and choose which wall side each endpoint uses.</p>
+            <p class="panel-kicker" data-i18n="corridors.help">Select a room, then drag from one of its walls to another room. Drag an existing corridor endpoint to reconnect it.</p>
             <label>
               <span data-i18n="corridors.selected">Selected corridor</span>
               <select id="corridorSelect" aria-label="Existing corridors"></select>
@@ -1753,18 +1809,24 @@
             <button id="applyCorridorSides" class="wide-action" type="button" disabled data-i18n="corridors.applySides">Apply doorway sides</button>
             <button id="removeCorridor" class="danger-action danger-wide" type="button" disabled data-i18n="corridors.remove">Remove selected corridor</button>
 
-            <p class="section-caption" data-i18n="corridors.new">New corridor</p>
-            <div class="compact-grid">
-              <label>
-                <span data-i18n="corridors.fromRoom">From room</span>
-                <select id="corridorFromRoom" aria-label="New corridor from room"></select>
-              </label>
-              <label>
-                <span data-i18n="corridors.toRoom">To room</span>
-                <select id="corridorToRoom" aria-label="New corridor to room"></select>
-              </label>
+            <div class="corridor-drag-callout">
+              <strong data-i18n="corridors.dragTitle">3D drag editing</strong>
+              <span data-i18n="corridors.dragBody">Room → wall drag → target room. Release without reaching a room to cancel.</span>
             </div>
-            <button id="addCorridor" class="wide-action" type="button" data-i18n="corridors.add">＋ Add corridor</button>
+            <div class="manual-corridor-create" hidden aria-hidden="true">
+              <p class="section-caption" data-i18n="corridors.new">New corridor</p>
+              <div class="compact-grid">
+                <label>
+                  <span data-i18n="corridors.fromRoom">From room</span>
+                  <select id="corridorFromRoom" aria-label="New corridor from room"></select>
+                </label>
+                <label>
+                  <span data-i18n="corridors.toRoom">To room</span>
+                  <select id="corridorToRoom" aria-label="New corridor to room"></select>
+                </label>
+              </div>
+              <button id="addCorridor" class="wide-action" type="button" data-i18n="corridors.add">＋ Add corridor</button>
+            </div>
           </fieldset>
         </section>
       </aside>
