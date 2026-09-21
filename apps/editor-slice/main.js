@@ -1829,6 +1829,15 @@ function beginCorridorDraft(event) {
   } else if (hit.kind === 'corridor') {
     const corridor = authoringSpec().corridors.find((entry) => entry.id === hit.specId);
     if (!corridor || ![corridor.fromRoomId, corridor.toRoomId].includes(sourceRoom.id)) return false;
+
+    const rendered = adapter.plan?.corridorGroups?.find((group) => group.specId === corridor.id);
+    const sourceIsFrom = rendered?.fromDoor?.roomId === sourceRoom.id;
+    const doorPoint = sourceIsFrom ? rendered?.route?.[0] : rendered?.route?.at(-1);
+    const nearSelectedRoomEndpoint = doorPoint && hit.point
+      ? Math.hypot(hit.point.x - doorPoint.x, hit.point.z - doorPoint.z) <= Math.max(3.5, corridor.width * 1.5)
+      : false;
+    if (!nearSelectedRoomEndpoint) return false;
+
     sourceSide = corridorSideForRoom(adapter.plan, corridor.id, sourceRoom.id);
     existingCorridorId = corridor.id;
   } else {
