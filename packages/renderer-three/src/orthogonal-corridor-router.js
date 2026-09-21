@@ -203,6 +203,7 @@ function findOrthogonalPath({
   margin,
   occupiedSegments,
   bendPenalty,
+  allowCrossings,
 }) {
   const obstacles = rooms.map((room) => roomRect(room, clearance));
   const { xs, zs } = makeCoordinateSet(rooms, start, goal, clearance, margin);
@@ -216,6 +217,7 @@ function findOrthogonalPath({
 
   function segmentValid(a, b) {
     if (obstacles.some((rect) => segmentCrossesRectInterior(a, b, rect))) return false;
+    if (allowCrossings) return true;
     return occupiedSegments.every(([c, d]) => !segmentsConflict(a, b, c, d));
   }
 
@@ -289,6 +291,7 @@ export function planOrthogonalCorridors(spec, {
   outerMargin = 8,
   bendPenalty = 2,
   reusedDoorPenalty = 1000,
+  allowCrossings = false,
 } = {}) {
   const roomById = new Map(spec.rooms.map((room) => [room.id, room]));
   const usage = new Map(spec.rooms.map((room) => [room.id, new Map(SIDES.map((side) => [side, 0]))]));
@@ -318,7 +321,7 @@ export function planOrthogonalCorridors(spec, {
           [fromDoor, fromOutside],
           [toOutside, toDoor],
         ];
-        if (endpointSegments.some(([a, b]) =>
+        if (!allowCrossings && endpointSegments.some(([a, b]) =>
           occupiedSegments.some(([c, d]) => segmentsConflict(a, b, c, d)))) {
           continue;
         }
@@ -331,6 +334,7 @@ export function planOrthogonalCorridors(spec, {
           margin: outerMargin + routes.size * (corridor.width + 1),
           occupiedSegments: [...occupiedSegments, ...endpointSegments],
           bendPenalty,
+          allowCrossings,
         });
         if (!middle) continue;
 
