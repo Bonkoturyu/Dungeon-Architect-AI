@@ -1123,6 +1123,42 @@
     }
     aside {
       padding: var(--ui-space-3);
+      overflow-x: hidden;
+    }
+
+    aside > *,
+    aside fieldset,
+    aside section,
+    aside nav,
+    aside label,
+    aside .compact-grid,
+    aside .room-size-grid {
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    aside select,
+    aside input,
+    aside textarea,
+    aside button {
+      max-width: 100%;
+    }
+
+    aside select,
+    aside input,
+    aside textarea {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .compact-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .compact-grid > *,
+    .room-size-grid > *,
+    .size-stepper > * {
+      min-width: 0;
     }
 
     .viewport-label {
@@ -1225,6 +1261,9 @@
     #entitySelect { min-height: 40px; font-size: var(--ui-font-body); }
 
     .inspector-shell {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
       margin: 0 0 var(--ui-space-3);
       overflow: hidden;
       border: 1px solid rgba(102, 117, 142, 0.72);
@@ -1287,6 +1326,9 @@
     }
     .inspector-panel {
       display: none;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
       margin: 0;
       padding: 16px;
       border: 0;
