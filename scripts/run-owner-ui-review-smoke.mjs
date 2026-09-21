@@ -282,6 +282,13 @@ try {
   const entityCount = generated.entities.length;
   const entityCardCount = await page.locator('#entityCards .entity-card').count();
   const entityIconCount = await page.locator('#entityCards .entity-icon').count();
+  const entityCardColors = await page.evaluate(() => {
+    const kinds = ['goal', 'enemy', 'treasure', 'trap', 'recovery'];
+    return Object.fromEntries(kinds.map((kind) => {
+      const icon = document.querySelector(`.entity-card[data-kind="${kind}"] .entity-icon`);
+      return [kind, icon ? getComputedStyle(icon).color : null];
+    }));
+  });
   const startEntityId = await page.evaluate(() =>
     window.__DAI_EDITOR_SLICE__.getState().entities.find((entity) => entity.type === 'start')?.id ?? null);
   if (!startEntityId) throw new Error('Start entity missing.');
@@ -436,6 +443,12 @@ try {
     entityCardsReplaceTextWall:
       entityCardCount === entityCount &&
       entityIconCount === entityCount,
+    entityCardPaletteSeparated:
+      entityCardColors.goal === 'rgb(59, 130, 246)' &&
+      entityCardColors.enemy === 'rgb(239, 68, 68)' &&
+      entityCardColors.treasure === 'rgb(234, 179, 8)' &&
+      entityCardColors.trap === 'rgb(139, 92, 246)' &&
+      entityCardColors.recovery === 'rgb(248, 250, 252)',
     clicking3dEntitySelectsAndHighlights:
       selectedEntityState.state.selectedEntityId === startEntityId &&
       selectedEntityState.renderedSelection === startEntityId,
@@ -494,6 +507,7 @@ try {
     middleAfterRestore,
     pathState,
     pathText,
+    entityCardColors,
     selectedEntityId: selectedEntityState.state.selectedEntityId,
     renderedSelection: selectedEntityState.renderedSelection,
     selectedEntityRoomListValue: selectedEntityState.roomListValue,
