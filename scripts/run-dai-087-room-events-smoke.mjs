@@ -278,6 +278,22 @@ try {
       resultText.includes('DMG') &&
       resultText.includes('HEAL') &&
       hpReadout === `${result.result?.playerState?.hp ?? 0}/${result.result?.playerState?.maxHp ?? 0}`,
+    progressionMetricsVisible:
+      resultText.includes('LV') &&
+      resultText.includes('XP') &&
+      resultText.includes('G') &&
+      resultText.includes('LOOT') &&
+      resultText.includes('WPN') &&
+      resultText.includes('ARM'),
+    progressionRewardsRecorded:
+      (metrics.xpEarned ?? 0) > 0 &&
+      (metrics.goldEarned ?? 0) > 0 &&
+      (metrics.lootCollected ?? 0) >= 1 &&
+      (result.result?.playerState?.gold ?? 0) > 0 &&
+      Boolean(
+        result.result?.playerState?.equipment?.weapon ||
+        result.result?.playerState?.equipment?.armor
+      ),
     runClears: result.result?.status === 'cleared',
     playEventTimesMonotonic: eventTimesMonotonic,
     resultTimeNotBeforeEvents:
