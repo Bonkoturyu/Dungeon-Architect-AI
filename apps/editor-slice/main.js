@@ -9,8 +9,14 @@ import {
 import { evaluateStartGate } from '../../packages/editor-core/src/start-gate.js';
 import { startPlaySession, movePlaySession, createPlayResult } from '../../packages/play-core/src/play-session.js';
 import { createRendererVisibilityFromPlaySession, derivePlayMap } from '../../packages/play-core/src/play-map.js';
-import { listRoomEnemies, recordEnemyEncounter, defeatEnemy } from '../../packages/play-core/src/enemy-runtime.js';
 import {
+  DEFAULT_ENEMY_DAMAGE,
+  listRoomEnemies,
+  resolveEnemyCombat,
+} from '../../packages/play-core/src/enemy-runtime.js';
+import {
+  DEFAULT_RECOVERY_HEALING,
+  DEFAULT_TRAP_DAMAGE,
   listRoomInteractables,
   openTreasure,
   avoidTrap,
@@ -54,6 +60,7 @@ const roomEventItems = document.querySelector('#roomEventItems');
 const playModeLabel = document.querySelector('#playModeLabel');
 const moveCount = document.querySelector('#moveCount');
 const mappedCount = document.querySelector('#mappedCount');
+const hpCount = document.querySelector('#hpCount');
 const roomSelect = document.querySelector('#roomSelect');
 const roomWidth = document.querySelector('#roomWidth');
 const roomDepth = document.querySelector('#roomDepth');
@@ -755,23 +762,16 @@ function applyPlayRuntimeResult(result, failurePrefix) {
   }
   playSession = result.session;
   updatePlayReadout();
+  if (finalizePlayIfNeeded()) return true;
   renderActiveSpec();
   return true;
 }
 
 function clearEnemy(enemyId) {
   if (!playSession || mode !== 'play') return false;
-  let current = playSession;
-  const enemyState = listRoomEnemies(current, current.currentRoomId, { includeDefeated: true })
-    .find((entry) => entry.enemy.id === enemyId)?.state;
-  if ((enemyState?.encounters ?? 0) === 0) {
-    const encountered = recordEnemyEncounter(current, enemyId, { at: nextPlayActionAt() });
-    if (!encountered.ok) return applyPlayRuntimeResult(encountered, 'Encounter failed');
-    current = encountered.session;
-  }
   return applyPlayRuntimeResult(
-    defeatEnemy(current, enemyId, { at: nextPlayActionAt() }),
-    'Clear failed',
+    resolveEnemyCombat(playSession, enemyId, { at: nextPlayActionAt() }),
+    'Combat failed',
   );
 }
 
@@ -811,7 +811,7 @@ function renderRoomEvents() {
 
     const note = document.createElement('span');
     note.className = 'room-event-note';
-    note.textContent = t('roomEvent.blocks');
+    note.textContent = `${t('roomEvent.blocks')} · -${enemy.damage ?? DEFAULT_ENEMY_DAMAGE} HP`;
 
     const actions = document.createElement('div');
     actions.className = 'room-event-actions';
@@ -845,9 +845,14 @@ function renderRoomEvents() {
 
     const note = document.createElement('span');
     note.className = 'room-event-note';
-    if (entity.type === 'trap') note.textContent = warning === 'floor-cracks' ? t('roomEvent.cracked') : t('roomEvent.off');
-    else if (entity.type === 'treasure') note.textContent = warning === 'suspicious-glow' ? t('roomEvent.suspicious') : t('roomEvent.optional');
-    else note.textContent = t('roomEvent.optional');
+    if (entity.type === 'trap') {
+      const base = warning === 'floor-cracks' ? t('roomEvent.cracked') : t('roomEvent.off');
+      note.textContent = `${base} · -${entity.damage ?? DEFAULT_TRAP_DAMAGE} HP`;
+    } else if (entity.type === 'treasure') {
+      note.textContent = warning === 'suspicious-glow' ? t('roomEvent.suspicious') : t('roomEvent.optional');
+    } else {
+      note.textContent = `${t('roomEvent.optional')} · +${entity.healing ?? DEFAULT_RECOVERY_HEALING} HP`;
+    }
 
     const actions = document.createElement('div');
     actions.className = 'room-event-actions';
@@ -1714,6 +1719,7 @@ function updatePlayReadout() {
   if (!playSession) {
     if (moveCount) moveCount.textContent = '0';
     if (mappedCount) mappedCount.textContent = '0';
+    if (hpCount) hpCount.textContent = '0/0';
     resultStatus.textContent = '';
     resultStatus.hidden = true;
     if (playModeLabel) {
@@ -1730,12 +1736,16 @@ function updatePlayReadout() {
   }
   if (moveCount) moveCount.textContent = String(playSession.moves);
   if (mappedCount) mappedCount.textContent = String(map.exploredRoomIds.length);
+  if (hpCount) hpCount.textContent = `${playSession.playerState?.hp ?? 0}/${playSession.playerState?.maxHp ?? 0}`;
 }
 
 function renderResultMetrics(result) {
   if (!resultMetrics) return;
   const metrics = result?.metrics ?? {};
   const items = [
+    ['HP', `${result?.playerState?.hp ?? 0}/${result?.playerState?.maxHp ?? 0}`],
+    ['DMG', metrics.damageTaken ?? 0],
+    ['HEAL', metrics.healingReceived ?? 0],
     [t('result.enemy'), metrics.enemiesCleared ?? 0],
     [t('result.chest'), metrics.treasuresOpened ?? 0],
     [t('result.trap'), metrics.trapsTriggered ?? 0],
@@ -1897,6 +1907,7 @@ function returnToEdit() {
   selectedCorridorId = null;
   if (moveCount) moveCount.textContent = '0';
   if (mappedCount) mappedCount.textContent = '0';
+  if (hpCount) hpCount.textContent = '0/0';
   resultStatus.textContent = '';
   resultStatus.hidden = true;
   if (resultMetrics) {
