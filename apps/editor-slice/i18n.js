@@ -767,9 +767,9 @@ export function applyDocumentTranslations(
   for (const button of root.querySelectorAll('[data-language-cycle]')) {
     button.dataset.currentLanguage = currentLanguage;
     button.dataset.nextLanguage = nextLanguage;
-    button.textContent = `${currentOption.label} → ${nextOption.label}`;
-    button.setAttribute('aria-label', `${t('language.label')}: ${currentOption.label} → ${nextOption.label}`);
-    button.title = `${currentOption.label} → ${nextOption.label}`;
+    button.textContent = `${currentOption.label} ▶ ${nextOption.label}`;
+    button.setAttribute('aria-label', `${t('language.label')}: ${currentOption.label} to ${nextOption.label}`);
+    button.title = `${currentOption.label} ▶ ${nextOption.label}`;
   }
 }
 
