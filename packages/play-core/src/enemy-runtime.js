@@ -1,6 +1,7 @@
 import { applyGameplayStateCommand } from "./gameplay-state.js";
 import { dispatchSupportedEvents } from "./event-runtime.js";
 import { applyPlayerDamage } from "./play-session.js";
+import { grantEnemyReward } from "./progression-runtime.js";
 
 export const DEFAULT_ENEMY_DAMAGE = 4;
 
@@ -188,5 +189,7 @@ export function defeatEnemy(session, enemyId, { at = session?.startedAt ?? 0 } =
   if (!dispatched.ok) return dispatched;
   next = dispatched.session;
 
-  return { ok: true, session: next };
+  const rewarded = grantEnemyReward(next, enemyId, { at });
+  if (!rewarded.ok) return rewarded;
+  return { ok: true, session: rewarded.session, reward: rewarded.reward };
 }
