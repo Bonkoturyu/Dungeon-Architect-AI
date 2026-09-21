@@ -702,14 +702,25 @@ export function getLanguage() {
   return currentLanguage;
 }
 
-export function t(key, variables = {}) {
-  const dictionary = TRANSLATIONS[currentLanguage] ?? TRANSLATIONS[DEFAULT_LANGUAGE];
+export function getMessage(language, key, variables = {}) {
+  const normalized = normalizeLanguage(language);
+  const dictionary = TRANSLATIONS[normalized] ?? TRANSLATIONS[DEFAULT_LANGUAGE];
   const fallback = TRANSLATIONS[DEFAULT_LANGUAGE];
   let value = dictionary[key] ?? fallback[key] ?? key;
   for (const [name, replacement] of Object.entries(variables)) {
     value = value.replaceAll(`{${name}}`, String(replacement));
   }
   return value;
+}
+
+export function t(key, variables = {}) {
+  return getMessage(currentLanguage, key, variables);
+}
+
+export function getNextLanguage(language = currentLanguage) {
+  const normalized = normalizeLanguage(language);
+  const index = LANGUAGE_OPTIONS.findIndex((option) => option.id === normalized);
+  return LANGUAGE_OPTIONS[(index + 1) % LANGUAGE_OPTIONS.length].id;
 }
 
 export function applyDocumentTranslations(root = document) {
@@ -730,6 +741,17 @@ export function applyDocumentTranslations(root = document) {
     const active = button.dataset.language === currentLanguage;
     button.classList.toggle('is-active', active);
     button.setAttribute('aria-pressed', String(active));
+  }
+
+  const currentOption = LANGUAGE_OPTIONS.find((option) => option.id === currentLanguage) ?? LANGUAGE_OPTIONS[0];
+  const nextLanguage = getNextLanguage(currentLanguage);
+  const nextOption = LANGUAGE_OPTIONS.find((option) => option.id === nextLanguage) ?? LANGUAGE_OPTIONS[0];
+  for (const button of root.querySelectorAll('[data-language-cycle]')) {
+    button.dataset.currentLanguage = currentLanguage;
+    button.dataset.nextLanguage = nextLanguage;
+    button.textContent = `${currentOption.label} → ${nextOption.label}`;
+    button.setAttribute('aria-label', `${t('language.label')}: ${currentOption.label} → ${nextOption.label}`);
+    button.title = `${currentOption.label} → ${nextOption.label}`;
   }
 }
 
@@ -761,6 +783,11 @@ export function bindLanguageSwitchers(root = document) {
     if (button.dataset.languageBound === 'true') continue;
     button.dataset.languageBound = 'true';
     button.addEventListener('click', () => setLanguage(button.dataset.language));
+  }
+  for (const button of root.querySelectorAll('[data-language-cycle]')) {
+    if (button.dataset.languageBound === 'true') continue;
+    button.dataset.languageBound = 'true';
+    button.addEventListener('click', () => setLanguage(getNextLanguage()));
   }
   applyDocumentTranslations(root);
 }
