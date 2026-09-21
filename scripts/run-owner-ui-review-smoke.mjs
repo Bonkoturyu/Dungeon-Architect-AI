@@ -692,6 +692,25 @@ try {
     selectedRoomContentId: document.querySelector('#roomContentsItems .room-content-item.is-selected')?.dataset.entityId ?? null,
   }));
 
+  const entityCreateSpacing = await page.evaluate(() => {
+    const panel = document.querySelector('[data-inspector-panel="entities"]');
+    const buttonRow = panel?.querySelector('.button-row');
+    const label = panel?.querySelector('.entity-create-label');
+    const labelText = label?.querySelector('span');
+    const select = document.querySelector('#entityType');
+    const add = document.querySelector('#addEntity');
+    const buttonRect = buttonRow?.getBoundingClientRect() ?? null;
+    const labelRect = labelText?.getBoundingClientRect() ?? null;
+    const selectRect = select?.getBoundingClientRect() ?? null;
+    const addRect = add?.getBoundingClientRect() ?? null;
+    return {
+      buttonToLabelGap: buttonRect && labelRect ? labelRect.top - buttonRect.bottom : null,
+      labelToSelectGap: labelRect && selectRect ? selectRect.top - labelRect.bottom : null,
+      selectToAddGap: selectRect && addRect ? addRect.top - selectRect.bottom : null,
+      labelLineHeight: labelText ? parseFloat(getComputedStyle(labelText).lineHeight) : null,
+    };
+  });
+
   // Same-room Start/Goal protection in UI and validation.
   await page.waitForFunction((goalId) => {
     const option = document.querySelector(`#entityRoom option[value="${goalId}"]`);
@@ -784,9 +803,29 @@ try {
       ? (summaryRect.left + summaryRect.right) / 2
       : null;
 
+    let modeLampTextGap = null;
+    if (modeBadge) {
+      const textNode = [...modeBadge.childNodes].find((node) =>
+        node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0);
+      if (textNode) {
+        const range = document.createRange();
+        range.selectNodeContents(textNode);
+        const textRect = range.getBoundingClientRect();
+        const badgeRect = modeBadge.getBoundingClientRect();
+        const pseudo = getComputedStyle(modeBadge, '::before');
+        const lampLeft = Number.parseFloat(pseudo.left);
+        const lampWidth = Number.parseFloat(pseudo.width);
+        if (Number.isFinite(lampLeft) && Number.isFinite(lampWidth)) {
+          modeLampTextGap = textRect.left - (badgeRect.left + lampLeft + lampWidth);
+        }
+      }
+    }
+
     return {
       modeBadgeJustify: modeBadge ? getComputedStyle(modeBadge).justifyContent : null,
       modeBadgeTextAlign: modeBadge ? getComputedStyle(modeBadge).textAlign : null,
+      modeLampTextGap,
+      returnEditText: document.querySelector('#returnEdit')?.textContent?.trim() ?? '',
       playSummaryJustify: playSummary ? getComputedStyle(playSummary).justifyContent : null,
       playSummaryTextAlign: playSummary ? getComputedStyle(playSummary).textAlign : null,
       playMetricsJustify: playMetrics ? getComputedStyle(playMetrics).justifyContent : null,
@@ -1005,6 +1044,14 @@ try {
       selectedEntityState.roomListValue === startRoomId &&
       selectedEntityState.roomContentsVisible === true &&
       selectedEntityState.selectedRoomContentId === startEntityId,
+    entityCreateControlsHaveBalancedVerticalRhythm:
+      Number.isFinite(entityCreateSpacing.buttonToLabelGap) &&
+      Number.isFinite(entityCreateSpacing.labelToSelectGap) &&
+      Number.isFinite(entityCreateSpacing.selectToAddGap) &&
+      entityCreateSpacing.buttonToLabelGap >= 14 &&
+      entityCreateSpacing.labelToSelectGap >= 8 &&
+      entityCreateSpacing.selectToAddGap >= 10 &&
+      entityCreateSpacing.labelLineHeight >= 18,
     playKeyboardMovesOrReachesRoomEvent:
       playAfterKeyboard.play?.moves === playBeforeKeyboard.play.moves + 1 ||
       eventLayout.eventVisible === true,
@@ -1018,6 +1065,11 @@ try {
       Number.isFinite(playResultCentering.groupCenter) &&
       Number.isFinite(playResultCentering.summaryCenter) &&
       Math.abs(playResultCentering.groupCenter - playResultCentering.summaryCenter) <= 2,
+    modeLampDoesNotOverlapLabel:
+      Number.isFinite(playResultCentering.modeLampTextGap) &&
+      playResultCentering.modeLampTextGap >= 8,
+    returnEditUsesSolidTriangle:
+      playResultCentering.returnEditText.startsWith('◀'),
     roomEventCommandsAppearBelowReticle:
       eventLayout.eventVisible === false ||
       (Number.isFinite(eventLayout.eventTop) &&
@@ -1098,6 +1150,7 @@ try {
     selectedEntityId: selectedEntityState.state.selectedEntityId,
     renderedSelection: selectedEntityState.renderedSelection,
     selectedEntityRoomListValue: selectedEntityState.roomListValue,
+    entityCreateSpacing,
     keyboardExit,
     playBeforeKeyboard,
     playAfterKeyboard,
