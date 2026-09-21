@@ -154,19 +154,27 @@ try {
   }));
   await page.evaluate(() => window.__DAI_ONBOARDING__.close());
 
-  // Camera orbit / zoom.
+  // Camera controls: right drag orbits, left drag pans, wheel zooms.
   const cameraBefore = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getCameraState());
   const canvas = page.locator('#renderCanvas');
   const box = await canvas.boundingBox();
   if (!box) throw new Error('Canvas bounds unavailable.');
   const cx = box.x + box.width * 0.5;
   const cy = box.y + box.height * 0.5;
+
   await page.mouse.move(cx, cy);
-  await page.mouse.down();
+  await page.mouse.down({ button: 'right' });
   await page.mouse.move(cx + 110, cy + 45, { steps: 12 });
-  await page.mouse.up();
+  await page.mouse.up({ button: 'right' });
   await page.waitForTimeout(50);
   const cameraAfterOrbit = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getCameraState());
+
+  await page.mouse.move(cx, cy);
+  await page.mouse.down({ button: 'left' });
+  await page.mouse.move(cx + 90, cy - 55, { steps: 10 });
+  await page.mouse.up({ button: 'left' });
+  await page.waitForTimeout(50);
+  const cameraAfterPan = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getCameraState());
 
   await page.mouse.move(cx, cy);
   await page.mouse.wheel(0, -650);
@@ -423,11 +431,15 @@ try {
   const middleAfterRestore = await page.evaluate((id) =>
     window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === id), middleRoomId);
 
-  // Structural authoring: add/remove Room, add/remove Corridor, and force N/E/S/W doorway sides.
-  await page.locator('#roomSelect').selectOption(middleRoomId);
+  // Structural authoring: direction-button Room creation plus direct 3D corridor drag.
+  const structuralAnchorId = await page.evaluate(() => {
+    const state = window.__DAI_EDITOR_SLICE__.getState();
+    return state.rooms.reduce((best, room) => room.x < best.x ? room : best).id;
+  });
+  await page.evaluate((id) => window.__DAI_EDITOR_SLICE__.selectRoom(id), structuralAnchorId);
   const structuralBefore = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
-  await page.locator('#roomAddDirection').selectOption('north');
-  await page.click('#addRoom');
+
+  await page.click('[data-room-add-direction="west"]');
   await page.waitForFunction((roomCount) =>
     window.__DAI_EDITOR_SLICE__.getState().rooms.length === roomCount + 1,
   structuralBefore.rooms.length);
@@ -435,23 +447,32 @@ try {
   const addedRoomId = structuralAfterAddRoom.selectedRoomId;
   if (!addedRoomId) throw new Error('Added room did not become selected.');
 
-  await page.locator('#corridorFromRoom').selectOption(middleRoomId);
-  await page.locator('#corridorToRoom').selectOption(addedRoomId);
-  await page.click('#addCorridor');
+  await page.evaluate((id) => window.__DAI_EDITOR_SLICE__.selectRoom(id), structuralAnchorId);
+  const dragPoints = await page.evaluate(({ fromRoomId, toRoomId }) => {
+    const state = window.__DAI_EDITOR_SLICE__.getState();
+    const target = state.rooms.find((room) => room.id === toRoomId);
+    return {
+      start: window.__DAI_EDITOR_SLICE__.getScreenPositionForRoomWall(fromRoomId, 'west'),
+      end: window.__DAI_EDITOR_SLICE__.getScreenPositionForWorldPoint({
+        x: target.x,
+        y: 0,
+        z: target.z,
+      }),
+    };
+  }, { fromRoomId: structuralAnchorId, toRoomId: addedRoomId });
+  if (!dragPoints.start || !dragPoints.end) throw new Error('Direct corridor drag screen points unavailable.');
+
+  await page.mouse.move(dragPoints.start.x, dragPoints.start.y);
+  await page.mouse.down({ button: 'left' });
+  await page.mouse.move(dragPoints.end.x, dragPoints.end.y, { steps: 14 });
+  await page.mouse.up({ button: 'left' });
   await page.waitForFunction((corridorCount) =>
     window.__DAI_EDITOR_SLICE__.getState().corridors.length === corridorCount + 1,
   structuralBefore.corridors.length);
   const structuralAfterAddCorridor = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
   const addedCorridorId = structuralAfterAddCorridor.selectedCorridorId;
-  if (!addedCorridorId) throw new Error('Added corridor did not become selected.');
+  if (!addedCorridorId) throw new Error('Direct corridor drag did not select the created corridor.');
 
-  await page.locator('#corridorFromSide').selectOption('north');
-  await page.locator('#corridorToSide').selectOption('south');
-  await page.click('#applyCorridorSides');
-  await page.waitForFunction((corridorId) => {
-    const corridor = window.__DAI_EDITOR_SLICE__.getState().corridors.find((entry) => entry.id === corridorId);
-    return corridor?.fromSide === 'north' && corridor?.toSide === 'south';
-  }, addedCorridorId);
   const structuralAfterSides = await page.evaluate((corridorId) => {
     const state = window.__DAI_EDITOR_SLICE__.getState();
     return {
@@ -461,12 +482,35 @@ try {
     };
   }, addedCorridorId);
 
+  // Dragging a wall into empty space and releasing must cancel without adding a corridor.
+  await page.evaluate((id) => window.__DAI_EDITOR_SLICE__.selectRoom(id), addedRoomId);
+  const beforeCancelledDraft = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState().corridors.length);
+  const cancelPoints = await page.evaluate((roomId) => {
+    const state = window.__DAI_EDITOR_SLICE__.getState();
+    const room = state.rooms.find((entry) => entry.id === roomId);
+    return {
+      start: window.__DAI_EDITOR_SLICE__.getScreenPositionForRoomWall(roomId, 'north'),
+      end: window.__DAI_EDITOR_SLICE__.getScreenPositionForWorldPoint({
+        x: room.x,
+        y: 0,
+        z: room.z - 24,
+      }),
+    };
+  }, addedRoomId);
+  await page.mouse.move(cancelPoints.start.x, cancelPoints.start.y);
+  await page.mouse.down({ button: 'left' });
+  await page.mouse.move(cancelPoints.end.x, cancelPoints.end.y, { steps: 10 });
+  await page.mouse.up({ button: 'left' });
+  await page.waitForTimeout(60);
+  const afterCancelledDraft = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState().corridors.length);
+
+  await page.evaluate((id) => window.__DAI_EDITOR_SLICE__.selectCorridor(id), addedCorridorId);
   await page.click('#removeCorridor');
   await page.waitForFunction((corridorId) =>
     !window.__DAI_EDITOR_SLICE__.getState().corridors.some((entry) => entry.id === corridorId),
   addedCorridorId);
 
-  await page.locator('#roomSelect').selectOption(addedRoomId);
+  await page.evaluate((id) => window.__DAI_EDITOR_SLICE__.selectRoom(id), addedRoomId);
   await page.click('#removeRoom');
   await page.waitForFunction((roomId) =>
     !window.__DAI_EDITOR_SLICE__.getState().rooms.some((entry) => entry.id === roomId),
@@ -662,8 +706,13 @@ try {
       sidebarOverflow.asideScrollWidth <= sidebarOverflow.asideClientWidth + 1 &&
       sidebarOverflow.inspectorScrollWidth <= sidebarOverflow.inspectorClientWidth + 1 &&
       sidebarOverflow.panelScrollWidth <= sidebarOverflow.panelClientWidth + 1,
-    mouseOrbitChangesCamera: distance3(cameraBefore.position, cameraAfterOrbit.position) > 0.1,
-    mouseWheelZoomChangesDistance: cameraAfterZoom.distance < cameraAfterOrbit.distance - 0.1,
+    rightMouseDragOrbitsCamera:
+      distance3(cameraBefore.position, cameraAfterOrbit.position) > 0.1 &&
+      distance3(cameraBefore.target, cameraAfterOrbit.target) < 0.05,
+    leftMouseDragPansCamera:
+      distance3(cameraAfterOrbit.target, cameraAfterPan.target) > 0.1 &&
+      Math.abs(cameraAfterOrbit.distance - cameraAfterPan.distance) < 0.1,
+    mouseWheelZoomChangesDistance: cameraAfterZoom.distance < cameraAfterPan.distance - 0.1,
     roomSelectionDoesNotRecenterCamera:
       distance3(cameraAfterZoom.position, cameraAfterSelection.position) < 0.01 &&
       distance3(cameraAfterZoom.target, cameraAfterSelection.target) < 0.01 &&
@@ -721,15 +770,17 @@ try {
       structuralAfterAddRoom.rooms.length === structuralBefore.rooms.length + 1 &&
       structuralAfterAddRoom.inspectorTab === 'rooms' &&
       structuralAfterCleanup.rooms.length === structuralBefore.rooms.length,
-    corridorAddRemoveWorks:
+    directCorridorDragAddRemoveWorks:
       structuralAfterAddCorridor.corridors.length === structuralBefore.corridors.length + 1 &&
       structuralAfterAddCorridor.inspectorTab === 'corridors' &&
       structuralAfterCleanup.corridors.length === structuralBefore.corridors.length,
     corridorCardinalDoorSidesWork:
-      structuralAfterSides.corridor?.fromSide === 'north' &&
-      structuralAfterSides.corridor?.toSide === 'south' &&
+      structuralAfterSides.corridor?.fromSide === 'west' &&
+      structuralAfterSides.corridor?.toSide === 'east' &&
       structuralAfterSides.selectedCorridorId === addedCorridorId &&
       structuralAfterSides.selectionText.includes(addedCorridorId),
+    corridorDraftReleaseWithoutRoomCancels:
+      afterCancelledDraft === beforeCancelledDraft,
     generatedRoomSelectionDoesNotRecenterCamera:
       distance3(cameraBeforeGeneratedRoomSelection.position, cameraAfterGeneratedRoomSelection.position) < 0.01 &&
       distance3(cameraBeforeGeneratedRoomSelection.target, cameraAfterGeneratedRoomSelection.target) < 0.01,
@@ -832,6 +883,7 @@ try {
     falseChecks,
     cameraBefore,
     cameraAfterOrbit,
+    cameraAfterPan,
     cameraAfterZoom,
     cameraAfterSelection,
     goalInspectorAfterSelection,
@@ -860,6 +912,8 @@ try {
     structuralAfterAddRoom,
     structuralAfterAddCorridor,
     structuralAfterSides,
+    beforeCancelledDraft,
+    afterCancelledDraft,
     structuralAfterCleanup,
     pathState,
     pathText,
