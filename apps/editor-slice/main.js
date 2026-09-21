@@ -65,6 +65,9 @@ const resizeRoomButton = document.querySelector('#resizeRoom');
 const roomAddDirection = document.querySelector('#roomAddDirection');
 const addRoomButton = document.querySelector('#addRoom');
 const roomDirectionAddButtons = [...document.querySelectorAll('[data-room-add-direction]')];
+const roomAddFromSelection = document.querySelector('#roomAddFromSelection');
+const roomAddWithoutSelection = document.querySelector('#roomAddWithoutSelection');
+const addRoomAtViewCenterButton = document.querySelector('#addRoomAtViewCenter');
 const removeRoomButton = document.querySelector('#removeRoom');
 const corridorSelect = document.querySelector('#corridorSelect');
 const corridorFromSide = document.querySelector('#corridorFromSide');
@@ -123,6 +126,7 @@ let authoringPreviewConcealed = false;
 let pathCheckResult = null;
 let canvasPointerOrigin = null;
 let corridorDraft = null;
+let roomDrag = null;
 let viewportNoticeTimer = null;
 
 function clone(value) {
@@ -661,8 +665,11 @@ function updateUi() {
   roomDepthPlus.disabled = !editing || authoringBusy || !room;
   roomAddDirection.disabled = !editing || authoringBusy;
   addRoomButton.disabled = !editing || authoringBusy;
+  if (roomAddFromSelection) roomAddFromSelection.hidden = !room;
+  if (roomAddWithoutSelection) roomAddWithoutSelection.hidden = Boolean(room);
+  if (addRoomAtViewCenterButton) addRoomAtViewCenterButton.disabled = !editing || authoringBusy || Boolean(room);
   for (const button of roomDirectionAddButtons) {
-    button.disabled = !editing || authoringBusy;
+    button.disabled = !editing || authoringBusy || !room;
   }
   const protectedRoom = room && authoringSpec().entities.some((item) =>
     item.roomId === room.id && ['start', 'goal'].includes(item.type));
@@ -1277,44 +1284,101 @@ function roomInteriorsOverlap(left, right) {
   return overlapX > 1e-9 && overlapZ > 1e-9;
 }
 
+function findFreeRoomNearViewCenter(size = 8) {
+  const rooms = authoringSpec().rooms;
+  const rect = canvas.getBoundingClientRect();
+  const ground = adapter.getGroundPointAt(
+    rect.left + rect.width / 2,
+    rect.top + rect.height / 2,
+  );
+
+  const fallbackCenter = rooms.length > 0
+    ? {
+        x: rooms.reduce((sum, room) => sum + room.x, 0) / rooms.length,
+        z: rooms.reduce((sum, room) => sum + room.z, 0) / rooms.length,
+      }
+    : { x: 0, z: 0 };
+
+  const base = {
+    x: Math.round((ground?.x ?? fallbackCenter.x) * 2) / 2,
+    z: Math.round((ground?.z ?? fallbackCenter.z) * 2) / 2,
+  };
+  const step = size + 4;
+
+  for (let ring = 0; ring <= 12; ring += 1) {
+    const offsets = ring === 0
+      ? [[0, 0]]
+      : [];
+    if (ring > 0) {
+      for (let dx = -ring; dx <= ring; dx += 1) {
+        offsets.push([dx, -ring], [dx, ring]);
+      }
+      for (let dz = -ring + 1; dz <= ring - 1; dz += 1) {
+        offsets.push([-ring, dz], [ring, dz]);
+      }
+    }
+
+    for (const [dx, dz] of offsets) {
+      const candidate = {
+        id: nextRoomId(),
+        x: base.x + dx * step,
+        z: base.z + dz * step,
+        width: size,
+        depth: size,
+      };
+      if (!rooms.some((other) => roomInteriorsOverlap(candidate, other))) {
+        return candidate;
+      }
+    }
+  }
+
+  return null;
+}
+
 function addRoom(requestedDirection = null) {
   if (mode !== 'edit' || generationBusy || naturalEditBusy) return false;
 
   const rooms = authoringSpec().rooms;
-  const anchor = selectedRoom() ?? rooms.at(-1) ?? { x: 0, z: 0, width: 8, depth: 8 };
-  const direction = ['north', 'east', 'south', 'west'].includes(requestedDirection)
-    ? requestedDirection
-    : roomAddDirection.value || 'east';
+  const anchor = selectedRoom();
   const size = 8;
-  const gap = 4;
-  const vector = {
-    north: [0, -1],
-    east: [1, 0],
-    south: [0, 1],
-    west: [-1, 0],
-  }[direction] ?? [1, 0];
+  let room = null;
 
-  const axisDistance = vector[0] !== 0
-    ? anchor.width / 2 + gap + size / 2
-    : anchor.depth / 2 + gap + size / 2;
+  if (!anchor) {
+    room = findFreeRoomNearViewCenter(size);
+  } else {
+    const direction = ['north', 'east', 'south', 'west'].includes(requestedDirection)
+      ? requestedDirection
+      : roomAddDirection.value || 'east';
+    const gap = 4;
+    const vector = {
+      north: [0, -1],
+      east: [1, 0],
+      south: [0, 1],
+      west: [-1, 0],
+    }[direction] ?? [1, 0];
 
-  let room = {
-    id: nextRoomId(),
-    x: anchor.x + vector[0] * axisDistance,
-    z: anchor.z + vector[1] * axisDistance,
-    width: size,
-    depth: size,
-  };
+    const axisDistance = vector[0] !== 0
+      ? anchor.width / 2 + gap + size / 2
+      : anchor.depth / 2 + gap + size / 2;
 
-  for (let step = 0; step < 50 && rooms.some((other) => roomInteriorsOverlap(room, other)); step += 1) {
     room = {
-      ...room,
-      x: room.x + vector[0] * (size + gap),
-      z: room.z + vector[1] * (size + gap),
+      id: nextRoomId(),
+      x: anchor.x + vector[0] * axisDistance,
+      z: anchor.z + vector[1] * axisDistance,
+      width: size,
+      depth: size,
     };
+
+    for (let step = 0; step < 50 && rooms.some((other) => roomInteriorsOverlap(room, other)); step += 1) {
+      room = {
+        ...room,
+        x: room.x + vector[0] * (size + gap),
+        z: room.z + vector[1] * (size + gap),
+      };
+    }
   }
 
-  if (rooms.some((other) => roomInteriorsOverlap(room, other))) {
+  if (!room || rooms.some((other) => roomInteriorsOverlap(room, other))) {
     showViewportNotice(t('notice.noRoomSpace'));
     return false;
   }
@@ -1784,6 +1848,116 @@ function returnToEdit() {
   return true;
 }
 
+function roomHasIncidentCorridor(roomId) {
+  return authoringSpec().corridors.some((corridor) =>
+    corridor.fromRoomId === roomId || corridor.toRoomId === roomId);
+}
+
+function beginRoomDrag(event) {
+  if (
+    event.button !== 0 ||
+    mode !== 'edit' ||
+    workflowTab !== 'edit' ||
+    generationBusy ||
+    naturalEditBusy
+  ) return false;
+
+  const room = selectedRoom();
+  if (!room || roomHasIncidentCorridor(room.id)) return false;
+
+  const hit = adapter.pickDetailedAt(event.clientX, event.clientY);
+  if (!hit || hit.kind !== 'room' || hit.specId !== room.id || hit.part !== 'floor') return false;
+
+  const ground = adapter.getGroundPointAt(event.clientX, event.clientY);
+  if (!ground) return false;
+
+  roomDrag = {
+    pointerId: event.pointerId,
+    roomId: room.id,
+    startClientX: event.clientX,
+    startClientY: event.clientY,
+    startX: room.x,
+    startZ: room.z,
+    offsetX: room.x - ground.x,
+    offsetZ: room.z - ground.z,
+    x: room.x,
+    z: room.z,
+    valid: true,
+    moved: false,
+  };
+
+  adapter.setCameraControlsEnabled(false);
+  canvas.setPointerCapture?.(event.pointerId);
+  canvas.classList.add('is-room-dragging');
+  adapter.setRoomDraftPreview({ roomId: room.id, x: room.x, z: room.z, state: 'ready' });
+  return true;
+}
+
+function updateRoomDrag(event) {
+  if (!roomDrag || event.pointerId !== roomDrag.pointerId) return false;
+  const ground = adapter.getGroundPointAt(event.clientX, event.clientY);
+  if (!ground) return false;
+
+  const x = Math.round((ground.x + roomDrag.offsetX) * 10) / 10;
+  const z = Math.round((ground.z + roomDrag.offsetZ) * 10) / 10;
+  const room = authoringSpec().rooms.find((entry) => entry.id === roomDrag.roomId);
+  if (!room) return false;
+
+  const candidate = { ...room, x, z };
+  const valid = !authoringSpec().rooms.some((other) =>
+    other.id !== room.id && roomInteriorsOverlap(candidate, other));
+
+  roomDrag.x = x;
+  roomDrag.z = z;
+  roomDrag.valid = valid;
+  roomDrag.moved =
+    roomDrag.moved ||
+    Math.hypot(event.clientX - roomDrag.startClientX, event.clientY - roomDrag.startClientY) > 5;
+
+  adapter.setRoomDraftPreview({
+    roomId: room.id,
+    x,
+    z,
+    state: valid ? 'ready' : 'blocked',
+  });
+  return true;
+}
+
+function finishRoomDrag({ cancelled = false } = {}) {
+  const draft = roomDrag;
+  if (!draft) return false;
+
+  roomDrag = null;
+  canvas.classList.remove('is-room-dragging');
+  adapter.clearRoomDraftPreview();
+  adapter.setCameraControlsEnabled(true);
+  if (canvas.hasPointerCapture?.(draft.pointerId)) {
+    canvas.releasePointerCapture?.(draft.pointerId);
+  }
+
+  if (cancelled || !draft.moved) {
+    updateUi();
+    return false;
+  }
+
+  if (!draft.valid) {
+    showViewportNotice(t('notice.roomDragOverlap'), { timeoutMs: 3800 });
+    setEditStatus(t('notice.roomDragBlockedShort'));
+    updateUi();
+    return false;
+  }
+
+  const moved = applyCommand({
+    type: 'move-room',
+    roomId: draft.roomId,
+    x: draft.x,
+    z: draft.z,
+  }, `moved ${draft.roomId}`);
+  if (!moved) return false;
+  selectRoom(draft.roomId);
+  return true;
+}
+
 function corridorRoutesForDraft() {
   return (adapter?.plan?.corridorGroups ?? []).map((group) => ({
     corridorId: group.specId,
@@ -1897,6 +2071,16 @@ function updateCorridorDraft(event) {
   const point = adapter.getGroundPointAt(event.clientX, event.clientY);
   if (!point) return false;
 
+  const hit = adapter.pickDetailedAt(event.clientX, event.clientY);
+  let targetRoomId = null;
+  let targetSide = null;
+  if (hit?.kind === 'room' && hit.specId !== corridorDraft.sourceRoomId) {
+    targetRoomId = hit.specId;
+    targetSide = wallSideFromPart(hit.part);
+  } else if (hit?.roomId && hit.roomId !== corridorDraft.sourceRoomId) {
+    targetRoomId = hit.roomId;
+  }
+
   const preview = buildCorridorDragPreview(authoringSpec(), {
     sourceRoomId: corridorDraft.sourceRoomId,
     sourceSide: corridorDraft.sourceSide,
@@ -1904,6 +2088,8 @@ function updateCorridorDraft(event) {
     width: corridorDraft.width,
     existingCorridorId: corridorDraft.existingCorridorId,
     corridorRoutes: corridorRoutesForDraft(),
+    targetRoomId,
+    targetSide,
   });
   corridorDraft.preview = preview;
   adapter.setCorridorDraftPreview({
@@ -2022,16 +2208,30 @@ function handleCanvasPointerDown(event) {
     return;
   }
 
+  if (event.button === 0 && beginRoomDrag(event)) {
+    canvasPointerOrigin = null;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    return;
+  }
+
   canvasPointerOrigin = event.button === 0
     ? { x: event.clientX, y: event.clientY }
     : null;
 }
 
 function handleCanvasPointerMove(event) {
-  if (!corridorDraft || event.pointerId !== corridorDraft.pointerId) return;
-  event.preventDefault();
-  event.stopImmediatePropagation();
-  updateCorridorDraft(event);
+  if (corridorDraft && event.pointerId === corridorDraft.pointerId) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    updateCorridorDraft(event);
+    return;
+  }
+  if (roomDrag && event.pointerId === roomDrag.pointerId) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    updateRoomDrag(event);
+  }
 }
 
 function handleCanvasPointerUp(event) {
@@ -2039,6 +2239,13 @@ function handleCanvasPointerUp(event) {
     event.preventDefault();
     event.stopImmediatePropagation();
     finishCorridorDraft();
+    return;
+  }
+
+  if (roomDrag && event.pointerId === roomDrag.pointerId) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    finishRoomDrag();
     return;
   }
 
@@ -2051,10 +2258,17 @@ function handleCanvasPointerUp(event) {
 }
 
 function handleCanvasPointerCancel(event) {
-  if (!corridorDraft || event.pointerId !== corridorDraft.pointerId) return;
-  event.preventDefault();
-  event.stopImmediatePropagation();
-  finishCorridorDraft({ cancelled: true });
+  if (corridorDraft && event.pointerId === corridorDraft.pointerId) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    finishCorridorDraft({ cancelled: true });
+    return;
+  }
+  if (roomDrag && event.pointerId === roomDrag.pointerId) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    finishRoomDrag({ cancelled: true });
+  }
 }
 
 function refreshLocalizedUi() {
@@ -2188,6 +2402,7 @@ async function run() {
     roomDepthPlus.addEventListener('click', () => stepRoomSize('depth', 1));
     resizeRoomButton.addEventListener('click', resizeSelectedRoom);
     addRoomButton.addEventListener('click', () => addRoom());
+    addRoomAtViewCenterButton?.addEventListener('click', () => addRoom());
     for (const button of roomDirectionAddButtons) {
       button.addEventListener('click', () => addRoom(button.dataset.roomAddDirection));
     }
@@ -2234,6 +2449,9 @@ async function run() {
       beginCorridorDraft,
       updateCorridorDraft,
       finishCorridorDraft,
+      beginRoomDrag,
+      updateRoomDrag,
+      finishRoomDrag,
       addRoom,
       removeSelectedRoom,
       addCorridor,
