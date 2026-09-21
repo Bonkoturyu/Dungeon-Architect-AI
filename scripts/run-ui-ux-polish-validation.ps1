@@ -35,6 +35,9 @@ if ($LASTEXITCODE -ne 0) { throw 'DAI-071 browser-performance smoke failed.' }
 npm run smoke:mobile-scope
 if ($LASTEXITCODE -ne 0) { throw 'DAI-075 mobile-scope smoke failed.' }
 
+npm run smoke:onboarding
+if ($LASTEXITCODE -ne 0) { throw 'DAI-070 multilingual onboarding smoke failed.' }
+
 npm run smoke:ui-ux-polish
 if ($LASTEXITCODE -ne 0) { throw 'UI/UX polish visible-Chrome smoke failed.' }
 
