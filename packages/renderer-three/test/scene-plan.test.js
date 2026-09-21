@@ -253,3 +253,38 @@ test('scene plan remains renderable after large outward room moves', () => {
   assert.equal(moved.corridorGroups.length, 6);
   assert.ok(moved.corridorGroups.every((group) => Array.isArray(group.route) && group.route.length >= 1));
 });
+
+
+test('goal room remains renderable when moved upward from the owner-reviewed offset layout', () => {
+  const spec = {
+    schemaVersion: '1.0',
+    id: 'owner-goal-upward-move',
+    seed: 12092026,
+    rooms: [
+      { id: 'room-start', x: 0, z: 0, width: 8, depth: 8 },
+      { id: 'room-middle', x: 12, z: 0, width: 8, depth: 8 },
+      { id: 'room-goal', x: 27, z: 4, width: 8, depth: 8 },
+    ],
+    corridors: [
+      { id: 'corridor-1', fromRoomId: 'room-start', toRoomId: 'room-middle', width: 3 },
+      { id: 'corridor-2', fromRoomId: 'room-middle', toRoomId: 'room-goal', width: 3 },
+    ],
+    entities: [
+      { id: 'start-1', type: 'start', roomId: 'room-start' },
+      { id: 'enemy-1', type: 'enemy', roomId: 'room-middle' },
+      { id: 'treasure-1', type: 'treasure', roomId: 'room-middle' },
+      { id: 'goal-1', type: 'goal', roomId: 'room-goal' },
+    ],
+    events: [],
+  };
+
+  const before = createDungeonScenePlan(spec);
+  assert.equal(before.roomGroups.length, 3);
+
+  spec.rooms.find((room) => room.id === 'room-goal').z = 3;
+  const moved = createDungeonScenePlan(spec);
+  assert.equal(moved.roomGroups.length, 3);
+  assert.equal(moved.corridorGroups.length, 2);
+  assert.ok(moved.corridorGroups.every((group) =>
+    Array.isArray(group.route) && group.route.length >= 1));
+});
