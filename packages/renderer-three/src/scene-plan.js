@@ -528,25 +528,37 @@ export function createDungeonScenePlan(spec, style = {}) {
       let from = { ...segment.from };
       let to = { ...segment.to };
 
-      if (!isFirst) {
+      const rawLength = Math.abs(to.x - from.x) + Math.abs(to.z - from.z);
+      const requestedStartTrim = isFirst ? 0 : halfWidth;
+      const requestedEndTrim = isLast ? 0 : halfWidth;
+      const requestedTrim = requestedStartTrim + requestedEndTrim;
+      const minimumVisibleLength = Math.min(0.25, rawLength * 0.25);
+      const maximumTrim = Math.max(0, rawLength - minimumVisibleLength);
+      const trimScale = requestedTrim > maximumTrim && requestedTrim > EPSILON
+        ? maximumTrim / requestedTrim
+        : 1;
+      const startTrim = requestedStartTrim * trimScale;
+      const endTrim = requestedEndTrim * trimScale;
+
+      if (startTrim > EPSILON) {
         if (segment.axis === 'x') {
-          from.x += Math.sign(to.x - from.x) * halfWidth;
+          from.x += Math.sign(to.x - from.x) * startTrim;
         } else {
-          from.z += Math.sign(to.z - from.z) * halfWidth;
+          from.z += Math.sign(to.z - from.z) * startTrim;
         }
       }
 
-      if (!isLast) {
+      if (endTrim > EPSILON) {
         if (segment.axis === 'x') {
-          to.x -= Math.sign(to.x - from.x) * halfWidth;
+          to.x -= Math.sign(to.x - from.x) * endTrim;
         } else {
-          to.z -= Math.sign(to.z - from.z) * halfWidth;
+          to.z -= Math.sign(to.z - from.z) * endTrim;
         }
       }
 
       const length = Math.abs(to.x - from.x) + Math.abs(to.z - from.z);
       if (length <= EPSILON) {
-        throw new Error(`Corridor ${corridor.id} segment ${index} is too short for a clean bend junction.`);
+        throw new Error(`Corridor ${corridor.id} segment ${index} collapsed during bend trimming.`);
       }
 
       const rotationY = segment.axis === 'x' ? 0 : -Math.PI / 2;
