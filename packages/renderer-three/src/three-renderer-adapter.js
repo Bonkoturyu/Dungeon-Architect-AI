@@ -46,7 +46,11 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
   const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
   const controls = new OrbitControls(camera, canvas);
   controls.enableDamping = false;
-  controls.enablePan = false;
+  controls.enablePan = true;
+  controls.screenSpacePanning = true;
+  controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
+  controls.mouseButtons.MIDDLE = THREE.MOUSE.DOLLY;
+  controls.mouseButtons.RIGHT = THREE.MOUSE.ROTATE;
   controls.rotateSpeed = 0.7;
   controls.zoomSpeed = 1.0;
   controls.minDistance = 5;
@@ -121,6 +125,24 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
       emissive: 0x315f73,
       emissiveIntensity: 0.42,
     }),
+    draftOpen: new THREE.MeshBasicMaterial({
+      color: 0x66ccff,
+      transparent: true,
+      opacity: 0.5,
+      depthWrite: false,
+    }),
+    draftReady: new THREE.MeshBasicMaterial({
+      color: 0x78d89a,
+      transparent: true,
+      opacity: 0.62,
+      depthWrite: false,
+    }),
+    draftBlocked: new THREE.MeshBasicMaterial({
+      color: 0xff7373,
+      transparent: true,
+      opacity: 0.62,
+      depthWrite: false,
+    }),
   };
 
   const runtimeBySpecId = new Map();
@@ -135,6 +157,9 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
   let selectionFillHelper = null;
   let contextHelper = null;
   let pathHelpers = [];
+  let corridorDraftGroup = null;
+  let corridorDraftTargetHelper = null;
+  let hiddenDraftCorridorId = null;
 
   function assertAlive() {
     if (disposed) throw new Error('Three renderer adapter has been disposed.');
@@ -178,10 +203,31 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     pathHelpers = [];
   }
 
+  function clearCorridorDraftPreview() {
+    if (corridorDraftGroup) {
+      scene.remove(corridorDraftGroup);
+      disposeObjectTree(corridorDraftGroup);
+      corridorDraftGroup = null;
+    }
+    if (corridorDraftTargetHelper) {
+      scene.remove(corridorDraftTargetHelper);
+      corridorDraftTargetHelper.geometry?.dispose();
+      corridorDraftTargetHelper.material?.dispose();
+      corridorDraftTargetHelper = null;
+    }
+    if (hiddenDraftCorridorId) {
+      const hidden = runtimeBySpecId.get(hiddenDraftCorridorId);
+      if (hidden) hidden.visible = true;
+      hiddenDraftCorridorId = null;
+    }
+    draw();
+  }
+
   function clearRenderedSpec() {
     clearSelectionHelper();
     clearContextHelper();
     clearPathHelpers();
+    clearCorridorDraftPreview();
     selectedSpecId = null;
     for (const child of [...root.children]) {
       root.remove(child);
@@ -377,22 +423,171 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     return null;
   }
 
-  function pickSpecAt(clientX, clientY) {
-    assertAlive();
-    if (!Number.isFinite(clientX) || !Number.isFinite(clientY)) return null;
+  function setRayFromClient(clientX, clientY) {
+    if (!Number.isFinite(clientX) || !Number.isFinite(clientY)) return false;
     const rect = canvas.getBoundingClientRect();
-    if (rect.width <= 0 || rect.height <= 0) return null;
-
+    if (rect.width <= 0 || rect.height <= 0) return false;
     pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
     pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
     raycaster.setFromCamera(pointer, camera);
+    return true;
+  }
+
+  function pickDetailedAt(clientX, clientY) {
+    assertAlive();
+    if (!setRayFromClient(clientX, clientY)) return null;
 
     const intersections = raycaster.intersectObjects(root.children, true);
     for (const intersection of intersections) {
       const metadata = findSpecMetadata(intersection.object);
-      if (metadata) return metadata;
+      if (!metadata) continue;
+      return {
+        ...metadata,
+        part: intersection.object.userData?.part ?? null,
+        point: {
+          x: intersection.point.x,
+          y: intersection.point.y,
+          z: intersection.point.z,
+        },
+      };
     }
     return null;
+  }
+
+  function pickSpecAt(clientX, clientY) {
+    return pickDetailedAt(clientX, clientY);
+  }
+
+  function getGroundPointAt(clientX, clientY, y = 0) {
+    assertAlive();
+    if (!setRayFromClient(clientX, clientY)) return null;
+    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -y);
+    const point = new THREE.Vector3();
+    if (!raycaster.ray.intersectPlane(plane, point)) return null;
+    return { x: point.x, y: point.y, z: point.z };
+  }
+
+  function setCorridorDraftPreview({
+    points = [],
+    width = 3,
+    state = 'open',
+    existingCorridorId = null,
+    targetRoomId = null,
+  } = {}) {
+    assertAlive();
+
+    if (corridorDraftGroup) {
+      scene.remove(corridorDraftGroup);
+      disposeObjectTree(corridorDraftGroup);
+      corridorDraftGroup = null;
+    }
+    if (corridorDraftTargetHelper) {
+      scene.remove(corridorDraftTargetHelper);
+      corridorDraftTargetHelper.geometry?.dispose();
+      corridorDraftTargetHelper.material?.dispose();
+      corridorDraftTargetHelper = null;
+    }
+    if (hiddenDraftCorridorId && hiddenDraftCorridorId !== existingCorridorId) {
+      const oldHidden = runtimeBySpecId.get(hiddenDraftCorridorId);
+      if (oldHidden) oldHidden.visible = true;
+      hiddenDraftCorridorId = null;
+    }
+
+    if (existingCorridorId) {
+      const existing = runtimeBySpecId.get(existingCorridorId);
+      if (existing) {
+        existing.visible = false;
+        hiddenDraftCorridorId = existingCorridorId;
+      }
+    }
+
+    const material = state === 'ready'
+      ? materials.draftReady
+      : state === 'blocked'
+        ? materials.draftBlocked
+        : materials.draftOpen;
+
+    const group = new THREE.Group();
+    group.name = 'corridor-draft-preview';
+
+    for (let index = 0; index < points.length - 1; index += 1) {
+      const from = points[index];
+      const to = points[index + 1];
+      const dx = to.x - from.x;
+      const dz = to.z - from.z;
+      const length = Math.abs(dx) + Math.abs(dz);
+      if (length <= 1e-9) continue;
+
+      const geometry = new THREE.BoxGeometry(1, 1, 1);
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.name = `corridor-draft-segment-${index}`;
+      mesh.position.set((from.x + to.x) / 2, 0.05, (from.z + to.z) / 2);
+      if (Math.abs(dx) > Math.abs(dz)) mesh.scale.set(length, 0.1, width);
+      else mesh.scale.set(width, 0.1, length);
+      group.add(mesh);
+    }
+
+    for (let index = 1; index < points.length - 1; index += 1) {
+      const point = points[index];
+      const junction = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), material);
+      junction.name = `corridor-draft-junction-${index}`;
+      junction.position.set(point.x, 0.052, point.z);
+      junction.scale.set(width, 0.104, width);
+      group.add(junction);
+    }
+
+    corridorDraftGroup = group;
+    scene.add(group);
+
+    if (targetRoomId) {
+      const target = runtimeBySpecId.get(targetRoomId);
+      if (target) {
+        corridorDraftTargetHelper = new THREE.BoxHelper(
+          target,
+          state === 'blocked' ? 0xff7373 : 0x78d89a,
+        );
+        corridorDraftTargetHelper.name = `corridor-draft-target:${targetRoomId}`;
+        scene.add(corridorDraftTargetHelper);
+      }
+    }
+
+    draw();
+  }
+
+  function setCameraControlsEnabled(enabled) {
+    assertAlive();
+    controls.enabled = enabled === true;
+  }
+
+  function getScreenPositionForWorldPoint(point) {
+    assertAlive();
+    if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.z)) return null;
+    const projected = new THREE.Vector3(
+      point.x,
+      Number.isFinite(point.y) ? point.y : 0,
+      point.z,
+    );
+    camera.updateWorldMatrix(true, false);
+    projected.project(camera);
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: rect.left + ((projected.x + 1) / 2) * rect.width,
+      y: rect.top + ((1 - projected.y) / 2) * rect.height,
+    };
+  }
+
+  function getScreenPositionForRoomWall(roomId, side) {
+    assertAlive();
+    const room = lastPlan?.roomGroups?.find((entry) => entry.specId === roomId);
+    const floor = room?.boxes?.find((box) => box.part === 'floor');
+    if (!floor) return null;
+    const point = { x: floor.position.x, y: 1.2, z: floor.position.z };
+    if (side === 'north') point.z -= floor.size.z / 2;
+    else if (side === 'south') point.z += floor.size.z / 2;
+    else if (side === 'west') point.x -= floor.size.x / 2;
+    else if (side === 'east') point.x += floor.size.x / 2;
+    else return null;
+    return getScreenPositionForWorldPoint(point);
   }
 
   function setSelectedSpecId(id) {
@@ -523,12 +718,15 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
   function dispose() {
     if (disposed) return;
     clearRenderedSpec();
+    canvas.removeEventListener('contextmenu', preventContextMenu);
     controls.dispose();
     for (const material of Object.values(materials)) material.dispose();
     renderer.dispose();
     disposed = true;
   }
 
+  const preventContextMenu = (event) => event.preventDefault();
+  canvas.addEventListener('contextmenu', preventContextMenu);
   controls.addEventListener('change', draw);
 
   return {
@@ -536,12 +734,19 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     resize,
     getObjectBySpecId,
     pickSpecAt,
+    pickDetailedAt,
+    getGroundPointAt,
+    setCorridorDraftPreview,
+    clearCorridorDraftPreview,
+    setCameraControlsEnabled,
     setSelectedSpecId,
     setContextSpecId,
     focusSpecId,
     setHighlightedSpecIds,
     getCameraState,
     getScreenPositionForSpecId,
+    getScreenPositionForWorldPoint,
+    getScreenPositionForRoomWall,
     dispose,
     get selectedSpecId() {
       return selectedSpecId;
