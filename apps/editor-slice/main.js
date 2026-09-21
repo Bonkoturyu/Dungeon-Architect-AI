@@ -1,5 +1,11 @@
 import { EditSession } from '../../packages/editor-core/src/edit-session.js';
 import { applyEditCommand } from '../../packages/editor-core/src/edit-command.js';
+import {
+  buildCorridorDragPreview,
+  corridorSideForRoom,
+  findCorridorOpeningAtWall,
+  wallSideFromPart,
+} from '../../packages/editor-core/src/corridor-drag.js';
 import { evaluateStartGate } from '../../packages/editor-core/src/start-gate.js';
 import { startPlaySession, movePlaySession, createPlayResult } from '../../packages/play-core/src/play-session.js';
 import { createRendererVisibilityFromPlaySession, derivePlayMap } from '../../packages/play-core/src/play-map.js';
@@ -58,6 +64,7 @@ const roomDepthPlus = document.querySelector('#roomDepthPlus');
 const resizeRoomButton = document.querySelector('#resizeRoom');
 const roomAddDirection = document.querySelector('#roomAddDirection');
 const addRoomButton = document.querySelector('#addRoom');
+const roomDirectionAddButtons = [...document.querySelectorAll('[data-room-add-direction]')];
 const removeRoomButton = document.querySelector('#removeRoom');
 const corridorSelect = document.querySelector('#corridorSelect');
 const corridorFromSide = document.querySelector('#corridorFromSide');
@@ -115,6 +122,7 @@ let promptHistory = [];
 let authoringPreviewConcealed = false;
 let pathCheckResult = null;
 let canvasPointerOrigin = null;
+let corridorDraft = null;
 let viewportNoticeTimer = null;
 
 function clone(value) {
@@ -653,6 +661,9 @@ function updateUi() {
   roomDepthPlus.disabled = !editing || authoringBusy || !room;
   roomAddDirection.disabled = !editing || authoringBusy;
   addRoomButton.disabled = !editing || authoringBusy;
+  for (const button of roomDirectionAddButtons) {
+    button.disabled = !editing || authoringBusy;
+  }
   const protectedRoom = room && authoringSpec().entities.some((item) =>
     item.roomId === room.id && ['start', 'goal'].includes(item.type));
   removeRoomButton.disabled = !editing || authoringBusy || !room || protectedRoom;
@@ -1075,6 +1086,7 @@ function applyCommand(command, successMessage) {
     'remove-corridor',
     'restore-corridor',
     'set-corridor-doors',
+    'reconnect-corridor',
   ].includes(command.type)) {
     try {
       createDungeonScenePlan(preview.spec);
@@ -1265,12 +1277,14 @@ function roomInteriorsOverlap(left, right) {
   return overlapX > 1e-9 && overlapZ > 1e-9;
 }
 
-function addRoom() {
+function addRoom(requestedDirection = null) {
   if (mode !== 'edit' || generationBusy || naturalEditBusy) return false;
 
   const rooms = authoringSpec().rooms;
   const anchor = selectedRoom() ?? rooms.at(-1) ?? { x: 0, z: 0, width: 8, depth: 8 };
-  const direction = roomAddDirection.value || 'east';
+  const direction = ['north', 'east', 'south', 'west'].includes(requestedDirection)
+    ? requestedDirection
+    : roomAddDirection.value || 'east';
   const size = 8;
   const gap = 4;
   const vector = {
@@ -1770,6 +1784,204 @@ function returnToEdit() {
   return true;
 }
 
+function corridorRoutesForDraft() {
+  return (adapter?.plan?.corridorGroups ?? []).map((group) => ({
+    corridorId: group.specId,
+    points: (group.route ?? []).map((point) => ({ x: point.x, z: point.z })),
+  }));
+}
+
+function corridorDraftErrorMessage(preview) {
+  if (preview?.blockedCode === 'DUPLICATE_CORRIDOR') return t('notice.corridorDuplicate');
+  if (preview?.blockedCode === 'CORRIDOR_COLLISION') return t('notice.corridorCollision');
+  return t('notice.route');
+}
+
+function beginCorridorDraft(event) {
+  if (
+    event.button !== 0 ||
+    mode !== 'edit' ||
+    workflowTab !== 'edit' ||
+    generationBusy ||
+    naturalEditBusy
+  ) return false;
+
+  const sourceRoom = selectedRoom();
+  if (!sourceRoom) return false;
+
+  const hit = adapter.pickDetailedAt(event.clientX, event.clientY);
+  if (!hit) return false;
+
+  let sourceSide = null;
+  let existingCorridorId = null;
+
+  if (hit.kind === 'room' && hit.specId === sourceRoom.id) {
+    sourceSide = wallSideFromPart(hit.part);
+    if (!sourceSide) return false;
+
+    const opening = findCorridorOpeningAtWall(adapter.plan, {
+      roomId: sourceRoom.id,
+      side: sourceSide,
+      point: hit.point,
+      room: sourceRoom,
+    });
+    existingCorridorId = opening?.corridorId ?? null;
+  } else if (hit.kind === 'corridor') {
+    const corridor = authoringSpec().corridors.find((entry) => entry.id === hit.specId);
+    if (!corridor || ![corridor.fromRoomId, corridor.toRoomId].includes(sourceRoom.id)) return false;
+    sourceSide = corridorSideForRoom(adapter.plan, corridor.id, sourceRoom.id);
+    existingCorridorId = corridor.id;
+  } else {
+    return false;
+  }
+
+  if (!sourceSide) return false;
+
+  const existingCorridor = existingCorridorId
+    ? authoringSpec().corridors.find((entry) => entry.id === existingCorridorId) ?? null
+    : null;
+
+  corridorDraft = {
+    pointerId: event.pointerId,
+    sourceRoomId: sourceRoom.id,
+    sourceSide,
+    existingCorridorId,
+    sourceEndpoint: existingCorridor
+      ? existingCorridor.fromRoomId === sourceRoom.id ? 'from' : 'to'
+      : null,
+    width: existingCorridor?.width ?? 3,
+    preview: null,
+  };
+
+  if (existingCorridor) {
+    selectedCorridorId = existingCorridor.id;
+    selectedRoomId = null;
+    selectedEntityId = null;
+    setInspectorTab('corridors');
+    ensureCorridorOptions();
+    adapter.setSelectedSpecId(existingCorridor.id);
+
+    const rendered = adapter.plan?.corridorGroups?.find((group) => group.specId === existingCorridor.id);
+    if (rendered?.route?.length >= 2) {
+      const points = rendered.fromDoor?.roomId === sourceRoom.id
+        ? rendered.route
+        : [...rendered.route].reverse();
+      adapter.setCorridorDraftPreview({
+        points,
+        width: corridorDraft.width,
+        state: 'open',
+        existingCorridorId,
+      });
+    }
+  }
+
+  adapter.setCameraControlsEnabled(false);
+  canvas.setPointerCapture?.(event.pointerId);
+  canvas.classList.add('is-corridor-drafting');
+  updateCorridorDraft(event);
+  updateUi();
+  return true;
+}
+
+function updateCorridorDraft(event) {
+  if (!corridorDraft || event.pointerId !== corridorDraft.pointerId) return false;
+  const point = adapter.getGroundPointAt(event.clientX, event.clientY);
+  if (!point) return false;
+
+  const preview = buildCorridorDragPreview(authoringSpec(), {
+    sourceRoomId: corridorDraft.sourceRoomId,
+    sourceSide: corridorDraft.sourceSide,
+    pointer: point,
+    width: corridorDraft.width,
+    existingCorridorId: corridorDraft.existingCorridorId,
+    corridorRoutes: corridorRoutesForDraft(),
+  });
+  corridorDraft.preview = preview;
+  adapter.setCorridorDraftPreview({
+    points: preview.points,
+    width: corridorDraft.width,
+    state: preview.state,
+    existingCorridorId: corridorDraft.existingCorridorId,
+    targetRoomId: preview.targetRoomId,
+  });
+  return true;
+}
+
+function finishCorridorDraft({ cancelled = false } = {}) {
+  const draft = corridorDraft;
+  if (!draft) return false;
+
+  corridorDraft = null;
+  canvas.classList.remove('is-corridor-drafting');
+  adapter.clearCorridorDraftPreview();
+  adapter.setCameraControlsEnabled(true);
+  if (canvas.hasPointerCapture?.(draft.pointerId)) {
+    canvas.releasePointerCapture?.(draft.pointerId);
+  }
+
+  if (cancelled || !draft.preview || draft.preview.state === 'open') {
+    setEditStatus('corridor draft cancelled');
+    updateUi();
+    return false;
+  }
+
+  if (draft.preview.state === 'blocked') {
+    showViewportNotice(corridorDraftErrorMessage(draft.preview), { timeoutMs: 4200 });
+    setEditStatus(t('notice.corridorBlockedShort'));
+    updateUi();
+    return false;
+  }
+
+  const targetRoomId = draft.preview.targetRoomId;
+  const targetSide = draft.preview.targetSide;
+  if (!targetRoomId || !targetSide) {
+    updateUi();
+    return false;
+  }
+
+  if (!draft.existingCorridorId) {
+    const corridor = {
+      id: nextCorridorId(),
+      fromRoomId: draft.sourceRoomId,
+      toRoomId: targetRoomId,
+      width: draft.width,
+      kind: 'manual',
+      fromSide: draft.sourceSide,
+      toSide: targetSide,
+    };
+    const added = applyCommand({ type: 'add-corridor', corridor }, `added ${corridor.id}`);
+    if (!added) return false;
+    selectCorridor(corridor.id);
+    return true;
+  }
+
+  const existing = authoringSpec().corridors.find((entry) => entry.id === draft.existingCorridorId);
+  if (!existing) return false;
+
+  const command = draft.sourceEndpoint === 'from'
+    ? {
+        type: 'reconnect-corridor',
+        corridorId: existing.id,
+        fromRoomId: draft.sourceRoomId,
+        toRoomId: targetRoomId,
+        fromSide: draft.sourceSide,
+        toSide: targetSide,
+      }
+    : {
+        type: 'reconnect-corridor',
+        corridorId: existing.id,
+        fromRoomId: targetRoomId,
+        toRoomId: draft.sourceRoomId,
+        fromSide: targetSide,
+        toSide: draft.sourceSide,
+      };
+
+  const reconnected = applyCommand(command, `reconnected ${existing.id}`);
+  if (!reconnected) return false;
+  selectCorridor(existing.id);
+  return true;
+}
+
 function handleCanvasPointer(event) {
   const hit = adapter.pickSpecAt(event.clientX, event.clientY);
   if (!hit) {
@@ -1794,15 +2006,46 @@ function handleCanvasPointer(event) {
 }
 
 function handleCanvasPointerDown(event) {
-  canvasPointerOrigin = { x: event.clientX, y: event.clientY };
+  if (event.button === 0 && beginCorridorDraft(event)) {
+    canvasPointerOrigin = null;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    return;
+  }
+
+  canvasPointerOrigin = event.button === 0
+    ? { x: event.clientX, y: event.clientY }
+    : null;
+}
+
+function handleCanvasPointerMove(event) {
+  if (!corridorDraft || event.pointerId !== corridorDraft.pointerId) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  updateCorridorDraft(event);
 }
 
 function handleCanvasPointerUp(event) {
+  if (corridorDraft && event.pointerId === corridorDraft.pointerId) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    finishCorridorDraft();
+    return;
+  }
+
+  if (event.button !== 0) return;
   const origin = canvasPointerOrigin;
   canvasPointerOrigin = null;
   if (!origin) return;
   const distance = Math.hypot(event.clientX - origin.x, event.clientY - origin.y);
   if (distance <= 5) handleCanvasPointer(event);
+}
+
+function handleCanvasPointerCancel(event) {
+  if (!corridorDraft || event.pointerId !== corridorDraft.pointerId) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  finishCorridorDraft({ cancelled: true });
 }
 
 function refreshLocalizedUi() {
@@ -1911,8 +2154,10 @@ async function run() {
     canvasResizeObserver = new ResizeObserver(() => resize());
     canvasResizeObserver.observe(canvas);
 
-    canvas.addEventListener('pointerdown', handleCanvasPointerDown);
-    canvas.addEventListener('pointerup', handleCanvasPointerUp);
+    canvas.addEventListener('pointerdown', handleCanvasPointerDown, true);
+    canvas.addEventListener('pointermove', handleCanvasPointerMove, true);
+    canvas.addEventListener('pointerup', handleCanvasPointerUp, true);
+    canvas.addEventListener('pointercancel', handleCanvasPointerCancel, true);
     window.addEventListener('resize', resize);
     window.addEventListener('keydown', handleKeyboard);
     undoButton.addEventListener('click', undo);
@@ -1933,7 +2178,10 @@ async function run() {
     roomDepthMinus.addEventListener('click', () => stepRoomSize('depth', -1));
     roomDepthPlus.addEventListener('click', () => stepRoomSize('depth', 1));
     resizeRoomButton.addEventListener('click', resizeSelectedRoom);
-    addRoomButton.addEventListener('click', addRoom);
+    addRoomButton.addEventListener('click', () => addRoom());
+    for (const button of roomDirectionAddButtons) {
+      button.addEventListener('click', () => addRoom(button.dataset.roomAddDirection));
+    }
     removeRoomButton.addEventListener('click', removeSelectedRoom);
     corridorSelect.addEventListener('change', () => selectCorridor(corridorSelect.value));
     corridorFromSide.addEventListener('change', updateUi);
@@ -1972,6 +2220,9 @@ async function run() {
       selectEntity,
       selectCorridor,
       setInspectorTab,
+      beginCorridorDraft,
+      updateCorridorDraft,
+      finishCorridorDraft,
       addRoom,
       removeSelectedRoom,
       addCorridor,
