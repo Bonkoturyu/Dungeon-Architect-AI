@@ -205,6 +205,15 @@ function snapshotState() {
       width: room.width,
       depth: room.depth,
     })) ?? [],
+    corridors: spec?.corridors.map((corridor) => ({
+      id: corridor.id,
+      fromRoomId: corridor.fromRoomId,
+      toRoomId: corridor.toRoomId,
+      width: corridor.width,
+      kind: corridor.kind ?? null,
+      fromSide: corridor.fromSide ?? null,
+      toSide: corridor.toSide ?? null,
+    })) ?? [],
     entities: spec?.entities.map((entity) => ({ id: entity.id, type: entity.type, roomId: entity.roomId })) ?? [],
   };
 }
