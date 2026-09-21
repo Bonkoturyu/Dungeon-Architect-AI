@@ -539,6 +539,81 @@ try {
   addedRoomId);
   const structuralAfterCleanup = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
 
+  // With no Room selected, Add Room should place a new isolated Room near the
+  // current view center. That unconnected Room can then be freely dragged.
+  await page.evaluate(() => window.__DAI_EDITOR_SLICE__.selectRoom(null));
+  const noSelectionRoomUi = await page.evaluate(() => ({
+    selectedVisible: document.querySelector('#roomAddFromSelection')?.hidden === false,
+    unselectedVisible: document.querySelector('#roomAddWithoutSelection')?.hidden === false,
+  }));
+  const beforeCenteredAdd = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
+  await page.click('#addRoomAtViewCenter');
+  await page.waitForFunction((roomCount) =>
+    window.__DAI_EDITOR_SLICE__.getState().rooms.length === roomCount + 1,
+  beforeCenteredAdd.rooms.length);
+  const centeredAddState = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
+  const centeredRoomId = centeredAddState.selectedRoomId;
+  if (!centeredRoomId) throw new Error('Centered room add did not select the new room.');
+
+  const centeredRoomScreen = await page.evaluate((roomId) =>
+    window.__DAI_EDITOR_SLICE__.getScreenPositionForSpecId(roomId), centeredRoomId);
+  if (!centeredRoomScreen) throw new Error('Centered room screen point unavailable.');
+
+  const centeredRoomDragPlan = await page.evaluate((roomId) => {
+    const state = window.__DAI_EDITOR_SLICE__.getState();
+    const room = state.rooms.find((entry) => entry.id === roomId);
+    const overlaps = (candidate, other) => {
+      const overlapX =
+        Math.min(candidate.x + candidate.width / 2, other.x + other.width / 2) -
+        Math.max(candidate.x - candidate.width / 2, other.x - other.width / 2);
+      const overlapZ =
+        Math.min(candidate.z + candidate.depth / 2, other.z + other.depth / 2) -
+        Math.max(candidate.z - candidate.depth / 2, other.z - other.depth / 2);
+      return overlapX > 1e-9 && overlapZ > 1e-9;
+    };
+    const offsets = [
+      [16, 0], [-16, 0], [0, 16], [0, -16],
+      [16, 16], [-16, 16], [16, -16], [-16, -16],
+      [24, 0], [-24, 0], [0, 24], [0, -24],
+    ];
+    for (const [dx, dz] of offsets) {
+      const candidate = { ...room, x: room.x + dx, z: room.z + dz };
+      if (!state.rooms.some((other) => other.id !== roomId && overlaps(candidate, other))) {
+        return {
+          before: { x: room.x, z: room.z },
+          target: { x: candidate.x, z: candidate.z },
+          screen: window.__DAI_EDITOR_SLICE__.getScreenPositionForWorldPoint({
+            x: candidate.x,
+            y: 0,
+            z: candidate.z,
+          }),
+        };
+      }
+    }
+    return null;
+  }, centeredRoomId);
+  if (!centeredRoomDragPlan?.screen) throw new Error('No safe target available for isolated room drag.');
+
+  await page.mouse.move(centeredRoomScreen.x, centeredRoomScreen.y);
+  await page.mouse.down({ button: 'left' });
+  await page.mouse.move(centeredRoomDragPlan.screen.x, centeredRoomDragPlan.screen.y, { steps: 14 });
+  await page.mouse.up({ button: 'left' });
+  await page.waitForFunction(({ roomId, target }) => {
+    const room = window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === roomId);
+    return room &&
+      Math.abs(room.x - target.x) <= 0.25 &&
+      Math.abs(room.z - target.z) <= 0.25;
+  }, { roomId: centeredRoomId, target: centeredRoomDragPlan.target });
+  const centeredRoomAfterDrag = await page.evaluate((roomId) =>
+    window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === roomId),
+  centeredRoomId);
+
+  await page.click('#removeRoom');
+  await page.waitForFunction((roomId) =>
+    !window.__DAI_EDITOR_SLICE__.getState().rooms.some((entry) => entry.id === roomId),
+  centeredRoomId);
+  const afterCenteredRoomCleanup = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
+
   // In Edit, Goal Check may reveal the actual route.
   await page.click('#checkPath');
   const pathState = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState().pathCheckResult);
@@ -792,6 +867,18 @@ try {
       structuralAfterAddRoom.rooms.length === structuralBefore.rooms.length + 1 &&
       structuralAfterAddRoom.inspectorTab === 'rooms' &&
       structuralAfterCleanup.rooms.length === structuralBefore.rooms.length,
+    noSelectionShowsCenteredRoomAdd:
+      noSelectionRoomUi.selectedVisible === false &&
+      noSelectionRoomUi.unselectedVisible === true,
+    centeredRoomAddCreatesAndSelectsIsolatedRoom:
+      centeredAddState.rooms.length === beforeCenteredAdd.rooms.length + 1 &&
+      centeredAddState.selectedRoomId === centeredRoomId &&
+      !centeredAddState.corridors.some((corridor) =>
+        corridor.fromRoomId === centeredRoomId || corridor.toRoomId === centeredRoomId),
+    unconnectedRoomCanBeDraggedFreely:
+      Math.abs(centeredRoomAfterDrag.x - centeredRoomDragPlan.target.x) <= 0.25 &&
+      Math.abs(centeredRoomAfterDrag.z - centeredRoomDragPlan.target.z) <= 0.25 &&
+      afterCenteredRoomCleanup.rooms.length === structuralAfterCleanup.rooms.length,
     directCorridorDragAddRemoveWorks:
       structuralAfterAddCorridor.corridors.length === structuralBefore.corridors.length + 1 &&
       structuralAfterAddCorridor.inspectorTab === 'corridors' &&
@@ -937,6 +1024,13 @@ try {
     beforeCancelledDraft,
     afterCancelledDraft,
     structuralAfterCleanup,
+    noSelectionRoomUi,
+    beforeCenteredAdd,
+    centeredAddState,
+    centeredRoomScreen,
+    centeredRoomDragPlan,
+    centeredRoomAfterDrag,
+    afterCenteredRoomCleanup,
     pathState,
     pathText,
     rightEntityCardCount,
