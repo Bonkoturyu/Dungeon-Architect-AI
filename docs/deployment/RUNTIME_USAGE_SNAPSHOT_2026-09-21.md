@@ -13,6 +13,7 @@ Scope shown in the dashboard:
 - Time range: Last 7 days
 - API key filter: All API keys
 - Runtime model observed: `gpt-5.6-luna`
+- **OpenAI API Organization Usage Tier: Tier 1**
 
 Observed usage:
 
@@ -40,7 +41,7 @@ Attribution visible in the dashboard:
 
 Billing / limit state:
 
-- Usage tier: **Tier 1**
+- **Organization Usage Tier: Tier 1**
 - Organization spend limit: **$100.00**
 - Displayed current spend: **$0.00**
 - Spend alerts configured at **80% ($80)** and **100% ($100)**
