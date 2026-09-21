@@ -56,6 +56,17 @@ const roomWidthPlus = document.querySelector('#roomWidthPlus');
 const roomDepthMinus = document.querySelector('#roomDepthMinus');
 const roomDepthPlus = document.querySelector('#roomDepthPlus');
 const resizeRoomButton = document.querySelector('#resizeRoom');
+const roomAddDirection = document.querySelector('#roomAddDirection');
+const addRoomButton = document.querySelector('#addRoom');
+const removeRoomButton = document.querySelector('#removeRoom');
+const corridorSelect = document.querySelector('#corridorSelect');
+const corridorFromSide = document.querySelector('#corridorFromSide');
+const corridorToSide = document.querySelector('#corridorToSide');
+const applyCorridorSidesButton = document.querySelector('#applyCorridorSides');
+const removeCorridorButton = document.querySelector('#removeCorridor');
+const corridorFromRoom = document.querySelector('#corridorFromRoom');
+const corridorToRoom = document.querySelector('#corridorToRoom');
+const addCorridorButton = document.querySelector('#addCorridor');
 const checkPathButton = document.querySelector('#checkPath');
 const pathStatus = document.querySelector('#pathStatus');
 const entitySelect = document.querySelector('#entitySelect');
@@ -83,6 +94,7 @@ let adapter;
 let session;
 let selectedRoomId = null;
 let selectedEntityId = null;
+let selectedCorridorId = null;
 let generationBusy = false;
 let lastDesignIntent = null;
 let lastGeneration = null;
@@ -133,6 +145,16 @@ function selectedEntity() {
   return selectedEntityId ? authoringSpec().entities.find((entity) => entity.id === selectedEntityId) ?? null : null;
 }
 
+function selectedCorridor() {
+  return selectedCorridorId
+    ? authoringSpec().corridors.find((corridor) => corridor.id === selectedCorridorId) ?? null
+    : null;
+}
+
+function oppositeSide(side) {
+  return { north: 'south', south: 'north', east: 'west', west: 'east' }[side] ?? 'west';
+}
+
 function currentPlayState() {
   if (!playSession) return null;
   return {
@@ -158,6 +180,7 @@ function snapshotState() {
     language: getLanguage(),
     selectedRoomId,
     selectedEntityId,
+    selectedCorridorId,
     targetRoomId: entityRoom?.value || null,
     canUndo: Boolean(session?.canUndo),
     canRedo: Boolean(session?.canRedo),
