@@ -1112,6 +1112,13 @@ function applyCommand(command, successMessage) {
       if (command.type === 'move-room') {
         setEditStatus(t('notice.routeMoveShort'));
         showViewportNotice(t('notice.routeMove'), { timeoutMs: 5200 });
+      } else if ([
+        'add-corridor',
+        'reconnect-corridor',
+        'set-corridor-doors',
+      ].includes(command.type)) {
+        setEditStatus(t('notice.corridorBlockedShort'));
+        showViewportNotice(t('notice.corridorRouteUnavailable'), { timeoutMs: 4200 });
       } else {
         setEditStatus(t('notice.routeShort'));
         showViewportNotice(t('notice.route'), { timeoutMs: 4200 });
@@ -1980,7 +1987,8 @@ function corridorRoutesForDraft() {
 function corridorDraftErrorMessage(preview) {
   if (preview?.blockedCode === 'DUPLICATE_CORRIDOR') return t('notice.corridorDuplicate');
   if (preview?.blockedCode === 'CORRIDOR_COLLISION') return t('notice.corridorCollision');
-  return t('notice.route');
+  if (preview?.blockedCode === 'ROUTE_UNAVAILABLE') return t('notice.corridorRouteUnavailable');
+  return t('notice.corridorRouteUnavailable');
 }
 
 function beginCorridorDraft(event) {
@@ -2045,6 +2053,7 @@ function beginCorridorDraft(event) {
       ? existingCorridor.fromRoomId === sourceRoom.id ? 'from' : 'to'
       : null,
     width: existingCorridor?.width ?? 3,
+    candidateCorridorId: existingCorridor?.id ?? nextCorridorId(),
     preview: null,
   };
 
@@ -2078,6 +2087,105 @@ function beginCorridorDraft(event) {
   return true;
 }
 
+function corridorDraftCommand(draft, preview) {
+  if (!draft || !preview?.targetRoomId) return null;
+  const targetSide = preview.targetSide ?? null;
+
+  if (!draft.existingCorridorId) {
+    const corridor = {
+      id: draft.candidateCorridorId,
+      fromRoomId: draft.sourceRoomId,
+      toRoomId: preview.targetRoomId,
+      width: draft.width,
+      kind: 'manual',
+      fromSide: draft.sourceSide,
+    };
+    if (targetSide) corridor.toSide = targetSide;
+    return {
+      corridorId: corridor.id,
+      command: { type: 'add-corridor', corridor },
+    };
+  }
+
+  const existing = authoringSpec().corridors.find(
+    (entry) => entry.id === draft.existingCorridorId,
+  );
+  if (!existing) return null;
+
+  const command = draft.sourceEndpoint === 'from'
+    ? {
+        type: 'reconnect-corridor',
+        corridorId: existing.id,
+        fromRoomId: draft.sourceRoomId,
+        toRoomId: preview.targetRoomId,
+        fromSide: draft.sourceSide,
+        toSide: targetSide,
+      }
+    : {
+        type: 'reconnect-corridor',
+        corridorId: existing.id,
+        fromRoomId: preview.targetRoomId,
+        toRoomId: draft.sourceRoomId,
+        fromSide: targetSide,
+        toSide: draft.sourceSide,
+      };
+
+  return { corridorId: existing.id, command };
+}
+
+function preflightCorridorDraft(draft, preview) {
+  const candidate = corridorDraftCommand(draft, preview);
+  if (!candidate) {
+    return {
+      ok: false,
+      blockedCode: 'ROUTE_UNAVAILABLE',
+      errorMessage: 'Unable to build corridor edit command.',
+    };
+  }
+
+  const edited = applyEditCommand(authoringSpec(), candidate.command);
+  if (!edited.ok) {
+    return {
+      ok: false,
+      blockedCode: edited.error?.code ?? 'EDIT_RESULT_INVALID',
+      errorMessage: edited.error?.message ?? null,
+    };
+  }
+
+  try {
+    const plan = createDungeonScenePlan(edited.spec);
+    const group = plan.corridorGroups.find(
+      (entry) => entry.specId === candidate.corridorId,
+    );
+    if (!group) {
+      return {
+        ok: false,
+        blockedCode: 'ROUTE_UNAVAILABLE',
+        errorMessage: 'The routed corridor was not present in the scene plan.',
+      };
+    }
+
+    const route = Array.isArray(group.route)
+      ? group.route.map((point) => ({ x: point.x, z: point.z }))
+      : [];
+
+    return {
+      ok: true,
+      corridorId: candidate.corridorId,
+      command: candidate.command,
+      points: route.length > 0 ? route : preview.points,
+      routedFromSide: group.fromDoor?.side ?? null,
+      routedToSide: group.toDoor?.side ?? null,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      blockedCode: 'ROUTE_UNAVAILABLE',
+      errorMessage: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
 function updateCorridorDraft(event) {
   if (!corridorDraft || event.pointerId !== corridorDraft.pointerId) return false;
   const point = adapter.getGroundPointAt(event.clientX, event.clientY);
@@ -2088,12 +2196,13 @@ function updateCorridorDraft(event) {
   let targetSide = null;
   if (hit?.kind === 'room' && hit.specId !== corridorDraft.sourceRoomId) {
     targetRoomId = hit.specId;
+    // Room floor/body means Auto. Only a deliberately pointed wall fixes N/E/S/W.
     targetSide = wallSideFromPart(hit.part);
   } else if (hit?.roomId && hit.roomId !== corridorDraft.sourceRoomId) {
     targetRoomId = hit.roomId;
   }
 
-  const preview = buildCorridorDragPreview(authoringSpec(), {
+  let preview = buildCorridorDragPreview(authoringSpec(), {
     sourceRoomId: corridorDraft.sourceRoomId,
     sourceSide: corridorDraft.sourceSide,
     pointer: point,
@@ -2103,6 +2212,31 @@ function updateCorridorDraft(event) {
     targetRoomId,
     targetSide,
   });
+
+  if (preview.state === 'ready' && preview.targetRoomId) {
+    const routed = preflightCorridorDraft(corridorDraft, preview);
+    if (routed.ok) {
+      preview = {
+        ...preview,
+        state: 'ready',
+        points: routed.points,
+        commitCommand: routed.command,
+        commitCorridorId: routed.corridorId,
+        routedFromSide: routed.routedFromSide,
+        routedToSide: routed.routedToSide,
+        blockedCode: null,
+        routeErrorMessage: null,
+      };
+    } else {
+      preview = {
+        ...preview,
+        state: 'blocked',
+        blockedCode: routed.blockedCode ?? 'ROUTE_UNAVAILABLE',
+        routeErrorMessage: routed.errorMessage ?? null,
+      };
+    }
+  }
+
   corridorDraft.preview = preview;
   adapter.setCorridorDraftPreview({
     points: preview.points,
@@ -2139,53 +2273,24 @@ function finishCorridorDraft({ cancelled = false } = {}) {
     return false;
   }
 
-  const targetRoomId = draft.preview.targetRoomId;
-  const targetSide = draft.preview.targetSide;
-  if (!targetRoomId || !targetSide) {
+  const command = draft.preview.commitCommand;
+  const corridorId = draft.preview.commitCorridorId;
+  if (!command || !corridorId) {
+    showViewportNotice(t('notice.corridorRouteUnavailable'), { timeoutMs: 4200 });
+    setEditStatus(t('notice.corridorBlockedShort'));
     updateUi();
     return false;
   }
 
-  if (!draft.existingCorridorId) {
-    const corridor = {
-      id: nextCorridorId(),
-      fromRoomId: draft.sourceRoomId,
-      toRoomId: targetRoomId,
-      width: draft.width,
-      kind: 'manual',
-      fromSide: draft.sourceSide,
-      toSide: targetSide,
-    };
-    const added = applyCommand({ type: 'add-corridor', corridor }, `added ${corridor.id}`);
-    if (!added) return false;
-    selectCorridor(corridor.id);
-    return true;
-  }
+  const committed = applyCommand(
+    command,
+    draft.existingCorridorId
+      ? `reconnected ${corridorId}`
+      : `added ${corridorId}`,
+  );
+  if (!committed) return false;
 
-  const existing = authoringSpec().corridors.find((entry) => entry.id === draft.existingCorridorId);
-  if (!existing) return false;
-
-  const command = draft.sourceEndpoint === 'from'
-    ? {
-        type: 'reconnect-corridor',
-        corridorId: existing.id,
-        fromRoomId: draft.sourceRoomId,
-        toRoomId: targetRoomId,
-        fromSide: draft.sourceSide,
-        toSide: targetSide,
-      }
-    : {
-        type: 'reconnect-corridor',
-        corridorId: existing.id,
-        fromRoomId: targetRoomId,
-        toRoomId: draft.sourceRoomId,
-        fromSide: targetSide,
-        toSide: draft.sourceSide,
-      };
-
-  const reconnected = applyCommand(command, `reconnected ${existing.id}`);
-  if (!reconnected) return false;
-  selectCorridor(existing.id);
+  selectCorridor(corridorId);
   return true;
 }
 
