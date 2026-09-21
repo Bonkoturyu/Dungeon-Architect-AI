@@ -156,7 +156,9 @@ test('forced wall side can shift its doorway along the wall when the center is b
     seed: 11,
     rooms: [
       { id: 'a', x: 0, z: 0, width: 8, depth: 8 },
-      { id: 'blocker', x: 6, z: 0, width: 4, depth: 4 },
+      // Blocks the centered east doorway after corridor clearance is applied,
+      // while still leaving a valid offset doorway toward the north half.
+      { id: 'blocker', x: 6, z: 1.5, width: 4, depth: 1 },
       { id: 'b', x: 20, z: 0, width: 8, depth: 8 },
     ],
     corridors: [
