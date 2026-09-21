@@ -6,7 +6,11 @@ const COUNTER_KEYS = Object.freeze([
   "trapsTriggered",
   "recoveryUsed",
   "damageTaken",
-  "healingReceived"
+  "healingReceived",
+  "xpEarned",
+  "goldEarned",
+  "levelUps",
+  "lootCollected"
 ]);
 
 export const GAMEPLAY_COUNTER_KEYS = COUNTER_KEYS;
