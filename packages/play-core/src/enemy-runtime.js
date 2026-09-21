@@ -161,7 +161,13 @@ export function resolveEnemyCombat(
 
   const defeated = defeatEnemy(damaged.session, enemyId, { at });
   if (!defeated.ok) return defeated;
-  return { ok: true, session: defeated.session, defeated: true, damageApplied: damaged.applied };
+  return {
+    ok: true,
+    session: defeated.session,
+    defeated: true,
+    damageApplied: damaged.applied,
+    reward: defeated.reward ?? null
+  };
 }
 
 export function defeatEnemy(session, enemyId, { at = session?.startedAt ?? 0 } = {}) {
