@@ -13,9 +13,16 @@ import {
 } from '../../packages/play-core/src/interaction-runtime.js';
 import { createDungeonScenePlan, createThreeRendererAdapter } from '../../packages/renderer-three/src/index.js';
 import { generateDungeonFromDesignIntent } from '../../packages/generator/src/design-intent-generator.js';
+import {
+  bindLanguageSwitchers,
+  getLanguage,
+  subscribeLanguage,
+  t,
+} from './i18n.js';
 
 const canvas = document.querySelector('#renderCanvas');
 const status = document.querySelector('#status');
+const modeBadge = document.querySelector('#modeBadge');
 const selectedLabel = document.querySelector('#selected');
 const entitySelectedLabel = document.querySelector('#entitySelected');
 const editStatus = document.querySelector('#editStatus');
@@ -143,6 +150,7 @@ function snapshotState() {
   return {
     mode,
     workflowTab,
+    language: getLanguage(),
     selectedRoomId,
     selectedEntityId,
     targetRoomId: entityRoom?.value || null,
@@ -201,11 +209,9 @@ function showViewportNotice(message, { timeoutMs = 2200 } = {}) {
 function friendlyEditError(error) {
   const code = error?.code ?? 'EDIT_FAILED';
   const message = String(error?.message ?? '');
-  if (code === 'START_GOAL_SAME_ROOM') return 'Blocked: Start and Goal must be in different rooms.';
-  if (code === 'EDIT_RESULT_INVALID' && message.includes('ROOM_OVERLAP')) {
-    return 'Blocked: that change would overlap another room.';
-  }
-  if (code === 'ROOM_DIMENSION_INVALID') return 'Blocked: room size must be greater than zero.';
+  if (code === 'START_GOAL_SAME_ROOM') return t('notice.sameRoom');
+  if (code === 'EDIT_RESULT_INVALID' && message.includes('ROOM_OVERLAP')) return t('notice.overlap');
+  if (code === 'ROOM_DIMENSION_INVALID') return t('notice.dimension');
   return `Blocked: ${code}`;
 }
 
@@ -213,11 +219,14 @@ function refreshGate() {
   gate = evaluateStartGate(authoringSpec());
   if (gate.allowed) {
     validationStatus.dataset.state = 'pass';
-    validationStatus.textContent = '✓ Valid';
+    validationStatus.textContent = t('validation.valid');
   } else {
     validationStatus.dataset.state = 'blocked';
     const codes = gate.errors.slice(0, 3).map((entry) => entry.code).join(', ');
-    validationStatus.textContent = `! Fix ${gate.criticalCount}${codes ? ` · ${codes}` : ''}`;
+    validationStatus.textContent = t('validation.fix', {
+      count: gate.criticalCount,
+      codes: codes ? ` · ${codes}` : '',
+    });
   }
 }
 
@@ -230,19 +239,19 @@ function roomRole(roomId) {
 
 function roomLabel(roomId) {
   const role = roomRole(roomId);
-  if (role === 'start') return `◆ START · ${roomId}`;
-  if (role === 'goal') return `★ GOAL · ${roomId}`;
+  if (role === 'start') return `◆ ${t('entity.start')} · ${roomId}`;
+  if (role === 'goal') return `★ ${t('entity.goal')} · ${roomId}`;
   return `▦ ${roomId}`;
 }
 
 function entityDisplay(entity) {
   const table = {
-    start: { icon: '◆', label: 'Start' },
-    goal: { icon: '★', label: 'Goal' },
-    enemy: { icon: '⚔', label: 'Enemy' },
-    treasure: { icon: '▣', label: 'Chest' },
-    trap: { icon: '⚠', label: 'Trap' },
-    recovery: { icon: '✚', label: 'Recovery' },
+    start: { icon: '◆', label: t('entity.start') },
+    goal: { icon: '★', label: t('entity.goal') },
+    enemy: { icon: '⚔', label: t('entity.enemy') },
+    treasure: { icon: '▣', label: t('entity.treasure') },
+    trap: { icon: '⚠', label: t('entity.trap') },
+    recovery: { icon: '✚', label: t('entity.recovery') },
   };
   return table[entity.type] ?? { icon: '◇', label: entity.type };
 }
@@ -252,7 +261,7 @@ function renderPromptHistory() {
   if (promptHistory.length === 0) {
     const empty = document.createElement('span');
     empty.className = 'muted';
-    empty.textContent = 'No prompts yet.';
+    empty.textContent = t('create.historyEmpty');
     generationHistory.replaceChildren(empty);
     return;
   }
@@ -263,7 +272,7 @@ function renderPromptHistory() {
     button.className = 'prompt-history-item';
     button.title = entry.prompt;
     const meta = document.createElement('strong');
-    meta.textContent = `#${promptHistory.length - index} · ${entry.roomCount} rooms`;
+    meta.textContent = `#${promptHistory.length - index} · ${t('create.historyRooms', { count: entry.roomCount })}`;
     const text = document.createElement('span');
     text.textContent = entry.prompt;
     button.append(meta, document.createElement('br'), text);
