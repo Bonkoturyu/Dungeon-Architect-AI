@@ -1051,6 +1051,290 @@
         transform: translateX(-50%);
       }
     }
+
+    /* Owner UI/UX review 2026-09-21 — readable desktop authoring scale. */
+    :root {
+      --ui-space-1: 8px;
+      --ui-space-2: 12px;
+      --ui-space-3: 16px;
+      --ui-space-4: 24px;
+      --ui-space-5: 32px;
+      --ui-font-caption: 0.8125rem;
+      --ui-font-body: 0.9375rem;
+      --ui-font-body-lg: 1rem;
+      --ui-font-section: 1.0625rem;
+      --ui-font-title: 1.25rem;
+      --ui-control-h: 40px;
+      --ui-control-h-lg: 44px;
+      --ui-sidebar-w: 420px;
+    }
+
+    button {
+      min-height: var(--ui-control-h);
+      padding: 8px 12px;
+      font-size: var(--ui-font-body);
+    }
+    select,
+    input {
+      min-height: var(--ui-control-h);
+      font-size: var(--ui-font-body);
+    }
+    select { padding: 7px 10px; }
+    textarea {
+      min-height: 96px;
+      padding: 12px;
+      font-size: var(--ui-font-body);
+      line-height: 1.5;
+    }
+
+    .app-header {
+      min-height: 68px;
+      gap: var(--ui-space-3);
+      padding: 12px var(--ui-space-3);
+    }
+    .brand-eyebrow { font-size: 0.75rem; }
+    .brand-title { font-size: var(--ui-font-title); }
+    .mode-badge {
+      min-height: 36px;
+      padding: 7px 11px;
+      font-size: 0.8125rem;
+    }
+    .language-cycle {
+      min-height: 36px;
+      padding: 6px 10px;
+      font-size: 0.75rem;
+    }
+    .icon-button {
+      width: 40px;
+      min-width: 40px;
+      min-height: 40px;
+    }
+
+    .toolbar {
+      gap: var(--ui-space-2);
+      padding: 10px var(--ui-space-3);
+    }
+    .toolbar-group { gap: var(--ui-space-1); }
+    #editStatus { font-size: var(--ui-font-caption); }
+    #hint { font-size: var(--ui-font-caption); }
+
+    .workspace {
+      grid-template-columns: minmax(0, 1fr) var(--ui-sidebar-w);
+    }
+    aside {
+      padding: var(--ui-space-3);
+    }
+
+    .viewport-label {
+      top: var(--ui-space-3);
+      left: var(--ui-space-3);
+      gap: 4px;
+    }
+    .viewport-label strong { font-size: 0.8125rem; }
+    .viewport-label span { font-size: 0.75rem; }
+
+    .goal-check-card {
+      margin-bottom: var(--ui-space-3);
+      padding: var(--ui-space-3);
+      border-radius: 14px;
+    }
+    .goal-check-top {
+      gap: var(--ui-space-1);
+      margin-bottom: var(--ui-space-2);
+    }
+    .goal-check-top strong { font-size: 0.9375rem; }
+    #validationStatus {
+      min-height: 34px;
+      padding: 6px 10px;
+      font-size: 0.8125rem;
+    }
+    .goal-check-card #checkPath {
+      min-height: var(--ui-control-h-lg);
+      font-size: var(--ui-font-body-lg);
+    }
+    .path-status {
+      margin-top: var(--ui-space-1);
+      padding: 10px 11px;
+      font-size: 0.8125rem;
+      line-height: 1.5;
+    }
+
+    .workflow-tabs {
+      gap: var(--ui-space-1);
+      margin-bottom: var(--ui-space-3);
+      padding: 5px;
+    }
+    .workflow-tab {
+      min-height: var(--ui-control-h-lg);
+      padding: 8px;
+      font-size: 0.875rem;
+    }
+
+    fieldset {
+      padding: var(--ui-space-3);
+      margin-bottom: var(--ui-space-3);
+    }
+    legend { font-size: 0.9375rem; }
+    label {
+      gap: var(--ui-space-1);
+      margin-bottom: var(--ui-space-2);
+      font-size: 0.875rem;
+    }
+    .panel-kicker,
+    .resize-note,
+    .muted {
+      font-size: var(--ui-font-caption);
+      line-height: 1.5;
+    }
+    .create-hint,
+    .section-caption {
+      font-size: 0.75rem;
+    }
+    .button-row { gap: var(--ui-space-1); }
+    .compact-grid,
+    .room-size-grid { gap: var(--ui-space-2); }
+    .size-stepper {
+      grid-template-columns: 40px minmax(0, 1fr) 40px;
+      gap: var(--ui-space-1);
+    }
+    .size-stepper button {
+      min-width: 40px;
+      min-height: 40px;
+    }
+    .room-size-grid input { min-height: 40px; font-size: var(--ui-font-body); }
+    #roomSelect {
+      min-height: 144px;
+      padding: 7px;
+      font-size: var(--ui-font-body);
+      line-height: 1.45;
+    }
+    #entitySelect { min-height: 40px; font-size: var(--ui-font-body); }
+
+    .inspector-shell {
+      margin: 0 0 var(--ui-space-3);
+    }
+    .inspector-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--ui-space-1);
+      margin: 0 0 var(--ui-space-2);
+      padding: 5px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(18, 22, 29, 0.62);
+    }
+    .inspector-tab {
+      min-width: 0;
+      min-height: var(--ui-control-h);
+      padding: 7px 8px;
+      border-color: transparent;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.8125rem;
+      white-space: nowrap;
+    }
+    .inspector-tab.is-active {
+      border-color: #687796;
+      background: #343d4d;
+      color: var(--text);
+    }
+    .inspector-panel { display: none; margin: 0; }
+    .inspector-shell[data-inspector-tab="entities"] [data-inspector-panel="entities"],
+    .inspector-shell[data-inspector-tab="rooms"] [data-inspector-panel="rooms"],
+    .inspector-shell[data-inspector-tab="corridors"] [data-inspector-panel="corridors"] {
+      display: block;
+    }
+
+    .left-hud-stack {
+      position: absolute;
+      z-index: 3;
+      top: 58px;
+      left: var(--ui-space-3);
+      width: min(320px, calc(50% - 32px));
+      display: none;
+      gap: var(--ui-space-2);
+      pointer-events: none;
+    }
+    body[data-mode="edit"][data-workflow-tab="edit"] .left-hud-stack {
+      display: grid;
+    }
+    .left-hud-stack .edit-hud {
+      position: static;
+      display: block;
+      width: 100%;
+    }
+    .entity-legend,
+    .selection-overlay {
+      width: 100%;
+      padding: 12px 13px;
+      border-radius: 11px;
+    }
+    .selection-overlay .overlay-heading,
+    .room-contents-overlay .overlay-heading,
+    .entity-legend .overlay-heading {
+      margin-bottom: var(--ui-space-1);
+      font-size: 0.6875rem;
+    }
+    .selection-chip {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+    }
+    #entitySelected { font-size: 0.75rem; }
+    .legend-items { gap: 7px 10px; }
+    .legend-item,
+    .room-content-item {
+      gap: 6px;
+      font-size: 0.75rem;
+    }
+    .room-contents-overlay {
+      top: var(--ui-space-3);
+      right: var(--ui-space-3);
+      width: min(300px, 34%);
+      padding: 12px 13px;
+    }
+    #roomContentsRoom { font-size: 0.8125rem; }
+    #roomContentsItems { gap: var(--ui-space-1); }
+    .room-content-item {
+      min-height: 32px;
+      padding: 5px 8px;
+    }
+    .room-content-empty { font-size: 0.75rem; }
+    .entity-marker {
+      width: 20px;
+      height: 20px;
+      flex-basis: 20px;
+      font-size: 0.75rem;
+    }
+
+    .viewport-notice {
+      max-width: min(620px, calc(100% - 40px));
+      padding: 12px 16px;
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 1100px) {
+      :root { --ui-sidebar-w: 360px; }
+      .left-hud-stack { width: min(300px, calc(55% - 24px)); }
+    }
+    @media (max-width: 800px) {
+      .workspace,
+      body[data-mode="play"] .workspace,
+      body[data-mode="result"] .workspace {
+        grid-template-columns: 1fr;
+      }
+      .left-hud-stack {
+        top: 52px;
+        left: 10px;
+        width: min(300px, calc(100% - 20px));
+      }
+      .room-contents-overlay {
+        top: 10px;
+        right: 10px;
+        width: min(280px, calc(100% - 20px));
+      }
+    }
+
   </style>
 </head>
 <body data-mode="edit" data-workflow-tab="create">
@@ -1087,20 +1371,22 @@
           <span id="viewportHelp" data-i18n="viewport.editHelp">Drag orbit · Wheel zoom · WASD / Arrow keys move</span>
         </div>
         <canvas id="renderCanvas" tabindex="0"></canvas>
-        <div id="selectionOverlay" class="selection-overlay edit-hud" hidden>
-          <span class="overlay-heading" data-i18n="overlay.selected">Selected</span>
-          <span id="selected" class="selection-chip"></span>
-          <span id="entitySelected" class="selection-chip"></span>
-        </div>
-        <div id="entityLegend" class="entity-legend edit-hud" aria-label="Entity legend">
-          <span class="overlay-heading" data-i18n="overlay.legend">Legend</span>
-          <div class="legend-items">
-            <span class="legend-item" data-kind="start"><span class="entity-marker">◆</span><span data-i18n="entity.start">Start</span></span>
-            <span class="legend-item" data-kind="goal"><span class="entity-marker">★</span><span data-i18n="entity.goal">Goal</span></span>
-            <span class="legend-item" data-kind="enemy"><span class="entity-marker">⚔</span><span data-i18n="entity.enemy">Enemy</span></span>
-            <span class="legend-item" data-kind="treasure"><span class="entity-marker">▣</span><span data-i18n="entity.treasure">Chest</span></span>
-            <span class="legend-item" data-kind="trap"><span class="entity-marker">⚠</span><span data-i18n="entity.trap">Trap</span></span>
-            <span class="legend-item" data-kind="recovery"><span class="entity-marker">✚</span><span data-i18n="entity.recovery">Recovery</span></span>
+        <div class="left-hud-stack edit-hud-stack">
+          <div id="entityLegend" class="entity-legend edit-hud" aria-label="Entity legend">
+            <span class="overlay-heading" data-i18n="overlay.legend">Legend</span>
+            <div class="legend-items">
+              <span class="legend-item" data-kind="start"><span class="entity-marker">◆</span><span data-i18n="entity.start">Start</span></span>
+              <span class="legend-item" data-kind="goal"><span class="entity-marker">★</span><span data-i18n="entity.goal">Goal</span></span>
+              <span class="legend-item" data-kind="enemy"><span class="entity-marker">⚔</span><span data-i18n="entity.enemy">Enemy</span></span>
+              <span class="legend-item" data-kind="treasure"><span class="entity-marker">▣</span><span data-i18n="entity.treasure">Chest</span></span>
+              <span class="legend-item" data-kind="trap"><span class="entity-marker">⚠</span><span data-i18n="entity.trap">Trap</span></span>
+              <span class="legend-item" data-kind="recovery"><span class="entity-marker">✚</span><span data-i18n="entity.recovery">Recovery</span></span>
+            </div>
+          </div>
+          <div id="selectionOverlay" class="selection-overlay edit-hud" hidden>
+            <span class="overlay-heading" data-i18n="overlay.selected">Selected</span>
+            <span id="selected" class="selection-chip"></span>
+            <span id="entitySelected" class="selection-chip"></span>
           </div>
         </div>
         <div id="roomContentsOverlay" class="room-contents-overlay edit-hud" hidden>
@@ -1186,121 +1472,128 @@
           <p id="naturalEditStatus" class="muted" aria-live="polite"></p>
         </fieldset>
 
-        <fieldset class="editor-only" data-workflow-panel="edit">
-          <legend data-i18n="entities.title">✦ Entities</legend>
-          <p class="panel-kicker" data-i18n="entities.help">Select an entity in 3D, Room contents, or the dropdown below.</p>
-          <label>
-            <span data-i18n="entities.selected">Selected entity</span>
-            <select id="entitySelect" aria-label="Existing entities"></select>
-          </label>
-          <label>
-            <span data-i18n="entities.room">Room</span>
-            <select id="entityRoom" aria-label="Target room"></select>
-          </label>
-          <div class="button-row">
-            <button id="moveEntity" type="button" disabled data-i18n="entities.move">Move to room</button>
-            <button id="removeEntity" class="danger-action" type="button" disabled data-i18n="entities.remove">Remove</button>
-          </div>
-          <label>
-            <span data-i18n="entities.type">＋ Type</span>
-            <select id="entityType" aria-label="New entity type">
-              <option value="enemy" data-i18n="entity.enemy">Enemy</option>
-              <option value="treasure" data-i18n="entity.treasure">Chest</option>
-              <option value="trap" data-i18n="entity.trap">Trap</option>
-              <option value="recovery" data-i18n="entity.recovery">Recovery</option>
-            </select>
-          </label>
-          <button id="addEntity" class="wide-action" type="button" data-i18n="entities.add">＋ Add</button>
-        </fieldset>
-
-        <fieldset class="editor-only" data-workflow-panel="edit">
-          <legend data-i18n="rooms.title">▦ Rooms</legend>
-          <p class="panel-kicker" data-i18n="rooms.help">Select a room in 3D or from this list. Drag the 3D view to orbit; use the mouse wheel to zoom. Move selected rooms with Arrow keys or WASD.</p>
-          <label>
-            <span data-i18n="rooms.list">Rooms</span>
-            <select id="roomSelect" size="5" aria-label="Rooms"></select>
-          </label>
-          <div class="room-size-grid">
+        <section id="editInspector" class="inspector-shell editor-only" data-workflow-panel="edit" data-inspector-tab="entities" aria-label="Edit inspector">
+          <nav class="inspector-tabs" aria-label="Edit inspector sections">
+            <button class="inspector-tab is-active" type="button" data-inspector-tab-target="entities" aria-selected="true" data-i18n="entities.title">✦ Entities</button>
+            <button class="inspector-tab" type="button" data-inspector-tab-target="rooms" aria-selected="false" data-i18n="rooms.title">▦ Rooms</button>
+            <button class="inspector-tab" type="button" data-inspector-tab-target="corridors" aria-selected="false" data-i18n="corridors.title">⇄ Corridors</button>
+          </nav>
+          <fieldset class="inspector-panel" data-inspector-panel="entities">
+            <legend data-i18n="entities.title">✦ Entities</legend>
+            <p class="panel-kicker" data-i18n="entities.help">Select an entity in 3D, Room contents, or the dropdown below.</p>
             <label>
-              <span data-i18n="rooms.width">Width</span>
-              <span class="size-stepper">
-                <button id="roomWidthMinus" type="button" aria-label="Decrease room width">−</button>
-                <input id="roomWidth" type="number" min="1" step="1" aria-label="Room width">
-                <button id="roomWidthPlus" type="button" aria-label="Increase room width">＋</button>
-              </span>
+              <span data-i18n="entities.selected">Selected entity</span>
+              <select id="entitySelect" aria-label="Existing entities"></select>
             </label>
             <label>
-              <span data-i18n="rooms.depth">Depth</span>
-              <span class="size-stepper">
-                <button id="roomDepthMinus" type="button" aria-label="Decrease room depth">−</button>
-                <input id="roomDepth" type="number" min="1" step="1" aria-label="Room depth">
-                <button id="roomDepthPlus" type="button" aria-label="Increase room depth">＋</button>
-              </span>
+              <span data-i18n="entities.room">Room</span>
+              <select id="entityRoom" aria-label="Target room"></select>
             </label>
-          </div>
-          <p class="resize-note" data-i18n="rooms.resizeNote">Use − / ＋ for 1-unit steps, or type a size, then Apply. Overlapping rooms are blocked.</p>
-          <button id="resizeRoom" class="wide-action" type="button" disabled data-i18n="rooms.apply">Apply room size</button>
-
-          <div class="compact-grid">
+            <div class="button-row">
+              <button id="moveEntity" type="button" disabled data-i18n="entities.move">Move to room</button>
+              <button id="removeEntity" class="danger-action" type="button" disabled data-i18n="entities.remove">Remove</button>
+            </div>
             <label>
-              <span data-i18n="rooms.newDirection">New room direction</span>
-              <select id="roomAddDirection" aria-label="New room direction">
-                <option value="east" data-i18n="side.east">East</option>
-                <option value="south" data-i18n="side.south">South</option>
-                <option value="west" data-i18n="side.west">West</option>
-                <option value="north" data-i18n="side.north">North</option>
+              <span data-i18n="entities.type">＋ Type</span>
+              <select id="entityType" aria-label="New entity type">
+                <option value="enemy" data-i18n="entity.enemy">Enemy</option>
+                <option value="treasure" data-i18n="entity.treasure">Chest</option>
+                <option value="trap" data-i18n="entity.trap">Trap</option>
+                <option value="recovery" data-i18n="entity.recovery">Recovery</option>
               </select>
             </label>
-            <button id="addRoom" type="button" data-i18n="rooms.add">＋ Add room</button>
-          </div>
-          <button id="removeRoom" class="danger-action danger-wide" type="button" disabled data-i18n="rooms.remove">Remove selected room</button>
-        </fieldset>
+            <button id="addEntity" class="wide-action" type="button" data-i18n="entities.add">＋ Add</button>
+          </fieldset>
 
-        <fieldset class="editor-only" data-workflow-panel="edit">
-          <legend data-i18n="corridors.title">⇄ Corridors</legend>
-          <p class="panel-kicker" data-i18n="corridors.help">Select a corridor and choose which wall side each endpoint uses.</p>
-          <label>
-            <span data-i18n="corridors.selected">Selected corridor</span>
-            <select id="corridorSelect" aria-label="Existing corridors"></select>
-          </label>
-          <div class="compact-grid">
+          <fieldset class="inspector-panel" data-inspector-panel="rooms">
+            <legend data-i18n="rooms.title">▦ Rooms</legend>
+            <p class="panel-kicker" data-i18n="rooms.help">Select a room in 3D or from this list. Drag the 3D view to orbit; use the mouse wheel to zoom. Move selected rooms with Arrow keys or WASD.</p>
             <label>
-              <span data-i18n="corridors.fromSide">From side</span>
-              <select id="corridorFromSide" aria-label="Corridor from side">
-                <option value="auto" data-i18n="corridors.auto">Auto</option>
-                <option value="north" data-i18n="side.north">North</option>
-                <option value="east" data-i18n="side.east">East</option>
-                <option value="south" data-i18n="side.south">South</option>
-                <option value="west" data-i18n="side.west">West</option>
-              </select>
+              <span data-i18n="rooms.list">Rooms</span>
+              <select id="roomSelect" size="5" aria-label="Rooms"></select>
             </label>
-            <label>
-              <span data-i18n="corridors.toSide">To side</span>
-              <select id="corridorToSide" aria-label="Corridor to side">
-                <option value="auto" data-i18n="corridors.auto">Auto</option>
-                <option value="north" data-i18n="side.north">North</option>
-                <option value="east" data-i18n="side.east">East</option>
-                <option value="south" data-i18n="side.south">South</option>
-                <option value="west" data-i18n="side.west">West</option>
-              </select>
-            </label>
-          </div>
-          <button id="applyCorridorSides" class="wide-action" type="button" disabled data-i18n="corridors.applySides">Apply doorway sides</button>
-          <button id="removeCorridor" class="danger-action danger-wide" type="button" disabled data-i18n="corridors.remove">Remove selected corridor</button>
+            <div class="room-size-grid">
+              <label>
+                <span data-i18n="rooms.width">Width</span>
+                <span class="size-stepper">
+                  <button id="roomWidthMinus" type="button" aria-label="Decrease room width">−</button>
+                  <input id="roomWidth" type="number" min="1" step="1" aria-label="Room width">
+                  <button id="roomWidthPlus" type="button" aria-label="Increase room width">＋</button>
+                </span>
+              </label>
+              <label>
+                <span data-i18n="rooms.depth">Depth</span>
+                <span class="size-stepper">
+                  <button id="roomDepthMinus" type="button" aria-label="Decrease room depth">−</button>
+                  <input id="roomDepth" type="number" min="1" step="1" aria-label="Room depth">
+                  <button id="roomDepthPlus" type="button" aria-label="Increase room depth">＋</button>
+                </span>
+              </label>
+            </div>
+            <p class="resize-note" data-i18n="rooms.resizeNote">Use − / ＋ for 1-unit steps, or type a size, then Apply. Overlapping rooms are blocked.</p>
+            <button id="resizeRoom" class="wide-action" type="button" disabled data-i18n="rooms.apply">Apply room size</button>
 
-          <p class="section-caption" data-i18n="corridors.new">New corridor</p>
-          <div class="compact-grid">
+            <div class="compact-grid">
+              <label>
+                <span data-i18n="rooms.newDirection">New room direction</span>
+                <select id="roomAddDirection" aria-label="New room direction">
+                  <option value="east" data-i18n="side.east">East</option>
+                  <option value="south" data-i18n="side.south">South</option>
+                  <option value="west" data-i18n="side.west">West</option>
+                  <option value="north" data-i18n="side.north">North</option>
+                </select>
+              </label>
+              <button id="addRoom" type="button" data-i18n="rooms.add">＋ Add room</button>
+            </div>
+            <button id="removeRoom" class="danger-action danger-wide" type="button" disabled data-i18n="rooms.remove">Remove selected room</button>
+          </fieldset>
+
+          <fieldset class="inspector-panel" data-inspector-panel="corridors">
+            <legend data-i18n="corridors.title">⇄ Corridors</legend>
+            <p class="panel-kicker" data-i18n="corridors.help">Select a corridor and choose which wall side each endpoint uses.</p>
             <label>
-              <span data-i18n="corridors.fromRoom">From room</span>
-              <select id="corridorFromRoom" aria-label="New corridor from room"></select>
+              <span data-i18n="corridors.selected">Selected corridor</span>
+              <select id="corridorSelect" aria-label="Existing corridors"></select>
             </label>
-            <label>
-              <span data-i18n="corridors.toRoom">To room</span>
-              <select id="corridorToRoom" aria-label="New corridor to room"></select>
-            </label>
-          </div>
-          <button id="addCorridor" class="wide-action" type="button" data-i18n="corridors.add">＋ Add corridor</button>
-        </fieldset>
+            <div class="compact-grid">
+              <label>
+                <span data-i18n="corridors.fromSide">From side</span>
+                <select id="corridorFromSide" aria-label="Corridor from side">
+                  <option value="auto" data-i18n="corridors.auto">Auto</option>
+                  <option value="north" data-i18n="side.north">North</option>
+                  <option value="east" data-i18n="side.east">East</option>
+                  <option value="south" data-i18n="side.south">South</option>
+                  <option value="west" data-i18n="side.west">West</option>
+                </select>
+              </label>
+              <label>
+                <span data-i18n="corridors.toSide">To side</span>
+                <select id="corridorToSide" aria-label="Corridor to side">
+                  <option value="auto" data-i18n="corridors.auto">Auto</option>
+                  <option value="north" data-i18n="side.north">North</option>
+                  <option value="east" data-i18n="side.east">East</option>
+                  <option value="south" data-i18n="side.south">South</option>
+                  <option value="west" data-i18n="side.west">West</option>
+                </select>
+              </label>
+            </div>
+            <button id="applyCorridorSides" class="wide-action" type="button" disabled data-i18n="corridors.applySides">Apply doorway sides</button>
+            <button id="removeCorridor" class="danger-action danger-wide" type="button" disabled data-i18n="corridors.remove">Remove selected corridor</button>
+
+            <p class="section-caption" data-i18n="corridors.new">New corridor</p>
+            <div class="compact-grid">
+              <label>
+                <span data-i18n="corridors.fromRoom">From room</span>
+                <select id="corridorFromRoom" aria-label="New corridor from room"></select>
+              </label>
+              <label>
+                <span data-i18n="corridors.toRoom">To room</span>
+                <select id="corridorToRoom" aria-label="New corridor to room"></select>
+              </label>
+            </div>
+            <button id="addCorridor" class="wide-action" type="button" data-i18n="corridors.add">＋ Add corridor</button>
+          </fieldset>
+        </section>
       </aside>
     </div>
   </main>
