@@ -739,7 +739,9 @@ export function getNextLanguage(language = currentLanguage) {
   return LANGUAGE_OPTIONS[(index + 1) % LANGUAGE_OPTIONS.length].id;
 }
 
-export function applyDocumentTranslations(root = document) {
+export function applyDocumentTranslations(
+  root = typeof document !== 'undefined' ? document : null,
+) {
   if (!root) return;
   for (const node of root.querySelectorAll('[data-i18n]')) {
     node.textContent = t(node.dataset.i18n);
@@ -793,7 +795,9 @@ export function subscribeLanguage(listener) {
   return () => listeners.delete(listener);
 }
 
-export function bindLanguageSwitchers(root = document) {
+export function bindLanguageSwitchers(
+  root = typeof document !== 'undefined' ? document : null,
+) {
   if (!root) return;
   for (const button of root.querySelectorAll('[data-language]')) {
     if (button.dataset.languageBound === 'true') continue;
