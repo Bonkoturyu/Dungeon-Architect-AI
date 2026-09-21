@@ -291,6 +291,20 @@ try {
       labelFontPx: Number.parseFloat(label.fontSize),
     };
   });
+  const sidebarOverflow = await page.evaluate(() => {
+    const aside = document.querySelector('aside');
+    const inspector = document.querySelector('#editInspector');
+    const visiblePanel = document.querySelector('.inspector-panel:not([style*="display: none"])') ??
+      [...document.querySelectorAll('.inspector-panel')].find((panel) => getComputedStyle(panel).display !== 'none');
+    return {
+      asideClientWidth: aside?.clientWidth ?? 0,
+      asideScrollWidth: aside?.scrollWidth ?? 0,
+      inspectorClientWidth: inspector?.clientWidth ?? 0,
+      inspectorScrollWidth: inspector?.scrollWidth ?? 0,
+      panelClientWidth: visiblePanel?.clientWidth ?? 0,
+      panelScrollWidth: visiblePanel?.scrollWidth ?? 0,
+    };
+  });
 
   // Room labels, all-room resize, and WASD.
   const roomOptionText = await page.locator('#roomSelect option').allTextContents();
@@ -622,6 +636,10 @@ try {
       uiScale.selectHeight >= 40 &&
       uiScale.helperFontPx >= 13 &&
       uiScale.labelFontPx >= 14,
+    editorSidebarHasNoHorizontalOverflow:
+      sidebarOverflow.asideScrollWidth <= sidebarOverflow.asideClientWidth + 1 &&
+      sidebarOverflow.inspectorScrollWidth <= sidebarOverflow.inspectorClientWidth + 1 &&
+      sidebarOverflow.panelScrollWidth <= sidebarOverflow.panelClientWidth + 1,
     mouseOrbitChangesCamera: distance3(cameraBefore.position, cameraAfterOrbit.position) > 0.1,
     mouseWheelZoomChangesDistance: cameraAfterZoom.distance < cameraAfterOrbit.distance - 0.1,
     roomSelectionDoesNotRecenterCamera:
@@ -777,6 +795,7 @@ try {
     englishRestored,
     sidebarHierarchy,
     uiScale,
+    sidebarOverflow,
     falseChecks,
     cameraBefore,
     cameraAfterOrbit,
