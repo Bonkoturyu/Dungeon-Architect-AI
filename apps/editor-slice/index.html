@@ -173,36 +173,30 @@
       gap: 8px;
       margin-left: 0;
     }
-    .language-switcher {
-      display: inline-flex;
-      align-items: center;
-      gap: 2px;
-      padding: 3px;
-      border: 1px solid var(--line);
-      border-radius: 9px;
-      background: rgba(22, 28, 37, 0.66);
-    }
-    .language-switcher button {
-      min-width: 31px;
-      min-height: 28px;
-      padding: 3px 6px;
-      border-color: transparent;
-      background: transparent;
-      color: var(--text-muted);
-      font-size: 0.66rem;
+    .language-cycle {
+      min-width: 0;
+      min-height: 30px;
+      padding: 4px 8px;
+      border-color: rgba(102, 117, 142, 0.72);
+      background: rgba(48, 58, 73, 0.62);
+      color: var(--text-soft);
+      font-size: 0.64rem;
       font-weight: 760;
       white-space: nowrap;
+      letter-spacing: 0.01em;
     }
-    .language-switcher button.is-active {
-      border-color: #687796;
-      background: #3b4658;
+    .language-cycle:hover:not(:disabled) {
+      background: var(--surface-3);
       color: var(--text);
     }
-    .onboarding-language {
-      margin: 0 0 16px;
-      width: max-content;
-      max-width: 100%;
-      flex-wrap: wrap;
+    .onboarding-top-actions {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex: 0 0 auto;
+    }
+    .onboarding-top-actions .language-cycle {
+      max-width: 130px;
     }
     .icon-button {
       width: 34px;
@@ -999,14 +993,8 @@
         <span id="entitySelected" class="selection-chip">entity: none</span>
       </div>
       <div class="header-actions">
-        <div class="language-switcher" role="group" aria-label="Language" data-i18n-aria-label="language.label">
-          <button type="button" data-language="en" aria-pressed="true">EN</button>
-          <button type="button" data-language="ja" aria-pressed="false">日本語</button>
-          <button type="button" data-language="zh-Hans" aria-pressed="false">简中</button>
-          <button type="button" data-language="zh-Hant" aria-pressed="false">繁中</button>
-          <button type="button" data-language="ko" aria-pressed="false">한국어</button>
-        </div>
         <button id="returnEdit" type="button" disabled data-i18n="action.returnEdit">← Edit</button>
+        <button id="languageCycle" class="language-cycle" type="button" data-language-cycle>EN → 日本語</button>
         <button id="guide" class="secondary-accent icon-button" type="button" title="Open guide" aria-label="Open guide" data-i18n-title="action.guide" data-i18n-aria-label="action.guide">?</button>
       </div>
     </header>
@@ -1174,16 +1162,12 @@
           <p id="onboardingEyebrow">Describe. Edit. Play.</p>
           <h1 id="onboardingTitle">Welcome to Dungeon Architect AI</h1>
         </div>
-        <button id="onboardingClose" type="button" aria-label="Close guide" data-i18n-aria-label="onboarding.close">×</button>
+        <div class="onboarding-top-actions">
+          <button id="onboardingLanguageCycle" class="language-cycle" type="button" data-language-cycle>EN → 日本語</button>
+          <button id="onboardingClose" type="button" aria-label="Close guide" data-i18n-aria-label="onboarding.close">×</button>
+        </div>
       </div>
       <p id="onboardingBody"></p>
-      <div class="language-switcher onboarding-language" role="group" aria-label="Language" data-i18n-aria-label="language.label">
-        <button type="button" data-language="en" aria-pressed="true">EN</button>
-        <button type="button" data-language="ja" aria-pressed="false">日本語</button>
-        <button type="button" data-language="zh-Hans" aria-pressed="false">简中</button>
-        <button type="button" data-language="zh-Hant" aria-pressed="false">繁中</button>
-        <button type="button" data-language="ko" aria-pressed="false">한국어</button>
-      </div>
       <div class="onboarding-footer">
         <span id="onboardingProgress">1 / 5</span>
         <button id="onboardingBack" type="button" data-i18n="onboarding.back">Back</button>
