@@ -211,6 +211,19 @@ function snapshotState() {
     pathCheckResult: pathCheckResult ? clone(pathCheckResult) : null,
     naturalEditBusy,
     lastNaturalEditCommand: lastNaturalEditCommand ? { ...lastNaturalEditCommand } : null,
+    corridorDraftPreview: corridorDraft?.preview
+      ? {
+          state: corridorDraft.preview.state,
+          targetRoomId: corridorDraft.preview.targetRoomId ?? null,
+          targetSide: corridorDraft.preview.targetSide ?? null,
+          previewTargetSide: corridorDraft.preview.previewTargetSide ?? null,
+          routedFromSide: corridorDraft.preview.routedFromSide ?? null,
+          routedToSide: corridorDraft.preview.routedToSide ?? null,
+          commitCorridorId: corridorDraft.preview.commitCorridorId ?? null,
+          hasCommitCommand: Boolean(corridorDraft.preview.commitCommand),
+          blockedCode: corridorDraft.preview.blockedCode ?? null,
+        }
+      : null,
     play: currentPlayState(),
     playSource,
     result: lastPlayResult ? clone(lastPlayResult) : null,
