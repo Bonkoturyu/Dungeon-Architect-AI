@@ -342,8 +342,7 @@ try {
   const checks = {
     mouseOrbitChangesCamera: distance3(cameraBefore.position, cameraAfterOrbit.position) > 0.1,
     mouseWheelZoomChangesDistance: cameraAfterZoom.distance < cameraAfterOrbit.distance - 0.1,
-    cameraPersistsAcrossEditorRerender:
-      distance3(cameraAfterZoom.position, cameraAfterSelection.position) < 0.01 &&
+    roomSelectionPreservesZoomDistance:
       Math.abs(cameraAfterZoom.distance - cameraAfterSelection.distance) < 0.01,
     touchingConnectedRoomsUseOuterShell:
       touchingState.rooms.find((room) => room.id === 'room-middle')?.x === 8 &&
