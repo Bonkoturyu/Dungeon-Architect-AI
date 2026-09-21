@@ -673,6 +673,7 @@ function updateUi() {
   }
   const protectedRoom = room && authoringSpec().entities.some((item) =>
     item.roomId === room.id && ['start', 'goal'].includes(item.type));
+  removeRoomButton.hidden = !room;
   removeRoomButton.disabled = !editing || authoringBusy || !room || protectedRoom;
   corridorSelect.disabled = !editing || authoringBusy;
   corridorFromSide.disabled = !editing || authoringBusy || !corridor;
