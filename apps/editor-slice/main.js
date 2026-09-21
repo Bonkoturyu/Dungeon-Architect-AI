@@ -332,6 +332,7 @@ function ensureEntityOptions() {
     button.type = 'button';
     button.className = `entity-card${selectedEntityId === entity.id ? ' is-selected' : ''}`;
     button.dataset.entityId = entity.id;
+    button.dataset.kind = entity.type;
 
     const icon = document.createElement('span');
     icon.className = 'entity-icon';
