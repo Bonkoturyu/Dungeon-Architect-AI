@@ -145,6 +145,13 @@ The owner review replaces the previous left-drag orbit interaction with an edito
 - Collision with an existing Corridor / invalid target produces an error instead of silently creating invalid geometry.
 - Dragging from an existing Corridor endpoint temporarily replaces its rendered Corridor with the draft appearance; successful release reconnects the same Corridor ID as one undoable edit.
 
+Mystery → Edit continuity:
+
+- Test mode remains a temporary play session over the current authored dungeon; returning to Edit keeps the existing Edit document.
+- Mystery mode is a generated alternate dungeon. Returning to Edit from Mystery adopts that exact played snapshot as the new editable document, including when returning after the Result screen.
+- The adopted Mystery document starts a fresh Edit undo/redo history rather than allowing Undo to jump back into the previously authored dungeon.
+- Mystery adoption removes authoring concealment and stale path highlighting, and updates generation metadata to the adopted Mystery seed/profile.
+
 Result/Play summary alignment:
 
 - the header mode badge label is visually centered inside its pill while the status dot is positioned independently with explicit clearance from the text;
