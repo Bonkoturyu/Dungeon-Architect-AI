@@ -147,9 +147,16 @@ The owner review replaces the previous left-drag orbit interaction with an edito
 
 Result/Play summary alignment:
 
-- the header mode badge label is visually centered inside its pill while the status dot is positioned independently;
+- the header mode badge label is visually centered inside its pill while the status dot is positioned independently with explicit clearance from the text;
 - the Play/Result summary row centers the mode label together with MOVE/MAP metrics within the floating result card;
-- the result banner and result metrics remain centered below that summary row.
+- the result banner and result metrics remain centered below that summary row;
+- the return-to-editor action uses a solid `◀` glyph for better legibility than the thin left arrow.
+
+Entity inspector vertical rhythm:
+
+- the Move/Remove action row is separated from the new-Entity controls by 16px;
+- the `＋ Type` label uses a larger label-to-select gap and readable line height;
+- the selector-to-`＋ Add` spacing is kept consistent with the surrounding inspector rhythm.
 
 The temporary Corridor uses distinct visual states:
 
