@@ -425,10 +425,43 @@
       letter-spacing: 0.05em;
     }
 
+    .goal-check-card {
+      margin: 0 0 12px;
+      padding: 11px;
+      border: 1px solid rgba(120, 216, 154, 0.42);
+      border-radius: 12px;
+      background: rgba(28, 39, 34, 0.7);
+    }
+    .goal-check-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .goal-check-top strong {
+      margin-right: auto;
+      font-size: 0.76rem;
+      letter-spacing: 0.04em;
+    }
+    .goal-check-card #validationStatus { flex: 0 0 auto; }
+    .goal-check-card #checkPath { width: 100%; }
+    .goal-check-card #pathStatus { margin-top: 7px; }
+
     .room-size-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
+    }
+    .size-stepper {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr) 34px;
+      gap: 5px;
+      align-items: center;
+    }
+    .size-stepper button {
+      min-width: 34px;
+      padding: 0;
+      font-size: 1rem;
     }
     .room-size-grid input {
       width: 100%;
@@ -438,6 +471,13 @@
       border-radius: var(--radius-sm);
       background: var(--surface-3);
       color: var(--text);
+      text-align: center;
+    }
+    .resize-note {
+      margin: -3px 0 8px;
+      color: var(--text-muted);
+      font-size: 0.66rem;
+      line-height: 1.35;
     }
     #roomSelect { width: 100%; min-height: 118px; padding: 5px; }
     #entitySelect { min-height: 36px; }
@@ -637,12 +677,60 @@
       box-shadow: 0 0 0 1px rgba(120, 216, 154, 0.07), var(--shadow);
     }
 
+    .viewport-notice {
+      position: absolute;
+      z-index: 12;
+      top: 54px;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: min(560px, calc(100% - 32px));
+      padding: 8px 12px;
+      border: 1px solid rgba(255, 158, 158, 0.58);
+      border-radius: 9px;
+      background: rgba(84, 38, 42, 0.94);
+      color: #ffe0e0;
+      font-size: 0.74rem;
+      font-weight: 760;
+      box-shadow: var(--shadow);
+      pointer-events: none;
+    }
+    .play-reticle {
+      position: absolute;
+      z-index: 3;
+      left: 50%;
+      top: 50%;
+      width: 22px;
+      height: 22px;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+    .play-reticle::before,
+    .play-reticle::after {
+      content: "";
+      position: absolute;
+      background: rgba(230, 242, 255, 0.9);
+      box-shadow: 0 0 5px rgba(0,0,0,0.7);
+    }
+    .play-reticle::before {
+      left: 10px;
+      top: 2px;
+      width: 2px;
+      height: 18px;
+    }
+    .play-reticle::after {
+      left: 2px;
+      top: 10px;
+      width: 18px;
+      height: 2px;
+    }
+
     .room-events {
       position: absolute;
       z-index: 4;
-      left: 18px;
-      bottom: 18px;
-      width: min(310px, calc(100% - 36px));
+      left: 50%;
+      top: calc(50% + 34px);
+      transform: translateX(-50%);
+      width: min(390px, calc(100% - 36px));
       padding: 9px;
       border: 1px solid rgba(113, 128, 153, 0.5);
       border-radius: 14px;
@@ -853,10 +941,12 @@
       }
       .viewport-label { top: 10px; left: 10px; }
       .room-events {
-        left: 10px;
-        right: 10px;
-        bottom: 10px;
-        width: auto;
+        left: 50%;
+        right: auto;
+        top: calc(50% + 34px);
+        bottom: auto;
+        width: min(360px, calc(100% - 20px));
+        transform: translateX(-50%);
       }
     }
   </style>
@@ -898,6 +988,8 @@
           <span id="viewportHelp">Select · Arrow keys move</span>
         </div>
         <canvas id="renderCanvas" tabindex="0"></canvas>
+        <div id="viewportNotice" class="viewport-notice" hidden></div>
+        <div id="playReticle" class="play-reticle" hidden aria-hidden="true"></div>
         <div id="authoringPreviewCover" class="preview-cover" hidden>
           <div class="preview-cover-card">
             <strong>Dungeon generated</strong>
@@ -915,6 +1007,15 @@
       </section>
 
       <aside>
+        <section class="goal-check-card editor-only" aria-label="Goal path validation">
+          <div class="goal-check-top">
+            <strong>✓ Goal Check</strong>
+            <span id="validationStatus" data-state="blocked">Checking…</span>
+          </div>
+          <button id="checkPath" class="secondary-accent" type="button">Check Start → Goal</button>
+          <div id="pathStatus" class="path-status">Path not checked.</div>
+        </section>
+
         <nav class="workflow-tabs editor-only" aria-label="Authoring workflow">
           <button class="workflow-tab is-active" type="button" data-workflow-tab="create" aria-selected="true">✨ Create</button>
           <button class="workflow-tab" type="button" data-workflow-tab="edit" aria-selected="false">✎ Edit</button>
@@ -939,7 +1040,6 @@
         </fieldset>
 
         <fieldset class="panel-play" data-workflow-panel="play" aria-label="Play dungeon">
-          <span id="validationStatus" data-state="blocked">Checking…</span>
           <div class="play-choice-row editor-only">
             <button id="start" class="primary-action" type="button" disabled title="Play the dungeon currently shown in Edit mode.">▶ Test</button>
             <button id="mysteryPlay" class="mystery-action" type="button" disabled title="Generate a fresh hidden dungeon from the same design intent.">🎲 Mystery</button>
@@ -966,16 +1066,23 @@
           <div class="room-size-grid">
             <label>
               Width
-              <input id="roomWidth" type="number" min="1" step="1" aria-label="Room width">
+              <span class="size-stepper">
+                <button id="roomWidthMinus" type="button" aria-label="Decrease room width">−</button>
+                <input id="roomWidth" type="number" min="1" step="1" aria-label="Room width">
+                <button id="roomWidthPlus" type="button" aria-label="Increase room width">＋</button>
+              </span>
             </label>
             <label>
               Depth
-              <input id="roomDepth" type="number" min="1" step="1" aria-label="Room depth">
+              <span class="size-stepper">
+                <button id="roomDepthMinus" type="button" aria-label="Decrease room depth">−</button>
+                <input id="roomDepth" type="number" min="1" step="1" aria-label="Room depth">
+                <button id="roomDepthPlus" type="button" aria-label="Increase room depth">＋</button>
+              </span>
             </label>
           </div>
-          <button id="resizeRoom" class="wide-action" type="button" disabled>Resize selected room</button>
-          <button id="checkPath" class="wide-action secondary-accent" type="button">Check Start → Goal path</button>
-          <div id="pathStatus" class="path-status">Path not checked.</div>
+          <p class="resize-note">Use − / ＋ for 1-unit steps, or type a size, then Apply. Overlapping rooms are blocked.</p>
+          <button id="resizeRoom" class="wide-action" type="button" disabled>Apply room size</button>
         </fieldset>
 
         <fieldset class="editor-only" data-workflow-panel="edit">
