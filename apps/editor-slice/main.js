@@ -371,6 +371,83 @@ function ensureEntityOptions() {
   }
 }
 
+function corridorLabel(corridor) {
+  const from = corridor.fromSide ? corridor.fromSide.toUpperCase() : 'AUTO';
+  const to = corridor.toSide ? corridor.toSide.toUpperCase() : 'AUTO';
+  return `${corridor.id} · ${corridor.fromRoomId} [${from}] → ${corridor.toRoomId} [${to}]`;
+}
+
+function ensureCorridorOptions() {
+  const spec = authoringSpec();
+  const rooms = spec.rooms;
+  const corridors = spec.corridors;
+
+  corridorSelect.replaceChildren(...corridors.map((corridor) => {
+    const option = document.createElement('option');
+    option.value = corridor.id;
+    option.textContent = corridorLabel(corridor);
+    return option;
+  }));
+
+  const roomOptions = rooms.map((room) => {
+    const option = document.createElement('option');
+    option.value = room.id;
+    option.textContent = roomLabel(room.id);
+    return option;
+  });
+  corridorFromRoom.replaceChildren(...roomOptions.map((option) => option.cloneNode(true)));
+  corridorToRoom.replaceChildren(...roomOptions.map((option) => option.cloneNode(true)));
+
+  const corridor = selectedCorridor();
+  if (corridor) {
+    corridorSelect.value = corridor.id;
+    corridorFromSide.value = corridor.fromSide ?? 'auto';
+    corridorToSide.value = corridor.toSide ?? 'auto';
+  } else {
+    corridorSelect.selectedIndex = -1;
+    corridorFromSide.value = 'auto';
+    corridorToSide.value = 'auto';
+  }
+
+  if (selectedRoomId && rooms.some((room) => room.id === selectedRoomId)) {
+    corridorFromRoom.value = selectedRoomId;
+  } else if (rooms.length > 0) {
+    corridorFromRoom.value = rooms[0].id;
+  }
+
+  if (!corridorToRoom.value || corridorToRoom.value === corridorFromRoom.value) {
+    const alternative = rooms.find((room) => room.id !== corridorFromRoom.value);
+    corridorToRoom.value = alternative?.id ?? corridorFromRoom.value ?? '';
+  }
+}
+
+function selectCorridor(corridorId) {
+  if (mode !== 'edit') return false;
+  const corridor = corridorId
+    ? authoringSpec().corridors.find((item) => item.id === corridorId)
+    : null;
+
+  if (!corridor) {
+    selectedCorridorId = null;
+    corridorSelect.selectedIndex = -1;
+    adapter.setSelectedSpecId(null);
+    updateUi();
+    return false;
+  }
+
+  selectedCorridorId = corridor.id;
+  selectedRoomId = null;
+  selectedEntityId = null;
+  setWorkflowTab('edit');
+  ensureRoomOptions();
+  ensureEntityOptions();
+  ensureCorridorOptions();
+  adapter.setSelectedSpecId(corridor.id);
+  adapter.setContextSpecId(null);
+  updateUi();
+  return true;
+}
+
 function renderEditContextHud() {
   if (!selectionOverlay || !roomContentsOverlay || !roomContentsRoom || !roomContentsItems) return;
 
