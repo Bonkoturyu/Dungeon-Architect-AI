@@ -313,10 +313,9 @@ export function buildCorridorDragPreview(spec, {
   if (targetRoomId && targetRoomId !== sourceRoomId) {
     const targetRoom = spec.rooms.find((room) => room.id === targetRoomId);
     if (targetRoom) {
-      const effectiveTargetSide = CARDINAL_SIDES.includes(targetSide)
-        ? targetSide
-        : facingRoomSide(targetRoom, sourceRoom);
-      const targetDoor = roomDoorPoint(targetRoom, effectiveTargetSide);
+      const explicitTargetSide = CARDINAL_SIDES.includes(targetSide) ? targetSide : null;
+      const previewTargetSide = explicitTargetSide ?? facingRoomSide(targetRoom, sourceRoom);
+      const targetDoor = roomDoorPoint(targetRoom, previewTargetSide);
       const targetedPoints = buildPointerPath(sourceDoor, sourceSide, targetDoor, width);
       const duplicate = spec.corridors.find((corridor) =>
         corridor.id !== existingCorridorId &&
@@ -331,7 +330,8 @@ export function buildCorridorDragPreview(spec, {
           sourceRoomId,
           sourceSide,
           targetRoomId: targetRoom.id,
-          targetSide: effectiveTargetSide,
+          targetSide: explicitTargetSide,
+          previewTargetSide,
           state: 'blocked',
           blockedCode: 'DUPLICATE_CORRIDOR',
           blockedCorridorId: duplicate.id,
@@ -348,7 +348,8 @@ export function buildCorridorDragPreview(spec, {
         sourceRoomId,
         sourceSide,
         targetRoomId: targetRoom.id,
-        targetSide: effectiveTargetSide,
+        targetSide: explicitTargetSide,
+        previewTargetSide,
         state: 'ready',
         blockedCode: null,
         blockedCorridorId: null,
