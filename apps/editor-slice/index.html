@@ -126,9 +126,6 @@
     }
     body[data-mode="play"] .mode-badge::before { background: var(--success); box-shadow: 0 0 0 3px rgba(120, 216, 154, 0.12); }
     body[data-mode="result"] .mode-badge::before { background: var(--warning); box-shadow: 0 0 0 3px rgba(232, 198, 122, 0.12); }
-    .mode-badge::after { content: "Edit mode"; }
-    body[data-mode="play"] .mode-badge::after { content: "Play mode"; }
-    body[data-mode="result"] .mode-badge::after { content: "Result"; }
 
     #status, #selected, #entitySelected, #editStatus, #validationStatus, #playStatus, #resultStatus, #generationStatus, #naturalEditStatus {
       font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
@@ -175,6 +172,37 @@
       align-items: center;
       gap: 8px;
       margin-left: 0;
+    }
+    .language-switcher {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      padding: 3px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: rgba(22, 28, 37, 0.66);
+    }
+    .language-switcher button {
+      min-width: 31px;
+      min-height: 28px;
+      padding: 3px 6px;
+      border-color: transparent;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.66rem;
+      font-weight: 760;
+      white-space: nowrap;
+    }
+    .language-switcher button.is-active {
+      border-color: #687796;
+      background: #3b4658;
+      color: var(--text);
+    }
+    .onboarding-language {
+      margin: 0 0 16px;
+      width: max-content;
+      max-width: 100%;
+      flex-wrap: wrap;
     }
     .icon-button {
       width: 34px;
@@ -961,53 +989,60 @@
   <main>
     <header class="app-header">
       <div class="brand-block">
-        <span class="brand-eyebrow">Describe · Build · Explore</span>
+        <span class="brand-eyebrow" data-i18n="app.tagline">Describe · Build · Explore</span>
         <h1 class="brand-title">Dungeon Architect AI</h1>
       </div>
-      <span class="mode-badge" aria-hidden="true"></span>
+      <span id="modeBadge" class="mode-badge" aria-live="polite">Edit mode</span>
       <span id="status">loading</span>
       <div class="selection-strip" aria-label="Current selection">
         <span id="selected" class="selection-chip">room: none</span>
         <span id="entitySelected" class="selection-chip">entity: none</span>
       </div>
       <div class="header-actions">
-        <button id="returnEdit" type="button" disabled>← Edit</button>
-        <button id="guide" class="secondary-accent icon-button" type="button" title="Guide" aria-label="Open guide">?</button>
+        <div class="language-switcher" role="group" aria-label="Language" data-i18n-aria-label="language.label">
+          <button type="button" data-language="en" aria-pressed="true">EN</button>
+          <button type="button" data-language="ja" aria-pressed="false">日本語</button>
+          <button type="button" data-language="zh-Hans" aria-pressed="false">简中</button>
+          <button type="button" data-language="zh-Hant" aria-pressed="false">繁中</button>
+          <button type="button" data-language="ko" aria-pressed="false">한국어</button>
+        </div>
+        <button id="returnEdit" type="button" disabled data-i18n="action.returnEdit">← Edit</button>
+        <button id="guide" class="secondary-accent icon-button" type="button" title="Open guide" aria-label="Open guide" data-i18n-title="action.guide" data-i18n-aria-label="action.guide">?</button>
       </div>
     </header>
 
     <div class="toolbar">
       <div class="toolbar-group history-group" aria-label="History">
-        <button id="undo" type="button" disabled>Undo</button>
-        <button id="redo" type="button" disabled>Redo</button>
+        <button id="undo" type="button" disabled data-i18n="action.undo">Undo</button>
+        <button id="redo" type="button" disabled data-i18n="action.redo">Redo</button>
       </div>
       <span id="editStatus" hidden></span>
       <span id="hint" hidden>Edit: select rooms or use the inspector. Play: choose directional exits.</span>
     </div>
 
-    <p id="mobileScopeNotice" class="scope-notice" role="note">Desktop demo target: mobile/narrow layouts are best-effort only and are not a supported judging target for this hackathon build. Use desktop Chrome for evaluation.</p>
+    <p id="mobileScopeNotice" class="scope-notice" role="note" data-i18n="mobile.notice">Desktop demo target: mobile/narrow layouts are best-effort only and are not a supported judging target for this hackathon build. Use desktop Chrome for evaluation.</p>
 
     <div class="workspace">
       <section class="viewport-shell" aria-label="Dungeon viewport">
         <div class="viewport-label">
-          <strong id="viewportTitle">3D Dungeon</strong>
-          <span id="viewportHelp">Select · Arrow keys move</span>
+          <strong id="viewportTitle" data-i18n="viewport.editTitle">3D Dungeon</strong>
+          <span id="viewportHelp" data-i18n="viewport.editHelp">Drag orbit · Wheel zoom · WASD / Arrow keys move</span>
         </div>
         <canvas id="renderCanvas" tabindex="0"></canvas>
         <div id="viewportNotice" class="viewport-notice" hidden></div>
         <div id="playReticle" class="play-reticle" hidden aria-hidden="true"></div>
         <div id="authoringPreviewCover" class="preview-cover" hidden>
           <div class="preview-cover-card">
-            <strong>Dungeon generated</strong>
-            <span>Choose Edit to reveal the authored layout, ▶ Test to explore this dungeon unseen, or 🎲 Mystery for a fresh hidden dungeon.</span>
+            <strong data-i18n="preview.title">Dungeon generated</strong>
+            <span data-i18n="preview.body">Choose Edit to reveal the authored layout, ▶ Test to explore this dungeon unseen, or 🎲 Mystery for a fresh hidden dungeon.</span>
           </div>
         </div>
         <div id="roomEventBar" class="room-events" hidden>
-          <span class="room-event-heading">ROOM</span>
+          <span class="room-event-heading" data-i18n="roomEvent.heading">ROOM</span>
           <div id="roomEventItems"></div>
         </div>
         <div id="playExitBar" class="play-exits" hidden>
-          <span class="exit-prompt">CHOOSE EXIT</span>
+          <span class="exit-prompt" data-i18n="exit.choose">CHOOSE EXIT</span>
           <div id="playExitButtons" aria-label="Available exits"></div>
         </div>
       </section>
@@ -1015,63 +1050,101 @@
       <aside>
         <section class="goal-check-card editor-only" aria-label="Goal path validation">
           <div class="goal-check-top">
-            <strong>✓ Goal Check</strong>
+            <strong data-i18n="goal.title">✓ Goal Check</strong>
             <span id="validationStatus" data-state="blocked">Checking…</span>
           </div>
-          <button id="checkPath" class="secondary-accent" type="button">Check Start → Goal</button>
-          <div id="pathStatus" class="path-status">Path not checked.</div>
+          <button id="checkPath" class="secondary-accent" type="button" data-i18n="goal.check">Check Start → Goal</button>
+          <div id="pathStatus" class="path-status" data-i18n="goal.none">Path not checked.</div>
         </section>
 
         <nav class="workflow-tabs editor-only" aria-label="Authoring workflow">
-          <button class="workflow-tab is-active" type="button" data-workflow-tab="create" aria-selected="true">✨ Create</button>
-          <button class="workflow-tab" type="button" data-workflow-tab="edit" aria-selected="false">✎ Edit</button>
-          <button class="workflow-tab" type="button" data-workflow-tab="play" aria-selected="false">▶ Play</button>
+          <button class="workflow-tab is-active" type="button" data-workflow-tab="create" aria-selected="true" data-i18n="tabs.create">✨ Create</button>
+          <button class="workflow-tab" type="button" data-workflow-tab="edit" aria-selected="false" data-i18n="tabs.edit">✎ Edit</button>
+          <button class="workflow-tab" type="button" data-workflow-tab="play" aria-selected="false" data-i18n="tabs.play">▶ Play</button>
         </nav>
 
         <fieldset class="panel-primary editor-only" data-workflow-panel="create" aria-label="Create dungeon">
           
-          <p class="create-hint">Describe → Generate</p>
+          <p class="create-hint" data-i18n="create.hint">Describe → Generate</p>
           <label>
-            Prompt
-            <textarea id="generationPrompt" aria-label="Dungeon generation request" placeholder="Create a fair but tense 5-minute dungeon with exploration and a few dangerous rewards."></textarea>
+            <span data-i18n="create.prompt">Prompt</span>
+            <textarea id="generationPrompt" aria-label="Dungeon generation request" placeholder="Create a fair but tense 5-minute dungeon with exploration and a few dangerous rewards." data-i18n-placeholder="create.placeholder"></textarea>
           </label>
-          <button id="generateDungeon" class="primary-action wide-action" type="button">Generate</button>
+          <button id="generateDungeon" class="primary-action wide-action" type="button" data-i18n="create.generate">Generate</button>
           <p id="generationStatus" class="muted" aria-live="polite"></p>
           <div class="prompt-history">
-            <p class="section-caption">Prompt history · this session</p>
+            <p class="section-caption" data-i18n="create.history">Prompt history · this session</p>
             <div id="generationHistory" class="prompt-history-list">
-              <span class="muted">No prompts yet.</span>
+              <span class="muted" data-i18n="create.historyEmpty">No prompts yet.</span>
             </div>
           </div>
         </fieldset>
 
         <fieldset class="panel-play" data-workflow-panel="play" aria-label="Play dungeon">
           <div class="play-choice-row editor-only">
-            <button id="start" class="primary-action" type="button" disabled title="Play the dungeon currently shown in Edit mode.">▶ Test</button>
-            <button id="mysteryPlay" class="mystery-action" type="button" disabled title="Generate a fresh hidden dungeon from the same design intent.">🎲 Mystery</button>
+            <button id="start" class="primary-action" type="button" disabled title="Play the dungeon currently shown in Edit mode." data-i18n="play.test" data-i18n-title="play.testTitle">▶ Test</button>
+            <button id="mysteryPlay" class="mystery-action" type="button" disabled title="Generate a fresh hidden dungeon from the same design intent." data-i18n="play.mystery">🎲 Mystery</button>
           </div>
-          <p class="mode-note editor-only">Test = current · Mystery = unseen</p>
+          <p class="mode-note editor-only" data-i18n="play.note">Test = current · Mystery = unseen</p>
           <div class="play-summary">
             <span id="playModeLabel" class="play-mode-pill" hidden></span>
             <div id="playStatus" class="play-metrics" aria-live="polite">
-              <span class="metric"><span class="metric-label">MOVE</span><span id="moveCount">0</span></span>
-              <span class="metric"><span class="metric-label">MAP</span><span id="mappedCount">0</span></span>
+              <span class="metric"><span class="metric-label" data-i18n="play.move">MOVE</span><span id="moveCount">0</span></span>
+              <span class="metric"><span class="metric-label" data-i18n="play.map">MAP</span><span id="mappedCount">0</span></span>
             </div>
           </div>
           <p id="resultStatus" class="result-banner" aria-live="polite" hidden></p>
           <div id="resultMetrics" class="result-metrics" hidden></div>
         </fieldset>
 
-        <fieldset class="editor-only" data-workflow-panel="edit">
-          <legend>▦ Rooms</legend>
-          <p class="panel-kicker">Select a room in 3D or from this list. Drag the 3D view to orbit; use the mouse wheel to zoom. Move selected rooms with Arrow keys or WASD.</p>
+        <fieldset class="panel-ai editor-only" data-workflow-panel="edit">
+          <legend data-i18n="ai.title">✦ AI Request</legend>
           <label>
-            Rooms
+            <span data-i18n="ai.request">Request</span>
+            <textarea id="naturalEditInput" aria-label="Natural-language edit request" placeholder="Move the treasure to the room that contains the goal." data-i18n-placeholder="ai.placeholder"></textarea>
+          </label>
+          <button id="applyNaturalEdit" class="wide-action" type="button" data-i18n="ai.apply">✦ Apply</button>
+          <p id="naturalEditStatus" class="muted" aria-live="polite"></p>
+        </fieldset>
+
+        <fieldset class="editor-only" data-workflow-panel="edit">
+          <legend data-i18n="entities.title">✦ Entities</legend>
+          <p class="panel-kicker" data-i18n="entities.help">Select an entity card to highlight it and its room in 3D.</p>
+          <div id="entityCards" class="entity-card-list" aria-label="Entity cards"></div>
+          <label>
+            <span data-i18n="entities.selected">Selected entity</span>
+            <select id="entitySelect" aria-label="Existing entities"></select>
+          </label>
+          <label>
+            <span data-i18n="entities.room">Room</span>
+            <select id="entityRoom" aria-label="Target room"></select>
+          </label>
+          <div class="button-row">
+            <button id="moveEntity" type="button" disabled data-i18n="entities.move">Move to room</button>
+            <button id="removeEntity" class="danger-action" type="button" disabled data-i18n="entities.remove">Remove</button>
+          </div>
+          <label>
+            <span data-i18n="entities.type">＋ Type</span>
+            <select id="entityType" aria-label="New entity type">
+              <option value="enemy" data-i18n="entity.enemy">Enemy</option>
+              <option value="treasure" data-i18n="entity.treasure">Chest</option>
+              <option value="trap" data-i18n="entity.trap">Trap</option>
+              <option value="recovery" data-i18n="entity.recovery">Recovery</option>
+            </select>
+          </label>
+          <button id="addEntity" class="wide-action" type="button" data-i18n="entities.add">＋ Add</button>
+        </fieldset>
+
+        <fieldset class="editor-only" data-workflow-panel="edit">
+          <legend data-i18n="rooms.title">▦ Rooms</legend>
+          <p class="panel-kicker" data-i18n="rooms.help">Select a room in 3D or from this list. Drag the 3D view to orbit; use the mouse wheel to zoom. Move selected rooms with Arrow keys or WASD.</p>
+          <label>
+            <span data-i18n="rooms.list">Rooms</span>
             <select id="roomSelect" size="5" aria-label="Rooms"></select>
           </label>
           <div class="room-size-grid">
             <label>
-              Width
+              <span data-i18n="rooms.width">Width</span>
               <span class="size-stepper">
                 <button id="roomWidthMinus" type="button" aria-label="Decrease room width">−</button>
                 <input id="roomWidth" type="number" min="1" step="1" aria-label="Room width">
@@ -1079,7 +1152,7 @@
               </span>
             </label>
             <label>
-              Depth
+              <span data-i18n="rooms.depth">Depth</span>
               <span class="size-stepper">
                 <button id="roomDepthMinus" type="button" aria-label="Decrease room depth">−</button>
                 <input id="roomDepth" type="number" min="1" step="1" aria-label="Room depth">
@@ -1087,49 +1160,8 @@
               </span>
             </label>
           </div>
-          <p class="resize-note">Use − / ＋ for 1-unit steps, or type a size, then Apply. Overlapping rooms are blocked.</p>
-          <button id="resizeRoom" class="wide-action" type="button" disabled>Apply room size</button>
-        </fieldset>
-
-        <fieldset class="editor-only" data-workflow-panel="edit">
-          <legend>✦ Entities</legend>
-          
-          <p class="panel-kicker">Select an entity card to highlight it in 3D.</p>
-          <div id="entityCards" class="entity-card-list" aria-label="Entity cards"></div>
-          <label>
-            Selected entity
-            <select id="entitySelect" aria-label="Existing entities"></select>
-          </label>
-          <label>
-            Room
-            <select id="entityRoom" aria-label="Target room"></select>
-          </label>
-          <div class="button-row">
-            <button id="moveEntity" type="button" disabled>Move to room</button>
-            <button id="removeEntity" class="danger-action" type="button" disabled>Remove</button>
-          </div>
-          
-          <label>
-            ＋ Type
-            <select id="entityType" aria-label="New entity type">
-              <option value="enemy">Enemy</option>
-              <option value="treasure">Treasure</option>
-              <option value="trap">Trap</option>
-              <option value="recovery">Recovery</option>
-            </select>
-          </label>
-          <button id="addEntity" class="wide-action" type="button">＋ Add</button>
-        </fieldset>
-
-        <fieldset class="panel-ai editor-only" data-workflow-panel="edit">
-          <legend>✦ AI Edit</legend>
-          
-          <label>
-            Request
-            <textarea id="naturalEditInput" aria-label="Natural-language edit request" placeholder="Move the treasure to the room that contains the goal."></textarea>
-          </label>
-          <button id="applyNaturalEdit" class="wide-action" type="button">✦ Apply</button>
-          <p id="naturalEditStatus" class="muted" aria-live="polite"></p>
+          <p class="resize-note" data-i18n="rooms.resizeNote">Use − / ＋ for 1-unit steps, or type a size, then Apply. Overlapping rooms are blocked.</p>
+          <button id="resizeRoom" class="wide-action" type="button" disabled data-i18n="rooms.apply">Apply room size</button>
         </fieldset>
       </aside>
     </div>
@@ -1142,13 +1174,20 @@
           <p id="onboardingEyebrow">Describe. Edit. Play.</p>
           <h1 id="onboardingTitle">Welcome to Dungeon Architect AI</h1>
         </div>
-        <button id="onboardingClose" type="button" aria-label="Close guide">×</button>
+        <button id="onboardingClose" type="button" aria-label="Close guide" data-i18n-aria-label="onboarding.close">×</button>
       </div>
       <p id="onboardingBody"></p>
+      <div class="language-switcher onboarding-language" role="group" aria-label="Language" data-i18n-aria-label="language.label">
+        <button type="button" data-language="en" aria-pressed="true">EN</button>
+        <button type="button" data-language="ja" aria-pressed="false">日本語</button>
+        <button type="button" data-language="zh-Hans" aria-pressed="false">简中</button>
+        <button type="button" data-language="zh-Hant" aria-pressed="false">繁中</button>
+        <button type="button" data-language="ko" aria-pressed="false">한국어</button>
+      </div>
       <div class="onboarding-footer">
         <span id="onboardingProgress">1 / 5</span>
-        <button id="onboardingBack" type="button">Back</button>
-        <button id="onboardingNext" class="primary-action" type="button">Next</button>
+        <button id="onboardingBack" type="button" data-i18n="onboarding.back">Back</button>
+        <button id="onboardingNext" class="primary-action" type="button" data-i18n="onboarding.next">Next</button>
       </div>
     </div>
   </section>
