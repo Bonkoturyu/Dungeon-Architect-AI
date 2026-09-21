@@ -305,7 +305,15 @@ try {
     entityCount: generated.entities.length,
     provider: generated.lastGeneration?.selectedProvider ?? null,
   });
-  await wait(5000);
+  await wait(2200);
+
+  await page.click('[data-workflow-tab="edit"]');
+  await page.waitForFunction(() => {
+    const state = window.__DAI_EDITOR_SLICE__.getState();
+    return state.workflowTab === 'edit' && state.authoringPreviewConcealed === false;
+  });
+  mark('edit-revealed');
+  await wait(2200);
 
   const middleRoomId = generated.rooms[Math.floor(generated.rooms.length / 2)]?.id;
   if (middleRoomId) {

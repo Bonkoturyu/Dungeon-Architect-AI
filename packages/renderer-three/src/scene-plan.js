@@ -156,6 +156,77 @@ function corridorWallOpening(room, side, corridor, fromRoom, toRoom) {
   };
 }
 
+function sharedRoomBoundary(fromRoom, toRoom) {
+  const from = {
+    minX: fromRoom.x - fromRoom.width / 2,
+    maxX: fromRoom.x + fromRoom.width / 2,
+    minZ: fromRoom.z - fromRoom.depth / 2,
+    maxZ: fromRoom.z + fromRoom.depth / 2,
+  };
+  const to = {
+    minX: toRoom.x - toRoom.width / 2,
+    maxX: toRoom.x + toRoom.width / 2,
+    minZ: toRoom.z - toRoom.depth / 2,
+    maxZ: toRoom.z + toRoom.depth / 2,
+  };
+
+  function verticalBoundary(x, fromSide, toSide) {
+    const start = Math.max(from.minZ, to.minZ);
+    const end = Math.min(from.maxZ, to.maxZ);
+    if (end - start <= EPSILON) return null;
+    const center = (start + end) / 2;
+    return {
+      point: { x, z: center },
+      width: end - start,
+      fromDoor: {
+        roomId: fromRoom.id,
+        side: fromSide,
+        offset: center - fromRoom.z,
+      },
+      toDoor: {
+        roomId: toRoom.id,
+        side: toSide,
+        offset: center - toRoom.z,
+      },
+    };
+  }
+
+  function horizontalBoundary(z, fromSide, toSide) {
+    const start = Math.max(from.minX, to.minX);
+    const end = Math.min(from.maxX, to.maxX);
+    if (end - start <= EPSILON) return null;
+    const center = (start + end) / 2;
+    return {
+      point: { x: center, z },
+      width: end - start,
+      fromDoor: {
+        roomId: fromRoom.id,
+        side: fromSide,
+        offset: center - fromRoom.x,
+      },
+      toDoor: {
+        roomId: toRoom.id,
+        side: toSide,
+        offset: center - toRoom.x,
+      },
+    };
+  }
+
+  if (Math.abs(from.maxX - to.minX) <= EPSILON) {
+    return verticalBoundary(from.maxX, 'east', 'west');
+  }
+  if (Math.abs(from.minX - to.maxX) <= EPSILON) {
+    return verticalBoundary(from.minX, 'west', 'east');
+  }
+  if (Math.abs(from.maxZ - to.minZ) <= EPSILON) {
+    return horizontalBoundary(from.maxZ, 'south', 'north');
+  }
+  if (Math.abs(from.minZ - to.maxZ) <= EPSILON) {
+    return horizontalBoundary(from.minZ, 'north', 'south');
+  }
+  return null;
+}
+
 function collectDoorOpenings(spec, corridorRoutes) {
   const byRoom = new Map(spec.rooms.map((room) => [room.id, []]));
 
@@ -370,7 +441,75 @@ export function createDungeonScenePlan(spec, style = {}) {
 
   const config = { ...DEFAULT_SCENE_STYLE, ...style };
   const roomById = new Map(spec.rooms.map((room) => [room.id, room]));
-  const corridorRoutes = planOrthogonalCorridors(spec);
+  const touchingByCorridor = new Map();
+  const routedCorridors = [];
+
+  for (const corridor of spec.corridors) {
+    const fromRoom = roomById.get(corridor.fromRoomId);
+    const toRoom = roomById.get(corridor.toRoomId);
+    const shared = fromRoom && toRoom ? sharedRoomBoundary(fromRoom, toRoom) : null;
+    const sharedMatchesPreference =
+      shared &&
+      (!corridor.fromSide || corridor.fromSide === shared.fromDoor.side) &&
+      (!corridor.toSide || corridor.toSide === shared.toDoor.side);
+    if (sharedMatchesPreference) touchingByCorridor.set(corridor.id, shared);
+    else routedCorridors.push(corridor);
+  }
+
+  let corridorRoutes;
+  let routingFallbackUsed = false;
+  let routingFallbackMode = 'strict';
+
+  const routedSpec = {
+    ...spec,
+    corridors: routedCorridors,
+  };
+
+  const strictMargins = [8, 16, 32];
+  let strictError = null;
+  for (const outerMargin of strictMargins) {
+    try {
+      corridorRoutes = planOrthogonalCorridors(routedSpec, { outerMargin });
+      if (outerMargin !== strictMargins[0]) {
+        routingFallbackUsed = true;
+        routingFallbackMode = `strict-expanded-${outerMargin}`;
+      }
+      break;
+    } catch (error) {
+      strictError = error;
+    }
+  }
+
+  if (!corridorRoutes) {
+    try {
+      corridorRoutes = planOrthogonalCorridors(routedSpec, {
+        allowCrossings: true,
+        outerMargin: 32,
+      });
+      routingFallbackUsed = true;
+      routingFallbackMode = 'crossing-fallback';
+    } catch {
+      throw strictError;
+    }
+  }
+
+  for (const corridor of spec.corridors) {
+    const shared = touchingByCorridor.get(corridor.id);
+    if (!shared) continue;
+    corridorRoutes.set(corridor.id, {
+      corridorId: corridor.id,
+      points: [{ ...shared.point }],
+      fromDoor: {
+        ...shared.fromDoor,
+        width: shared.width,
+      },
+      toDoor: {
+        ...shared.toDoor,
+        width: shared.width,
+      },
+    });
+  }
+
   const doorOpeningsByRoom = collectDoorOpenings(spec, corridorRoutes);
   const roomGroups = spec.rooms.map((room) => buildRoomGroup(room, doorOpeningsByRoom.get(room.id) ?? [], config));
   const corridorGroups = [];
@@ -389,25 +528,37 @@ export function createDungeonScenePlan(spec, style = {}) {
       let from = { ...segment.from };
       let to = { ...segment.to };
 
-      if (!isFirst) {
+      const rawLength = Math.abs(to.x - from.x) + Math.abs(to.z - from.z);
+      const requestedStartTrim = isFirst ? 0 : halfWidth;
+      const requestedEndTrim = isLast ? 0 : halfWidth;
+      const requestedTrim = requestedStartTrim + requestedEndTrim;
+      const minimumVisibleLength = Math.min(0.25, rawLength * 0.25);
+      const maximumTrim = Math.max(0, rawLength - minimumVisibleLength);
+      const trimScale = requestedTrim > maximumTrim && requestedTrim > EPSILON
+        ? maximumTrim / requestedTrim
+        : 1;
+      const startTrim = requestedStartTrim * trimScale;
+      const endTrim = requestedEndTrim * trimScale;
+
+      if (startTrim > EPSILON) {
         if (segment.axis === 'x') {
-          from.x += Math.sign(to.x - from.x) * halfWidth;
+          from.x += Math.sign(to.x - from.x) * startTrim;
         } else {
-          from.z += Math.sign(to.z - from.z) * halfWidth;
+          from.z += Math.sign(to.z - from.z) * startTrim;
         }
       }
 
-      if (!isLast) {
+      if (endTrim > EPSILON) {
         if (segment.axis === 'x') {
-          to.x -= Math.sign(to.x - from.x) * halfWidth;
+          to.x -= Math.sign(to.x - from.x) * endTrim;
         } else {
-          to.z -= Math.sign(to.z - from.z) * halfWidth;
+          to.z -= Math.sign(to.z - from.z) * endTrim;
         }
       }
 
       const length = Math.abs(to.x - from.x) + Math.abs(to.z - from.z);
       if (length <= EPSILON) {
-        throw new Error(`Corridor ${corridor.id} segment ${index} is too short for a clean bend junction.`);
+        throw new Error(`Corridor ${corridor.id} segment ${index} collapsed during bend trimming.`);
       }
 
       const rotationY = segment.axis === 'x' ? 0 : -Math.PI / 2;
@@ -497,5 +648,7 @@ export function createDungeonScenePlan(spec, style = {}) {
     corridorGroups,
     markers,
     bounds: makeBounds(spec.rooms, corridorRoutes),
+    routingFallbackUsed,
+    routingFallbackMode,
   };
 }

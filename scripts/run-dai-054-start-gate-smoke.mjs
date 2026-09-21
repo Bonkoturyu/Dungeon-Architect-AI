@@ -38,7 +38,7 @@ function treasureRoom(state) {
 }
 
 function normalizedRooms(rooms) {
-  return rooms.map(({ id, x, z }) => ({ id, x, z }));
+  return rooms.map(({ id, x, z, width, depth }) => ({ id, x, z, width, depth }));
 }
 
 function normalizedEntities(entities) {
@@ -132,7 +132,7 @@ try {
   const afterReturn = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
 
   const snapshotMatchesAuthoringAtStart =
-    JSON.stringify(normalizedRooms(afterStart.play.snapshot.rooms)) === JSON.stringify(initial.rooms) &&
+    JSON.stringify(normalizedRooms(afterStart.play.snapshot.rooms)) === JSON.stringify(normalizedRooms(initial.rooms)) &&
     JSON.stringify(normalizedEntities(afterStart.play.snapshot.entities)) === JSON.stringify(initial.entities);
 
   const result = {

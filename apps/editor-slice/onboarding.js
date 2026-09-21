@@ -6,6 +6,12 @@ import {
   openOnboarding,
   previousOnboardingStep,
 } from '../../packages/onboarding/src/guide.js';
+import {
+  bindLanguageSwitchers,
+  getLanguage,
+  subscribeLanguage,
+  t,
+} from './i18n.js';
 
 const guideButton = document.querySelector('#guide');
 const dialog = document.querySelector('#onboarding');
@@ -24,18 +30,23 @@ function snapshot() {
     open: state.open,
     stepIndex: state.stepIndex,
     stepCount: state.stepCount,
+    language: getLanguage(),
     step: { ...currentOnboardingStep(state) },
   };
 }
 
 function render() {
   const step = currentOnboardingStep(state);
-  eyebrow.textContent = step.eyebrow;
-  title.textContent = step.title;
-  body.textContent = step.body;
+  eyebrow.textContent = t(`onboarding.${step.id}.eyebrow`);
+  title.textContent = t(`onboarding.${step.id}.title`);
+  body.textContent = t(`onboarding.${step.id}.body`);
   progress.textContent = `${state.stepIndex + 1} / ${state.stepCount}`;
   backButton.disabled = state.stepIndex === 0;
-  nextButton.textContent = state.stepIndex === state.stepCount - 1 ? 'Done' : 'Next';
+  backButton.textContent = t('onboarding.back');
+  nextButton.textContent = state.stepIndex === state.stepCount - 1
+    ? t('onboarding.done')
+    : t('onboarding.next');
+  closeButton.setAttribute('aria-label', t('onboarding.close'));
   dialog.hidden = !state.open;
   dialog.dataset.step = step.id;
   document.body.dataset.onboardingOpen = String(state.open);
@@ -67,6 +78,9 @@ function back() {
   render();
   return snapshot();
 }
+
+bindLanguageSwitchers(document);
+subscribeLanguage(() => render());
 
 guideButton.addEventListener('click', () => openGuide(0));
 closeButton.addEventListener('click', closeGuide);

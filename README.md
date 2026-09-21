@@ -48,7 +48,7 @@ Suggested natural-language edit:
 Move the treasure to the room that contains the goal.
 ```
 
-Then confirm `✓ Valid`, open **Play**, choose **▶ Test** (current authored dungeon) or **🎲 Mystery** (fresh hidden dungeon from the same DesignIntent), resolve any blocking Room Events, navigate with the directional **CHOOSE EXIT** pad until Goal, inspect `✓ CLEARED`, and use **← Edit**.
+Then confirm `✓ Valid`, open **Play**, choose **▶ Test** (current authored dungeon) or **🎲 Mystery** (fresh Seed that rerolls routes/content without revealing the authored map), resolve any blocking Room Events, navigate with the directional **CHOOSE EXIT** pad until Goal, inspect `✓ CLEARED`, and use **← Edit**. Generator V1 may still produce a similar room layout because its spatial embedding is fixed for a given room count.
 
 ## What is production-backed today
 
@@ -61,7 +61,8 @@ Then confirm `✓ Valid`, open **Play**, choose **▶ Test** (current authored d
 | Natural-language generation | OpenAI Responses cloud path + deterministic fallback → validated DesignIntent → bounded DungeonSpec mapping |
 | Play core | Session snapshot, Fog of War / auto-map, directional exits, enemy/treasure/trap/recovery Room Events, Test/Mystery play, clear/failure Result |
 | Natural-language edit | Live-tested constrained `move-entity` translation through server-side OpenAI path |
-| Edit mode | Room selection/movement, entity add/move/remove, Undo/Redo |
+| Edit mode | Room select/move/resize/add/remove; corridor add/remove + N/E/S/W endpoint-side editing; entity add/move/remove; Undo/Redo; Start→Goal route check |
+| UI languages | English (default), Japanese, Simplified Chinese, Traditional Chinese, Korean; live switching also available in onboarding |
 | Validation | Critical Play gate with structural/reachability checks |
 | Simulation | Deterministic simulator, shortest/greedy/cautious agents, metrics, intent-fit and explainable summary |
 | Hosting | Cloudflare Pages + Pages Functions / ADR-002 |
@@ -80,7 +81,7 @@ Key boundaries:
 - mobile is outside the supported submission acceptance scope;
 - no Safari/Firefox acceptance claim has been made;
 - there are no accounts, persistent project storage, analytics or telemetry;
-- the GitHub repository visibility switch remains a submission task. DAI-085–088 local polish gates are complete; the historical DAI-084 freeze remains a rollback point until the refreshed public demo/video are revalidated and a new final freeze is created.
+- the GitHub repository visibility switch remains a submission task. DAI-085 UI/UX polish is reopened for the 2026-09-21 owner-review revalidation; the historical DAI-084 freeze remains a rollback point until the refreshed public demo/video are revalidated and a new final freeze is created.
 
 ## Sample prompts
 
@@ -92,20 +93,30 @@ The repository also retains the frozen ten-case DesignIntent regression corpus a
 
 `spec/design-intent/fixtures/dai-045-prompt-regression-v1.json`
 
+## Generator versions and research
+
+The current production generator is frozen as **Generator Version 1**. Future generation methods are added as Version 2, Version 3, and so on without deleting or silently replacing earlier implementations.
+
+- [Generator version registry / Version 1 specification](docs/architecture/GENERATOR_VERSIONS.md)
+- [Dungeon generation algorithm research](docs/research/DUNGEON_GENERATION_ALGORITHMS.md)
+
+`DungeonSpec schemaVersion` and `Generator Version` are separate concepts: the same DungeonSpec schema may be produced by multiple generator versions.
+
 ## Architecture
 
 - `DesignIntent` represents normalized game-design intent.
 - `DungeonSpec` is renderer-independent serialized dungeon data.
 - Generator/Core produces deterministic structure and bounded intent-driven entities.
 - Editor mutations go through explicit `EditCommand` operations.
-- `▶ Test` creates a fixed execution snapshot of the current authored dungeon; `🎲 Mystery` creates a fresh hidden snapshot from the same validated DesignIntent.
+- `▶ Test` creates a fixed execution snapshot of the current authored dungeon; `🎲 Mystery` uses a fresh Seed so route/content choices can change without exposing the authoring map. Generator V1 can still keep a similar room layout; spatial variability is a future Generator Version concern.
 - Play Core does not directly mutate authoring state.
 - Three.js consumes the spec/snapshot through a disposable renderer adapter.
 - Cloudflare Pages Functions hold provider credentials server-side.
 - AI output is schema-constrained and independently validated before application.
 
-Relevant ADRs:
+Relevant ADRs and design reviews:
 
+- [Editor UI/UX Review — 2026-09-21](docs/research/EDITOR_UI_UX_REVIEW_2026-09-21.md)
 - [ADR-001 — Three.js production renderer](docs/architecture/adr/ADR-001-PRODUCTION-RENDERER-THREEJS.md)
 - [ADR-002 — Cloudflare Pages hosting](docs/architecture/adr/ADR-002-HOSTING-CLOUDFLARE-PAGES.md)
 - [ADR-003 — Desktop-only submission mobile scope](docs/architecture/adr/ADR-003-MOBILE-SCOPE-DESKTOP-ONLY.md)

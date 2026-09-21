@@ -181,3 +181,110 @@ test('rejects invalid DungeonSpec before planning', () => {
   const invalid = { ...fixture, entities: [] };
   assert.throws(() => createDungeonScenePlan(invalid), DungeonScenePlanError);
 });
+
+
+test('touching connected rooms remove the shared wall and use the combined outer shell', () => {
+  const touching = {
+    schemaVersion: '1.0',
+    id: 'touching-room-fixture',
+    seed: 5,
+    rooms: [
+      { id: 'a', x: 0, z: 0, width: 8, depth: 8 },
+      { id: 'b', x: 8, z: 0, width: 8, depth: 8 },
+    ],
+    corridors: [
+      { id: 'ab', fromRoomId: 'a', toRoomId: 'b', width: 3, kind: 'backbone' },
+    ],
+    entities: [
+      { id: 'start', type: 'start', roomId: 'a' },
+      { id: 'goal', type: 'goal', roomId: 'b' },
+    ],
+    events: [],
+  };
+
+  const plan = createDungeonScenePlan(touching);
+  const a = roomGroup(plan, 'a');
+  const b = roomGroup(plan, 'b');
+  const corridor = plan.corridorGroups.find((group) => group.specId === 'ab');
+
+  assert.equal(a.boxes.some((box) => box.part.startsWith('wall-east-')), false);
+  assert.equal(b.boxes.some((box) => box.part.startsWith('wall-west-')), false);
+  assert.equal(corridor.boxes.length, 0);
+  assert.equal(a.doorOpenings.find((opening) => opening.corridorId === 'ab').width, 8);
+  assert.equal(b.doorOpenings.find((opening) => opening.corridorId === 'ab').width, 8);
+});
+
+
+test('scene plan remains renderable after large outward room moves', () => {
+  const spec = {
+    schemaVersion: '1.0',
+    id: 'outward-edit-routing',
+    seed: 91,
+    rooms: [
+      { id: 'start-room', x: 0, z: 0, width: 8, depth: 8 },
+      { id: 'north-room', x: 12, z: 0, width: 8, depth: 8 },
+      { id: 'middle-room', x: 24, z: 0, width: 8, depth: 8 },
+      { id: 'south-room', x: 24, z: 12, width: 8, depth: 8 },
+      { id: 'goal-room', x: 36, z: 12, width: 8, depth: 8 },
+    ],
+    corridors: [
+      { id: 'c1', fromRoomId: 'start-room', toRoomId: 'north-room', width: 3, kind: 'backbone' },
+      { id: 'c2', fromRoomId: 'north-room', toRoomId: 'middle-room', width: 3, kind: 'backbone' },
+      { id: 'c3', fromRoomId: 'middle-room', toRoomId: 'south-room', width: 3, kind: 'backbone' },
+      { id: 'c4', fromRoomId: 'south-room', toRoomId: 'goal-room', width: 3, kind: 'backbone' },
+      { id: 'c5', fromRoomId: 'start-room', toRoomId: 'south-room', width: 3, kind: 'alternate' },
+      { id: 'c6', fromRoomId: 'north-room', toRoomId: 'goal-room', width: 3, kind: 'alternate' },
+    ],
+    entities: [
+      { id: 'start', type: 'start', roomId: 'start-room' },
+      { id: 'goal', type: 'goal', roomId: 'goal-room' },
+    ],
+    events: [],
+  };
+
+  const initial = createDungeonScenePlan(spec);
+  assert.equal(initial.roomGroups.length, 5);
+
+  spec.rooms.find((room) => room.id === 'start-room').x -= 24;
+  spec.rooms.find((room) => room.id === 'goal-room').z += 24;
+
+  const moved = createDungeonScenePlan(spec);
+  assert.equal(moved.roomGroups.length, 5);
+  assert.equal(moved.corridorGroups.length, 6);
+  assert.ok(moved.corridorGroups.every((group) => Array.isArray(group.route) && group.route.length >= 1));
+});
+
+
+test('goal room remains renderable when moved upward from the owner-reviewed offset layout', () => {
+  const spec = {
+    schemaVersion: '1.0',
+    id: 'owner-goal-upward-move',
+    seed: 12092026,
+    rooms: [
+      { id: 'room-start', x: 0, z: 0, width: 8, depth: 8 },
+      { id: 'room-middle', x: 12, z: 0, width: 8, depth: 8 },
+      { id: 'room-goal', x: 27, z: 4, width: 8, depth: 8 },
+    ],
+    corridors: [
+      { id: 'corridor-1', fromRoomId: 'room-start', toRoomId: 'room-middle', width: 3 },
+      { id: 'corridor-2', fromRoomId: 'room-middle', toRoomId: 'room-goal', width: 3 },
+    ],
+    entities: [
+      { id: 'start-1', type: 'start', roomId: 'room-start' },
+      { id: 'enemy-1', type: 'enemy', roomId: 'room-middle' },
+      { id: 'treasure-1', type: 'treasure', roomId: 'room-middle' },
+      { id: 'goal-1', type: 'goal', roomId: 'room-goal' },
+    ],
+    events: [],
+  };
+
+  const before = createDungeonScenePlan(spec);
+  assert.equal(before.roomGroups.length, 3);
+
+  spec.rooms.find((room) => room.id === 'room-goal').z = 3;
+  const moved = createDungeonScenePlan(spec);
+  assert.equal(moved.roomGroups.length, 3);
+  assert.equal(moved.corridorGroups.length, 2);
+  assert.ok(moved.corridorGroups.every((group) =>
+    Array.isArray(group.route) && group.route.length >= 1));
+});

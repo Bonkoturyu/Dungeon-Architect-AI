@@ -35,6 +35,9 @@ if ($LASTEXITCODE -ne 0) { throw 'DAI-071 browser-performance smoke failed.' }
 npm run smoke:mobile-scope
 if ($LASTEXITCODE -ne 0) { throw 'DAI-075 mobile-scope smoke failed.' }
 
+npm run smoke:onboarding
+if ($LASTEXITCODE -ne 0) { throw 'DAI-070 multilingual onboarding smoke failed.' }
+
 npm run smoke:ui-ux-polish
 if ($LASTEXITCODE -ne 0) { throw 'UI/UX polish visible-Chrome smoke failed.' }
 
@@ -44,11 +47,15 @@ if ($LASTEXITCODE -ne 0) { throw 'Exploration / Mystery Play visible-Chrome smok
 npm run smoke:room-events
 if ($LASTEXITCODE -ne 0) { throw 'Room-event Play visible-Chrome smoke failed.' }
 
+npm run smoke:owner-ui-review
+if ($LASTEXITCODE -ne 0) { throw 'Owner UI review smoke failed.' }
+
 Write-Host ''
-Write-Host 'UI/UX polish + DAI-081 local integration validation completed successfully.' -ForegroundColor Green
+Write-Host 'UI/UX polish + owner interaction validation completed successfully.' -ForegroundColor Green
 Write-Host 'Evidence: artifacts\ui-ux-polish/ui-ux-polish.json'
 Write-Host 'Screenshots: artifacts\ui-ux-polish/ui-ux-edit.png / ui-ux-play.png / ui-ux-result.png'
 Write-Host 'Exploration evidence: artifacts\exploration-ux/dai-086-exploration-ux.json'
 Write-Host 'Exploration screenshots: artifacts\exploration-ux/test-play-start.png / test-play-after-one-move.png / mystery-play-start.png'
 Write-Host 'Room-event evidence: artifacts\room-events/dai-087-room-events.json'
 Write-Host 'Room-event screenshots: artifacts\room-events/room-event-blocked.png / room-event-result.png'
+Write-Host 'Owner review evidence: artifacts\\owner-ui-review/owner-ui-review.json'`n

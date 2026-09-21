@@ -9,6 +9,13 @@ export const ENTITY_TYPES = Object.freeze([
   "recovery"
 ]);
 
+export const CORRIDOR_SIDES = Object.freeze([
+  "north",
+  "east",
+  "south",
+  "west"
+]);
+
 export const EVENT_TRIGGER_TYPES = Object.freeze([
   "on_enter_room",
   "on_interact_entity",
@@ -33,6 +40,7 @@ export const EVENT_ACTION_TYPES = Object.freeze([
 ]);
 
 const ENTITY_TYPE_SET = new Set(ENTITY_TYPES);
+const CORRIDOR_SIDE_SET = new Set(CORRIDOR_SIDES);
 const EVENT_TRIGGER_TYPE_SET = new Set(EVENT_TRIGGER_TYPES);
 const EVENT_CONDITION_TYPE_SET = new Set(EVENT_CONDITION_TYPES);
 const EVENT_ACTION_TYPE_SET = new Set(EVENT_ACTION_TYPES);
@@ -109,6 +117,53 @@ function validateRooms(rooms, ids, roomIds, errors) {
   });
 }
 
+function validateRoomGeometry(rooms, errors) {
+  if (!Array.isArray(rooms)) return;
+
+  for (let leftIndex = 0; leftIndex < rooms.length; leftIndex += 1) {
+    const left = rooms[leftIndex];
+    if (!isRecord(left) ||
+        !["x", "z", "width", "depth"].every((field) => isFiniteNumber(left[field])) ||
+        left.width <= 0 ||
+        left.depth <= 0) {
+      continue;
+    }
+
+    const leftMinX = left.x - left.width / 2;
+    const leftMaxX = left.x + left.width / 2;
+    const leftMinZ = left.z - left.depth / 2;
+    const leftMaxZ = left.z + left.depth / 2;
+
+    for (let rightIndex = leftIndex + 1; rightIndex < rooms.length; rightIndex += 1) {
+      const right = rooms[rightIndex];
+      if (!isRecord(right) ||
+          !["x", "z", "width", "depth"].every((field) => isFiniteNumber(right[field])) ||
+          right.width <= 0 ||
+          right.depth <= 0) {
+        continue;
+      }
+
+      const rightMinX = right.x - right.width / 2;
+      const rightMaxX = right.x + right.width / 2;
+      const rightMinZ = right.z - right.depth / 2;
+      const rightMaxZ = right.z + right.depth / 2;
+
+      const overlapX = Math.min(leftMaxX, rightMaxX) - Math.max(leftMinX, rightMinX);
+      const overlapZ = Math.min(leftMaxZ, rightMaxZ) - Math.max(leftMinZ, rightMinZ);
+
+      // Zero-width contact is allowed so connected rooms may intentionally share a wall.
+      if (overlapX > 1e-9 && overlapZ > 1e-9) {
+        pushError(
+          errors,
+          "ROOM_OVERLAP",
+          `rooms[${rightIndex}]`,
+          `Rooms ${String(left.id)} and ${String(right.id)} overlap; touching edges are allowed, overlapping interiors are not.`
+        );
+      }
+    }
+  }
+}
+
 function validateCorridors(corridors, ids, roomIds, corridorIds, errors) {
   if (!Array.isArray(corridors)) {
     pushError(errors, "ARRAY_REQUIRED", "corridors", "corridors must be an array.");
@@ -142,6 +197,17 @@ function validateCorridors(corridors, ids, roomIds, corridorIds, errors) {
 
     if (corridor.initiallyEnabled !== undefined && typeof corridor.initiallyEnabled !== "boolean") {
       pushError(errors, "BOOLEAN_REQUIRED", `${path}.initiallyEnabled`, "initiallyEnabled must be a boolean when provided.");
+    }
+
+    for (const field of ["fromSide", "toSide"]) {
+      if (corridor[field] !== undefined && !CORRIDOR_SIDE_SET.has(corridor[field])) {
+        pushError(
+          errors,
+          "CORRIDOR_SIDE_INVALID",
+          `${path}.${field}`,
+          `${field} must be one of: ${CORRIDOR_SIDES.join(", ")}.`
+        );
+      }
     }
   });
 }
@@ -189,6 +255,27 @@ function validateEntities(entities, ids, roomIds, entityIds, entityTypeById, err
   }
   if (goalCount !== 1) {
     pushError(errors, "GOAL_COUNT_INVALID", "entities", `Exactly one goal entity is required; found ${goalCount}.`);
+  }
+
+  if (startCount === 1 && goalCount === 1) {
+    const start = entities.find((entity) => entity?.type === "start");
+    const goal = entities.find((entity) => entity?.type === "goal");
+    if (
+      start &&
+      goal &&
+      typeof start.roomId === "string" &&
+      typeof goal.roomId === "string" &&
+      roomIds.has(start.roomId) &&
+      roomIds.has(goal.roomId) &&
+      start.roomId === goal.roomId
+    ) {
+      pushError(
+        errors,
+        "START_GOAL_SAME_ROOM",
+        "entities",
+        `Start and Goal must be in different rooms; both reference ${start.roomId}.`
+      );
+    }
   }
 }
 
@@ -421,6 +508,7 @@ export function validateDungeonSpec(spec) {
   const entityTypeById = new Map();
 
   validateRooms(spec.rooms, ids, roomIds, errors);
+  validateRoomGeometry(spec.rooms, errors);
   validateCorridors(spec.corridors, ids, roomIds, corridorIds, errors);
   validateEntities(spec.entities, ids, roomIds, entityIds, entityTypeById, errors);
   validateEvents(spec.events, ids, roomIds, corridorIds, entityIds, entityTypeById, errors);

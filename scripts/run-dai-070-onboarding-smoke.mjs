@@ -65,11 +65,41 @@ try {
   const backDisabledInitially = await page.locator('#onboardingBack').isDisabled();
 
   await page.locator('#onboardingNext').click();
+  const afterDescribe = await page.evaluate(() => window.__DAI_ONBOARDING__.getState());
+  await page.locator('#onboardingNext').click();
   const afterEdit = await page.evaluate(() => window.__DAI_ONBOARDING__.getState());
   await page.locator('#onboardingNext').click();
   const afterValidate = await page.evaluate(() => window.__DAI_ONBOARDING__.getState());
   await page.locator('#onboardingBack').click();
   const afterBack = await page.evaluate(() => window.__DAI_ONBOARDING__.getState());
+
+  await page.locator('#onboardingLanguageCycle').click();
+  const japanese = await page.evaluate(() => ({
+    state: window.__DAI_ONBOARDING__.getState(),
+    title: document.querySelector('#onboardingTitle')?.textContent ?? '',
+    next: document.querySelector('#onboardingNext')?.textContent ?? '',
+    htmlLang: document.documentElement.lang,
+    cycleText: document.querySelector('#onboardingLanguageCycle')?.textContent ?? '',
+  }));
+  await page.locator('#onboardingLanguageCycle').click();
+  const simplified = await page.evaluate(() => ({
+    title: document.querySelector('#onboardingTitle')?.textContent ?? '',
+    htmlLang: document.documentElement.lang,
+    cycleText: document.querySelector('#onboardingLanguageCycle')?.textContent ?? '',
+  }));
+  await page.locator('#onboardingLanguageCycle').click();
+  const traditional = await page.evaluate(() => ({
+    title: document.querySelector('#onboardingTitle')?.textContent ?? '',
+    htmlLang: document.documentElement.lang,
+    cycleText: document.querySelector('#onboardingLanguageCycle')?.textContent ?? '',
+  }));
+  await page.locator('#onboardingLanguageCycle').click();
+  const korean = await page.evaluate(() => ({
+    title: document.querySelector('#onboardingTitle')?.textContent ?? '',
+    htmlLang: document.documentElement.lang,
+    cycleText: document.querySelector('#onboardingLanguageCycle')?.textContent ?? '',
+  }));
+  await page.locator('#onboardingLanguageCycle').click();
 
   await page.locator('#onboardingClose').click();
   const afterClose = await page.evaluate(() => window.__DAI_ONBOARDING__.getState());
@@ -77,7 +107,7 @@ try {
 
   await page.locator('#guide').click();
   const afterReopen = await page.evaluate(() => window.__DAI_ONBOARDING__.getState());
-  for (let index = 0; index < 3; index += 1) await page.locator('#onboardingNext').click();
+  for (let index = 0; index < 4; index += 1) await page.locator('#onboardingNext').click();
   const finalStep = await page.evaluate(() => window.__DAI_ONBOARDING__.getState());
   const doneLabel = await page.locator('#onboardingNext').textContent();
   await page.locator('#onboardingNext').click();
@@ -86,14 +116,33 @@ try {
   const startStillEnabled = await page.locator('#start').isEnabled();
   const result = {
     editorReadyAndValid: editorState.mode === 'edit' && editorState.startAllowed === true && editorState.validationCriticalCount === 0,
-    opensAutomatically: initialVisible && initial.open === true && initial.step?.id === 'welcome' && initial.stepCount === 4,
+    opensAutomatically: initialVisible && initial.open === true && initial.step?.id === 'welcome' && initial.stepCount === 5 && initial.language === 'en',
     backDisabledAtFirstStep: backDisabledInitially,
-    nextMovesToEdit: afterEdit.step?.id === 'edit' && afterEdit.stepIndex === 1,
-    nextMovesToValidate: afterValidate.step?.id === 'validate' && afterValidate.stepIndex === 2,
-    backReturnsToEdit: afterBack.step?.id === 'edit' && afterBack.stepIndex === 1,
+    nextMovesToDescribe: afterDescribe.step?.id === 'describe' && afterDescribe.stepIndex === 1,
+    nextMovesToEdit: afterEdit.step?.id === 'edit' && afterEdit.stepIndex === 2,
+    nextMovesToValidate: afterValidate.step?.id === 'validate' && afterValidate.stepIndex === 3,
+    backReturnsToEdit: afterBack.step?.id === 'edit' && afterBack.stepIndex === 2,
+    japaneseSwitchWorks:
+      japanese.state?.language === 'ja' &&
+      japanese.htmlLang === 'ja' &&
+      japanese.title === 'ダンジョンを調整' &&
+      japanese.next === '次へ' &&
+      japanese.cycleText === '日本語 ▶ 简中',
+    simplifiedChineseSwitchWorks:
+      simplified.htmlLang === 'zh-Hans' &&
+      simplified.title === '调整地牢' &&
+      simplified.cycleText === '简中 ▶ 繁中',
+    traditionalChineseSwitchWorks:
+      traditional.htmlLang === 'zh-Hant' &&
+      traditional.title === '調整地城' &&
+      traditional.cycleText === '繁中 ▶ 한국어',
+    koreanSwitchWorks:
+      korean.htmlLang === 'ko' &&
+      korean.title === '던전 조정' &&
+      korean.cycleText === '한국어 ▶ EN',
     closeHidesGuide: afterClose.open === false && hiddenAfterClose,
-    guideReopensAtWelcome: afterReopen.open === true && afterReopen.step?.id === 'welcome' && afterReopen.stepIndex === 0,
-    finalStepIsPlay: finalStep.step?.id === 'play' && finalStep.stepIndex === 3 && doneLabel === 'Done',
+    guideReopensAtWelcome: afterReopen.open === true && afterReopen.step?.id === 'welcome' && afterReopen.stepIndex === 0 && afterReopen.language === 'en',
+    finalStepIsPlay: finalStep.step?.id === 'play' && finalStep.stepIndex === 4 && doneLabel === 'Done',
     doneClosesGuide: afterDone.open === false,
     onboardingDoesNotBlockStartAfterClose: startStillEnabled,
   };
@@ -110,6 +159,10 @@ try {
     passed,
     result,
     initial,
+    japanese,
+    simplified,
+    traditional,
+    korean,
     finalStep,
     consoleErrors,
     pageErrors,

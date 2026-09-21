@@ -29,6 +29,13 @@ Clean-room production contract. No Pre experiment implementation is copied.
 
 Both room references must exist; a corridor cannot connect a room to itself.
 
+Optional manual-rendering preferences:
+
+- `fromSide`: `north | east | south | west`
+- `toSide`: `north | east | south | west`
+
+When omitted, the renderer/router chooses the doorway side automatically. These fields constrain only the endpoint wall used by the orthogonal corridor route; they do not change logical graph connectivity.
+
 ## Entities
 
 MVP v1 types:
@@ -57,9 +64,22 @@ This is structural reachability only. Key/door/event-condition soft locks are ha
 
 Serialized DungeonSpec does not contain renderer objects, DOM nodes, Unity objects, GPU handles, scene nodes or runtime session references.
 
+## Generator versioning
+
+`DungeonSpec.schemaVersion` describes the serialized data contract. It is **not** the generator algorithm version.
+
+The current generation method is frozen as **Generator Version 1** under:
+
+`packages/generator/src/versions/v1/`
+
+Future generation algorithms are added as Version 2, Version 3, etc. without overwriting V1. See:
+
+- `docs/architecture/GENERATOR_VERSIONS.md`
+- `docs/research/DUNGEON_GENERATION_ALGORITHMS.md`
+
 ## Generator contract now available
 
-The production generator can create:
+The production **Generator Version 1** can create:
 
 - deterministic room graph from Seed
 - guaranteed backbone Start→Goal route
@@ -69,7 +89,7 @@ The production generator can create:
 
 ### Multiple-route constraints
 
-For the current generator revision:
+For Generator Version 1:
 
 - `routeChoice` remains normalized to `[0, 1]`;
 - alternate-route capacity is `max(1, floor(roomCount / 3))`;

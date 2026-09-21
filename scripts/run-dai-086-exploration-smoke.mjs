@@ -110,6 +110,7 @@ try {
   const currentVisibleAtStart = await page.evaluate((id) => window.__DAI_EDITOR_SLICE__.getScreenPositionForSpecId(id) !== null, testCurrentRoomId);
   const exitCountAtStart = await page.locator('#playExitButtons .exit-button').count();
   const visiblePlayText = await page.locator('body').innerText();
+  const cameraAtTestStart = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getCameraState());
 
   await page.screenshot({ path: path.join(outputDir, 'test-play-start.png'), fullPage: true });
 
@@ -119,6 +120,7 @@ try {
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().play?.moves === 1);
 
   const afterFirstMove = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
+  const cameraAfterFirstMove = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getCameraState());
   const destinationVisible = await page.evaluate((id) => window.__DAI_EDITOR_SLICE__.getScreenPositionForSpecId(id) !== null, firstExit.targetRoomId);
   const stillHiddenRoomId = afterFirstMove.play.snapshot.rooms
     .map((room) => room.id)
@@ -161,6 +163,12 @@ try {
     oneMoveExpandsMapByOneRoom:
       afterFirstMove.play.map.exploredRoomIds.length === 2 &&
       afterFirstMove.play.map.traversedCorridorIds.length === 1,
+    playCameraRefitsAfterMapExpansion:
+      Math.hypot(
+        cameraAfterFirstMove.target.x - cameraAtTestStart.target.x,
+        cameraAfterFirstMove.target.y - cameraAtTestStart.target.y,
+        cameraAfterFirstMove.target.z - cameraAtTestStart.target.z,
+      ) > 0.1,
     traversedDestinationVisible: destinationVisible === true,
     unrelatedUnexploredRoomStillHidden: unexploredStillHidden === true,
     mysteryUsesFreshSeed:

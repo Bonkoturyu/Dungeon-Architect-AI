@@ -18,6 +18,14 @@ Authoring UI must not mutate DungeonSpec directly. Supported edits are expressed
 { "type": "move-entity", "entityId": "enemy-1", "roomId": "room-004" }
 ```
 
+Start and Goal may be moved through this command, but validation rejects placing them in the same room.
+
+### `resize-room`
+
+```json
+{ "type": "resize-room", "roomId": "room-004", "width": 10, "depth": 14 }
+```
+
 ### `add-entity`
 
 Generic add supports non-protected entity types. Start/Goal cannot be created through this generic command.
@@ -25,6 +33,61 @@ Generic add supports non-protected entity types. Start/Goal cannot be created th
 ### `remove-entity`
 
 Generic remove cannot remove Start/Goal.
+
+### `add-room`
+
+```json
+{
+  "type": "add-room",
+  "room": { "id": "room-editor-001", "x": 36, "z": 12, "width": 8, "depth": 8 }
+}
+```
+
+### `remove-room`
+
+```json
+{ "type": "remove-room", "roomId": "room-editor-001" }
+```
+
+A room containing Start or Goal is protected. Removing another room also removes its incident corridors, non-protected entities, and events that reference those removed objects. The resulting DungeonSpec must still validate, including Start→Goal reachability.
+
+### `add-corridor`
+
+```json
+{
+  "type": "add-corridor",
+  "corridor": {
+    "id": "corridor-editor-001",
+    "fromRoomId": "room-002",
+    "toRoomId": "room-editor-001",
+    "width": 3,
+    "kind": "manual"
+  }
+}
+```
+
+### `remove-corridor`
+
+```json
+{ "type": "remove-corridor", "corridorId": "corridor-editor-001" }
+```
+
+Removal is rejected when the resulting DungeonSpec would make Goal unreachable.
+
+### `set-corridor-doors`
+
+```json
+{
+  "type": "set-corridor-doors",
+  "corridorId": "corridor-001",
+  "fromSide": "north",
+  "toSide": "south"
+}
+```
+
+Each endpoint may be `north`, `east`, `south`, `west`, or `auto`/null. The renderer's orthogonal router honors explicit endpoint sides and continues routing around room interiors.
+
+`restore-room` and `restore-corridor` are internal inverse commands used by Undo/Redo; they are not exposed as ordinary authoring actions.
 
 ## Natural-language translation boundary
 
@@ -55,10 +118,8 @@ The browser edit stays undoable/redoable because the translated result is an ord
 
 ## Not yet supported
 
-- room add/remove
-- corridor add/remove
-- resize-room
-- door/shortcut commands
-- event logic edits
+- corridor width editing
+- doorway offset editing along a wall (v1 structural UI selects the cardinal wall side only)
+- shortcut/event logic editing from the manual UI
 - batch transactions
 - natural-language translation for commands other than the first `move-entity` path

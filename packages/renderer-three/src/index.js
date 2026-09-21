@@ -4,4 +4,4 @@ export {
   createDungeonScenePlan,
   projectDungeonScenePlan,
 } from './scene-plan.js';
-export { createThreeRendererAdapter } from './three-renderer-adapter.js';
+export { DEFAULT_MARKER_COLORS, createThreeRendererAdapter } from './three-renderer-adapter.js';

@@ -1,25 +1,23 @@
-import { generateRoomGraph } from "./room-graph.js";
-import { layoutRoomGraph } from "./layout.js";
+import {
+  DEFAULT_GENERATOR_VERSION,
+  GENERATOR_VERSION_V1,
+  normalizeGeneratorVersion,
+} from './generator-versions.js';
+import { generateDungeonSpecV1 } from './versions/v1/dungeon-generator.js';
 
-export function generateDungeonSpec({
-  seed,
-  roomCount = 8,
-  routeChoice = 0.5,
-  id = `dungeon-${seed}`
-} = {}) {
-  const graph = generateRoomGraph({ seed, roomCount, routeChoice });
-  const layout = layoutRoomGraph(graph);
+export {
+  DEFAULT_GENERATOR_VERSION,
+  GENERATOR_VERSION_V1,
+  SUPPORTED_GENERATOR_VERSIONS,
+} from './generator-versions.js';
+export { generateDungeonSpecV1 } from './versions/v1/dungeon-generator.js';
 
-  return {
-    schemaVersion: "1.0",
-    id,
-    seed,
-    rooms: layout.rooms,
-    corridors: layout.corridors,
-    entities: [
-      { id: "start-1", type: "start", roomId: graph.startRoomId },
-      { id: "goal-1", type: "goal", roomId: graph.goalRoomId }
-    ],
-    events: []
-  };
+export function generateDungeonSpec(options = {}) {
+  const { version = DEFAULT_GENERATOR_VERSION, ...generationOptions } = options;
+  switch (normalizeGeneratorVersion(version)) {
+    case GENERATOR_VERSION_V1:
+      return generateDungeonSpecV1(generationOptions);
+    default:
+      throw new RangeError(`Unsupported generator version: ${version}`);
+  }
 }

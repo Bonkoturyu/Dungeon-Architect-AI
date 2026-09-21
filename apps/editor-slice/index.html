@@ -103,11 +103,13 @@
       letter-spacing: -0.01em;
     }
     .mode-badge {
+      position: relative;
       display: inline-flex;
       align-items: center;
-      gap: 7px;
+      justify-content: center;
       min-width: 84px;
-      padding: 5px 9px;
+      padding: 5px 24px;
+      text-align: center;
       border: 1px solid var(--line);
       border-radius: 999px;
       background: var(--surface-2);
@@ -118,6 +120,8 @@
     }
     .mode-badge::before {
       content: "";
+      position: absolute;
+      left: 10px;
       width: 7px;
       height: 7px;
       border-radius: 50%;
@@ -126,9 +130,6 @@
     }
     body[data-mode="play"] .mode-badge::before { background: var(--success); box-shadow: 0 0 0 3px rgba(120, 216, 154, 0.12); }
     body[data-mode="result"] .mode-badge::before { background: var(--warning); box-shadow: 0 0 0 3px rgba(232, 198, 122, 0.12); }
-    .mode-badge::after { content: "Edit mode"; }
-    body[data-mode="play"] .mode-badge::after { content: "Play mode"; }
-    body[data-mode="result"] .mode-badge::after { content: "Result"; }
 
     #status, #selected, #entitySelected, #editStatus, #validationStatus, #playStatus, #resultStatus, #generationStatus, #naturalEditStatus {
       font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
@@ -150,31 +151,37 @@
     body[data-mode="result"] #editStatus,
     body[data-mode="play"] #hint,
     body[data-mode="result"] #hint { display: none !important; }
-    .selection-strip {
-      display: flex;
-      gap: 8px;
-      margin-left: auto;
-      min-width: 0;
-      overflow: hidden;
-    }
-    .selection-chip {
-      max-width: 270px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      padding: 5px 9px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      background: #1b202a;
-      color: var(--text-muted);
-      font-size: 0.73rem;
-    }
 
     .header-actions {
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-left: 0;
+      margin-left: auto;
+    }
+    .language-cycle {
+      min-width: 0;
+      min-height: 30px;
+      padding: 4px 8px;
+      border-color: rgba(102, 117, 142, 0.72);
+      background: rgba(48, 58, 73, 0.62);
+      color: var(--text-soft);
+      font-size: 0.64rem;
+      font-weight: 760;
+      white-space: nowrap;
+      letter-spacing: 0.01em;
+    }
+    .language-cycle:hover:not(:disabled) {
+      background: var(--surface-3);
+      color: var(--text);
+    }
+    .onboarding-top-actions {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex: 0 0 auto;
+    }
+    .onboarding-top-actions .language-cycle {
+      max-width: 130px;
     }
     .icon-button {
       width: 34px;
@@ -209,7 +216,13 @@
     }
     .primary-action:hover:not(:disabled) { background: rgba(65, 142, 91, 0.36); border-color: var(--success); }
     .secondary-accent { border-color: #59668a; }
-    #returnEdit { border-color: #716c91; }
+    #returnEdit {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border-color: #716c91;
+    }
     #guide { border-color: #5b6791; }
     #validationStatus {
       justify-self: start;
@@ -382,12 +395,7 @@
       font-size: 0.72rem;
       line-height: 1.35;
     }
-    #entitySelect {
-      width: 100%;
-      min-height: 150px;
-      padding: 5px;
-      line-height: 1.45;
-    }
+    #entitySelect { width: 100%; padding: 5px; line-height: 1.45; }
     .button-row { display: flex; gap: 7px; flex-wrap: wrap; }
     .button-row > button { flex: 0 0 auto; }
     .wide-action { width: 100%; }
@@ -401,12 +409,277 @@
     }
     .muted { color: var(--text-muted); font-size: 0.74rem; line-height: 1.42; }
     .muted:empty { display: none; }
-    .play-summary {
+
+    .prompt-history { margin-top: 12px; }
+    .section-caption {
+      margin: 0 0 7px;
+      color: var(--text-muted);
+      font-size: 0.66rem;
+      font-weight: 850;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .prompt-history-list { display: grid; gap: 6px; }
+    .prompt-history-item {
+      width: 100%;
+      min-height: 30px;
+      padding: 6px 8px;
+      border-color: rgba(102, 117, 142, 0.52);
+      background: rgba(32, 39, 51, 0.55);
+      color: var(--text-soft);
+      text-align: left;
+      font-size: 0.7rem;
+      font-weight: 560;
+      line-height: 1.3;
+    }
+    .prompt-history-item strong {
+      color: var(--accent-strong);
+      font-size: 0.62rem;
+      letter-spacing: 0.05em;
+    }
+
+    .goal-check-card {
+      margin: 0 0 12px;
+      padding: 11px;
+      border: 1px solid rgba(120, 216, 154, 0.42);
+      border-radius: 12px;
+      background: rgba(28, 39, 34, 0.7);
+    }
+    .goal-check-top {
       display: flex;
       align-items: center;
       gap: 8px;
+      margin-bottom: 8px;
+    }
+    .goal-check-top strong {
+      margin-right: auto;
+      font-size: 0.76rem;
+      letter-spacing: 0.04em;
+    }
+    .goal-check-card #validationStatus { flex: 0 0 auto; }
+    .goal-check-card #checkPath { width: 100%; }
+    .goal-check-card #pathStatus { margin-top: 7px; }
+
+    .room-size-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .size-stepper {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr) 34px;
+      gap: 5px;
+      align-items: center;
+    }
+    .size-stepper button {
+      min-width: 34px;
+      padding: 0;
+      font-size: 1rem;
+    }
+    .room-size-grid input {
+      width: 100%;
+      min-height: 36px;
+      padding: 6px 8px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius-sm);
+      background: var(--surface-3);
+      color: var(--text);
+      text-align: center;
+    }
+    .resize-note {
+      margin: -3px 0 8px;
+      color: var(--text-muted);
+      font-size: 0.66rem;
+      line-height: 1.35;
+    }
+    .compact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      align-items: end;
+    }
+    .compact-grid > label { min-width: 0; }
+    .danger-wide { width: 100%; }
+    #roomSelect { width: 100%; min-height: 118px; padding: 5px; }
+    #entitySelect { min-height: 36px; }
+
+    .edit-hud {
+      position: absolute;
+      z-index: 3;
+      display: none;
+      pointer-events: none;
+    }
+    body[data-mode="edit"][data-workflow-tab="edit"] .edit-hud { display: block; }
+
+    .selection-overlay {
+      top: 54px;
+      left: 16px;
+      width: min(300px, calc(50% - 28px));
+      padding: 10px 11px;
+      border: 1px solid rgba(145, 167, 255, 0.48);
+      border-radius: 10px;
+      background: rgba(25, 31, 40, 0.86);
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.20);
+      backdrop-filter: blur(7px);
+    }
+    .selection-overlay .overlay-heading,
+    .room-contents-overlay .overlay-heading,
+    .entity-legend .overlay-heading {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--text-muted);
+      font-size: 0.60rem;
+      font-weight: 850;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+    .selection-chip {
+      display: block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--text);
+      font-size: 0.73rem;
+      line-height: 1.45;
+    }
+    #entitySelected {
+      margin-top: 2px;
+      color: var(--text-muted);
+      font-size: 0.66rem;
+    }
+
+    .entity-legend {
+      top: 142px;
+      left: 16px;
+      width: min(300px, calc(50% - 28px));
+      padding: 8px 10px;
+      border: 1px solid rgba(83, 97, 118, 0.66);
+      border-radius: 10px;
+      background: rgba(25, 31, 40, 0.72);
+      backdrop-filter: blur(6px);
+    }
+    .legend-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px 8px;
+    }
+    .legend-item,
+    .room-content-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      min-width: 0;
+      color: var(--text-soft);
+      font-size: 0.64rem;
+      line-height: 1.2;
+    }
+
+    .room-contents-overlay {
+      top: 16px;
+      right: 16px;
+      width: min(270px, 32%);
+      padding: 10px 11px;
+      border: 1px solid rgba(120, 216, 154, 0.42);
+      border-radius: 11px;
+      background: rgba(25, 31, 40, 0.86);
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.18);
+      backdrop-filter: blur(7px);
+      pointer-events: auto;
+    }
+    #roomContentsRoom {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--text);
+      font: 0.70rem ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-weight: 760;
+    }
+    #roomContentsItems {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .room-content-item {
+      min-height: 27px;
+      padding: 4px 7px;
+      border: 1px solid rgba(83, 97, 118, 0.72);
+      border-radius: 8px;
+      background: rgba(48, 58, 73, 0.64);
+      cursor: pointer;
+      pointer-events: auto;
+    }
+    .room-content-item.is-selected {
+      border-color: var(--accent);
+      background: rgba(72, 84, 110, 0.88);
+      box-shadow: 0 0 0 2px rgba(145, 167, 255, 0.10);
+    }
+    .room-content-empty {
+      color: var(--text-muted);
+      font-size: 0.66rem;
+    }
+
+    .entity-marker {
+      display: inline-grid;
+      place-items: center;
+      width: 18px;
+      height: 18px;
+      flex: 0 0 18px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 900;
+      border: 1px solid currentColor;
+      background: rgba(255, 255, 255, 0.03);
+    }
+    [data-kind="start"] .entity-marker { color: #22c55e; background: rgba(34, 197, 94, 0.12); }
+    [data-kind="goal"] .entity-marker { color: #3b82f6; background: rgba(59, 130, 246, 0.14); }
+    [data-kind="enemy"] .entity-marker { color: #ef4444; background: rgba(239, 68, 68, 0.13); }
+    [data-kind="treasure"] .entity-marker { color: #eab308; background: rgba(234, 179, 8, 0.13); }
+    [data-kind="trap"] .entity-marker { color: #8b5cf6; background: rgba(139, 92, 246, 0.14); }
+    [data-kind="recovery"] .entity-marker { color: #f8fafc; background: rgba(248, 250, 252, 0.12); }
+    .path-status {
+      margin: 8px 0 0;
+      padding: 8px 9px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(19, 24, 32, 0.35);
+      color: var(--text-soft);
+      font: 0.68rem ui-monospace, SFMono-Regular, Consolas, monospace;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+    .preview-cover {
+      position: absolute;
+      z-index: 8;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 28px;
+      background:
+        radial-gradient(circle at 50% 44%, rgba(91, 111, 164, 0.18), transparent 32%),
+        #202834;
+    }
+    .preview-cover-card {
+      width: min(460px, 86%);
+      padding: 22px;
+      border: 1px solid var(--line-strong);
+      border-radius: 16px;
+      background: rgba(40, 49, 62, 0.96);
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+    .preview-cover-card strong { display: block; margin-bottom: 7px; font-size: 1rem; }
+    .preview-cover-card span { color: var(--text-muted); font-size: 0.76rem; line-height: 1.5; }
+
+    .play-summary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      width: 100%;
       margin-top: 10px;
       min-height: 34px;
+      text-align: center;
     }
     .play-mode-pill {
       flex: 0 0 auto;
@@ -422,6 +695,7 @@
     .play-metrics {
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 10px;
       margin: 0;
       color: var(--text-soft);
@@ -512,12 +786,64 @@
       box-shadow: 0 0 0 1px rgba(120, 216, 154, 0.07), var(--shadow);
     }
 
+    .viewport-notice {
+      position: absolute;
+      z-index: 12;
+      top: auto;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: max-content;
+      max-width: min(620px, calc(100% - 40px));
+      padding: 10px 14px;
+      border: 1px solid rgba(255, 158, 158, 0.58);
+      border-radius: 10px;
+      background: rgba(84, 38, 42, 0.94);
+      color: #ffe0e0;
+      font-size: 0.78rem;
+      font-weight: 760;
+      line-height: 1.45;
+      text-align: center;
+      box-shadow: var(--shadow);
+      pointer-events: none;
+    }
+    .play-reticle {
+      position: absolute;
+      z-index: 3;
+      left: 50%;
+      top: 50%;
+      width: 22px;
+      height: 22px;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+    .play-reticle::before,
+    .play-reticle::after {
+      content: "";
+      position: absolute;
+      background: rgba(230, 242, 255, 0.9);
+      box-shadow: 0 0 5px rgba(0,0,0,0.7);
+    }
+    .play-reticle::before {
+      left: 10px;
+      top: 2px;
+      width: 2px;
+      height: 18px;
+    }
+    .play-reticle::after {
+      left: 2px;
+      top: 10px;
+      width: 18px;
+      height: 2px;
+    }
+
     .room-events {
       position: absolute;
       z-index: 4;
-      left: 18px;
-      bottom: 18px;
-      width: min(310px, calc(100% - 36px));
+      left: 50%;
+      top: calc(50% + 34px);
+      transform: translateX(-50%);
+      width: min(390px, calc(100% - 36px));
       padding: 9px;
       border: 1px solid rgba(113, 128, 153, 0.5);
       border-radius: 14px;
@@ -654,8 +980,6 @@
     .play-choice-row button { min-height: 44px; }
     .mystery-action { border-color: #7b6b9f; background: rgba(99, 79, 137, 0.28); color: #f1eaff; }
     .mode-note { margin: 8px 0 0; color: var(--text-muted); font-size: 0.68rem; }
-    body[data-mode="play"] .selection-strip,
-    body[data-mode="result"] .selection-strip { display: none; }
 
     [hidden] { display: none !important; }
 
@@ -702,8 +1026,6 @@
         grid-template-rows: auto auto auto auto;
       }
       .app-header { flex-wrap: wrap; gap: 8px 12px; }
-      .selection-strip { width: 100%; margin-left: 0; }
-      .selection-chip { max-width: calc(50vw - 22px); }
       .toolbar { grid-template-columns: 1fr; align-items: stretch; }
       .toolbar-group { flex-wrap: wrap; }
       .toolbar-divider { display: none; }
@@ -727,136 +1049,861 @@
         background: var(--surface-1);
       }
       .viewport-label { top: 10px; left: 10px; }
-      .room-events {
+      .selection-overlay,
+      .entity-legend {
         left: 10px;
+        width: min(290px, calc(100% - 20px));
+      }
+      .selection-overlay { top: 50px; }
+      .entity-legend { top: 138px; }
+      .room-contents-overlay {
+        top: 10px;
         right: 10px;
-        bottom: 10px;
-        width: auto;
+        width: min(260px, calc(100% - 20px));
+      }
+      .room-events {
+        left: 50%;
+        right: auto;
+        top: calc(50% + 34px);
+        bottom: auto;
+        width: min(360px, calc(100% - 20px));
+        transform: translateX(-50%);
       }
     }
+
+    /* Owner UI/UX review 2026-09-21 — readable desktop authoring scale. */
+    :root {
+      --ui-space-1: 8px;
+      --ui-space-2: 12px;
+      --ui-space-3: 16px;
+      --ui-space-4: 24px;
+      --ui-space-5: 32px;
+      --ui-font-caption: 0.8125rem;
+      --ui-font-body: 0.9375rem;
+      --ui-font-body-lg: 1rem;
+      --ui-font-section: 1.0625rem;
+      --ui-font-title: 1.25rem;
+      --ui-control-h: 40px;
+      --ui-control-h-lg: 44px;
+      --ui-sidebar-w: 420px;
+    }
+
+    button {
+      min-height: var(--ui-control-h);
+      padding: 8px 12px;
+      font-size: var(--ui-font-body);
+    }
+    select,
+    input {
+      min-height: var(--ui-control-h);
+      font-size: var(--ui-font-body);
+    }
+    select { padding: 7px 10px; }
+    textarea {
+      min-height: 96px;
+      padding: 12px;
+      font-size: var(--ui-font-body);
+      line-height: 1.5;
+    }
+
+    .app-header {
+      min-height: 68px;
+      gap: var(--ui-space-3);
+      padding: 12px var(--ui-space-3);
+    }
+    .brand-eyebrow { font-size: 0.75rem; }
+    .brand-title { font-size: var(--ui-font-title); }
+    .mode-badge {
+      min-width: 104px;
+      min-height: 36px;
+      padding: 7px 28px;
+      font-size: 0.8125rem;
+    }
+    .mode-badge::before {
+      left: 12px;
+    }
+    .language-cycle {
+      min-height: 36px;
+      padding: 6px 10px;
+      font-size: 0.75rem;
+    }
+    .icon-button {
+      width: 40px;
+      min-width: 40px;
+      min-height: 40px;
+    }
+
+    .toolbar {
+      gap: var(--ui-space-2);
+      padding: 10px var(--ui-space-3);
+    }
+    .toolbar-group { gap: var(--ui-space-1); }
+    #editStatus { font-size: var(--ui-font-caption); }
+    #hint { font-size: var(--ui-font-caption); }
+
+    .workspace {
+      grid-template-columns: minmax(0, 1fr) var(--ui-sidebar-w);
+    }
+    aside {
+      padding: var(--ui-space-3);
+      overflow-x: hidden;
+    }
+
+    aside > *,
+    aside fieldset,
+    aside section,
+    aside nav,
+    aside label,
+    aside .compact-grid,
+    aside .room-size-grid {
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    aside select,
+    aside input,
+    aside textarea,
+    aside button {
+      max-width: 100%;
+    }
+
+    aside select,
+    aside input,
+    aside textarea {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .compact-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .compact-grid > *,
+    .room-size-grid > *,
+    .size-stepper > * {
+      min-width: 0;
+    }
+
+    .viewport-label {
+      top: var(--ui-space-3);
+      left: var(--ui-space-3);
+      gap: 4px;
+    }
+    .viewport-label strong { font-size: 0.8125rem; }
+    .viewport-label span { font-size: 0.75rem; }
+
+    .goal-check-card {
+      margin-bottom: var(--ui-space-3);
+      padding: var(--ui-space-3);
+      border-radius: 14px;
+    }
+    fieldset.panel-ai {
+      border-color: rgba(102, 117, 142, 0.68);
+      background: linear-gradient(180deg, rgba(40, 48, 62, 0.76), rgba(29, 35, 46, 0.88));
+      box-shadow: 0 1px 0 rgba(255,255,255,0.025) inset;
+    }
+    fieldset.panel-ai legend {
+      color: #dce3f0;
+    }
+    #naturalEditInput {
+      min-height: 76px;
+    }
+    .panel-ai #applyNaturalEdit {
+      min-height: 42px;
+    }
+    .goal-check-top {
+      gap: var(--ui-space-1);
+      margin-bottom: var(--ui-space-2);
+    }
+    .goal-check-top strong { font-size: 0.9375rem; }
+    #validationStatus {
+      min-height: 34px;
+      padding: 6px 10px;
+      font-size: 0.8125rem;
+    }
+    .goal-check-card #checkPath {
+      min-height: var(--ui-control-h-lg);
+      font-size: var(--ui-font-body-lg);
+    }
+    .path-status {
+      margin-top: var(--ui-space-1);
+      padding: 10px 11px;
+      font-size: 0.8125rem;
+      line-height: 1.5;
+    }
+
+    .workflow-tabs {
+      gap: var(--ui-space-1);
+      margin-bottom: var(--ui-space-3);
+      padding: 5px;
+    }
+    .workflow-tab {
+      min-height: var(--ui-control-h-lg);
+      padding: 8px;
+      font-size: 0.875rem;
+    }
+
+    fieldset {
+      padding: var(--ui-space-3);
+      margin-bottom: var(--ui-space-3);
+    }
+    legend { font-size: 0.9375rem; }
+    label {
+      gap: var(--ui-space-1);
+      margin-bottom: var(--ui-space-2);
+      font-size: 0.875rem;
+    }
+    .panel-kicker,
+    .resize-note,
+    .muted {
+      font-size: var(--ui-font-caption);
+      line-height: 1.5;
+    }
+    .create-hint,
+    .section-caption {
+      font-size: 0.75rem;
+    }
+    .button-row { gap: var(--ui-space-1); }
+    .compact-grid,
+    .room-size-grid { gap: var(--ui-space-2); }
+    .size-stepper {
+      grid-template-columns: 40px minmax(0, 1fr) 40px;
+      gap: var(--ui-space-1);
+    }
+    .size-stepper button {
+      min-width: 40px;
+      min-height: 40px;
+    }
+    .room-size-grid input { min-height: 40px; font-size: var(--ui-font-body); }
+    #roomSelect {
+      min-height: 144px;
+      padding: 7px;
+      font-size: var(--ui-font-body);
+      line-height: 1.45;
+    }
+    #entitySelect { min-height: 40px; font-size: var(--ui-font-body); }
+
+    .inspector-shell {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      margin: 0 0 var(--ui-space-3);
+      overflow: hidden;
+      border: 1px solid rgba(102, 117, 142, 0.72);
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(38, 46, 59, 0.78), rgba(27, 33, 43, 0.9));
+      box-shadow: 0 1px 0 rgba(255,255,255,0.025) inset;
+    }
+    .inspector-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0;
+      margin: 0;
+      padding: 0 10px;
+      border: 0;
+      border-bottom: 1px solid rgba(102, 117, 142, 0.48);
+      border-radius: 0;
+      background: rgba(18, 22, 29, 0.28);
+    }
+    .inspector-tab {
+      position: relative;
+      min-width: 0;
+      min-height: 46px;
+      padding: 10px 8px 9px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.8125rem;
+      font-weight: 700;
+      white-space: nowrap;
+      box-shadow: none;
+    }
+    .inspector-tab:hover:not(:disabled) {
+      border: 0;
+      background: rgba(145, 167, 255, 0.055);
+      color: var(--text-soft);
+    }
+    .inspector-tab::after {
+      content: "";
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 0;
+      height: 2px;
+      border-radius: 2px 2px 0 0;
+      background: transparent;
+      transform: scaleX(0.45);
+      opacity: 0;
+      transition: transform 120ms ease, opacity 120ms ease, background 120ms ease;
+    }
+    .inspector-tab.is-active {
+      border: 0;
+      background: transparent;
+      color: var(--text);
+    }
+    .inspector-tab.is-active::after {
+      background: var(--accent);
+      transform: scaleX(1);
+      opacity: 1;
+    }
+    .inspector-panel {
+      display: none;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      margin: 0;
+      padding: 16px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+    .inspector-panel > legend {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    .inspector-panel .panel-kicker {
+      margin: 0 0 14px;
+      padding: 0;
+      color: #9da8b8;
+    }
+    .inspector-panel label {
+      margin-bottom: 11px;
+    }
+    .inspector-panel .wide-action + .danger-wide,
+    .inspector-panel .danger-wide + .section-caption {
+      margin-top: 8px;
+    }
+    .inspector-panel[data-inspector-panel="entities"] .button-row {
+      margin-bottom: 16px;
+    }
+    .entity-create-label {
+      gap: 9px !important;
+      margin: 0 0 12px !important;
+    }
+    .entity-create-label > span {
+      display: block;
+      min-height: 20px;
+      padding-top: 2px;
+      line-height: 1.4;
+    }
+    .inspector-panel .section-caption {
+      margin-top: 14px;
+      margin-bottom: 8px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(102, 117, 142, 0.32);
+    }
+    .inspector-shell[data-inspector-tab="entities"] [data-inspector-panel="entities"],
+    .inspector-shell[data-inspector-tab="rooms"] [data-inspector-panel="rooms"],
+    .inspector-shell[data-inspector-tab="corridors"] [data-inspector-panel="corridors"] {
+      display: block;
+    }
+
+    .left-hud-stack {
+      position: absolute;
+      z-index: 3;
+      top: 58px;
+      left: var(--ui-space-3);
+      width: min(320px, calc(50% - 32px));
+      display: none;
+      gap: var(--ui-space-2);
+      pointer-events: none;
+    }
+    body[data-mode="edit"][data-workflow-tab="edit"] .left-hud-stack {
+      display: grid;
+    }
+    .left-hud-stack .edit-hud {
+      position: static;
+      display: block;
+      width: 100%;
+    }
+    .entity-legend,
+    .selection-overlay {
+      width: 100%;
+      padding: 12px 13px;
+      border-radius: 11px;
+    }
+    .selection-overlay .overlay-heading,
+    .room-contents-overlay .overlay-heading,
+    .entity-legend .overlay-heading {
+      margin-bottom: var(--ui-space-1);
+      font-size: 0.6875rem;
+    }
+    .selection-chip {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+    }
+    #entitySelected { font-size: 0.75rem; }
+    .legend-items { gap: 7px 10px; }
+    .legend-item,
+    .room-content-item {
+      gap: 6px;
+      font-size: 0.75rem;
+    }
+    .room-contents-overlay {
+      top: var(--ui-space-3);
+      right: var(--ui-space-3);
+      width: min(300px, 34%);
+      padding: 12px 13px;
+    }
+    #roomContentsRoom { font-size: 0.8125rem; }
+    #roomContentsItems { gap: var(--ui-space-1); }
+    .room-content-item {
+      min-height: 32px;
+      padding: 5px 8px;
+    }
+    .room-content-empty { font-size: 0.75rem; }
+    .entity-marker {
+      width: 20px;
+      height: 20px;
+      flex-basis: 20px;
+      font-size: 0.75rem;
+    }
+
+    .prompt-history-item {
+      min-height: 40px;
+      padding: 8px 10px;
+      font-size: 0.8125rem;
+      line-height: 1.4;
+    }
+    .prompt-history-item strong { font-size: 0.75rem; }
+
+    .play-mode-pill,
+    .mode-note,
+    .metric-label,
+    .room-event-heading,
+    .exit-prompt {
+      font-size: 0.75rem;
+    }
+    .play-metrics { font-size: 0.875rem; }
+    .room-event {
+      min-height: 40px;
+      gap: var(--ui-space-1);
+      padding: 7px 8px;
+    }
+    .room-event-type,
+    .room-event-note {
+      font-size: 0.75rem;
+    }
+    .room-event-actions button {
+      min-height: 32px;
+      padding: 5px 8px;
+      font-size: 0.75rem;
+    }
+    .exit-button {
+      width: 44px;
+      height: 44px;
+      min-height: 44px;
+      font-size: 1.2rem;
+    }
+    .result-banner { font-size: 1rem; }
+    .result-metric { font-size: 0.8125rem; }
+
+    canvas {
+      cursor: grab;
+    }
+    canvas:active {
+      cursor: grabbing;
+    }
+    canvas.is-corridor-drafting,
+    canvas.is-corridor-drafting:active {
+      cursor: crosshair;
+    }
+
+    .room-actions {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(102, 117, 142, 0.32);
+    }
+    .room-actions .section-caption {
+      margin: 0 0 9px;
+    }
+    .room-direction-actions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-areas:
+        ". north ."
+        "west center east"
+        ". south .";
+      gap: 7px;
+      align-items: stretch;
+    }
+    .room-direction-actions button {
+      min-width: 0;
+      min-height: 40px;
+      padding: 7px 8px;
+      background: rgba(57, 69, 86, 0.72);
+    }
+    .room-direction-actions [data-room-add-direction="north"] { grid-area: north; }
+    .room-direction-actions [data-room-add-direction="east"] { grid-area: east; }
+    .room-direction-actions [data-room-add-direction="south"] { grid-area: south; }
+    .room-direction-actions [data-room-add-direction="west"] { grid-area: west; }
+    .room-direction-center {
+      grid-area: center;
+      display: grid;
+      place-items: center;
+      min-height: 40px;
+      padding: 6px;
+      border: 1px dashed rgba(145, 167, 255, 0.4);
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-align: center;
+      background: rgba(18, 22, 29, 0.26);
+    }
+    .room-add-without-selection {
+      display: grid;
+      gap: 8px;
+    }
+    .room-add-without-selection p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 0.8125rem;
+      line-height: 1.45;
+    }
+    #addRoomAtViewCenter {
+      width: 100%;
+      min-height: 44px;
+    }
+    .room-remove-action {
+      margin-top: 10px;
+    }
+
+    .corridor-drag-callout {
+      display: grid;
+      gap: 4px;
+      margin-top: 14px;
+      padding: 11px 12px;
+      border-top: 1px solid rgba(102, 117, 142, 0.32);
+      background: rgba(102, 117, 142, 0.06);
+      color: var(--text-soft);
+      font-size: 0.8125rem;
+      line-height: 1.45;
+    }
+    .corridor-drag-callout strong {
+      color: var(--accent-strong);
+      font-size: 0.8125rem;
+    }
+
+    .viewport-notice {
+      top: auto;
+      bottom: 28px;
+      width: max-content;
+      max-width: min(620px, calc(100% - 40px));
+      padding: 12px 16px;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    @media (max-width: 1100px) {
+      :root { --ui-sidebar-w: 360px; }
+      .left-hud-stack { width: min(300px, calc(55% - 24px)); }
+    }
+    @media (max-width: 800px) {
+      .workspace,
+      body[data-mode="play"] .workspace,
+      body[data-mode="result"] .workspace {
+        grid-template-columns: 1fr;
+      }
+      .left-hud-stack {
+        top: 52px;
+        left: 10px;
+        width: min(300px, calc(100% - 20px));
+      }
+      .room-contents-overlay {
+        top: 10px;
+        right: 10px;
+        width: min(280px, calc(100% - 20px));
+      }
+    }
+
   </style>
 </head>
 <body data-mode="edit" data-workflow-tab="create">
   <main>
     <header class="app-header">
       <div class="brand-block">
-        <span class="brand-eyebrow">Describe · Build · Explore</span>
+        <span class="brand-eyebrow" data-i18n="app.tagline">Describe · Build · Explore</span>
         <h1 class="brand-title">Dungeon Architect AI</h1>
       </div>
-      <span class="mode-badge" aria-hidden="true"></span>
+      <span id="modeBadge" class="mode-badge" aria-live="polite">Edit mode</span>
       <span id="status">loading</span>
-      <div class="selection-strip" aria-label="Current selection">
-        <span id="selected" class="selection-chip">room: none</span>
-        <span id="entitySelected" class="selection-chip">entity: none</span>
-      </div>
       <div class="header-actions">
-        <button id="returnEdit" type="button" disabled>← Edit</button>
-        <button id="guide" class="secondary-accent icon-button" type="button" title="Guide" aria-label="Open guide">?</button>
+        <button id="returnEdit" type="button" disabled data-i18n="action.returnEdit">◀ Edit</button>
+        <button id="languageCycle" class="language-cycle" type="button" data-language-cycle>EN ▶ 日本語</button>
+        <button id="guide" class="secondary-accent icon-button" type="button" title="Open guide" aria-label="Open guide" data-i18n-title="action.guide" data-i18n-aria-label="action.guide">?</button>
       </div>
     </header>
 
     <div class="toolbar">
       <div class="toolbar-group history-group" aria-label="History">
-        <button id="undo" type="button" disabled>Undo</button>
-        <button id="redo" type="button" disabled>Redo</button>
+        <button id="undo" type="button" disabled data-i18n="action.undo">Undo</button>
+        <button id="redo" type="button" disabled data-i18n="action.redo">Redo</button>
       </div>
       <span id="editStatus" hidden></span>
       <span id="hint" hidden>Edit: select rooms or use the inspector. Play: choose directional exits.</span>
     </div>
 
-    <p id="mobileScopeNotice" class="scope-notice" role="note">Desktop demo target: mobile/narrow layouts are best-effort only and are not a supported judging target for this hackathon build. Use desktop Chrome for evaluation.</p>
+    <p id="mobileScopeNotice" class="scope-notice" role="note" data-i18n="mobile.notice">Desktop demo target: mobile/narrow layouts are best-effort only and are not a supported judging target for this hackathon build. Use desktop Chrome for evaluation.</p>
 
     <div class="workspace">
       <section class="viewport-shell" aria-label="Dungeon viewport">
         <div class="viewport-label">
-          <strong id="viewportTitle">3D Dungeon</strong>
-          <span id="viewportHelp">Select · Arrow keys move</span>
+          <strong id="viewportTitle" data-i18n="viewport.editTitle">3D Dungeon</strong>
+          <span id="viewportHelp" data-i18n="viewport.editHelp">Left drag pan · Right drag orbit · Wheel zoom · Drag a room wall to create a corridor</span>
         </div>
         <canvas id="renderCanvas" tabindex="0"></canvas>
+        <div class="left-hud-stack edit-hud-stack">
+          <div id="entityLegend" class="entity-legend edit-hud" aria-label="Entity legend">
+            <span class="overlay-heading" data-i18n="overlay.legend">Legend</span>
+            <div class="legend-items">
+              <span class="legend-item" data-kind="start"><span class="entity-marker">◆</span><span data-i18n="entity.start">Start</span></span>
+              <span class="legend-item" data-kind="goal"><span class="entity-marker">★</span><span data-i18n="entity.goal">Goal</span></span>
+              <span class="legend-item" data-kind="enemy"><span class="entity-marker">⚔</span><span data-i18n="entity.enemy">Enemy</span></span>
+              <span class="legend-item" data-kind="treasure"><span class="entity-marker">▣</span><span data-i18n="entity.treasure">Chest</span></span>
+              <span class="legend-item" data-kind="trap"><span class="entity-marker">⚠</span><span data-i18n="entity.trap">Trap</span></span>
+              <span class="legend-item" data-kind="recovery"><span class="entity-marker">✚</span><span data-i18n="entity.recovery">Recovery</span></span>
+            </div>
+          </div>
+          <div id="selectionOverlay" class="selection-overlay edit-hud" hidden>
+            <span class="overlay-heading" data-i18n="overlay.selected">Selected</span>
+            <span id="selected" class="selection-chip"></span>
+            <span id="entitySelected" class="selection-chip"></span>
+          </div>
+        </div>
+        <div id="roomContentsOverlay" class="room-contents-overlay edit-hud" hidden>
+          <span class="overlay-heading" data-i18n="overlay.roomContents">Room contents</span>
+          <span id="roomContentsRoom"></span>
+          <div id="roomContentsItems"></div>
+        </div>
+        <div id="viewportNotice" class="viewport-notice" hidden></div>
+        <div id="playReticle" class="play-reticle" hidden aria-hidden="true"></div>
+        <div id="authoringPreviewCover" class="preview-cover" hidden>
+          <div class="preview-cover-card">
+            <strong data-i18n="preview.title">Dungeon generated</strong>
+            <span data-i18n="preview.body">Choose Edit to reveal the authored layout, ▶ Test to explore this dungeon unseen, or 🎲 Mystery to reroll routes and content with a fresh seed. Generator V1 may keep a similar room layout.</span>
+          </div>
+        </div>
         <div id="roomEventBar" class="room-events" hidden>
-          <span class="room-event-heading">ROOM</span>
+          <span class="room-event-heading" data-i18n="roomEvent.heading">ROOM</span>
           <div id="roomEventItems"></div>
         </div>
         <div id="playExitBar" class="play-exits" hidden>
-          <span class="exit-prompt">CHOOSE EXIT</span>
+          <span class="exit-prompt" data-i18n="exit.choose">CHOOSE EXIT</span>
           <div id="playExitButtons" aria-label="Available exits"></div>
         </div>
       </section>
 
       <aside>
+        <section class="goal-check-card editor-only" aria-label="Goal path validation">
+          <div class="goal-check-top">
+            <strong data-i18n="goal.title">✓ Goal Check</strong>
+            <span id="validationStatus" data-state="blocked">Checking…</span>
+          </div>
+          <button id="checkPath" class="secondary-accent" type="button" data-i18n="goal.check">Check Start → Goal</button>
+          <div id="pathStatus" class="path-status" data-i18n="goal.none">Path not checked.</div>
+        </section>
+
         <nav class="workflow-tabs editor-only" aria-label="Authoring workflow">
-          <button class="workflow-tab is-active" type="button" data-workflow-tab="create" aria-selected="true">✨ Create</button>
-          <button class="workflow-tab" type="button" data-workflow-tab="edit" aria-selected="false">✎ Edit</button>
-          <button class="workflow-tab" type="button" data-workflow-tab="play" aria-selected="false">▶ Play</button>
+          <button class="workflow-tab is-active" type="button" data-workflow-tab="create" aria-selected="true" data-i18n="tabs.create">✨ Create</button>
+          <button class="workflow-tab" type="button" data-workflow-tab="edit" aria-selected="false" data-i18n="tabs.edit">✎ Edit</button>
+          <button class="workflow-tab" type="button" data-workflow-tab="play" aria-selected="false" data-i18n="tabs.play">▶ Play</button>
         </nav>
 
         <fieldset class="panel-primary editor-only" data-workflow-panel="create" aria-label="Create dungeon">
           
-          <p class="create-hint">Describe → Generate</p>
+          <p class="create-hint" data-i18n="create.hint">Describe → Generate</p>
           <label>
-            Prompt
-            <textarea id="generationPrompt" aria-label="Dungeon generation request" placeholder="Create a fair but tense 5-minute dungeon with exploration and a few dangerous rewards."></textarea>
+            <span data-i18n="create.prompt">Prompt</span>
+            <textarea id="generationPrompt" aria-label="Dungeon generation request" placeholder="Create a fair but tense 5-minute dungeon with exploration and a few dangerous rewards." data-i18n-placeholder="create.placeholder"></textarea>
           </label>
-          <button id="generateDungeon" class="primary-action wide-action" type="button">Generate</button>
+          <button id="generateDungeon" class="primary-action wide-action" type="button" data-i18n="create.generate">Generate</button>
           <p id="generationStatus" class="muted" aria-live="polite"></p>
+          <div class="prompt-history">
+            <p class="section-caption" data-i18n="create.history">Prompt history · this session</p>
+            <div id="generationHistory" class="prompt-history-list">
+              <span class="muted" data-i18n="create.historyEmpty">No prompts yet.</span>
+            </div>
+          </div>
         </fieldset>
 
         <fieldset class="panel-play" data-workflow-panel="play" aria-label="Play dungeon">
-          <span id="validationStatus" data-state="blocked">Checking…</span>
           <div class="play-choice-row editor-only">
-            <button id="start" class="primary-action" type="button" disabled title="Play the dungeon currently shown in Edit mode.">▶ Test</button>
-            <button id="mysteryPlay" class="mystery-action" type="button" disabled title="Generate a fresh hidden dungeon from the same design intent.">🎲 Mystery</button>
+            <button id="start" class="primary-action" type="button" disabled title="Play the dungeon currently shown in Edit mode." data-i18n="play.test" data-i18n-title="play.testTitle">▶ Test</button>
+            <button id="mysteryPlay" class="mystery-action" type="button" disabled title="Reroll routes and content with a fresh seed. Generator V1 may keep a similar room layout." data-i18n="play.mystery">🎲 Mystery</button>
           </div>
-          <p class="mode-note editor-only">Test = current · Mystery = unseen</p>
+          <p class="mode-note editor-only" data-i18n="play.note">Test = current · Mystery = unseen</p>
           <div class="play-summary">
             <span id="playModeLabel" class="play-mode-pill" hidden></span>
             <div id="playStatus" class="play-metrics" aria-live="polite">
-              <span class="metric"><span class="metric-label">MOVE</span><span id="moveCount">0</span></span>
-              <span class="metric"><span class="metric-label">MAP</span><span id="mappedCount">0</span></span>
+              <span class="metric"><span class="metric-label" data-i18n="play.move">MOVE</span><span id="moveCount">0</span></span>
+              <span class="metric"><span class="metric-label" data-i18n="play.map">MAP</span><span id="mappedCount">0</span></span>
             </div>
           </div>
           <p id="resultStatus" class="result-banner" aria-live="polite" hidden></p>
           <div id="resultMetrics" class="result-metrics" hidden></div>
         </fieldset>
 
-        <fieldset class="editor-only" data-workflow-panel="edit">
-          <legend>✎ Entities</legend>
-          
-          <label>
-            Entities
-            <select id="entitySelect" size="7" aria-label="Existing entities"></select>
-          </label>
-          <label>
-            Room
-            <select id="entityRoom" aria-label="Target room"></select>
-          </label>
-          <div class="button-row">
-            <button id="moveEntity" type="button" disabled>Move to room</button>
-            <button id="removeEntity" class="danger-action" type="button" disabled>Remove</button>
-          </div>
-          
-          <label>
-            ＋ Type
-            <select id="entityType" aria-label="New entity type">
-              <option value="enemy">Enemy</option>
-              <option value="treasure">Treasure</option>
-              <option value="trap">Trap</option>
-              <option value="recovery">Recovery</option>
-            </select>
-          </label>
-          <button id="addEntity" class="wide-action" type="button">＋ Add</button>
-        </fieldset>
-
         <fieldset class="panel-ai editor-only" data-workflow-panel="edit">
-          <legend>✦ AI Edit</legend>
-          
+          <legend data-i18n="ai.title">✦ AI Request</legend>
           <label>
-            Request
-            <textarea id="naturalEditInput" aria-label="Natural-language edit request" placeholder="Move the treasure to the room that contains the goal."></textarea>
+            <span data-i18n="ai.request">Request</span>
+            <textarea id="naturalEditInput" aria-label="Natural-language edit request" placeholder="Move the treasure to the room that contains the goal." data-i18n-placeholder="ai.placeholder"></textarea>
           </label>
-          <button id="applyNaturalEdit" class="wide-action" type="button">✦ Apply</button>
+          <button id="applyNaturalEdit" class="wide-action" type="button" data-i18n="ai.apply">✦ Apply</button>
           <p id="naturalEditStatus" class="muted" aria-live="polite"></p>
         </fieldset>
+
+        <section id="editInspector" class="inspector-shell editor-only" data-workflow-panel="edit" data-inspector-tab="entities" aria-label="Edit inspector">
+          <nav class="inspector-tabs" aria-label="Edit inspector sections">
+            <button class="inspector-tab is-active" type="button" data-inspector-tab-target="entities" aria-selected="true" data-i18n="entities.title">✦ Entities</button>
+            <button class="inspector-tab" type="button" data-inspector-tab-target="rooms" aria-selected="false" data-i18n="rooms.title">▦ Rooms</button>
+            <button class="inspector-tab" type="button" data-inspector-tab-target="corridors" aria-selected="false" data-i18n="corridors.title">⇄ Corridors</button>
+          </nav>
+          <fieldset class="inspector-panel" data-inspector-panel="entities">
+            <legend data-i18n="entities.title">✦ Entities</legend>
+            <p class="panel-kicker" data-i18n="entities.help">Select an entity in 3D, Room contents, or the dropdown below.</p>
+            <label>
+              <span data-i18n="entities.selected">Selected entity</span>
+              <select id="entitySelect" aria-label="Existing entities"></select>
+            </label>
+            <label>
+              <span data-i18n="entities.room">Room</span>
+              <select id="entityRoom" aria-label="Target room"></select>
+            </label>
+            <div class="button-row">
+              <button id="moveEntity" type="button" disabled data-i18n="entities.move">Move to room</button>
+              <button id="removeEntity" class="danger-action" type="button" disabled data-i18n="entities.remove">Remove</button>
+            </div>
+            <label class="entity-create-label">
+              <span data-i18n="entities.type">＋ Type</span>
+              <select id="entityType" aria-label="New entity type">
+                <option value="enemy" data-i18n="entity.enemy">Enemy</option>
+                <option value="treasure" data-i18n="entity.treasure">Chest</option>
+                <option value="trap" data-i18n="entity.trap">Trap</option>
+                <option value="recovery" data-i18n="entity.recovery">Recovery</option>
+              </select>
+            </label>
+            <button id="addEntity" class="wide-action" type="button" data-i18n="entities.add">＋ Add</button>
+          </fieldset>
+
+          <fieldset class="inspector-panel" data-inspector-panel="rooms">
+            <legend data-i18n="rooms.title">▦ Rooms</legend>
+            <p class="panel-kicker" data-i18n="rooms.help">Select a room in 3D or from this list. Drag the 3D view to orbit; use the mouse wheel to zoom. Move selected rooms with Arrow keys or WASD.</p>
+            <label>
+              <span data-i18n="rooms.list">Rooms</span>
+              <select id="roomSelect" size="5" aria-label="Rooms"></select>
+            </label>
+            <div class="room-size-grid">
+              <label>
+                <span data-i18n="rooms.width">Width</span>
+                <span class="size-stepper">
+                  <button id="roomWidthMinus" type="button" aria-label="Decrease room width">−</button>
+                  <input id="roomWidth" type="number" min="1" step="1" aria-label="Room width">
+                  <button id="roomWidthPlus" type="button" aria-label="Increase room width">＋</button>
+                </span>
+              </label>
+              <label>
+                <span data-i18n="rooms.depth">Depth</span>
+                <span class="size-stepper">
+                  <button id="roomDepthMinus" type="button" aria-label="Decrease room depth">−</button>
+                  <input id="roomDepth" type="number" min="1" step="1" aria-label="Room depth">
+                  <button id="roomDepthPlus" type="button" aria-label="Increase room depth">＋</button>
+                </span>
+              </label>
+            </div>
+            <p class="resize-note" data-i18n="rooms.resizeNote">Use − / ＋ for 1-unit steps, or type a size, then Apply. Overlapping rooms are blocked.</p>
+            <button id="resizeRoom" class="wide-action" type="button" disabled data-i18n="rooms.apply">Apply room size</button>
+
+            <section class="room-actions" aria-label="Room actions">
+              <div id="roomAddFromSelection">
+                <p class="section-caption" data-i18n="rooms.addDirection">Add room from selected room</p>
+                <div class="room-direction-actions">
+                  <button type="button" data-room-add-direction="north" title="Add room north">↑ <span data-i18n="side.north">North</span></button>
+                  <button type="button" data-room-add-direction="east" title="Add room east">→ <span data-i18n="side.east">East</span></button>
+                  <button type="button" data-room-add-direction="south" title="Add room south">↓ <span data-i18n="side.south">South</span></button>
+                  <button type="button" data-room-add-direction="west" title="Add room west">← <span data-i18n="side.west">West</span></button>
+                  <div class="room-direction-center" data-i18n="rooms.selectedCenter">Selected room</div>
+                </div>
+              </div>
+              <div id="roomAddWithoutSelection" class="room-add-without-selection" hidden>
+                <p data-i18n="rooms.noSelectionAddHelp">No room selected. Add a new room near the center of the current view.</p>
+                <button id="addRoomAtViewCenter" type="button" data-i18n="rooms.addAtViewCenter">＋ Add room near view center</button>
+              </div>
+              <div hidden>
+                <select id="roomAddDirection" aria-label="New room direction">
+                  <option value="east">East</option>
+                  <option value="south">South</option>
+                  <option value="west">West</option>
+                  <option value="north">North</option>
+                </select>
+                <button id="addRoom" type="button">Add room</button>
+              </div>
+              <button id="removeRoom" class="danger-action danger-wide room-remove-action" type="button" disabled data-i18n="rooms.remove">Remove selected room</button>
+            </section>
+          </fieldset>
+
+          <fieldset class="inspector-panel" data-inspector-panel="corridors">
+            <legend data-i18n="corridors.title">⇄ Corridors</legend>
+            <p class="panel-kicker" data-i18n="corridors.help">Select a room, then drag from one of its walls to another room. Drag an existing corridor endpoint to reconnect it.</p>
+            <label>
+              <span data-i18n="corridors.selected">Selected corridor</span>
+              <select id="corridorSelect" aria-label="Existing corridors"></select>
+            </label>
+            <div class="compact-grid">
+              <label>
+                <span data-i18n="corridors.fromSide">From side</span>
+                <select id="corridorFromSide" aria-label="Corridor from side">
+                  <option value="auto" data-i18n="corridors.auto">Auto</option>
+                  <option value="north" data-i18n="side.north">North</option>
+                  <option value="east" data-i18n="side.east">East</option>
+                  <option value="south" data-i18n="side.south">South</option>
+                  <option value="west" data-i18n="side.west">West</option>
+                </select>
+              </label>
+              <label>
+                <span data-i18n="corridors.toSide">To side</span>
+                <select id="corridorToSide" aria-label="Corridor to side">
+                  <option value="auto" data-i18n="corridors.auto">Auto</option>
+                  <option value="north" data-i18n="side.north">North</option>
+                  <option value="east" data-i18n="side.east">East</option>
+                  <option value="south" data-i18n="side.south">South</option>
+                  <option value="west" data-i18n="side.west">West</option>
+                </select>
+              </label>
+            </div>
+            <button id="applyCorridorSides" class="wide-action" type="button" disabled data-i18n="corridors.applySides">Apply doorway sides</button>
+            <button id="removeCorridor" class="danger-action danger-wide" type="button" disabled data-i18n="corridors.remove">Remove selected corridor</button>
+
+            <div class="corridor-drag-callout">
+              <strong data-i18n="corridors.dragTitle">3D drag editing</strong>
+              <span data-i18n="corridors.dragBody">Room → wall drag → target room. Release without reaching a room to cancel.</span>
+            </div>
+            <div class="manual-corridor-create" hidden aria-hidden="true">
+              <p class="section-caption" data-i18n="corridors.new">New corridor</p>
+              <div class="compact-grid">
+                <label>
+                  <span data-i18n="corridors.fromRoom">From room</span>
+                  <select id="corridorFromRoom" aria-label="New corridor from room"></select>
+                </label>
+                <label>
+                  <span data-i18n="corridors.toRoom">To room</span>
+                  <select id="corridorToRoom" aria-label="New corridor to room"></select>
+                </label>
+              </div>
+              <button id="addCorridor" class="wide-action" type="button" data-i18n="corridors.add">＋ Add corridor</button>
+            </div>
+          </fieldset>
+        </section>
       </aside>
     </div>
   </main>
@@ -868,13 +1915,16 @@
           <p id="onboardingEyebrow">Describe. Edit. Play.</p>
           <h1 id="onboardingTitle">Welcome to Dungeon Architect AI</h1>
         </div>
-        <button id="onboardingClose" type="button" aria-label="Close guide">×</button>
+        <div class="onboarding-top-actions">
+          <button id="onboardingLanguageCycle" class="language-cycle" type="button" data-language-cycle>EN → 日本語</button>
+          <button id="onboardingClose" type="button" aria-label="Close guide" data-i18n-aria-label="onboarding.close">×</button>
+        </div>
       </div>
       <p id="onboardingBody"></p>
       <div class="onboarding-footer">
         <span id="onboardingProgress">1 / 5</span>
-        <button id="onboardingBack" type="button">Back</button>
-        <button id="onboardingNext" class="primary-action" type="button">Next</button>
+        <button id="onboardingBack" type="button" data-i18n="onboarding.back">Back</button>
+        <button id="onboardingNext" class="primary-action" type="button" data-i18n="onboarding.next">Next</button>
       </div>
     </div>
   </section>

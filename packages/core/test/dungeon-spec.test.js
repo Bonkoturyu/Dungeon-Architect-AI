@@ -60,3 +60,44 @@ test("unreachable Goal is rejected", async () => {
   assert.equal(result.valid, false);
   assert.ok(result.errors.some((error) => error.code === "GOAL_UNREACHABLE"));
 });
+
+
+test("Start and Goal cannot share a room", async () => {
+  const spec = await loadFixture();
+  const goal = spec.entities.find((entity) => entity.type === "goal");
+  const start = spec.entities.find((entity) => entity.type === "start");
+  goal.roomId = start.roomId;
+  const result = validateDungeonSpec(spec);
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((error) => error.code === "START_GOAL_SAME_ROOM"));
+});
+
+
+test("overlapping room interiors are rejected while touching edges remain valid", async () => {
+  const overlapping = await loadFixture();
+  overlapping.rooms.find((room) => room.id === "room-middle").width = 50;
+  const overlapResult = validateDungeonSpec(overlapping);
+  assert.equal(overlapResult.valid, false);
+  assert.ok(overlapResult.errors.some((error) => error.code === "ROOM_OVERLAP"));
+
+  const touching = await loadFixture();
+  touching.rooms.find((room) => room.id === "room-middle").x = 8;
+  const touchingResult = validateDungeonSpec(touching);
+  assert.equal(touchingResult.valid, true);
+  assert.ok(!touchingResult.errors.some((error) => error.code === "ROOM_OVERLAP"));
+});
+
+
+test("corridor doorway side preferences accept cardinal sides and reject invalid values", async () => {
+  const valid = await loadFixture();
+  valid.corridors[0].fromSide = "east";
+  valid.corridors[0].toSide = "west";
+  const validResult = validateDungeonSpec(valid);
+  assert.equal(validResult.valid, true);
+
+  const invalid = await loadFixture();
+  invalid.corridors[0].fromSide = "up-left";
+  const invalidResult = validateDungeonSpec(invalid);
+  assert.equal(invalidResult.valid, false);
+  assert.ok(invalidResult.errors.some((error) => error.code === "CORRIDOR_SIDE_INVALID"));
+});
