@@ -98,6 +98,16 @@ try {
     htmlLang: document.documentElement.lang,
     title: document.querySelector('#onboardingTitle')?.textContent ?? '',
     createTab: document.querySelector('[data-workflow-tab="create"]')?.textContent ?? '',
+    headerCurrentLanguage: document.querySelector('#languageCycle')?.dataset.currentLanguage ?? null,
+    headerNextLanguage: document.querySelector('#languageCycle')?.dataset.nextLanguage ?? null,
+    dialogCurrentLanguage: document.querySelector('#onboardingLanguageCycle')?.dataset.currentLanguage ?? null,
+    dialogNextLanguage: document.querySelector('#onboardingLanguageCycle')?.dataset.nextLanguage ?? null,
+    headerCycleText: document.querySelector('#languageCycle')?.textContent ?? '',
+    dialogCycleText: document.querySelector('#onboardingLanguageCycle')?.textContent ?? '',
+    headerButtonCount: document.querySelectorAll('.app-header [data-language-cycle]').length,
+    dialogButtonCount: document.querySelectorAll('#onboarding [data-language-cycle]').length,
+    legacyHeaderLanguageButtons: document.querySelectorAll('.app-header [data-language]').length,
+    legacyDialogLanguageButtons: document.querySelectorAll('#onboarding [data-language]').length,
     stateLanguage: window.__DAI_EDITOR_SLICE__.getState().language,
   }));
 
@@ -107,15 +117,19 @@ try {
     ['zh-Hant', '歡迎使用 Dungeon Architect AI', '✨ 建立'],
     ['ko', 'Dungeon Architect AI에 오신 것을 환영합니다', '✨ 생성'],
   ]) {
-    await page.locator(`#onboarding [data-language="${language}"]`).click();
+    await page.locator('#onboardingLanguageCycle').click();
     await page.waitForTimeout(30);
     languageSamples[language] = await page.evaluate(
       ({ expectedTitle, expectedCreate }) => ({
         htmlLang: document.documentElement.lang,
         title: document.querySelector('#onboardingTitle')?.textContent ?? '',
         createTab: document.querySelector('[data-workflow-tab="create"]')?.textContent ?? '',
-        activeHeaderLanguage: document.querySelector('.app-header [data-language].is-active')?.dataset.language ?? null,
-        activeDialogLanguage: document.querySelector('#onboarding [data-language].is-active')?.dataset.language ?? null,
+        headerCurrentLanguage: document.querySelector('#languageCycle')?.dataset.currentLanguage ?? null,
+        headerNextLanguage: document.querySelector('#languageCycle')?.dataset.nextLanguage ?? null,
+        dialogCurrentLanguage: document.querySelector('#onboardingLanguageCycle')?.dataset.currentLanguage ?? null,
+        dialogNextLanguage: document.querySelector('#onboardingLanguageCycle')?.dataset.nextLanguage ?? null,
+        headerCycleText: document.querySelector('#languageCycle')?.textContent ?? '',
+        dialogCycleText: document.querySelector('#onboardingLanguageCycle')?.textContent ?? '',
         stateLanguage: window.__DAI_EDITOR_SLICE__.getState().language,
         expectedTitle,
         expectedCreate,
@@ -124,14 +138,18 @@ try {
     );
   }
 
-  await page.locator('#onboarding [data-language="en"]').click();
+  await page.locator('#onboardingLanguageCycle').click();
   await page.waitForTimeout(30);
   const englishRestored = await page.evaluate(() => ({
     htmlLang: document.documentElement.lang,
     title: document.querySelector('#onboardingTitle')?.textContent ?? '',
     createTab: document.querySelector('[data-workflow-tab="create"]')?.textContent ?? '',
-    activeHeaderLanguage: document.querySelector('.app-header [data-language].is-active')?.dataset.language ?? null,
-    activeDialogLanguage: document.querySelector('#onboarding [data-language].is-active')?.dataset.language ?? null,
+    headerCurrentLanguage: document.querySelector('#languageCycle')?.dataset.currentLanguage ?? null,
+    headerNextLanguage: document.querySelector('#languageCycle')?.dataset.nextLanguage ?? null,
+    dialogCurrentLanguage: document.querySelector('#onboardingLanguageCycle')?.dataset.currentLanguage ?? null,
+    dialogNextLanguage: document.querySelector('#onboardingLanguageCycle')?.dataset.nextLanguage ?? null,
+    headerCycleText: document.querySelector('#languageCycle')?.textContent ?? '',
+    dialogCycleText: document.querySelector('#onboardingLanguageCycle')?.textContent ?? '',
     stateLanguage: window.__DAI_EDITOR_SLICE__.getState().language,
   }));
   await page.evaluate(() => window.__DAI_ONBOARDING__.close());
@@ -434,14 +452,23 @@ try {
         .every(([language, sample]) =>
           sample.htmlLang === language &&
           sample.stateLanguage === language &&
-          sample.activeHeaderLanguage === language &&
-          sample.activeDialogLanguage === language &&
+          sample.headerCurrentLanguage === language &&
+          sample.dialogCurrentLanguage === language &&
+          sample.headerCycleText === sample.dialogCycleText &&
           sample.title.trim().length > 0 &&
           sample.createTab.trim().length > 0) &&
       englishRestored.htmlLang === 'en' &&
       englishRestored.stateLanguage === 'en' &&
-      englishRestored.activeHeaderLanguage === 'en' &&
-      englishRestored.activeDialogLanguage === 'en',
+      englishRestored.headerCurrentLanguage === 'en' &&
+      englishRestored.dialogCurrentLanguage === 'en' &&
+      englishRestored.headerCycleText === englishRestored.dialogCycleText,
+    compactLanguageCycleControls:
+      languageSamples.en.headerButtonCount === 1 &&
+      languageSamples.en.dialogButtonCount === 1 &&
+      languageSamples.en.legacyHeaderLanguageButtons === 0 &&
+      languageSamples.en.legacyDialogLanguageButtons === 0 &&
+      languageSamples.en.headerCycleText === 'EN → 日本語' &&
+      languageSamples.en.dialogCycleText === 'EN → 日本語',
     editPanelsOrderedAiEntityRoom:
       editPanelOrder.length === 3 &&
       editPanelOrder[0] === '✦ AI Request' &&
