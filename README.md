@@ -81,7 +81,7 @@ Key boundaries:
 - mobile is outside the supported submission acceptance scope;
 - no Safari/Firefox acceptance claim has been made;
 - there are no accounts, persistent project storage, analytics or telemetry;
-- the GitHub repository visibility switch remains a submission task. DAI-085–088 local polish gates are complete; the historical DAI-084 freeze remains a rollback point until the refreshed public demo/video are revalidated and a new final freeze is created.
+- the GitHub repository visibility switch remains a submission task. DAI-085 UI/UX polish is reopened for the 2026-09-21 owner-review revalidation; the historical DAI-084 freeze remains a rollback point until the refreshed public demo/video are revalidated and a new final freeze is created.
 
 ## Sample prompts
 
