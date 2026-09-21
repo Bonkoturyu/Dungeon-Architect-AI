@@ -9,6 +9,13 @@ export const ENTITY_TYPES = Object.freeze([
   "recovery"
 ]);
 
+export const CORRIDOR_SIDES = Object.freeze([
+  "north",
+  "east",
+  "south",
+  "west"
+]);
+
 export const EVENT_TRIGGER_TYPES = Object.freeze([
   "on_enter_room",
   "on_interact_entity",
@@ -33,6 +40,7 @@ export const EVENT_ACTION_TYPES = Object.freeze([
 ]);
 
 const ENTITY_TYPE_SET = new Set(ENTITY_TYPES);
+const CORRIDOR_SIDE_SET = new Set(CORRIDOR_SIDES);
 const EVENT_TRIGGER_TYPE_SET = new Set(EVENT_TRIGGER_TYPES);
 const EVENT_CONDITION_TYPE_SET = new Set(EVENT_CONDITION_TYPES);
 const EVENT_ACTION_TYPE_SET = new Set(EVENT_ACTION_TYPES);
@@ -189,6 +197,17 @@ function validateCorridors(corridors, ids, roomIds, corridorIds, errors) {
 
     if (corridor.initiallyEnabled !== undefined && typeof corridor.initiallyEnabled !== "boolean") {
       pushError(errors, "BOOLEAN_REQUIRED", `${path}.initiallyEnabled`, "initiallyEnabled must be a boolean when provided.");
+    }
+
+    for (const field of ["fromSide", "toSide"]) {
+      if (corridor[field] !== undefined && !CORRIDOR_SIDE_SET.has(corridor[field])) {
+        pushError(
+          errors,
+          "CORRIDOR_SIDE_INVALID",
+          `${path}.${field}`,
+          `${field} must be one of: ${CORRIDOR_SIDES.join(", ")}.`
+        );
+      }
     }
   });
 }
