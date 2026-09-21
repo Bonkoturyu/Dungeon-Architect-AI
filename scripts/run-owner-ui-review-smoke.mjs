@@ -432,14 +432,36 @@ try {
     window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === id), middleRoomId);
 
   // Structural authoring: direction-button Room creation plus direct 3D corridor drag.
-  const structuralAnchorId = await page.evaluate(() => {
+  const structuralSetup = await page.evaluate(() => {
     const state = window.__DAI_EDITOR_SLICE__.getState();
-    return state.rooms.reduce((best, room) => room.x < best.x ? room : best).id;
+    const rooms = state.rooms;
+    const candidates = [
+      { room: rooms.reduce((best, room) => room.x < best.x ? room : best), side: 'west', opposite: 'east' },
+      { room: rooms.reduce((best, room) => room.x > best.x ? room : best), side: 'east', opposite: 'west' },
+      { room: rooms.reduce((best, room) => room.z < best.z ? room : best), side: 'north', opposite: 'south' },
+      { room: rooms.reduce((best, room) => room.z > best.z ? room : best), side: 'south', opposite: 'north' },
+    ];
+    for (const candidate of candidates) {
+      window.__DAI_EDITOR_SLICE__.selectRoom(candidate.room.id);
+      const plan = window.__DAI_EDITOR_SLICE__.getCurrentRoomPlan?.();
+      const occupied = (plan?.doorOpenings ?? []).some((opening) => opening.side === candidate.side);
+      if (!occupied) {
+        return {
+          roomId: candidate.room.id,
+          side: candidate.side,
+          opposite: candidate.opposite,
+        };
+      }
+    }
+    return null;
   });
+  if (!structuralSetup) throw new Error('No free outward room wall available for direct corridor smoke.');
+
+  const structuralAnchorId = structuralSetup.roomId;
   await page.evaluate((id) => window.__DAI_EDITOR_SLICE__.selectRoom(id), structuralAnchorId);
   const structuralBefore = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
 
-  await page.click('[data-room-add-direction="west"]');
+  await page.click(`[data-room-add-direction="${structuralSetup.side}"]`);
   await page.waitForFunction((roomCount) =>
     window.__DAI_EDITOR_SLICE__.getState().rooms.length === roomCount + 1,
   structuralBefore.rooms.length);
@@ -448,18 +470,18 @@ try {
   if (!addedRoomId) throw new Error('Added room did not become selected.');
 
   await page.evaluate((id) => window.__DAI_EDITOR_SLICE__.selectRoom(id), structuralAnchorId);
-  const dragPoints = await page.evaluate(({ fromRoomId, toRoomId }) => {
+  const dragPoints = await page.evaluate(({ fromRoomId, toRoomId, side }) => {
     const state = window.__DAI_EDITOR_SLICE__.getState();
     const target = state.rooms.find((room) => room.id === toRoomId);
     return {
-      start: window.__DAI_EDITOR_SLICE__.getScreenPositionForRoomWall(fromRoomId, 'west'),
+      start: window.__DAI_EDITOR_SLICE__.getScreenPositionForRoomWall(fromRoomId, side),
       end: window.__DAI_EDITOR_SLICE__.getScreenPositionForWorldPoint({
         x: target.x,
         y: 0,
         z: target.z,
       }),
     };
-  }, { fromRoomId: structuralAnchorId, toRoomId: addedRoomId });
+  }, { fromRoomId: structuralAnchorId, toRoomId: addedRoomId, side: structuralSetup.side });
   if (!dragPoints.start || !dragPoints.end) throw new Error('Direct corridor drag screen points unavailable.');
 
   await page.mouse.move(dragPoints.start.x, dragPoints.start.y);
@@ -775,8 +797,8 @@ try {
       structuralAfterAddCorridor.inspectorTab === 'corridors' &&
       structuralAfterCleanup.corridors.length === structuralBefore.corridors.length,
     corridorCardinalDoorSidesWork:
-      structuralAfterSides.corridor?.fromSide === 'west' &&
-      structuralAfterSides.corridor?.toSide === 'east' &&
+      structuralAfterSides.corridor?.fromSide === structuralSetup.side &&
+      structuralAfterSides.corridor?.toSide === structuralSetup.opposite &&
       structuralAfterSides.selectedCorridorId === addedCorridorId &&
       structuralAfterSides.selectionText.includes(addedCorridorId),
     corridorDraftReleaseWithoutRoomCancels:
@@ -908,6 +930,7 @@ try {
     middleBefore,
     middleAfterW,
     middleAfterRestore,
+    structuralSetup,
     structuralBefore,
     structuralAfterAddRoom,
     structuralAfterAddCorridor,
