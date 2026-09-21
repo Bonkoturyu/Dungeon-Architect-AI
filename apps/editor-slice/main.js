@@ -13,6 +13,7 @@ import {
 } from '../../packages/play-core/src/interaction-runtime.js';
 import { createDungeonScenePlan, createThreeRendererAdapter } from '../../packages/renderer-three/src/index.js';
 import { generateDungeonFromDesignIntent } from '../../packages/generator/src/design-intent-generator.js';
+import { DEFAULT_GENERATOR_VERSION } from '../../packages/generator/src/generator-versions.js';
 import {
   bindLanguageSwitchers,
   getLanguage,
@@ -1109,6 +1110,7 @@ async function generateDungeonFromPrompt() {
     lastNaturalEditCommand = null;
     lastDesignIntent = clone(payload.intent);
     lastGeneration = {
+      generatorVersion: generated.generatorVersion ?? DEFAULT_GENERATOR_VERSION,
       selectedProvider: payload.selectedProvider ?? 'unknown',
       seed: generated.profile.seed,
       roomCount: generated.profile.roomCount,
