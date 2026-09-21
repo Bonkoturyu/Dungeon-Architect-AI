@@ -25,6 +25,7 @@ Before each policy decision the simulator creates a plain-data observation conta
 - current room and goal room;
 - currently enabled adjacent room IDs;
 - visited room IDs and move count;
+- current PlayerState including HP, Level, XP, Gold, and equipment;
 - active room enemies;
 - unresolved room treasure/trap/recovery entities;
 - gameplay counters;
@@ -77,7 +78,7 @@ For the same:
 
 it must produce the same action trace and final simulation result.
 
-Randomized behavior, if introduced by a later agent, must be seeded explicitly outside the simulator core.
+Progression rewards are deterministic functions of the dungeon seed, loot-table version, source kind, and entity ID. Randomized behavior outside that contract, if introduced by a later agent, must be seeded explicitly outside the simulator core.
 
 ## Result contract
 
@@ -88,7 +89,7 @@ A successful simulation returns:
 - step count and termination reason;
 - terminal Play status/failure reason;
 - deterministic action trace;
-- the real PlayResult;
+- the real PlayResult, including final PlayerState and progression metrics;
 - final gameplay state.
 
 DAI-062 will derive comparison metrics from this evidence rather than duplicating gameplay semantics inside the simulator.
