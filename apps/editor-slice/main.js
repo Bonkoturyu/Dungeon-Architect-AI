@@ -1,4 +1,5 @@
 import { EditSession } from '../../packages/editor-core/src/edit-session.js';
+import { applyEditCommand } from '../../packages/editor-core/src/edit-command.js';
 import { evaluateStartGate } from '../../packages/editor-core/src/start-gate.js';
 import { startPlaySession, movePlaySession, createPlayResult } from '../../packages/play-core/src/play-session.js';
 import { createRendererVisibilityFromPlaySession, derivePlayMap } from '../../packages/play-core/src/play-map.js';
@@ -10,7 +11,7 @@ import {
   triggerTrap,
   useRecovery,
 } from '../../packages/play-core/src/interaction-runtime.js';
-import { createThreeRendererAdapter } from '../../packages/renderer-three/src/index.js';
+import { createDungeonScenePlan, createThreeRendererAdapter } from '../../packages/renderer-three/src/index.js';
 import { generateDungeonFromDesignIntent } from '../../packages/generator/src/design-intent-generator.js';
 
 const canvas = document.querySelector('#renderCanvas');
@@ -37,6 +38,10 @@ const mappedCount = document.querySelector('#mappedCount');
 const roomSelect = document.querySelector('#roomSelect');
 const roomWidth = document.querySelector('#roomWidth');
 const roomDepth = document.querySelector('#roomDepth');
+const roomWidthMinus = document.querySelector('#roomWidthMinus');
+const roomWidthPlus = document.querySelector('#roomWidthPlus');
+const roomDepthMinus = document.querySelector('#roomDepthMinus');
+const roomDepthPlus = document.querySelector('#roomDepthPlus');
 const resizeRoomButton = document.querySelector('#resizeRoom');
 const checkPathButton = document.querySelector('#checkPath');
 const pathStatus = document.querySelector('#pathStatus');
@@ -52,6 +57,8 @@ const generateDungeonButton = document.querySelector('#generateDungeon');
 const generationStatus = document.querySelector('#generationStatus');
 const generationHistory = document.querySelector('#generationHistory');
 const authoringPreviewCover = document.querySelector('#authoringPreviewCover');
+const viewportNotice = document.querySelector('#viewportNotice');
+const playReticle = document.querySelector('#playReticle');
 const naturalEditInput = document.querySelector('#naturalEditInput');
 const applyNaturalEditButton = document.querySelector('#applyNaturalEdit');
 const naturalEditStatus = document.querySelector('#naturalEditStatus');
@@ -81,6 +88,7 @@ let promptHistory = [];
 let authoringPreviewConcealed = false;
 let pathCheckResult = null;
 let canvasPointerOrigin = null;
+let viewportNoticeTimer = null;
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -178,6 +186,29 @@ function setNaturalEditStatus(message) {
   naturalEditStatus.textContent = message;
 }
 
+function showViewportNotice(message, { timeoutMs = 2200 } = {}) {
+  if (!viewportNotice) return;
+  if (viewportNoticeTimer) clearTimeout(viewportNoticeTimer);
+  viewportNotice.textContent = String(message);
+  viewportNotice.hidden = false;
+  viewportNoticeTimer = setTimeout(() => {
+    viewportNotice.hidden = true;
+    viewportNotice.textContent = '';
+    viewportNoticeTimer = null;
+  }, timeoutMs);
+}
+
+function friendlyEditError(error) {
+  const code = error?.code ?? 'EDIT_FAILED';
+  const message = String(error?.message ?? '');
+  if (code === 'START_GOAL_SAME_ROOM') return 'Blocked: Start and Goal must be in different rooms.';
+  if (code === 'EDIT_RESULT_INVALID' && message.includes('ROOM_OVERLAP')) {
+    return 'Blocked: that change would overlap another room.';
+  }
+  if (code === 'ROOM_DIMENSION_INVALID') return 'Blocked: room size must be greater than zero.';
+  return `Blocked: ${code}`;
+}
+
 function refreshGate() {
   gate = evaluateStartGate(authoringSpec());
   if (gate.allowed) {
@@ -270,6 +301,8 @@ function ensureRoomOptions() {
 
   if (selectedRoomId && rooms.some((room) => room.id === selectedRoomId)) {
     roomSelect.value = selectedRoomId;
+  } else if (entity && rooms.some((room) => room.id === entity.roomId)) {
+    roomSelect.value = entity.roomId;
   } else {
     roomSelect.selectedIndex = -1;
   }
@@ -359,6 +392,7 @@ function updateUi() {
   if (hint) hint.hidden = true;
 
   if (authoringPreviewCover) authoringPreviewCover.hidden = !concealed;
+  if (playReticle) playReticle.hidden = mode !== 'play';
   canvas.style.visibility = concealed ? 'hidden' : 'visible';
 
   if (viewportTitle) {
@@ -416,6 +450,10 @@ function updateUi() {
   roomWidth.disabled = !editing || authoringBusy || !room;
   roomDepth.disabled = !editing || authoringBusy || !room;
   resizeRoomButton.disabled = !editing || authoringBusy || !room;
+  roomWidthMinus.disabled = !editing || authoringBusy || !room;
+  roomWidthPlus.disabled = !editing || authoringBusy || !room;
+  roomDepthMinus.disabled = !editing || authoringBusy || !room;
+  roomDepthPlus.disabled = !editing || authoringBusy || !room;
   checkPathButton.disabled = !editing || authoringBusy;
   entitySelect.disabled = !editing || authoringBusy;
   entityRoom.disabled = !editing || authoringBusy;
@@ -691,6 +729,10 @@ function renderActiveSpec() {
     adapter.setSelectedSpecId(null);
   }
 
+  const contextRoomId = mode === 'edit' && selectedEntityId
+    ? selectedEntity()?.roomId ?? null
+    : null;
+  adapter.setContextSpecId(contextRoomId);
   adapter.setHighlightedSpecIds(pathCheckResult?.highlightIds ?? []);
 
   renderRoomEvents();
@@ -718,6 +760,8 @@ function selectRoom(roomId) {
   ensureRoomOptions();
   ensureEntityOptions();
   adapter.setSelectedSpecId(roomId);
+  adapter.setContextSpecId(null);
+  adapter.focusSpecId(roomId, { preserveDistance: true });
   updateUi();
   return true;
 }
@@ -741,6 +785,7 @@ function selectEntity(entityId) {
   ensureRoomOptions();
   ensureEntityOptions();
   adapter.setSelectedSpecId(entity.id);
+  adapter.setContextSpecId(entity.roomId);
   updateUi();
   return true;
 }
@@ -753,13 +798,38 @@ function clearPathCheck() {
 
 function applyCommand(command, successMessage) {
   if (mode !== 'edit' || generationBusy || naturalEditBusy) return false;
-  const result = session.apply(command);
-  if (!result.ok) {
-    setEditStatus(`error: ${result.error.code}`);
+
+  const preview = applyEditCommand(authoringSpec(), command);
+  if (!preview.ok) {
+    const message = friendlyEditError(preview.error);
+    setEditStatus(`error: ${preview.error.code}`);
+    showViewportNotice(message);
     return false;
   }
+
+  if (command.type === 'move-room' || command.type === 'resize-room') {
+    try {
+      createDungeonScenePlan(preview.spec);
+    } catch {
+      setEditStatus('error: LAYOUT_NOT_RENDERABLE');
+      showViewportNotice('Blocked: corridors cannot be routed cleanly from that layout.');
+      return false;
+    }
+  }
+
+  const result = session.apply(command);
+  if (!result.ok) {
+    const message = friendlyEditError(result.error);
+    setEditStatus(`error: ${result.error.code}`);
+    showViewportNotice(message);
+    return false;
+  }
+
   clearPathCheck();
   renderActiveSpec();
+  if (command.type === 'move-room' || command.type === 'resize-room') {
+    adapter.focusSpecId(command.roomId, { preserveDistance: true });
+  }
   setEditStatus(successMessage);
   return true;
 }
@@ -875,6 +945,16 @@ function checkStartGoalPath() {
   pathStatus.textContent = `✓ Reachable · ${path.moves} move${path.moves === 1 ? '' : 's'}\n${routeText}`;
   adapter.setHighlightedSpecIds(pathCheckResult.highlightIds);
   return true;
+}
+
+function stepRoomSize(axis, delta) {
+  const room = selectedRoom();
+  if (!room || !['width', 'depth'].includes(axis) || !Number.isFinite(delta)) return false;
+  const input = axis === 'width' ? roomWidth : roomDepth;
+  const current = Number(input.value || room[axis]);
+  const next = Math.max(1, current + delta);
+  input.value = String(next);
+  return resizeSelectedRoom();
 }
 
 function nextEntityId(type) {
@@ -1292,9 +1372,48 @@ function isFormControl(target) {
 }
 
 function handleKeyboard(event) {
-  if (mode !== 'edit') return;
   const commandKey = event.ctrlKey || event.metaKey;
   const key = event.key.toLowerCase();
+
+  if (isFormControl(event.target)) return;
+
+  if (mode === 'play') {
+    const directionByKey = {
+      ArrowUp: 'north',
+      ArrowRight: 'east',
+      ArrowDown: 'south',
+      ArrowLeft: 'west',
+      w: 'north',
+      d: 'east',
+      s: 'south',
+      a: 'west',
+    };
+    const direction = directionByKey[event.key] ?? directionByKey[key];
+    if (!direction) return;
+    event.preventDefault();
+
+    if (roomBlocksExit()) {
+      showViewportNotice('Resolve the room event before leaving.');
+      return;
+    }
+
+    const map = derivePlayMap(playSession);
+    const roomPlan = adapter.plan?.roomGroups.find((group) => group.specId === map.currentRoomId);
+    const sideByCorridor = new Map(
+      (roomPlan?.doorOpenings ?? []).map((opening) => [opening.corridorId, opening.side])
+    );
+    const matches = map.currentExits.filter((exit) => sideByCorridor.get(exit.corridorId) === direction);
+    if (matches.length === 1) {
+      movePlayToRoom(matches[0].targetRoomId, matches[0].corridorId);
+    } else if (matches.length > 1) {
+      showViewportNotice(`Multiple ${direction} exits — choose one on the exit pad.`);
+    } else {
+      showViewportNotice(`No ${direction} exit.`);
+    }
+    return;
+  }
+
+  if (mode !== 'edit') return;
 
   if (commandKey && key === 'z') {
     event.preventDefault();
@@ -1307,8 +1426,6 @@ function handleKeyboard(event) {
     redo();
     return;
   }
-
-  if (isFormControl(event.target)) return;
 
   const moves = {
     ArrowLeft: [-1, 0],
@@ -1351,6 +1468,10 @@ async function run() {
     mysteryPlayButton.addEventListener('click', startMysteryDungeon);
     returnEditButton.addEventListener('click', returnToEdit);
     roomSelect.addEventListener('change', () => selectRoom(roomSelect.value));
+    roomWidthMinus.addEventListener('click', () => stepRoomSize('width', -1));
+    roomWidthPlus.addEventListener('click', () => stepRoomSize('width', 1));
+    roomDepthMinus.addEventListener('click', () => stepRoomSize('depth', -1));
+    roomDepthPlus.addEventListener('click', () => stepRoomSize('depth', 1));
     resizeRoomButton.addEventListener('click', resizeSelectedRoom);
     checkPathButton.addEventListener('click', checkStartGoalPath);
     entitySelect.addEventListener('change', () => selectEntity(entitySelect.value));
