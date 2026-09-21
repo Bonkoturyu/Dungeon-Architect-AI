@@ -108,25 +108,32 @@ try {
     ['ko', 'Dungeon Architect AI에 오신 것을 환영합니다', '✨ 생성'],
   ]) {
     await page.locator(`#onboarding [data-language="${language}"]`).click();
-    await page.waitForFunction(({ language, expectedTitle, expectedCreate }) =>
-      document.documentElement.lang === language &&
-      document.querySelector('#onboardingTitle')?.textContent === expectedTitle &&
-      document.querySelector('[data-workflow-tab="create"]')?.textContent === expectedCreate,
-    { language, expectedTitle, expectedCreate });
-    languageSamples[language] = await page.evaluate(() => ({
-      htmlLang: document.documentElement.lang,
-      title: document.querySelector('#onboardingTitle')?.textContent ?? '',
-      createTab: document.querySelector('[data-workflow-tab="create"]')?.textContent ?? '',
-      activeHeaderLanguage: document.querySelector('.app-header [data-language].is-active')?.dataset.language ?? null,
-      activeDialogLanguage: document.querySelector('#onboarding [data-language].is-active')?.dataset.language ?? null,
-      stateLanguage: window.__DAI_EDITOR_SLICE__.getState().language,
-    }));
+    await page.waitForTimeout(30);
+    languageSamples[language] = await page.evaluate(
+      ({ expectedTitle, expectedCreate }) => ({
+        htmlLang: document.documentElement.lang,
+        title: document.querySelector('#onboardingTitle')?.textContent ?? '',
+        createTab: document.querySelector('[data-workflow-tab="create"]')?.textContent ?? '',
+        activeHeaderLanguage: document.querySelector('.app-header [data-language].is-active')?.dataset.language ?? null,
+        activeDialogLanguage: document.querySelector('#onboarding [data-language].is-active')?.dataset.language ?? null,
+        stateLanguage: window.__DAI_EDITOR_SLICE__.getState().language,
+        expectedTitle,
+        expectedCreate,
+      }),
+      { expectedTitle, expectedCreate },
+    );
   }
 
   await page.locator('#onboarding [data-language="en"]').click();
-  await page.waitForFunction(() =>
-    document.documentElement.lang === 'en' &&
-    document.querySelector('#onboardingTitle')?.textContent === 'Welcome to Dungeon Architect AI');
+  await page.waitForTimeout(30);
+  const englishRestored = await page.evaluate(() => ({
+    htmlLang: document.documentElement.lang,
+    title: document.querySelector('#onboardingTitle')?.textContent ?? '',
+    createTab: document.querySelector('[data-workflow-tab="create"]')?.textContent ?? '',
+    activeHeaderLanguage: document.querySelector('.app-header [data-language].is-active')?.dataset.language ?? null,
+    activeDialogLanguage: document.querySelector('#onboarding [data-language].is-active')?.dataset.language ?? null,
+    stateLanguage: window.__DAI_EDITOR_SLICE__.getState().language,
+  }));
   await page.evaluate(() => window.__DAI_ONBOARDING__.close());
 
   // Camera orbit / zoom.
@@ -424,15 +431,21 @@ try {
       languageSamples.en.createTab === '✨ Create' &&
       languageSamples.en.stateLanguage === 'en',
     allFiveLanguagesSwitchLive:
-      languageSamples.ja?.stateLanguage === 'ja' &&
-      languageSamples['zh-Hans']?.stateLanguage === 'zh-Hans' &&
-      languageSamples['zh-Hant']?.stateLanguage === 'zh-Hant' &&
-      languageSamples.ko?.stateLanguage === 'ko' &&
-      languageSamples.ja?.activeHeaderLanguage === 'ja' &&
-      languageSamples.ja?.activeDialogLanguage === 'ja' &&
-      languageSamples['zh-Hans']?.activeHeaderLanguage === 'zh-Hans' &&
-      languageSamples['zh-Hant']?.activeHeaderLanguage === 'zh-Hant' &&
-      languageSamples.ko?.activeHeaderLanguage === 'ko',
+      Object.entries(languageSamples)
+        .filter(([language]) => language !== 'en')
+        .every(([language, sample]) =>
+          sample.htmlLang === language &&
+          sample.stateLanguage === language &&
+          sample.title === sample.expectedTitle &&
+          sample.createTab === sample.expectedCreate &&
+          sample.activeHeaderLanguage === language &&
+          sample.activeDialogLanguage === language) &&
+      englishRestored.htmlLang === 'en' &&
+      englishRestored.stateLanguage === 'en' &&
+      englishRestored.title === 'Welcome to Dungeon Architect AI' &&
+      englishRestored.createTab === '✨ Create' &&
+      englishRestored.activeHeaderLanguage === 'en' &&
+      englishRestored.activeDialogLanguage === 'en',
     editPanelsOrderedAiEntityRoom:
       editPanelOrder.length === 3 &&
       editPanelOrder[0] === '✦ AI Request' &&
@@ -543,6 +556,7 @@ try {
     passed: falseChecks.length === 0,
     checks,
     languageSamples,
+    englishRestored,
     editPanelOrder,
     falseChecks,
     cameraBefore,
