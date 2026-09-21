@@ -1,5 +1,8 @@
 import { applyGameplayStateCommand } from "./gameplay-state.js";
 import { dispatchSupportedEvents } from "./event-runtime.js";
+import { applyPlayerDamage } from "./play-session.js";
+
+export const DEFAULT_ENEMY_DAMAGE = 4;
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -114,6 +117,50 @@ export function recordEnemyEncounter(session, enemyId, { at = session?.startedAt
   });
   next.events.push({ type: "enemy-encounter", enemyId, roomId: validation.enemy.roomId, at });
   return { ok: true, session: next };
+}
+
+export function resolveEnemyCombat(
+  session,
+  enemyId,
+  { at = session?.startedAt ?? 0, damage = null } = {}
+) {
+  const validation = validateEnemyAction(session, enemyId);
+  if (!validation.ok) return validation;
+
+  const previousState = currentEnemyState(session, enemyId);
+  if (previousState.status === "defeated") {
+    return { ok: false, error: { code: "ENEMY_ALREADY_DEFEATED", message: `${enemyId} is already defeated.` } };
+  }
+
+  const configuredDamage = damage ?? validation.enemy.damage ?? DEFAULT_ENEMY_DAMAGE;
+  if (!Number.isSafeInteger(configuredDamage) || configuredDamage < 0) {
+    return {
+      ok: false,
+      error: { code: "ENEMY_DAMAGE_INVALID", message: `Invalid enemy damage for ${enemyId}.` }
+    };
+  }
+
+  let current = session;
+  if ((previousState.encounters ?? 0) === 0) {
+    const encountered = recordEnemyEncounter(current, enemyId, { at });
+    if (!encountered.ok) return encountered;
+    current = encountered.session;
+  }
+
+  const damaged = applyPlayerDamage(current, configuredDamage, {
+    at,
+    sourceType: "enemy",
+    sourceId: enemyId
+  });
+  if (!damaged.ok) return damaged;
+
+  if (damaged.session.status === "failed") {
+    return { ok: true, session: damaged.session, defeated: false, damageApplied: damaged.applied };
+  }
+
+  const defeated = defeatEnemy(damaged.session, enemyId, { at });
+  if (!defeated.ok) return defeated;
+  return { ok: true, session: defeated.session, defeated: true, damageApplied: damaged.applied };
 }
 
 export function defeatEnemy(session, enemyId, { at = session?.startedAt ?? 0 } = {}) {

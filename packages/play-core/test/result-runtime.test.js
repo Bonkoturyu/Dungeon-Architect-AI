@@ -100,6 +100,7 @@ test("cleared Result exposes route and gameplay metrics", () => {
   assert.equal(result.result.schemaVersion, "1.0");
   assert.equal(result.result.status, "cleared");
   assert.equal(result.result.failureReason, null);
+  assert.deepEqual(result.result.playerState, { hp: 20, maxHp: 20 });
   assert.equal(result.result.elapsed, 40);
   assert.deepEqual(result.result.routeRoomIds, [
     "room-001", "room-002", "room-003", "room-004", "room-005"
@@ -149,6 +150,7 @@ test("player-defeated failure reports one terminal death", () => {
   const result = createPlayResult(failed.session);
   assert.equal(result.ok, true);
   assert.equal(result.result.failureReason, "player-defeated");
+  assert.deepEqual(result.result.playerState, { hp: 0, maxHp: 20 });
   assert.equal(result.result.metrics.deaths, 1);
 });
 

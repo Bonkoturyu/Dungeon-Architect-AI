@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { generateDungeonSpec } from "../../generator/src/dungeon-generator.js";
 import {
   applyPlaySessionStateCommand,
+  applyPlayerDamage,
+  applyPlayerHealing,
   createPlayResult,
   movePlaySession,
   startPlaySession
@@ -11,7 +13,8 @@ import {
   defeatEnemy,
   getEnemyState,
   listRoomEnemies,
-  recordEnemyEncounter
+  recordEnemyEncounter,
+  resolveEnemyCombat
 } from "../src/enemy-runtime.js";
 
 function fixture() {
@@ -44,6 +47,7 @@ test("START creates an execution snapshot independent from later authoring chang
 
 test("START creates deterministic renderer-independent gameplay state", () => {
   const session = startPlaySession(fixture()).session;
+  assert.deepEqual(session.playerState, { hp: 20, maxHp: 20 });
   assert.deepEqual(session.gameplayState, {
     schemaVersion: "1.0",
     flags: {},
@@ -60,6 +64,43 @@ test("START creates deterministic renderer-independent gameplay state", () => {
       healingReceived: 0
     }
   });
+});
+
+test("player damage and healing are immutable, capped, and lethal damage ends the run", () => {
+  const started = startPlaySession(fixture(), { startedAt: 10, maxHp: 10 }).session;
+  const damaged = applyPlayerDamage(started, 4, {
+    at: 11,
+    sourceType: "test",
+    sourceId: "damage-a"
+  });
+  assert.equal(damaged.ok, true);
+  assert.equal(started.playerState.hp, 10);
+  assert.deepEqual(damaged.session.playerState, { hp: 6, maxHp: 10 });
+  assert.equal(damaged.session.gameplayState.counters.damageTaken, 4);
+  assert.equal(damaged.session.events.at(-1).type, "player-damaged");
+
+  const healed = applyPlayerHealing(damaged.session, 3, {
+    at: 12,
+    sourceType: "test",
+    sourceId: "heal-a"
+  });
+  assert.equal(healed.ok, true);
+  assert.deepEqual(healed.session.playerState, { hp: 9, maxHp: 10 });
+  assert.equal(healed.session.gameplayState.counters.healingReceived, 3);
+  assert.equal(healed.session.events.at(-1).type, "player-healed");
+
+  const lethal = applyPlayerDamage(healed.session, 20, {
+    at: 13,
+    sourceType: "test",
+    sourceId: "damage-b"
+  });
+  assert.equal(lethal.ok, true);
+  assert.equal(lethal.session.status, "failed");
+  assert.equal(lethal.session.failureReason, "player-defeated");
+  assert.equal(lethal.session.completedAt, 13);
+  assert.equal(lethal.session.playerState.hp, 0);
+  assert.equal(lethal.session.gameplayState.counters.damageTaken, 13);
+  assert.equal(lethal.session.events.at(-1).type, "session-failed");
 });
 
 test("movement only allows adjacent rooms", () => {
@@ -179,6 +220,21 @@ test("enemy defeat marks only the runtime entity and increments enemiesCleared e
   assert.equal(repeated.ok, false);
   assert.equal(repeated.error.code, "ENEMY_ALREADY_DEFEATED");
   assert.equal(defeated.session.gameplayState.counters.enemiesCleared, 1);
+});
+
+test("deterministic enemy combat damages the player and clears the enemy when the player survives", () => {
+  const started = startPlaySession(enemyFixture(), { startedAt: 300, maxHp: 10 }).session;
+  const moved = movePlaySession(started, "room-002", { at: 301 }).session;
+  const resolved = resolveEnemyCombat(moved, "enemy-test", { at: 302 });
+
+  assert.equal(resolved.ok, true);
+  assert.equal(resolved.defeated, true);
+  assert.equal(resolved.damageApplied, 4);
+  assert.deepEqual(resolved.session.playerState, { hp: 6, maxHp: 10 });
+  assert.equal(resolved.session.gameplayState.counters.damageTaken, 4);
+  assert.equal(resolved.session.gameplayState.counters.enemiesCleared, 1);
+  assert.equal(getEnemyState(resolved.session, "enemy-test").state.encounters, 1);
+  assert.equal(getEnemyState(resolved.session, "enemy-test").state.status, "defeated");
 });
 
 test("enemy runtime rejects unknown enemies and actions after session completion", () => {

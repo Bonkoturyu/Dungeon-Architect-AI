@@ -100,7 +100,10 @@ test("trap triggering increments trapsTriggered once", () => {
   assert.equal(triggered.ok, true);
   assert.equal(getTrapState(triggered.session, "trap-test").state.status, "triggered");
   assert.equal(triggered.session.gameplayState.counters.trapsTriggered, 1);
-  assert.equal(triggered.session.events.at(-1).type, "trap-triggered");
+  assert.equal(triggered.session.gameplayState.counters.damageTaken, 6);
+  assert.equal(triggered.session.playerState.hp, 14);
+  assert.ok(triggered.session.events.some((event) => event.type === "trap-triggered"));
+  assert.equal(triggered.session.events.at(-1).type, "player-damaged");
 
   const repeated = triggerTrap(triggered.session, "trap-test", { at: 41 });
   assert.equal(repeated.ok, false);
@@ -112,14 +115,19 @@ test("recovery use is one-shot and increments recoveryUsed", () => {
   let session = startPlaySession(fixture()).session;
   session = movePlaySession(session, "room-002").session;
   session = movePlaySession(session, "room-003").session;
+  session = triggerTrap(session, "trap-test", { at: 49 }).session;
+  assert.equal(session.playerState.hp, 14);
   session = movePlaySession(session, "room-004").session;
 
   const used = useRecovery(session, "recovery-test", { at: 50 });
   assert.equal(used.ok, true);
   assert.equal(getRecoveryState(used.session, "recovery-test").state.status, "used");
   assert.equal(used.session.gameplayState.counters.recoveryUsed, 1);
-  assert.equal(used.session.gameplayState.counters.interactions, 1);
-  assert.equal(used.session.events.at(-1).type, "recovery-used");
+  assert.equal(used.session.gameplayState.counters.interactions, 2);
+  assert.equal(used.session.gameplayState.counters.healingReceived, 6);
+  assert.equal(used.session.playerState.hp, 20);
+  assert.ok(used.session.events.some((event) => event.type === "recovery-used"));
+  assert.equal(used.session.events.at(-1).type, "player-healed");
 
   const repeated = useRecovery(used.session, "recovery-test", { at: 51 });
   assert.equal(repeated.ok, false);

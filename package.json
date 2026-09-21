@@ -56,6 +56,7 @@
     "smoke:ui-ux-polish": "node scripts/run-ui-ux-polish-smoke.mjs",
     "smoke:exploration-ux": "node scripts/run-dai-086-exploration-smoke.mjs",
     "smoke:room-events": "node scripts/run-dai-087-room-events-smoke.mjs",
+    "validate:player-stats": "node scripts/run-dai-093-player-stats.mjs",
     "smoke:owner-ui-review": "node scripts/run-owner-ui-review-smoke.mjs"
   },
   "devDependencies": {

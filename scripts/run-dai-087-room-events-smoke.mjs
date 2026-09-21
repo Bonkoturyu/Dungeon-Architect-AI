@@ -237,6 +237,7 @@ try {
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().mode === 'result', null, { timeout: 30_000 });
   const result = await state(page);
   const resultText = await page.locator('#resultMetrics').innerText();
+  const hpReadout = await page.locator('#hpCount').innerText();
   await page.screenshot({ path: path.join(outputDir, 'room-event-result.png'), fullPage: true });
 
   await page.click('#returnEdit');
@@ -272,6 +273,11 @@ try {
       resultText.includes('ENEMY') &&
       resultText.includes('CHEST') &&
       resultText.includes('TRAP'),
+    playerStatsVisible:
+      resultText.includes('HP') &&
+      resultText.includes('DMG') &&
+      resultText.includes('HEAL') &&
+      hpReadout === `${result.result?.playerState?.hp ?? 0}/${result.result?.playerState?.maxHp ?? 0}`,
     runClears: result.result?.status === 'cleared',
     playEventTimesMonotonic: eventTimesMonotonic,
     resultTimeNotBeforeEvents:
@@ -301,6 +307,7 @@ try {
     resultMetrics: metrics,
     playEventTimes: eventTimes,
     resultText,
+    hpReadout,
     interactionState,
     consoleErrors,
     pageErrors,

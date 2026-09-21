@@ -1,5 +1,9 @@
 import { applyGameplayStateCommand } from "./gameplay-state.js";
 import { dispatchSupportedEvents } from "./event-runtime.js";
+import { applyPlayerDamage, applyPlayerHealing } from "./play-session.js";
+
+export const DEFAULT_TRAP_DAMAGE = 6;
+export const DEFAULT_RECOVERY_HEALING = 8;
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -223,7 +227,12 @@ export function inspectTrap(session, trapId, { at = session?.startedAt ?? 0 } = 
   return dispatchEntityTriggers(next, trapId, ["on_interact_entity"], at);
 }
 
-function resolveTrap(session, trapId, resolution, { at = session?.startedAt ?? 0 } = {}) {
+function resolveTrap(
+  session,
+  trapId,
+  resolution,
+  { at = session?.startedAt ?? 0, damage = resolution === "triggered" ? DEFAULT_TRAP_DAMAGE : 0 } = {}
+) {
   const validation = validateAction(session, "trap", trapId);
   if (!validation.ok) return validation;
 
@@ -249,7 +258,21 @@ function resolveTrap(session, trapId, resolution, { at = session?.startedAt ?? 0
     warning: validation.entity.warning ?? null,
     at
   });
-  return dispatchEntityTriggers(next, trapId, ["on_interact_entity"], at);
+  const dispatched = dispatchEntityTriggers(next, trapId, ["on_interact_entity"], at);
+  if (!dispatched.ok || resolution !== "triggered") return dispatched;
+
+  const configuredDamage = validation.entity.damage ?? damage;
+  if (!Number.isSafeInteger(configuredDamage) || configuredDamage < 0) {
+    return {
+      ok: false,
+      error: { code: "TRAP_DAMAGE_INVALID", message: `Invalid trap damage for ${trapId}.` }
+    };
+  }
+  return applyPlayerDamage(dispatched.session, configuredDamage, {
+    at,
+    sourceType: "trap",
+    sourceId: trapId
+  });
 }
 
 export function avoidTrap(session, trapId, options = {}) {
@@ -260,7 +283,11 @@ export function triggerTrap(session, trapId, options = {}) {
   return resolveTrap(session, trapId, "triggered", options);
 }
 
-export function useRecovery(session, recoveryId, { at = session?.startedAt ?? 0 } = {}) {
+export function useRecovery(
+  session,
+  recoveryId,
+  { at = session?.startedAt ?? 0, healing = DEFAULT_RECOVERY_HEALING } = {}
+) {
   const validation = validateAction(session, "recovery", recoveryId);
   if (!validation.ok) return validation;
 
@@ -277,5 +304,19 @@ export function useRecovery(session, recoveryId, { at = session?.startedAt ?? 0 
   incrementCounter(next, "recoveryUsed", 1);
   incrementInteraction(next);
   next.events.push({ type: "recovery-used", recoveryId, roomId: validation.entity.roomId, at });
-  return dispatchEntityTriggers(next, recoveryId, ["on_interact_entity"], at);
+  const dispatched = dispatchEntityTriggers(next, recoveryId, ["on_interact_entity"], at);
+  if (!dispatched.ok) return dispatched;
+
+  const configuredHealing = validation.entity.healing ?? healing;
+  if (!Number.isSafeInteger(configuredHealing) || configuredHealing < 0) {
+    return {
+      ok: false,
+      error: { code: "RECOVERY_HEALING_INVALID", message: `Invalid recovery healing for ${recoveryId}.` }
+    };
+  }
+  return applyPlayerHealing(dispatched.session, configuredHealing, {
+    at,
+    sourceType: "recovery",
+    sourceId: recoveryId
+  });
 }
