@@ -111,7 +111,7 @@ try {
   await page.waitForTimeout(50);
   const cameraAfterZoom = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getCameraState());
 
-  // Ordinary selection/rerender should preserve the user's manual camera.
+  // Room selection should preserve the user's manual camera rather than recentering.
   await page.evaluate(() => window.__DAI_EDITOR_SLICE__.selectRoom('room-middle'));
   const cameraAfterSelection = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getCameraState());
 
@@ -150,6 +150,12 @@ try {
   );
   const historyText = await page.locator('#generationHistory').innerText();
   const authoringSeed = generated.lastGeneration.seed;
+
+  await page.click('#checkPath');
+  const concealedGoalCheck = await page.evaluate(() => ({
+    result: window.__DAI_EDITOR_SLICE__.getState().pathCheckResult,
+    text: document.querySelector('#pathStatus')?.textContent ?? '',
+  }));
 
   await page.screenshot({ path: path.join(outputDir, 'generated-choice.png'), fullPage: true });
 
@@ -217,13 +223,39 @@ try {
     editStatus: document.querySelector('#editStatus')?.textContent ?? '',
   }), goalRoomId);
 
+  // Moving a room outward must not be rejected merely because strict non-crossing
+  // corridor routing can no longer satisfy the layout.
+  const leftmostBefore = await page.evaluate(() => {
+    const rooms = window.__DAI_EDITOR_SLICE__.getState().rooms;
+    return rooms.reduce((best, room) => room.x < best.x ? room : best);
+  });
+  await page.locator('#roomSelect').selectOption(leftmostBefore.id);
+  await canvas.focus();
+  for (let index = 0; index < 8; index += 1) await page.keyboard.press('a');
+  const leftmostAfter = await page.evaluate((id) =>
+    window.__DAI_EDITOR_SLICE__.getState().rooms.find((room) => room.id === id),
+  leftmostBefore.id);
+
+  const southmostBefore = await page.evaluate(() => {
+    const rooms = window.__DAI_EDITOR_SLICE__.getState().rooms;
+    return rooms.reduce((best, room) => room.z > best.z ? room : best);
+  });
+  await page.locator('#roomSelect').selectOption(southmostBefore.id);
+  await canvas.focus();
+  for (let index = 0; index < 8; index += 1) await page.keyboard.press('s');
+  const southmostAfter = await page.evaluate((id) =>
+    window.__DAI_EDITOR_SLICE__.getState().rooms.find((room) => room.id === id),
+  southmostBefore.id);
+
   const middleRoomId = await page.evaluate(() => {
     const state = window.__DAI_EDITOR_SLICE__.getState();
     return state.rooms.find((room) => room.id !== state.entities.find((entity) => entity.type === 'start')?.roomId &&
       room.id !== state.entities.find((entity) => entity.type === 'goal')?.roomId)?.id ?? null;
   });
   if (!middleRoomId) throw new Error('No interior room available.');
+  const cameraBeforeGeneratedRoomSelection = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getCameraState());
   await page.locator('#roomSelect').selectOption(middleRoomId);
+  const cameraAfterGeneratedRoomSelection = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getCameraState());
   const middleBefore = await page.evaluate((id) =>
     window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === id), middleRoomId);
   await canvas.focus();
@@ -240,9 +272,8 @@ try {
 
   const middleAfterRestore = await page.evaluate((id) =>
     window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === id), middleRoomId);
-  const cameraAfterRoomSelect = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getCameraState());
 
-  // Start -> Goal path check.
+  // In Edit, Goal Check may reveal the actual route.
   await page.click('#checkPath');
   const pathState = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState().pathCheckResult);
   const pathText = await page.locator('#pathStatus').innerText();
@@ -342,7 +373,9 @@ try {
   const checks = {
     mouseOrbitChangesCamera: distance3(cameraBefore.position, cameraAfterOrbit.position) > 0.1,
     mouseWheelZoomChangesDistance: cameraAfterZoom.distance < cameraAfterOrbit.distance - 0.1,
-    roomSelectionPreservesZoomDistance:
+    roomSelectionDoesNotRecenterCamera:
+      distance3(cameraAfterZoom.position, cameraAfterSelection.position) < 0.01 &&
+      distance3(cameraAfterZoom.target, cameraAfterSelection.target) < 0.01 &&
       Math.abs(cameraAfterZoom.distance - cameraAfterSelection.distance) < 0.01,
     touchingConnectedRoomsUseOuterShell:
       touchingState.rooms.find((room) => room.id === 'room-middle')?.x === 8 &&
@@ -356,6 +389,13 @@ try {
       workflowBeforeMystery === 'play' &&
       coverVisible === true &&
       canvasVisibilityWhileConcealed === 'hidden',
+    concealedGoalCheckDoesNotRevealRoute:
+      concealedGoalCheck.result?.reachable === true &&
+      concealedGoalCheck.result?.routeVisible === false &&
+      concealedGoalCheck.result?.roomIds?.length === 0 &&
+      concealedGoalCheck.result?.corridorIds?.length === 0 &&
+      concealedGoalCheck.result?.highlightIds?.length === 0 &&
+      concealedGoalCheck.text.trim() === '✓ Reachable',
     mysteryStartsDirectlyWithoutEditReveal:
       mystery.playSource === 'mystery' &&
       mystery.play.snapshot.seed !== authoringSeed &&
@@ -373,19 +413,26 @@ try {
       afterUnsafeResize.room?.width === 10 &&
       afterUnsafeResize.room?.depth === 9 &&
       afterUnsafeResize.editStatus.includes('EDIT_RESULT_INVALID'),
+    leftwardRoomMoveNotBlockedByCorridorRouting:
+      leftmostAfter?.x === leftmostBefore.x - 8,
+    downwardRoomMoveNotBlockedByCorridorRouting:
+      southmostAfter?.z === southmostBefore.z + 8,
     wasdMovesSelectedRoom: middleAfterW?.z === middleBefore.z - 1,
-    roomSelectionCentersCamera:
-      Math.abs(cameraAfterRoomSelect.target.x - middleAfterRestore.x) < 0.01 &&
-      Math.abs(cameraAfterRoomSelect.target.z - middleAfterRestore.z) < 0.01,
+    generatedRoomSelectionDoesNotRecenterCamera:
+      distance3(cameraBeforeGeneratedRoomSelection.position, cameraAfterGeneratedRoomSelection.position) < 0.01 &&
+      distance3(cameraBeforeGeneratedRoomSelection.target, cameraAfterGeneratedRoomSelection.target) < 0.01,
     blockedRoomMoveShowsReason:
       afterBlockedTouchMove.room?.x === 8 &&
       afterBlockedTouchMove.noticeVisible === true &&
       /Blocked:/.test(afterBlockedTouchMove.notice),
-    pathCheckShowsReachableRoute:
+    editGoalCheckShowsReachableRoute:
       pathState?.reachable === true &&
+      pathState?.routeVisible === true &&
       pathState.roomIds?.[0] === startRoomId &&
       pathState.roomIds?.at(-1) === goalRoomId &&
-      pathText.includes('Reachable'),
+      pathText.includes('Reachable') &&
+      pathText.includes('START') &&
+      pathText.includes('GOAL'),
     entityCardsReplaceTextWall:
       entityCardCount === entityCount &&
       entityIconCount === entityCount,
@@ -427,6 +474,7 @@ try {
     cameraAfterOrbit,
     cameraAfterZoom,
     cameraAfterSelection,
+    concealedGoalCheck,
     touchingRoomMiddle: touchingState.rooms.find((room) => room.id === 'room-middle'),
     touchingCorridorVisiblePoint,
     afterBlockedTouchMove,
@@ -435,10 +483,15 @@ try {
     resizedGoal,
     afterWidthStepper,
     afterUnsafeResize,
+    leftmostBefore,
+    leftmostAfter,
+    southmostBefore,
+    southmostAfter,
+    cameraBeforeGeneratedRoomSelection,
+    cameraAfterGeneratedRoomSelection,
     middleBefore,
     middleAfterW,
     middleAfterRestore,
-    cameraAfterRoomSelect,
     pathState,
     pathText,
     selectedEntityId: selectedEntityState.state.selectedEntityId,
