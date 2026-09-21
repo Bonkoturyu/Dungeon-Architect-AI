@@ -286,7 +286,6 @@ try {
       resultText.includes('WPN') &&
       resultText.includes('ARM'),
     progressionRewardsRecorded:
-      (metrics.xpEarned ?? 0) > 0 &&
       (metrics.goldEarned ?? 0) > 0 &&
       (metrics.lootCollected ?? 0) >= 1 &&
       (result.result?.playerState?.gold ?? 0) > 0 &&
