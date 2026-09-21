@@ -1,6 +1,7 @@
 import { validateDungeonSpec } from "../../core/src/dungeon-spec.js";
 import { applyGameplayStateCommand, createGameplayState } from "./gameplay-state.js";
 import { dispatchSupportedEvents, isRuntimeCorridorEnabled } from "./event-runtime.js";
+import { createInitialPlayerState } from "./progression-runtime.js";
 
 export const PLAY_FAILURE_REASONS = Object.freeze([
   "player-defeated",
@@ -70,6 +71,10 @@ function gameplayMetrics(session) {
     recoveryUsed: counters.recoveryUsed ?? 0,
     damageTaken: counters.damageTaken ?? 0,
     healingReceived: counters.healingReceived ?? 0,
+    xpEarned: counters.xpEarned ?? 0,
+    goldEarned: counters.goldEarned ?? 0,
+    levelUps: counters.levelUps ?? 0,
+    lootCollected: counters.lootCollected ?? 0,
     deaths: session.status === "failed" && session.failureReason === "player-defeated" ? 1 : 0
   };
 }
@@ -104,7 +109,7 @@ export function startPlaySession(authoringSpec, { startedAt = 0, maxHp = DEFAULT
     goalRoomId: goal.roomId,
     visitedRoomIds: [start.roomId],
     moves: 0,
-    playerState: { hp: maxHp, maxHp },
+    playerState: createInitialPlayerState(maxHp),
     gameplayState: createGameplayState({ roomEntries: 1 }),
     events: []
   };
