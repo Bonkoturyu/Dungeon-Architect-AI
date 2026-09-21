@@ -84,7 +84,19 @@ The browser UI and first-run guide support live switching between:
 - Traditional Chinese
 - Korean
 
-Language selection is page-session UI state only; reloading starts in English. Dungeon IDs, schema identifiers, API identifiers, and validation/error codes remain stable language-neutral contracts.
+Language selection is page-session UI state only; reloading starts in English.
+
+Localization architecture:
+
+- English is the default language and fallback catalog.
+- UI logic uses stable message IDs such as `tabs.create`, `goal.reachable`, and `entity.enemy`; rendered translated text is not used as a gameplay/state discriminator.
+- Runtime/gameplay decisions continue to use language-neutral IDs and constants such as `entity.type === "enemy"`, room IDs, corridor IDs, validation codes, action IDs, and mode values.
+- A language catalog is only a presentation mapping from stable message ID → localized string.
+- If a requested language has no entry for a stable message ID, the English message is displayed.
+- If the language identifier itself is unsupported, message lookup also falls back to English.
+- New UI languages can therefore be added by adding a catalog without changing gameplay judgment logic.
+
+Dungeon IDs, schema identifiers, API identifiers, validation/error codes, generator versions, and gameplay action IDs remain stable language-neutral contracts.
 
 ## Confirmed production scope decisions
 
