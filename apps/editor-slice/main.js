@@ -117,6 +117,7 @@ let gate = { allowed: false, criticalCount: 0, errors: [] };
 let playSession = null;
 let playSource = null;
 let lastPlayResult = null;
+let mysteryGeneration = null;
 let workflowTab = 'create';
 let inspectorTab = 'entities';
 let playActionClock = 0;
@@ -1582,6 +1583,7 @@ async function generateDungeonFromPrompt() {
     selectedCorridorId = null;
     playSession = null;
     playSource = null;
+    mysteryGeneration = null;
     lastPlayResult = null;
     lastNaturalEditCommand = null;
     lastDesignIntent = clone(payload.intent);
@@ -1804,6 +1806,7 @@ function startDungeon() {
     updateUi();
     return false;
   }
+  mysteryGeneration = null;
   return beginPlay(authoringSpec(), 'test');
 }
 
@@ -1825,6 +1828,14 @@ function startMysteryDungeon() {
     seed,
     id: `mystery-${seed}`,
   });
+  mysteryGeneration = {
+    generatorVersion: generated.generatorVersion ?? DEFAULT_GENERATOR_VERSION,
+    seed: generated.profile.seed,
+    roomCount: generated.profile.roomCount,
+    routeChoice: generated.profile.routeChoice,
+    entityCount: generated.spec.entities.length,
+    eventCount: generated.spec.events.length,
+  };
   return beginPlay(generated.spec, 'mystery');
 }
 
@@ -1853,9 +1864,32 @@ function movePlayToRoom(roomId, corridorId = null) {
 
 function returnToEdit() {
   if (mode === 'edit') return false;
+
+  const returningFromMystery = playSource === 'mystery' && Boolean(playSession?.snapshot);
+  if (returningFromMystery) {
+    session = new EditSession(playSession.snapshot);
+    authoringPreviewConcealed = false;
+    pathCheckResult = null;
+    lastNaturalEditCommand = null;
+    adapter.setHighlightedSpecIds([]);
+
+    if (mysteryGeneration) {
+      lastGeneration = {
+        ...lastGeneration,
+        generatorVersion: mysteryGeneration.generatorVersion,
+        seed: mysteryGeneration.seed,
+        roomCount: mysteryGeneration.roomCount,
+        routeChoice: mysteryGeneration.routeChoice,
+        entityCount: mysteryGeneration.entityCount,
+        eventCount: mysteryGeneration.eventCount,
+      };
+    }
+  }
+
   mode = 'edit';
   playSession = null;
   playSource = null;
+  mysteryGeneration = null;
   playActionClock = 0;
   setWorkflowTab('edit');
   selectedRoomId = null;
@@ -1873,7 +1907,8 @@ function returnToEdit() {
     playModeLabel.textContent = '';
     playModeLabel.hidden = true;
   }
-  setEditStatus('returned to edit');
+  setEditStatus(returningFromMystery ? 'mystery adopted into edit' : 'returned to edit');
+  renderPathStatus();
   renderActiveSpec();
   canvas.focus();
   return true;
