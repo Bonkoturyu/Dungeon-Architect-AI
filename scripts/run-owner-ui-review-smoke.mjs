@@ -214,11 +214,33 @@ try {
   await canvas.focus();
   await page.keyboard.press('a');
   await page.waitForTimeout(40);
-  const afterBlockedTouchMove = await page.evaluate(() => ({
-    room: window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === 'room-middle'),
-    notice: document.querySelector('#viewportNotice')?.textContent ?? '',
-    noticeVisible: document.querySelector('#viewportNotice')?.hidden === false,
-  }));
+  const afterBlockedTouchMove = await page.evaluate(() => {
+    const notice = document.querySelector('#viewportNotice');
+    const viewport = document.querySelector('.viewport-shell');
+    const noticeRect = notice?.getBoundingClientRect();
+    const viewportRect = viewport?.getBoundingClientRect();
+    return {
+      room: window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === 'room-middle'),
+      notice: notice?.textContent ?? '',
+      noticeVisible: notice?.hidden === false,
+      noticeRect: noticeRect ? {
+        left: noticeRect.left,
+        right: noticeRect.right,
+        top: noticeRect.top,
+        bottom: noticeRect.bottom,
+        width: noticeRect.width,
+        height: noticeRect.height,
+      } : null,
+      viewportRect: viewportRect ? {
+        left: viewportRect.left,
+        right: viewportRect.right,
+        top: viewportRect.top,
+        bottom: viewportRect.bottom,
+        width: viewportRect.width,
+        height: viewportRect.height,
+      } : null,
+    };
+  });
   await page.screenshot({ path: path.join(outputDir, 'touching-room-shell.png'), fullPage: true });
 
   // Generate and verify no authored topology is revealed before the choice.
@@ -715,6 +737,17 @@ try {
       afterBlockedTouchMove.room?.x === 8 &&
       afterBlockedTouchMove.noticeVisible === true &&
       /Blocked:/.test(afterBlockedTouchMove.notice),
+    viewportNoticeUsesLowerCenterPlacement:
+      afterBlockedTouchMove.noticeRect != null &&
+      afterBlockedTouchMove.viewportRect != null &&
+      Math.abs(
+        (afterBlockedTouchMove.noticeRect.left + afterBlockedTouchMove.noticeRect.right) / 2 -
+        (afterBlockedTouchMove.viewportRect.left + afterBlockedTouchMove.viewportRect.right) / 2
+      ) <= 2 &&
+      afterBlockedTouchMove.noticeRect.bottom <= afterBlockedTouchMove.viewportRect.bottom - 20 &&
+      afterBlockedTouchMove.noticeRect.bottom >= afterBlockedTouchMove.viewportRect.bottom - 48 &&
+      afterBlockedTouchMove.noticeRect.top > afterBlockedTouchMove.viewportRect.top +
+        afterBlockedTouchMove.viewportRect.height * 0.55,
     editGoalCheckShowsReachableRoute:
       pathState?.reachable === true &&
       pathState?.routeVisible === true &&
