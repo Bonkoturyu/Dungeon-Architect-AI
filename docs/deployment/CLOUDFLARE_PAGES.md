@@ -62,6 +62,14 @@ Expected evidence:
 
 This public smoke is reusable by DAI-081 when the final hosted-demo candidate is deployed.
 
+## Operational usage snapshots
+
+Owner-verified provider usage / quota snapshots are recorded separately from static platform facts:
+
+- [2026-09-21 OpenAI + Cloudflare runtime usage snapshot](RUNTIME_USAGE_SNAPSHOT_2026-09-21.md)
+
+These snapshots are point-in-time operational evidence and should be refreshed before the final submission freeze.
+
 ## Current Cloudflare platform facts used by DAI-072
 
 Reviewed against Cloudflare documentation on 2026-09-17:
