@@ -121,6 +121,15 @@ try {
   const touchingState = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
   const touchingCorridorVisiblePoint = await page.evaluate(() =>
     window.__DAI_EDITOR_SLICE__.getScreenPositionForSpecId('corridor-1'));
+
+  await canvas.focus();
+  await page.keyboard.press('a');
+  await page.waitForTimeout(40);
+  const afterBlockedTouchMove = await page.evaluate(() => ({
+    room: window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === 'room-middle'),
+    notice: document.querySelector('#viewportNotice')?.textContent ?? '',
+    noticeVisible: document.querySelector('#viewportNotice')?.hidden === false,
+  }));
   await page.screenshot({ path: path.join(outputDir, 'touching-room-shell.png'), fullPage: true });
 
   // Generate and verify no authored topology is revealed before the choice.
@@ -232,23 +241,6 @@ try {
   const middleAfterRestore = await page.evaluate((id) =>
     window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === id), middleRoomId);
   const cameraAfterRoomSelect = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getCameraState());
-
-  // Force a move toward a room until overlap is blocked, then confirm visible feedback and no mutation.
-  let blockedMoveObserved = false;
-  let blockedMoveNotice = '';
-  for (let attempt = 0; attempt < 20 && !blockedMoveObserved; attempt += 1) {
-    const before = await page.evaluate((id) =>
-      window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === id), middleRoomId);
-    await canvas.focus();
-    await page.keyboard.press('d');
-    await page.waitForTimeout(30);
-    const after = await page.evaluate((id) =>
-      window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === id), middleRoomId);
-    if (after.x === before.x) {
-      blockedMoveObserved = true;
-      blockedMoveNotice = await page.locator('#viewportNotice').innerText();
-    }
-  }
 
   // Start -> Goal path check.
   await page.click('#checkPath');
@@ -387,8 +379,9 @@ try {
       Math.abs(cameraAfterRoomSelect.target.x - middleAfterRestore.x) < 0.01 &&
       Math.abs(cameraAfterRoomSelect.target.z - middleAfterRestore.z) < 0.01,
     blockedRoomMoveShowsReason:
-      blockedMoveObserved === true &&
-      /Blocked:/.test(blockedMoveNotice),
+      afterBlockedTouchMove.room?.x === 8 &&
+      afterBlockedTouchMove.noticeVisible === true &&
+      /Blocked:/.test(afterBlockedTouchMove.notice),
     pathCheckShowsReachableRoute:
       pathState?.reachable === true &&
       pathState.roomIds?.[0] === startRoomId &&
@@ -437,6 +430,7 @@ try {
     cameraAfterSelection,
     touchingRoomMiddle: touchingState.rooms.find((room) => room.id === 'room-middle'),
     touchingCorridorVisiblePoint,
+    afterBlockedTouchMove,
     roomOptionText,
     goalCheckLayout,
     resizedGoal,
@@ -446,8 +440,6 @@ try {
     middleAfterW,
     middleAfterRestore,
     cameraAfterRoomSelect,
-    blockedMoveObserved,
-    blockedMoveNotice,
     pathState,
     pathText,
     selectedEntityId: selectedEntityState.state.selectedEntityId,
