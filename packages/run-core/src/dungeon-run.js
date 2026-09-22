@@ -8,6 +8,7 @@ export const DUNGEON_RUN_SPEC_VERSION = "1.0";
 export const MAX_DUNGEON_RUN_FLOORS = 10;
 
 function clone(value) {
+  if (value === undefined) return undefined;
   return JSON.parse(JSON.stringify(value));
 }
 
