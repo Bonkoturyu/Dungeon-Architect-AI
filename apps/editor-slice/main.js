@@ -2120,30 +2120,40 @@ function movePlayToRoom(roomId, corridorId = null) {
 function returnToEdit() {
   if (mode === 'edit') return false;
 
-  const returningFromMystery = playSource === 'mystery' && Boolean(playSession?.snapshot);
+  const runtimeFloorIndex = dungeonRunSession?.currentFloorIndex ?? currentFloorIndex;
+  const returningFromMystery =
+    playSource === 'mystery' &&
+    Array.isArray(dungeonRunSession?.snapshot?.floors) &&
+    dungeonRunSession.snapshot.floors.length > 0;
+
   if (returningFromMystery) {
-    session = new EditSession(playSession.snapshot);
+    setAuthoringFloors(
+      dungeonRunSession.snapshot.floors.map((floor) => floor.dungeon),
+      runtimeFloorIndex,
+    );
     authoringPreviewConcealed = false;
     pathCheckResult = null;
     lastNaturalEditCommand = null;
     adapter.setHighlightedSpecIds([]);
+    if (floorCountInput) floorCountInput.value = String(floorSessions.length);
 
     if (mysteryGeneration) {
       lastGeneration = {
         ...lastGeneration,
-        generatorVersion: mysteryGeneration.generatorVersion,
-        seed: mysteryGeneration.seed,
-        roomCount: mysteryGeneration.roomCount,
-        routeChoice: mysteryGeneration.routeChoice,
-        entityCount: mysteryGeneration.entityCount,
-        eventCount: mysteryGeneration.eventCount,
+        ...clone(mysteryGeneration),
       };
     }
+  } else if (floorSessions.length > 0) {
+    currentFloorIndex = Math.max(0, Math.min(floorSessions.length - 1, runtimeFloorIndex));
+    session = floorSessions[currentFloorIndex];
   }
 
   mode = 'edit';
   playSession = null;
   playSource = null;
+  dungeonRunSession = null;
+  lastDungeonRunResult = null;
+  lastPlayResult = null;
   mysteryGeneration = null;
   playActionClock = 0;
   setWorkflowTab('edit');
@@ -2152,6 +2162,7 @@ function returnToEdit() {
   selectedCorridorId = null;
   if (moveCount) moveCount.textContent = '0';
   if (mappedCount) mappedCount.textContent = '0';
+  if (playFloorCount) playFloorCount.textContent = `${currentFloorIndex + 1}/${Math.max(1, floorSessions.length)}`;
   if (hpCount) hpCount.textContent = '0/0';
   if (levelCount) levelCount.textContent = '1';
   if (xpCount) xpCount.textContent = '0/20';
@@ -2166,7 +2177,7 @@ function returnToEdit() {
     playModeLabel.textContent = '';
     playModeLabel.hidden = true;
   }
-  setEditStatus(returningFromMystery ? 'mystery adopted into edit' : 'returned to edit');
+  setEditStatus(returningFromMystery ? 'mystery run adopted into edit' : 'returned to edit');
   renderPathStatus();
   renderActiveSpec();
   canvas.focus();
