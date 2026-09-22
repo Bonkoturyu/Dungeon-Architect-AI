@@ -7,7 +7,7 @@ import {
   wallSideFromPart,
 } from '../../packages/editor-core/src/corridor-drag.js';
 import { evaluateStartGate } from '../../packages/editor-core/src/start-gate.js';
-import { startPlaySession, movePlaySession, createPlayResult } from '../../packages/play-core/src/play-session.js';
+import { movePlaySession, createPlayResult } from '../../packages/play-core/src/play-session.js';
 import { createRendererVisibilityFromPlaySession, derivePlayMap } from '../../packages/play-core/src/play-map.js';
 import {
   DEFAULT_ENEMY_DAMAGE,
@@ -902,6 +902,7 @@ function applyPlayRuntimeResult(result, failurePrefix) {
     return false;
   }
   playSession = result.session;
+  selectedRoomId = playSession.currentRoomId;
   updatePlayReadout();
   if (finalizePlayIfNeeded()) return true;
   renderActiveSpec();
@@ -1911,6 +1912,7 @@ function renderResultMetrics(result) {
   const metrics = result?.metrics ?? {};
   const player = result?.playerState ?? {};
   const items = [
+    ['FLOOR', `${lastDungeonRunResult?.floorsCompleted ?? 1}/${lastDungeonRunResult?.floorCount ?? 1}`],
     ['HP', `${player.hp ?? 0}/${player.maxHp ?? 0}`],
     ['LV', player.level ?? 1],
     ['XP', `${player.xp ?? 0}/${xpRequiredForNextLevel(player.level ?? 1)}`],
@@ -1937,21 +1939,67 @@ function renderResultMetrics(result) {
 
 function finalizePlayIfNeeded() {
   if (!playSession || !['cleared', 'failed'].includes(playSession.status)) return false;
-  const result = createPlayResult(playSession);
-  if (!result.ok) throw new Error(`createPlayResult failed: ${JSON.stringify(result.error)}`);
-  lastPlayResult = result.result;
+
+  if (!dungeonRunSession) {
+    const fallback = createPlayResult(playSession);
+    if (!fallback.ok) throw new Error(`createPlayResult failed: ${JSON.stringify(fallback.error)}`);
+    lastPlayResult = fallback.result;
+    lastDungeonRunResult = null;
+    mode = 'result';
+    resultStatus.textContent = lastPlayResult.status === 'cleared' ? t('result.cleared') : t('result.ended');
+    resultStatus.hidden = false;
+    renderResultMetrics(lastPlayResult);
+    renderActiveSpec();
+    return true;
+  }
+
+  const synced = syncDungeonRunFloor(dungeonRunSession, playSession, {
+    at: playSession.completedAt ?? playActionClock,
+  });
+  if (!synced.ok) {
+    throw new Error(`syncDungeonRunFloor failed: ${JSON.stringify(synced.error)}`);
+  }
+  dungeonRunSession = synced.run;
+  currentFloorIndex = dungeonRunSession.currentFloorIndex;
+
+  if (synced.advanced) {
+    playSession = dungeonRunSession.currentFloorSession;
+    if (playSource === 'test' && floorSessions[currentFloorIndex]) {
+      session = floorSessions[currentFloorIndex];
+    }
+    selectedRoomId = playSession.currentRoomId;
+    selectedEntityId = null;
+    selectedCorridorId = null;
+    playActionClock = Math.max(playActionClock, Number(playSession.startedAt) || 0);
+    mode = 'play';
+    resultStatus.textContent = '';
+    resultStatus.hidden = true;
+    updatePlayReadout();
+    setEditStatus(`${t('run.floor')} ${currentFloorIndex + 1}/${dungeonRunSession.floorCount}`);
+    renderActiveSpec();
+    return true;
+  }
+
+  const runResult = createDungeonRunResult(dungeonRunSession);
+  if (!runResult.ok) throw new Error(`createDungeonRunResult failed: ${JSON.stringify(runResult.error)}`);
+  lastDungeonRunResult = runResult.result;
+
+  const floorResult = dungeonRunSession.floorResults.at(-1)?.result ?? createPlayResult(playSession).result;
+  lastPlayResult = clone(floorResult);
   mode = 'result';
   if (moveCount) moveCount.textContent = String(lastPlayResult.moves);
   if (mappedCount) mappedCount.textContent = String(lastPlayResult.visitedRoomIds.length);
-  resultStatus.textContent = lastPlayResult.status === 'cleared' ? t('result.cleared') : t('result.ended');
+  if (playFloorCount) playFloorCount.textContent =
+    `${lastDungeonRunResult.floorsCompleted}/${lastDungeonRunResult.floorCount}`;
+  resultStatus.textContent = lastDungeonRunResult.status === 'cleared' ? t('result.cleared') : t('result.ended');
   resultStatus.hidden = false;
   renderResultMetrics(lastPlayResult);
   renderActiveSpec();
   return true;
 }
 
-function beginPlay(spec, source) {
-  const result = startPlaySession(spec, { startedAt: 0 });
+function beginDungeonRun(runSpec, source) {
+  const result = startDungeonRun(runSpec, { startedAt: 0 });
   if (!result.ok) {
     setEditStatus(`Play blocked: ${result.errors?.[0]?.code ?? 'VALIDATION'}`);
     return false;
@@ -1961,11 +2009,17 @@ function beginPlay(spec, source) {
   renderPathStatus();
   adapter.setHighlightedSpecIds([]);
 
-  playSession = result.session;
+  dungeonRunSession = result.run;
+  lastDungeonRunResult = null;
+  currentFloorIndex = dungeonRunSession.currentFloorIndex;
+  if (source === 'test' && floorSessions[currentFloorIndex]) {
+    session = floorSessions[currentFloorIndex];
+  }
+  playSession = dungeonRunSession.currentFloorSession;
   playActionClock = Number.isFinite(playSession.startedAt) ? playSession.startedAt : 0;
   playSource = source;
   lastPlayResult = null;
-  mode = playSession.status === 'playing' ? 'play' : 'result';
+  mode = 'play';
   selectedRoomId = playSession.currentRoomId;
   selectedEntityId = null;
   selectedCorridorId = null;
@@ -1976,7 +2030,9 @@ function beginPlay(spec, source) {
     resultMetrics.hidden = true;
   }
   updatePlayReadout();
-  setEditStatus(source === 'mystery' ? 'mystery play started' : 'test play started');
+  setEditStatus(source === 'mystery'
+    ? `mystery run started · ${dungeonRunSession.floorCount} floor(s)`
+    : `test run started · ${dungeonRunSession.floorCount} floor(s)`);
   renderActiveSpec();
   finalizePlayIfNeeded();
   return true;
@@ -1984,21 +2040,24 @@ function beginPlay(spec, source) {
 
 function startDungeon() {
   if (mode !== 'edit' || generationBusy || naturalEditBusy) return false;
-  refreshGate();
-  if (!gate.allowed) {
-    setEditStatus(`Play blocked: ${gate.criticalCount} Critical`);
+  const runSpec = authoringRunSpec('editor-test-run');
+  if (!runSpec.ok) {
+    setEditStatus(`Play blocked: ${runSpec.errors?.[0]?.code ?? 'VALIDATION'}`);
     updateUi();
     return false;
   }
   mysteryGeneration = null;
-  return beginPlay(authoringSpec(), 'test');
+  return beginDungeonRun(runSpec.spec, 'test');
 }
 
 function freshMysterySeed() {
   const values = new Uint32Array(1);
   crypto.getRandomValues(values);
   let seed = values[0] >>> 0;
-  const blocked = new Set([authoringSpec().seed, lastGeneration?.seed].filter(Number.isSafeInteger));
+  const blocked = new Set([
+    ...authoringFloorSpecs().map((spec) => spec.seed),
+    lastGeneration?.seed,
+  ].filter(Number.isSafeInteger));
   while (blocked.has(seed)) seed = (seed + 0x9e3779b9) >>> 0;
   return seed;
 }
@@ -2007,11 +2066,13 @@ function startMysteryDungeon() {
   if (mode !== 'edit' || generationBusy || naturalEditBusy || !lastDesignIntent) return false;
 
   const seed = freshMysterySeed();
-  const generated = generateDungeonFromDesignIntent(lastDesignIntent, {
+  const generatedFloors = generateFloorSet(lastDesignIntent, {
     prompt: 'mystery-play',
-    seed,
-    id: `mystery-${seed}`,
+    count: Math.max(1, floorSessions.length),
+    baseSeed: seed,
+    idPrefix: `mystery-${seed}`,
   });
+  const generated = generatedFloors[0];
   mysteryGeneration = {
     generatorVersion: generated.generatorVersion ?? DEFAULT_GENERATOR_VERSION,
     seed: generated.profile.seed,
@@ -2019,8 +2080,26 @@ function startMysteryDungeon() {
     routeChoice: generated.profile.routeChoice,
     entityCount: generated.spec.entities.length,
     eventCount: generated.spec.events.length,
+    floorCount: generatedFloors.length,
+    floors: generatedFloors.map((entry, index) => ({
+      floorIndex: index,
+      seed: entry.profile.seed,
+      dungeonId: entry.spec.id,
+      roomCount: entry.profile.roomCount,
+      entityCount: entry.spec.entities.length,
+      eventCount: entry.spec.events.length,
+    })),
   };
-  return beginPlay(generated.spec, 'mystery');
+
+  const runSpec = createDungeonRunSpec(
+    generatedFloors.map((entry) => entry.spec),
+    { id: `mystery-run-${seed}` }
+  );
+  if (!runSpec.ok) {
+    setEditStatus(`Mystery blocked: ${runSpec.errors?.[0]?.code ?? 'VALIDATION'}`);
+    return false;
+  }
+  return beginDungeonRun(runSpec.spec, 'mystery');
 }
 
 function movePlayToRoom(roomId, corridorId = null) {
@@ -2029,21 +2108,13 @@ function movePlayToRoom(roomId, corridorId = null) {
     setEditStatus('Resolve room event before leaving');
     return false;
   }
-  const result = movePlaySession(playSession, roomId, {
-    at: nextPlayActionAt(),
-    corridorId,
-  });
-  if (!result.ok) {
-    setEditStatus(`Move blocked: ${result.error.code}`);
-    return false;
-  }
-
-  playSession = result.session;
-  selectedRoomId = playSession.currentRoomId;
-  updatePlayReadout();
-  renderActiveSpec();
-  finalizePlayIfNeeded();
-  return true;
+  return applyPlayRuntimeResult(
+    movePlaySession(playSession, roomId, {
+      at: nextPlayActionAt(),
+      corridorId,
+    }),
+    'Move blocked',
+  );
 }
 
 function returnToEdit() {
