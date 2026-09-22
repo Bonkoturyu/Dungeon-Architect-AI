@@ -349,6 +349,7 @@ function snapshotState() {
       currentFloorIndex: dungeonRunSession.currentFloorIndex,
       floorCount: dungeonRunSession.floorCount,
       floorsCompleted: dungeonRunSession.floorResults?.length ?? 0,
+      floorDungeonIds: dungeonRunSession.snapshot.floors.map((floor) => floor.dungeon.id),
       playerState: clone(dungeonRunSession.playerState),
       events: clone(dungeonRunSession.events ?? []),
     } : null,
