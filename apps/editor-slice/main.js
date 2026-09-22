@@ -329,6 +329,17 @@ function snapshotState() {
     workflowTab,
     inspectorTab,
     language: getLanguage(),
+    floorCount: Math.max(1, floorSessions.length || 1),
+    currentFloorIndex,
+    run: dungeonRunSession ? {
+      status: dungeonRunSession.status,
+      failureReason: dungeonRunSession.failureReason,
+      currentFloorIndex: dungeonRunSession.currentFloorIndex,
+      floorCount: dungeonRunSession.floorCount,
+      floorsCompleted: dungeonRunSession.floorResults?.length ?? 0,
+      playerState: clone(dungeonRunSession.playerState),
+      events: clone(dungeonRunSession.events ?? []),
+    } : null,
     selectedRoomId,
     selectedEntityId,
     selectedCorridorId,
@@ -789,6 +800,7 @@ function updateUi() {
   }
 
   renderEditContextHud();
+  renderFloorControls();
 
   if (room) {
     if (document.activeElement !== roomWidth) roomWidth.value = String(room.width);
@@ -855,10 +867,12 @@ function updateUi() {
   removeEntityButton.disabled = !editing || authoringBusy || !entity || entity.type === 'start' || entity.type === 'goal';
   addEntityButton.disabled = !editing || authoringBusy || !entityRoom.value;
   generationPrompt.disabled = !editing || authoringBusy;
+  if (floorCountInput) floorCountInput.disabled = !editing || authoringBusy;
+  const runValidation = authoringRunSpec();
   generateDungeonButton.disabled = !editing || authoringBusy || !generationPrompt.value.trim();
   naturalEditInput.disabled = !editing || authoringBusy;
   applyNaturalEditButton.disabled = !editing || authoringBusy || !naturalEditInput.value.trim();
-  startButton.disabled = !editing || authoringBusy || !gate.allowed;
+  startButton.disabled = !editing || authoringBusy || !gate.allowed || !runValidation.ok;
   mysteryPlayButton.disabled = !editing || authoringBusy || !lastDesignIntent;
   mysteryPlayButton.title = authoringBusy
     ? t('play.mysteryTitleBusy')
@@ -2694,7 +2708,7 @@ async function run() {
     bindLanguageSwitchers(document);
     const response = await fetch('/spec/dungeon/fixtures/minimal-valid-v1.json', { cache: 'no-store' });
     if (!response.ok) throw new Error(`fixture fetch failed: HTTP ${response.status}`);
-    session = new EditSession(await response.json());
+    setAuthoringFloors([await response.json()]);
     adapter = createThreeRendererAdapter({ canvas });
     resize();
     renderActiveSpec();
@@ -2749,6 +2763,12 @@ async function run() {
     moveEntityButton.addEventListener('click', moveEntityToTargetRoom);
     removeEntityButton.addEventListener('click', removeEntity);
     generationPrompt.addEventListener('input', updateUi);
+    floorCountInput?.addEventListener('input', () => {
+      const count = requestedFloorCount();
+      if (floorCountInput.value !== String(count)) floorCountInput.value = String(count);
+      updateUi();
+    });
+    floorSelect?.addEventListener('change', () => selectFloor(floorSelect.value));
     generateDungeonButton.addEventListener('click', generateDungeonFromPrompt);
     naturalEditInput.addEventListener('input', updateUi);
     applyNaturalEditButton.addEventListener('click', applyNaturalEdit);
@@ -2769,6 +2789,7 @@ async function run() {
         return group ? clone(group) : null;
       },
       selectRoom,
+      selectFloor,
       selectEntity,
       selectCorridor,
       setInspectorTab,
