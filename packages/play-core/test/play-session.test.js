@@ -110,6 +110,16 @@ test("START can carry a validated PlayerState without aliasing the caller", () =
   assert.equal(invalid.ok, false);
   assert.equal(invalid.blocked, true);
   assert.equal(invalid.errors[0].code, "PLAYER_STATE_INVALID");
+
+  const defeatedCarry = startPlaySession(fixture(), {
+    initialPlayerState: {
+      ...started.session.playerState,
+      hp: 0
+    }
+  });
+  assert.equal(defeatedCarry.ok, false);
+  assert.equal(defeatedCarry.blocked, true);
+  assert.equal(defeatedCarry.errors[0].code, "PLAYER_STATE_INVALID");
 });
 
 test("player damage and healing are immutable, capped, and lethal damage ends the run", () => {
