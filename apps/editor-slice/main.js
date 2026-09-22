@@ -444,7 +444,22 @@ function friendlyEditError(error) {
 }
 
 function refreshGate() {
-  gate = evaluateStartGate(authoringSpec());
+  const currentGate = evaluateStartGate(authoringSpec());
+  const runValidation = authoringRunSpec();
+
+  if (runValidation.ok) {
+    gate = currentGate;
+  } else {
+    gate = {
+      allowed: false,
+      criticalCount: runValidation.errors.length,
+      errors: runValidation.errors.map((entry) => ({
+        severity: 'critical',
+        ...clone(entry),
+      })),
+    };
+  }
+
   if (gate.allowed) {
     validationStatus.dataset.state = 'pass';
     validationStatus.textContent = t('validation.valid');
