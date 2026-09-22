@@ -1726,13 +1726,17 @@ async function generateDungeonFromPrompt() {
       return false;
     }
 
-    const generated = generateDungeonFromDesignIntent(payload.intent, { prompt });
-    session = new EditSession(generated.spec);
+    const floorCount = requestedFloorCount();
+    const generatedFloors = generateFloorSet(payload.intent, { prompt, count: floorCount });
+    const generated = generatedFloors[0];
+    setAuthoringFloors(generatedFloors.map((entry) => entry.spec), 0);
     selectedRoomId = null;
     selectedEntityId = null;
     selectedCorridorId = null;
     playSession = null;
     playSource = null;
+    dungeonRunSession = null;
+    lastDungeonRunResult = null;
     mysteryGeneration = null;
     lastPlayResult = null;
     lastNaturalEditCommand = null;
@@ -1745,6 +1749,15 @@ async function generateDungeonFromPrompt() {
       routeChoice: generated.profile.routeChoice,
       entityCount: generated.spec.entities.length,
       eventCount: generated.spec.events.length,
+      floorCount: generatedFloors.length,
+      floors: generatedFloors.map((entry, index) => ({
+        floorIndex: index,
+        seed: entry.profile.seed,
+        dungeonId: entry.spec.id,
+        roomCount: entry.profile.roomCount,
+        entityCount: entry.spec.entities.length,
+        eventCount: entry.spec.events.length,
+      })),
     };
     mode = 'edit';
     authoringPreviewConcealed = true;
@@ -1752,7 +1765,7 @@ async function generateDungeonFromPrompt() {
     renderPathStatus();
     adapter.setHighlightedSpecIds([]);
     promptHistory = [
-      { prompt, roomCount: lastGeneration.roomCount },
+      { prompt, roomCount: lastGeneration.roomCount, floorCount: lastGeneration.floorCount },
       ...promptHistory,
     ].slice(0, 8);
     renderPromptHistory();
@@ -1762,8 +1775,10 @@ async function generateDungeonFromPrompt() {
     resultStatus.textContent = '';
     resultStatus.hidden = true;
     renderActiveSpec();
-    setGenerationStatus(t('generation.generated', { count: lastGeneration.roomCount }));
-    setEditStatus('generated new dungeon');
+    setGenerationStatus(floorCount > 1
+      ? t('generation.generatedRun', { floors: floorCount, count: lastGeneration.roomCount })
+      : t('generation.generated', { count: lastGeneration.roomCount }));
+    setEditStatus(floorCount > 1 ? `generated ${floorCount}-floor run` : 'generated new dungeon');
     return true;
   } catch {
     setGenerationStatus(t('generation.unavailable'));
