@@ -32,6 +32,12 @@ import { createDungeonScenePlan, createThreeRendererAdapter } from '../../packag
 import { generateDungeonFromDesignIntent } from '../../packages/generator/src/design-intent-generator.js';
 import { DEFAULT_GENERATOR_VERSION } from '../../packages/generator/src/generator-versions.js';
 import {
+  createDungeonRunResult,
+  createDungeonRunSpec,
+  startDungeonRun,
+  syncDungeonRunFloor,
+} from '../../packages/run-core/src/dungeon-run.js';
+import {
   bindLanguageSwitchers,
   getLanguage,
   subscribeLanguage,
@@ -65,6 +71,7 @@ const roomEventItems = document.querySelector('#roomEventItems');
 const playModeLabel = document.querySelector('#playModeLabel');
 const moveCount = document.querySelector('#moveCount');
 const mappedCount = document.querySelector('#mappedCount');
+const playFloorCount = document.querySelector('#playFloorCount');
 const hpCount = document.querySelector('#hpCount');
 const levelCount = document.querySelector('#levelCount');
 const xpCount = document.querySelector('#xpCount');
@@ -101,6 +108,9 @@ const addEntityButton = document.querySelector('#addEntity');
 const moveEntityButton = document.querySelector('#moveEntity');
 const removeEntityButton = document.querySelector('#removeEntity');
 const generationPrompt = document.querySelector('#generationPrompt');
+const floorCountInput = document.querySelector('#floorCount');
+const floorSelect = document.querySelector('#floorSelect');
+const floorSummary = document.querySelector('#floorSummary');
 const generateDungeonButton = document.querySelector('#generateDungeon');
 const generationStatus = document.querySelector('#generationStatus');
 const generationHistory = document.querySelector('#generationHistory');
@@ -119,6 +129,10 @@ const inspectorTabButtons = [...document.querySelectorAll('.inspector-tab[data-i
 
 let adapter;
 let session;
+let floorSessions = [];
+let currentFloorIndex = 0;
+let dungeonRunSession = null;
+let lastDungeonRunResult = null;
 let selectedRoomId = null;
 let selectedEntityId = null;
 let selectedCorridorId = null;
@@ -147,6 +161,109 @@ let viewportNoticeTimer = null;
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
+}
+
+function setAuthoringFloors(specs, selectedIndex = 0) {
+  if (!Array.isArray(specs) || specs.length === 0) {
+    throw new TypeError('setAuthoringFloors requires at least one DungeonSpec');
+  }
+  floorSessions = specs.map((spec) => new EditSession(spec));
+  currentFloorIndex = Math.max(0, Math.min(floorSessions.length - 1, selectedIndex));
+  session = floorSessions[currentFloorIndex];
+}
+
+function authoringFloorSpecs() {
+  if (floorSessions.length > 0) return floorSessions.map((entry) => entry.spec);
+  return session ? [session.spec] : [];
+}
+
+function authoringRunSpec(id = 'editor-run') {
+  return createDungeonRunSpec(authoringFloorSpecs(), { id });
+}
+
+function requestedFloorCount() {
+  const parsed = Number.parseInt(floorCountInput?.value ?? '1', 10);
+  if (!Number.isInteger(parsed)) return 1;
+  return Math.max(1, Math.min(10, parsed));
+}
+
+function derivedFloorSeed(baseSeed, floorIndex) {
+  if (floorIndex === 0) return baseSeed >>> 0;
+  return (baseSeed + Math.imul(floorIndex, 0x9e3779b9)) >>> 0;
+}
+
+function generateFloorSet(intent, { prompt, count, baseSeed = null, idPrefix = null } = {}) {
+  const total = Math.max(1, Math.min(10, Number.isInteger(count) ? count : 1));
+  const first = generateDungeonFromDesignIntent(intent, {
+    prompt,
+    ...(baseSeed === null ? {} : { seed: baseSeed >>> 0 }),
+    ...(idPrefix ? { id: idPrefix } : {}),
+  });
+  const rootSeed = first.profile.seed >>> 0;
+  const rootId = idPrefix ?? first.spec.id;
+  const generated = [first];
+
+  for (let floorIndex = 1; floorIndex < total; floorIndex += 1) {
+    const seed = derivedFloorSeed(rootSeed, floorIndex);
+    generated.push(generateDungeonFromDesignIntent(intent, {
+      prompt,
+      seed,
+      id: `${rootId}-floor-${String(floorIndex + 1).padStart(2, '0')}`,
+    }));
+  }
+
+  return generated;
+}
+
+function renderFloorControls() {
+  const count = Math.max(1, floorSessions.length || 1);
+  if (floorSelect) {
+    const currentOptions = [...floorSelect.options].map((option) => option.value);
+    const expectedOptions = Array.from({ length: count }, (_, index) => String(index));
+    if (JSON.stringify(currentOptions) !== JSON.stringify(expectedOptions)) {
+      floorSelect.replaceChildren(...expectedOptions.map((value, index) => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = `${t('run.floor')} ${index + 1}`;
+        return option;
+      }));
+    } else {
+      [...floorSelect.options].forEach((option, index) => {
+        option.textContent = `${t('run.floor')} ${index + 1}`;
+      });
+    }
+    floorSelect.value = String(Math.max(0, Math.min(count - 1, currentFloorIndex)));
+    floorSelect.disabled = mode !== 'edit' || generationBusy || naturalEditBusy || count <= 1;
+  }
+  if (floorSummary) floorSummary.textContent = `${currentFloorIndex + 1}/${count}`;
+  if (floorCountInput) floorCountInput.disabled = mode !== 'edit' || generationBusy || naturalEditBusy;
+
+  const playIndex = dungeonRunSession?.currentFloorIndex ?? 0;
+  const playCount = dungeonRunSession?.floorCount ?? count;
+  if (playFloorCount) playFloorCount.textContent = `${playIndex + 1}/${playCount}`;
+}
+
+function selectFloor(index) {
+  if (mode !== 'edit' || generationBusy || naturalEditBusy) return false;
+  const next = Number.parseInt(index, 10);
+  if (!Number.isInteger(next) || next < 0 || next >= floorSessions.length || next === currentFloorIndex) {
+    renderFloorControls();
+    return false;
+  }
+
+  currentFloorIndex = next;
+  session = floorSessions[currentFloorIndex];
+  selectedRoomId = null;
+  selectedEntityId = null;
+  selectedCorridorId = null;
+  pathCheckResult = null;
+  corridorDraft = null;
+  roomDrag = null;
+  adapter.setHighlightedSpecIds([]);
+  renderPathStatus();
+  renderActiveSpec();
+  setEditStatus(`${t('run.floor')} ${currentFloorIndex + 1}`);
+  return true;
 }
 
 function resize() {
