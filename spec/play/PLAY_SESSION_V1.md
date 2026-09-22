@@ -12,6 +12,8 @@ A successful START also initializes deterministic player vitality:
 
 `maxHp` must be a positive safe integer.
 
+For sequential multi-floor runs, `initialPlayerState` may carry an existing validated PlayerState into a fresh PlaySession. The carry is deep-cloned, must have HP greater than zero, and preserves HP / MaxHP / Level / XP / Gold / Weapon / Armor. Floor-local GameplayState is not carried.
+
 ## Execution snapshot
 
 A successful START deep-clones the authoring DungeonSpec into an execution snapshot. Later authoring edits cannot mutate the active play session.
