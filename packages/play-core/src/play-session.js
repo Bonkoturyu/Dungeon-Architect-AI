@@ -102,6 +102,17 @@ export function startPlaySession(
         }]
       };
     }
+    if (playerState.hp <= 0) {
+      return {
+        ok: false,
+        blocked: true,
+        errors: [{
+          code: "PLAYER_STATE_INVALID",
+          path: "playerState.hp",
+          message: "A new PlaySession requires playerState.hp to be greater than zero."
+        }]
+      };
+    }
   } else {
     if (!Number.isSafeInteger(maxHp) || maxHp <= 0) {
       return {
