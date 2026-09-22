@@ -460,6 +460,43 @@
     .goal-check-card #checkPath { width: 100%; }
     .goal-check-card #pathStatus { margin-top: 7px; }
 
+    .floor-switcher {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 12px;
+      padding: 9px 11px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(19, 24, 32, 0.42);
+    }
+    .floor-switcher strong {
+      color: var(--text-soft);
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .floor-switcher select {
+      min-width: 0;
+      width: 100%;
+    }
+    #floorSummary {
+      color: var(--accent-strong);
+      font: 0.72rem ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    #floorCount {
+      width: 100%;
+      min-height: 40px;
+      padding: 7px 9px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius-sm);
+      background: var(--surface-3);
+      color: var(--text);
+    }
+
     .room-size-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -1714,6 +1751,12 @@
           <div id="pathStatus" class="path-status" data-i18n="goal.none">Path not checked.</div>
         </section>
 
+        <section id="floorSwitcher" class="floor-switcher editor-only" aria-label="Dungeon floor">
+          <strong data-i18n="run.floor">Floor</strong>
+          <select id="floorSelect" aria-label="Selected dungeon floor"></select>
+          <span id="floorSummary">1/1</span>
+        </section>
+
         <nav class="workflow-tabs editor-only" aria-label="Authoring workflow">
           <button class="workflow-tab is-active" type="button" data-workflow-tab="create" aria-selected="true" data-i18n="tabs.create">✨ Create</button>
           <button class="workflow-tab" type="button" data-workflow-tab="edit" aria-selected="false" data-i18n="tabs.edit">✎ Edit</button>
@@ -1726,6 +1769,10 @@
           <label>
             <span data-i18n="create.prompt">Prompt</span>
             <textarea id="generationPrompt" aria-label="Dungeon generation request" placeholder="Create a fair but tense 5-minute dungeon with exploration and a few dangerous rewards." data-i18n-placeholder="create.placeholder"></textarea>
+          </label>
+          <label>
+            <span data-i18n="create.floors">Floors (1–10)</span>
+            <input id="floorCount" type="number" min="1" max="10" step="1" value="1" inputmode="numeric" aria-label="Dungeon floor count">
           </label>
           <button id="generateDungeon" class="primary-action wide-action" type="button" data-i18n="create.generate">Generate</button>
           <p id="generationStatus" class="muted" aria-live="polite"></p>
@@ -1748,6 +1795,7 @@
             <div id="playStatus" class="play-metrics" aria-live="polite">
               <span class="metric"><span class="metric-label" data-i18n="play.move">MOVE</span><span id="moveCount">0</span></span>
               <span class="metric"><span class="metric-label" data-i18n="play.map">MAP</span><span id="mappedCount">0</span></span>
+              <span class="metric"><span class="metric-label">FLOOR</span><span id="playFloorCount">1/1</span></span>
               <span class="metric"><span class="metric-label">HP</span><span id="hpCount">0/0</span></span>
               <span class="metric"><span class="metric-label">LV</span><span id="levelCount">1</span></span>
               <span class="metric"><span class="metric-label">XP</span><span id="xpCount">0/20</span></span>

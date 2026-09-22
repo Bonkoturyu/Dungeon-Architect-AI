@@ -7,7 +7,7 @@ import {
   wallSideFromPart,
 } from '../../packages/editor-core/src/corridor-drag.js';
 import { evaluateStartGate } from '../../packages/editor-core/src/start-gate.js';
-import { startPlaySession, movePlaySession, createPlayResult } from '../../packages/play-core/src/play-session.js';
+import { movePlaySession, createPlayResult } from '../../packages/play-core/src/play-session.js';
 import { createRendererVisibilityFromPlaySession, derivePlayMap } from '../../packages/play-core/src/play-map.js';
 import {
   DEFAULT_ENEMY_DAMAGE,
@@ -31,6 +31,12 @@ import {
 import { createDungeonScenePlan, createThreeRendererAdapter } from '../../packages/renderer-three/src/index.js';
 import { generateDungeonFromDesignIntent } from '../../packages/generator/src/design-intent-generator.js';
 import { DEFAULT_GENERATOR_VERSION } from '../../packages/generator/src/generator-versions.js';
+import {
+  createDungeonRunResult,
+  createDungeonRunSpec,
+  startDungeonRun,
+  syncDungeonRunFloor,
+} from '../../packages/run-core/src/dungeon-run.js';
 import {
   bindLanguageSwitchers,
   getLanguage,
@@ -65,6 +71,7 @@ const roomEventItems = document.querySelector('#roomEventItems');
 const playModeLabel = document.querySelector('#playModeLabel');
 const moveCount = document.querySelector('#moveCount');
 const mappedCount = document.querySelector('#mappedCount');
+const playFloorCount = document.querySelector('#playFloorCount');
 const hpCount = document.querySelector('#hpCount');
 const levelCount = document.querySelector('#levelCount');
 const xpCount = document.querySelector('#xpCount');
@@ -101,6 +108,9 @@ const addEntityButton = document.querySelector('#addEntity');
 const moveEntityButton = document.querySelector('#moveEntity');
 const removeEntityButton = document.querySelector('#removeEntity');
 const generationPrompt = document.querySelector('#generationPrompt');
+const floorCountInput = document.querySelector('#floorCount');
+const floorSelect = document.querySelector('#floorSelect');
+const floorSummary = document.querySelector('#floorSummary');
 const generateDungeonButton = document.querySelector('#generateDungeon');
 const generationStatus = document.querySelector('#generationStatus');
 const generationHistory = document.querySelector('#generationHistory');
@@ -119,6 +129,10 @@ const inspectorTabButtons = [...document.querySelectorAll('.inspector-tab[data-i
 
 let adapter;
 let session;
+let floorSessions = [];
+let currentFloorIndex = 0;
+let dungeonRunSession = null;
+let lastDungeonRunResult = null;
 let selectedRoomId = null;
 let selectedEntityId = null;
 let selectedCorridorId = null;
@@ -147,6 +161,109 @@ let viewportNoticeTimer = null;
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
+}
+
+function setAuthoringFloors(specs, selectedIndex = 0) {
+  if (!Array.isArray(specs) || specs.length === 0) {
+    throw new TypeError('setAuthoringFloors requires at least one DungeonSpec');
+  }
+  floorSessions = specs.map((spec) => new EditSession(spec));
+  currentFloorIndex = Math.max(0, Math.min(floorSessions.length - 1, selectedIndex));
+  session = floorSessions[currentFloorIndex];
+}
+
+function authoringFloorSpecs() {
+  if (floorSessions.length > 0) return floorSessions.map((entry) => entry.spec);
+  return session ? [session.spec] : [];
+}
+
+function authoringRunSpec(id = 'editor-run') {
+  return createDungeonRunSpec(authoringFloorSpecs(), { id });
+}
+
+function requestedFloorCount() {
+  const parsed = Number.parseInt(floorCountInput?.value ?? '1', 10);
+  if (!Number.isInteger(parsed)) return 1;
+  return Math.max(1, Math.min(10, parsed));
+}
+
+function derivedFloorSeed(baseSeed, floorIndex) {
+  if (floorIndex === 0) return baseSeed >>> 0;
+  return (baseSeed + Math.imul(floorIndex, 0x9e3779b9)) >>> 0;
+}
+
+function generateFloorSet(intent, { prompt, count, baseSeed = null, idPrefix = null } = {}) {
+  const total = Math.max(1, Math.min(10, Number.isInteger(count) ? count : 1));
+  const first = generateDungeonFromDesignIntent(intent, {
+    prompt,
+    ...(baseSeed === null ? {} : { seed: baseSeed >>> 0 }),
+    ...(idPrefix ? { id: idPrefix } : {}),
+  });
+  const rootSeed = first.profile.seed >>> 0;
+  const rootId = idPrefix ?? first.spec.id;
+  const generated = [first];
+
+  for (let floorIndex = 1; floorIndex < total; floorIndex += 1) {
+    const seed = derivedFloorSeed(rootSeed, floorIndex);
+    generated.push(generateDungeonFromDesignIntent(intent, {
+      prompt,
+      seed,
+      id: `${rootId}-floor-${String(floorIndex + 1).padStart(2, '0')}`,
+    }));
+  }
+
+  return generated;
+}
+
+function renderFloorControls() {
+  const count = Math.max(1, floorSessions.length || 1);
+  if (floorSelect) {
+    const currentOptions = [...floorSelect.options].map((option) => option.value);
+    const expectedOptions = Array.from({ length: count }, (_, index) => String(index));
+    if (JSON.stringify(currentOptions) !== JSON.stringify(expectedOptions)) {
+      floorSelect.replaceChildren(...expectedOptions.map((value, index) => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = `${t('run.floor')} ${index + 1}`;
+        return option;
+      }));
+    } else {
+      [...floorSelect.options].forEach((option, index) => {
+        option.textContent = `${t('run.floor')} ${index + 1}`;
+      });
+    }
+    floorSelect.value = String(Math.max(0, Math.min(count - 1, currentFloorIndex)));
+    floorSelect.disabled = mode !== 'edit' || generationBusy || naturalEditBusy || count <= 1;
+  }
+  if (floorSummary) floorSummary.textContent = `${currentFloorIndex + 1}/${count}`;
+  if (floorCountInput) floorCountInput.disabled = mode !== 'edit' || generationBusy || naturalEditBusy;
+
+  const playIndex = dungeonRunSession?.currentFloorIndex ?? 0;
+  const playCount = dungeonRunSession?.floorCount ?? count;
+  if (playFloorCount) playFloorCount.textContent = `${playIndex + 1}/${playCount}`;
+}
+
+function selectFloor(index) {
+  if (mode !== 'edit' || generationBusy || naturalEditBusy) return false;
+  const next = Number.parseInt(index, 10);
+  if (!Number.isInteger(next) || next < 0 || next >= floorSessions.length || next === currentFloorIndex) {
+    renderFloorControls();
+    return false;
+  }
+
+  currentFloorIndex = next;
+  session = floorSessions[currentFloorIndex];
+  selectedRoomId = null;
+  selectedEntityId = null;
+  selectedCorridorId = null;
+  pathCheckResult = null;
+  corridorDraft = null;
+  roomDrag = null;
+  adapter.setHighlightedSpecIds([]);
+  renderPathStatus();
+  renderActiveSpec();
+  setEditStatus(`${t('run.floor')} ${currentFloorIndex + 1}`);
+  return true;
 }
 
 function resize() {
@@ -195,6 +312,8 @@ function currentPlayState() {
     startedAt: playSession.startedAt,
     completedAt: playSession.completedAt,
     moves: playSession.moves,
+    floorIndex: dungeonRunSession?.currentFloorIndex ?? 0,
+    floorCount: dungeonRunSession?.floorCount ?? 1,
     visitedRoomIds: [...playSession.visitedRoomIds],
     map: clone(derivePlayMap(playSession)),
     playerState: clone(playSession.playerState),
@@ -212,13 +331,35 @@ function snapshotState() {
     workflowTab,
     inspectorTab,
     language: getLanguage(),
+    floorCount: Math.max(1, floorSessions.length || 1),
+    currentFloorIndex,
+    floorSummaries: floorSessions.map((entry, index) => {
+      const floorSpec = entry.spec;
+      return {
+        floorIndex: index,
+        dungeonId: floorSpec.id,
+        seed: floorSpec.seed,
+        roomCount: floorSpec.rooms.length,
+        entityCount: floorSpec.entities.length,
+      };
+    }),
+    run: dungeonRunSession ? {
+      status: dungeonRunSession.status,
+      failureReason: dungeonRunSession.failureReason,
+      currentFloorIndex: dungeonRunSession.currentFloorIndex,
+      floorCount: dungeonRunSession.floorCount,
+      floorsCompleted: dungeonRunSession.floorResults?.length ?? 0,
+      floorDungeonIds: dungeonRunSession.snapshot.floors.map((floor) => floor.dungeon.id),
+      playerState: clone(dungeonRunSession.playerState),
+      events: clone(dungeonRunSession.events ?? []),
+    } : null,
     selectedRoomId,
     selectedEntityId,
     selectedCorridorId,
     targetRoomId: entityRoom?.value || null,
     canUndo: Boolean(session?.canUndo),
     canRedo: Boolean(session?.canRedo),
-    startAllowed: gate.allowed,
+    startAllowed: gate.allowed && authoringRunSpec().ok,
     validationCriticalCount: gate.criticalCount,
     validationErrors: gate.errors.map((entry) => ({ ...entry })),
     generationBusy,
@@ -303,7 +444,22 @@ function friendlyEditError(error) {
 }
 
 function refreshGate() {
-  gate = evaluateStartGate(authoringSpec());
+  const currentGate = evaluateStartGate(authoringSpec());
+  const runValidation = authoringRunSpec();
+
+  if (runValidation.ok) {
+    gate = currentGate;
+  } else {
+    gate = {
+      allowed: false,
+      criticalCount: runValidation.errors.length,
+      errors: runValidation.errors.map((entry) => ({
+        severity: 'critical',
+        ...clone(entry),
+      })),
+    };
+  }
+
   if (gate.allowed) {
     validationStatus.dataset.state = 'pass';
     validationStatus.textContent = t('validation.valid');
@@ -672,6 +828,7 @@ function updateUi() {
   }
 
   renderEditContextHud();
+  renderFloorControls();
 
   if (room) {
     if (document.activeElement !== roomWidth) roomWidth.value = String(room.width);
@@ -738,10 +895,12 @@ function updateUi() {
   removeEntityButton.disabled = !editing || authoringBusy || !entity || entity.type === 'start' || entity.type === 'goal';
   addEntityButton.disabled = !editing || authoringBusy || !entityRoom.value;
   generationPrompt.disabled = !editing || authoringBusy;
+  if (floorCountInput) floorCountInput.disabled = !editing || authoringBusy;
+  const runValidation = authoringRunSpec();
   generateDungeonButton.disabled = !editing || authoringBusy || !generationPrompt.value.trim();
   naturalEditInput.disabled = !editing || authoringBusy;
   applyNaturalEditButton.disabled = !editing || authoringBusy || !naturalEditInput.value.trim();
-  startButton.disabled = !editing || authoringBusy || !gate.allowed;
+  startButton.disabled = !editing || authoringBusy || !gate.allowed || !runValidation.ok;
   mysteryPlayButton.disabled = !editing || authoringBusy || !lastDesignIntent;
   mysteryPlayButton.title = authoringBusy
     ? t('play.mysteryTitleBusy')
@@ -771,6 +930,17 @@ function applyPlayRuntimeResult(result, failurePrefix) {
     return false;
   }
   playSession = result.session;
+  selectedRoomId = playSession.currentRoomId;
+  if (dungeonRunSession && playSession.status === 'playing') {
+    const synced = syncDungeonRunFloor(dungeonRunSession, playSession, {
+      at: playActionClock,
+    });
+    if (!synced.ok) {
+      setEditStatus(`Run sync failed: ${synced.error?.code ?? 'UNKNOWN'}`);
+      return false;
+    }
+    dungeonRunSession = synced.run;
+  }
   updatePlayReadout();
   if (finalizePlayIfNeeded()) return true;
   renderActiveSpec();
@@ -1595,13 +1765,17 @@ async function generateDungeonFromPrompt() {
       return false;
     }
 
-    const generated = generateDungeonFromDesignIntent(payload.intent, { prompt });
-    session = new EditSession(generated.spec);
+    const floorCount = requestedFloorCount();
+    const generatedFloors = generateFloorSet(payload.intent, { prompt, count: floorCount });
+    const generated = generatedFloors[0];
+    setAuthoringFloors(generatedFloors.map((entry) => entry.spec), 0);
     selectedRoomId = null;
     selectedEntityId = null;
     selectedCorridorId = null;
     playSession = null;
     playSource = null;
+    dungeonRunSession = null;
+    lastDungeonRunResult = null;
     mysteryGeneration = null;
     lastPlayResult = null;
     lastNaturalEditCommand = null;
@@ -1614,6 +1788,15 @@ async function generateDungeonFromPrompt() {
       routeChoice: generated.profile.routeChoice,
       entityCount: generated.spec.entities.length,
       eventCount: generated.spec.events.length,
+      floorCount: generatedFloors.length,
+      floors: generatedFloors.map((entry, index) => ({
+        floorIndex: index,
+        seed: entry.profile.seed,
+        dungeonId: entry.spec.id,
+        roomCount: entry.profile.roomCount,
+        entityCount: entry.spec.entities.length,
+        eventCount: entry.spec.events.length,
+      })),
     };
     mode = 'edit';
     authoringPreviewConcealed = true;
@@ -1621,7 +1804,7 @@ async function generateDungeonFromPrompt() {
     renderPathStatus();
     adapter.setHighlightedSpecIds([]);
     promptHistory = [
-      { prompt, roomCount: lastGeneration.roomCount },
+      { prompt, roomCount: lastGeneration.roomCount, floorCount: lastGeneration.floorCount },
       ...promptHistory,
     ].slice(0, 8);
     renderPromptHistory();
@@ -1631,8 +1814,10 @@ async function generateDungeonFromPrompt() {
     resultStatus.textContent = '';
     resultStatus.hidden = true;
     renderActiveSpec();
-    setGenerationStatus(t('generation.generated', { count: lastGeneration.roomCount }));
-    setEditStatus('generated new dungeon');
+    setGenerationStatus(floorCount > 1
+      ? t('generation.generatedRun', { floors: floorCount, count: lastGeneration.roomCount })
+      : t('generation.generated', { count: lastGeneration.roomCount }));
+    setEditStatus(floorCount > 1 ? `generated ${floorCount}-floor run` : 'generated new dungeon');
     return true;
   } catch {
     setGenerationStatus(t('generation.unavailable'));
@@ -1733,6 +1918,8 @@ function updatePlayReadout() {
   if (!playSession) {
     if (moveCount) moveCount.textContent = '0';
     if (mappedCount) mappedCount.textContent = '0';
+    if (playFloorCount) playFloorCount.textContent =
+      `${currentFloorIndex + 1}/${Math.max(1, floorSessions.length)}`;
     if (hpCount) hpCount.textContent = '0/0';
     if (levelCount) levelCount.textContent = '1';
     if (xpCount) xpCount.textContent = '0/20';
@@ -1753,6 +1940,8 @@ function updatePlayReadout() {
   }
   if (moveCount) moveCount.textContent = String(playSession.moves);
   if (mappedCount) mappedCount.textContent = String(map.exploredRoomIds.length);
+  if (playFloorCount) playFloorCount.textContent =
+    `${(dungeonRunSession?.currentFloorIndex ?? 0) + 1}/${dungeonRunSession?.floorCount ?? 1}`;
   if (hpCount) hpCount.textContent = `${playSession.playerState?.hp ?? 0}/${playSession.playerState?.maxHp ?? 0}`;
   const level = playSession.playerState?.level ?? 1;
   if (levelCount) levelCount.textContent = String(level);
@@ -1765,6 +1954,7 @@ function renderResultMetrics(result) {
   const metrics = result?.metrics ?? {};
   const player = result?.playerState ?? {};
   const items = [
+    ['FLOOR', `${lastDungeonRunResult?.floorsCompleted ?? 1}/${lastDungeonRunResult?.floorCount ?? 1}`],
     ['HP', `${player.hp ?? 0}/${player.maxHp ?? 0}`],
     ['LV', player.level ?? 1],
     ['XP', `${player.xp ?? 0}/${xpRequiredForNextLevel(player.level ?? 1)}`],
@@ -1791,21 +1981,67 @@ function renderResultMetrics(result) {
 
 function finalizePlayIfNeeded() {
   if (!playSession || !['cleared', 'failed'].includes(playSession.status)) return false;
-  const result = createPlayResult(playSession);
-  if (!result.ok) throw new Error(`createPlayResult failed: ${JSON.stringify(result.error)}`);
-  lastPlayResult = result.result;
+
+  if (!dungeonRunSession) {
+    const fallback = createPlayResult(playSession);
+    if (!fallback.ok) throw new Error(`createPlayResult failed: ${JSON.stringify(fallback.error)}`);
+    lastPlayResult = fallback.result;
+    lastDungeonRunResult = null;
+    mode = 'result';
+    resultStatus.textContent = lastPlayResult.status === 'cleared' ? t('result.cleared') : t('result.ended');
+    resultStatus.hidden = false;
+    renderResultMetrics(lastPlayResult);
+    renderActiveSpec();
+    return true;
+  }
+
+  const synced = syncDungeonRunFloor(dungeonRunSession, playSession, {
+    at: playSession.completedAt ?? playActionClock,
+  });
+  if (!synced.ok) {
+    throw new Error(`syncDungeonRunFloor failed: ${JSON.stringify(synced.error)}`);
+  }
+  dungeonRunSession = synced.run;
+  currentFloorIndex = dungeonRunSession.currentFloorIndex;
+
+  if (synced.advanced) {
+    playSession = dungeonRunSession.currentFloorSession;
+    if (playSource === 'test' && floorSessions[currentFloorIndex]) {
+      session = floorSessions[currentFloorIndex];
+    }
+    selectedRoomId = playSession.currentRoomId;
+    selectedEntityId = null;
+    selectedCorridorId = null;
+    playActionClock = Math.max(playActionClock, Number(playSession.startedAt) || 0);
+    mode = 'play';
+    resultStatus.textContent = '';
+    resultStatus.hidden = true;
+    updatePlayReadout();
+    setEditStatus(`${t('run.floor')} ${currentFloorIndex + 1}/${dungeonRunSession.floorCount}`);
+    renderActiveSpec();
+    return true;
+  }
+
+  const runResult = createDungeonRunResult(dungeonRunSession);
+  if (!runResult.ok) throw new Error(`createDungeonRunResult failed: ${JSON.stringify(runResult.error)}`);
+  lastDungeonRunResult = runResult.result;
+
+  const floorResult = dungeonRunSession.floorResults.at(-1)?.result ?? createPlayResult(playSession).result;
+  lastPlayResult = clone(floorResult);
   mode = 'result';
   if (moveCount) moveCount.textContent = String(lastPlayResult.moves);
   if (mappedCount) mappedCount.textContent = String(lastPlayResult.visitedRoomIds.length);
-  resultStatus.textContent = lastPlayResult.status === 'cleared' ? t('result.cleared') : t('result.ended');
+  if (playFloorCount) playFloorCount.textContent =
+    `${lastDungeonRunResult.floorsCompleted}/${lastDungeonRunResult.floorCount}`;
+  resultStatus.textContent = lastDungeonRunResult.status === 'cleared' ? t('result.cleared') : t('result.ended');
   resultStatus.hidden = false;
   renderResultMetrics(lastPlayResult);
   renderActiveSpec();
   return true;
 }
 
-function beginPlay(spec, source) {
-  const result = startPlaySession(spec, { startedAt: 0 });
+function beginDungeonRun(runSpec, source) {
+  const result = startDungeonRun(runSpec, { startedAt: 0 });
   if (!result.ok) {
     setEditStatus(`Play blocked: ${result.errors?.[0]?.code ?? 'VALIDATION'}`);
     return false;
@@ -1815,11 +2051,17 @@ function beginPlay(spec, source) {
   renderPathStatus();
   adapter.setHighlightedSpecIds([]);
 
-  playSession = result.session;
+  dungeonRunSession = result.run;
+  lastDungeonRunResult = null;
+  currentFloorIndex = dungeonRunSession.currentFloorIndex;
+  if (source === 'test' && floorSessions[currentFloorIndex]) {
+    session = floorSessions[currentFloorIndex];
+  }
+  playSession = dungeonRunSession.currentFloorSession;
   playActionClock = Number.isFinite(playSession.startedAt) ? playSession.startedAt : 0;
   playSource = source;
   lastPlayResult = null;
-  mode = playSession.status === 'playing' ? 'play' : 'result';
+  mode = 'play';
   selectedRoomId = playSession.currentRoomId;
   selectedEntityId = null;
   selectedCorridorId = null;
@@ -1830,7 +2072,9 @@ function beginPlay(spec, source) {
     resultMetrics.hidden = true;
   }
   updatePlayReadout();
-  setEditStatus(source === 'mystery' ? 'mystery play started' : 'test play started');
+  setEditStatus(source === 'mystery'
+    ? `mystery run started · ${dungeonRunSession.floorCount} floor(s)`
+    : `test run started · ${dungeonRunSession.floorCount} floor(s)`);
   renderActiveSpec();
   finalizePlayIfNeeded();
   return true;
@@ -1838,21 +2082,24 @@ function beginPlay(spec, source) {
 
 function startDungeon() {
   if (mode !== 'edit' || generationBusy || naturalEditBusy) return false;
-  refreshGate();
-  if (!gate.allowed) {
-    setEditStatus(`Play blocked: ${gate.criticalCount} Critical`);
+  const runSpec = authoringRunSpec('editor-test-run');
+  if (!runSpec.ok) {
+    setEditStatus(`Play blocked: ${runSpec.errors?.[0]?.code ?? 'VALIDATION'}`);
     updateUi();
     return false;
   }
   mysteryGeneration = null;
-  return beginPlay(authoringSpec(), 'test');
+  return beginDungeonRun(runSpec.spec, 'test');
 }
 
 function freshMysterySeed() {
   const values = new Uint32Array(1);
   crypto.getRandomValues(values);
   let seed = values[0] >>> 0;
-  const blocked = new Set([authoringSpec().seed, lastGeneration?.seed].filter(Number.isSafeInteger));
+  const blocked = new Set([
+    ...authoringFloorSpecs().map((spec) => spec.seed),
+    lastGeneration?.seed,
+  ].filter(Number.isSafeInteger));
   while (blocked.has(seed)) seed = (seed + 0x9e3779b9) >>> 0;
   return seed;
 }
@@ -1861,11 +2108,13 @@ function startMysteryDungeon() {
   if (mode !== 'edit' || generationBusy || naturalEditBusy || !lastDesignIntent) return false;
 
   const seed = freshMysterySeed();
-  const generated = generateDungeonFromDesignIntent(lastDesignIntent, {
+  const generatedFloors = generateFloorSet(lastDesignIntent, {
     prompt: 'mystery-play',
-    seed,
-    id: `mystery-${seed}`,
+    count: Math.max(1, floorSessions.length),
+    baseSeed: seed,
+    idPrefix: `mystery-${seed}`,
   });
+  const generated = generatedFloors[0];
   mysteryGeneration = {
     generatorVersion: generated.generatorVersion ?? DEFAULT_GENERATOR_VERSION,
     seed: generated.profile.seed,
@@ -1873,8 +2122,26 @@ function startMysteryDungeon() {
     routeChoice: generated.profile.routeChoice,
     entityCount: generated.spec.entities.length,
     eventCount: generated.spec.events.length,
+    floorCount: generatedFloors.length,
+    floors: generatedFloors.map((entry, index) => ({
+      floorIndex: index,
+      seed: entry.profile.seed,
+      dungeonId: entry.spec.id,
+      roomCount: entry.profile.roomCount,
+      entityCount: entry.spec.entities.length,
+      eventCount: entry.spec.events.length,
+    })),
   };
-  return beginPlay(generated.spec, 'mystery');
+
+  const runSpec = createDungeonRunSpec(
+    generatedFloors.map((entry) => entry.spec),
+    { id: `mystery-run-${seed}` }
+  );
+  if (!runSpec.ok) {
+    setEditStatus(`Mystery blocked: ${runSpec.errors?.[0]?.code ?? 'VALIDATION'}`);
+    return false;
+  }
+  return beginDungeonRun(runSpec.spec, 'mystery');
 }
 
 function movePlayToRoom(roomId, corridorId = null) {
@@ -1883,50 +2150,52 @@ function movePlayToRoom(roomId, corridorId = null) {
     setEditStatus('Resolve room event before leaving');
     return false;
   }
-  const result = movePlaySession(playSession, roomId, {
-    at: nextPlayActionAt(),
-    corridorId,
-  });
-  if (!result.ok) {
-    setEditStatus(`Move blocked: ${result.error.code}`);
-    return false;
-  }
-
-  playSession = result.session;
-  selectedRoomId = playSession.currentRoomId;
-  updatePlayReadout();
-  renderActiveSpec();
-  finalizePlayIfNeeded();
-  return true;
+  return applyPlayRuntimeResult(
+    movePlaySession(playSession, roomId, {
+      at: nextPlayActionAt(),
+      corridorId,
+    }),
+    'Move blocked',
+  );
 }
 
 function returnToEdit() {
   if (mode === 'edit') return false;
 
-  const returningFromMystery = playSource === 'mystery' && Boolean(playSession?.snapshot);
+  const runtimeFloorIndex = dungeonRunSession?.currentFloorIndex ?? currentFloorIndex;
+  const returningFromMystery =
+    playSource === 'mystery' &&
+    Array.isArray(dungeonRunSession?.snapshot?.floors) &&
+    dungeonRunSession.snapshot.floors.length > 0;
+
   if (returningFromMystery) {
-    session = new EditSession(playSession.snapshot);
+    setAuthoringFloors(
+      dungeonRunSession.snapshot.floors.map((floor) => floor.dungeon),
+      runtimeFloorIndex,
+    );
     authoringPreviewConcealed = false;
     pathCheckResult = null;
     lastNaturalEditCommand = null;
     adapter.setHighlightedSpecIds([]);
+    if (floorCountInput) floorCountInput.value = String(floorSessions.length);
 
     if (mysteryGeneration) {
       lastGeneration = {
         ...lastGeneration,
-        generatorVersion: mysteryGeneration.generatorVersion,
-        seed: mysteryGeneration.seed,
-        roomCount: mysteryGeneration.roomCount,
-        routeChoice: mysteryGeneration.routeChoice,
-        entityCount: mysteryGeneration.entityCount,
-        eventCount: mysteryGeneration.eventCount,
+        ...clone(mysteryGeneration),
       };
     }
+  } else if (floorSessions.length > 0) {
+    currentFloorIndex = Math.max(0, Math.min(floorSessions.length - 1, runtimeFloorIndex));
+    session = floorSessions[currentFloorIndex];
   }
 
   mode = 'edit';
   playSession = null;
   playSource = null;
+  dungeonRunSession = null;
+  lastDungeonRunResult = null;
+  lastPlayResult = null;
   mysteryGeneration = null;
   playActionClock = 0;
   setWorkflowTab('edit');
@@ -1935,6 +2204,7 @@ function returnToEdit() {
   selectedCorridorId = null;
   if (moveCount) moveCount.textContent = '0';
   if (mappedCount) mappedCount.textContent = '0';
+  if (playFloorCount) playFloorCount.textContent = `${currentFloorIndex + 1}/${Math.max(1, floorSessions.length)}`;
   if (hpCount) hpCount.textContent = '0/0';
   if (levelCount) levelCount.textContent = '1';
   if (xpCount) xpCount.textContent = '0/20';
@@ -2577,7 +2847,7 @@ async function run() {
     bindLanguageSwitchers(document);
     const response = await fetch('/spec/dungeon/fixtures/minimal-valid-v1.json', { cache: 'no-store' });
     if (!response.ok) throw new Error(`fixture fetch failed: HTTP ${response.status}`);
-    session = new EditSession(await response.json());
+    setAuthoringFloors([await response.json()]);
     adapter = createThreeRendererAdapter({ canvas });
     resize();
     renderActiveSpec();
@@ -2632,6 +2902,12 @@ async function run() {
     moveEntityButton.addEventListener('click', moveEntityToTargetRoom);
     removeEntityButton.addEventListener('click', removeEntity);
     generationPrompt.addEventListener('input', updateUi);
+    floorCountInput?.addEventListener('input', updateUi);
+    floorCountInput?.addEventListener('change', () => {
+      floorCountInput.value = String(requestedFloorCount());
+      updateUi();
+    });
+    floorSelect?.addEventListener('change', () => selectFloor(floorSelect.value));
     generateDungeonButton.addEventListener('click', generateDungeonFromPrompt);
     naturalEditInput.addEventListener('input', updateUi);
     applyNaturalEditButton.addEventListener('click', applyNaturalEdit);
@@ -2652,6 +2928,7 @@ async function run() {
         return group ? clone(group) : null;
       },
       selectRoom,
+      selectFloor,
       selectEntity,
       selectCorridor,
       setInspectorTab,

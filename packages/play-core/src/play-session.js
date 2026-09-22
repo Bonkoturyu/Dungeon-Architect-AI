@@ -1,7 +1,7 @@
 import { validateDungeonSpec } from "../../core/src/dungeon-spec.js";
 import { applyGameplayStateCommand, createGameplayState } from "./gameplay-state.js";
 import { dispatchSupportedEvents, isRuntimeCorridorEnabled } from "./event-runtime.js";
-import { createInitialPlayerState } from "./progression-runtime.js";
+import { createInitialPlayerState, normalizePlayerState } from "./progression-runtime.js";
 
 export const PLAY_FAILURE_REASONS = Object.freeze([
   "player-defeated",
@@ -79,17 +79,49 @@ function gameplayMetrics(session) {
   };
 }
 
-export function startPlaySession(authoringSpec, { startedAt = 0, maxHp = DEFAULT_PLAYER_MAX_HP } = {}) {
+export function startPlaySession(
+  authoringSpec,
+  { startedAt = 0, maxHp = DEFAULT_PLAYER_MAX_HP, initialPlayerState = null } = {}
+) {
   const validation = validateDungeonSpec(authoringSpec);
   if (!validation.valid) {
     return { ok: false, blocked: true, errors: validation.errors };
   }
-  if (!Number.isSafeInteger(maxHp) || maxHp <= 0) {
-    return {
-      ok: false,
-      blocked: true,
-      errors: [{ code: "PLAYER_MAX_HP_INVALID", path: "playerState.maxHp", message: "maxHp must be a positive safe integer." }]
-    };
+  let playerState;
+  if (initialPlayerState !== null) {
+    try {
+      playerState = normalizePlayerState(initialPlayerState);
+    } catch (error) {
+      return {
+        ok: false,
+        blocked: true,
+        errors: [{
+          code: "PLAYER_STATE_INVALID",
+          path: "playerState",
+          message: error instanceof Error ? error.message : String(error)
+        }]
+      };
+    }
+    if (playerState.hp <= 0) {
+      return {
+        ok: false,
+        blocked: true,
+        errors: [{
+          code: "PLAYER_STATE_INVALID",
+          path: "playerState.hp",
+          message: "A new PlaySession requires playerState.hp to be greater than zero."
+        }]
+      };
+    }
+  } else {
+    if (!Number.isSafeInteger(maxHp) || maxHp <= 0) {
+      return {
+        ok: false,
+        blocked: true,
+        errors: [{ code: "PLAYER_MAX_HP_INVALID", path: "playerState.maxHp", message: "maxHp must be a positive safe integer." }]
+      };
+    }
+    playerState = createInitialPlayerState(maxHp);
   }
 
   const snapshot = clone(authoringSpec);
@@ -109,7 +141,7 @@ export function startPlaySession(authoringSpec, { startedAt = 0, maxHp = DEFAULT
     goalRoomId: goal.roomId,
     visitedRoomIds: [start.roomId],
     moves: 0,
-    playerState: createInitialPlayerState(maxHp),
+    playerState,
     gameplayState: createGameplayState({ roomEntries: 1 }),
     events: []
   };

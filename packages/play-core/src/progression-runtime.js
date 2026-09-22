@@ -74,6 +74,60 @@ export function createInitialPlayerState(maxHp) {
   };
 }
 
+function validateEquipmentItem(item, slot) {
+  if (item === null) return;
+  if (
+    !item ||
+    typeof item !== "object" ||
+    Array.isArray(item) ||
+    item.slot !== slot ||
+    typeof item.id !== "string" ||
+    item.id.trim() === "" ||
+    !Number.isSafeInteger(item.tier) ||
+    item.tier <= 0
+  ) {
+    throw new TypeError(`equipment.${slot} must be null or a valid ${slot} item`);
+  }
+}
+
+export function normalizePlayerState(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new TypeError("playerState must be a plain object");
+  }
+
+  const { hp, maxHp, level, xp, gold, equipment } = value;
+  assertPositiveSafeInteger(maxHp, "playerState.maxHp");
+  assertSafeNonNegative(hp, "playerState.hp");
+  assertPositiveSafeInteger(level, "playerState.level");
+  assertSafeNonNegative(xp, "playerState.xp");
+  assertSafeNonNegative(gold, "playerState.gold");
+
+  if (hp > maxHp) {
+    throw new RangeError("playerState.hp cannot exceed playerState.maxHp");
+  }
+  if (xp >= xpRequiredForNextLevel(level)) {
+    throw new RangeError("playerState.xp must be below the next level threshold");
+  }
+  if (!equipment || typeof equipment !== "object" || Array.isArray(equipment)) {
+    throw new TypeError("playerState.equipment must be a plain object");
+  }
+
+  validateEquipmentItem(equipment.weapon ?? null, "weapon");
+  validateEquipmentItem(equipment.armor ?? null, "armor");
+
+  return {
+    hp,
+    maxHp,
+    level,
+    xp,
+    gold,
+    equipment: {
+      weapon: equipment.weapon ? clone(equipment.weapon) : null,
+      armor: equipment.armor ? clone(equipment.armor) : null
+    }
+  };
+}
+
 export function deterministicEnemyReward(session, enemyId) {
   const hash = rewardHash(session, "enemy", enemyId);
   return {

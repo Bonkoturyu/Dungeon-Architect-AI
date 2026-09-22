@@ -77,6 +77,51 @@ test("START creates deterministic renderer-independent gameplay state", () => {
   });
 });
 
+test("START can carry a validated PlayerState without aliasing the caller", () => {
+  const carried = {
+    hp: 13,
+    maxHp: 24,
+    level: 3,
+    xp: 7,
+    gold: 42,
+    equipment: {
+      weapon: { id: "weapon-tier-2", slot: "weapon", tier: 2 },
+      armor: { id: "armor-tier-1", slot: "armor", tier: 1 }
+    }
+  };
+  const started = startPlaySession(fixture(), {
+    startedAt: 5,
+    initialPlayerState: carried
+  });
+
+  assert.equal(started.ok, true);
+  assert.deepEqual(started.session.playerState, carried);
+  carried.hp = 1;
+  carried.equipment.weapon.tier = 99;
+  assert.equal(started.session.playerState.hp, 13);
+  assert.equal(started.session.playerState.equipment.weapon.tier, 2);
+
+  const invalid = startPlaySession(fixture(), {
+    initialPlayerState: {
+      ...started.session.playerState,
+      hp: 999
+    }
+  });
+  assert.equal(invalid.ok, false);
+  assert.equal(invalid.blocked, true);
+  assert.equal(invalid.errors[0].code, "PLAYER_STATE_INVALID");
+
+  const defeatedCarry = startPlaySession(fixture(), {
+    initialPlayerState: {
+      ...started.session.playerState,
+      hp: 0
+    }
+  });
+  assert.equal(defeatedCarry.ok, false);
+  assert.equal(defeatedCarry.blocked, true);
+  assert.equal(defeatedCarry.errors[0].code, "PLAYER_STATE_INVALID");
+});
+
 test("player damage and healing are immutable, capped, and lethal damage ends the run", () => {
   const started = startPlaySession(fixture(), { startedAt: 10, maxHp: 10 }).session;
   const damaged = applyPlayerDamage(started, 4, {
