@@ -59,6 +59,8 @@
     "smoke:room-events": "node scripts/run-dai-087-room-events-smoke.mjs",
     "validate:player-stats": "node scripts/run-dai-093-player-stats.mjs",
     "validate:progression-loot": "node scripts/run-dai-094-progression-loot.mjs",
+    "validate:multi-floor-run": "node scripts/run-dai-095-multi-floor.mjs",
+    "smoke:multi-floor-run": "node scripts/run-dai-095-multi-floor-smoke.mjs",
     "smoke:owner-ui-review": "node scripts/run-owner-ui-review-smoke.mjs"
   },
   "devDependencies": {
