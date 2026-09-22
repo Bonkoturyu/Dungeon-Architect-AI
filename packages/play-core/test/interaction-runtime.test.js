@@ -60,6 +60,13 @@ test("treasure opening requires current room and increments exactly once", () =>
   assert.equal(getTreasureState(opened.session, "treasure-test").state.status, "opened");
   assert.equal(opened.session.gameplayState.counters.treasuresOpened, 1);
   assert.equal(opened.session.gameplayState.counters.interactions, 1);
+  assert.ok(opened.reward.gold >= 5);
+  assert.ok(["weapon", "armor"].includes(opened.reward.item.slot));
+  assert.equal(opened.session.gameplayState.counters.goldEarned, opened.reward.gold);
+  assert.equal(opened.session.gameplayState.counters.lootCollected, 1);
+  assert.equal(opened.session.gameplayState.inventory[opened.reward.item.id], 1);
+  assert.deepEqual(opened.session.playerState.equipment[opened.reward.item.slot], opened.reward.item);
+  assert.equal(opened.session.events.at(-1).type, "progression-reward");
   assert.equal(listRoomInteractables(opened.session).length, 0);
   assert.equal(listRoomInteractables(opened.session, "room-002", { includeResolved: true }).length, 1);
 

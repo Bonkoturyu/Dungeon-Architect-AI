@@ -59,6 +59,14 @@ test('simulation observation exposes deterministic runtime choices without PlayS
     { type: 'move', roomId: 'room-middle' },
     { type: 'stop' },
   ]);
+  assert.deepEqual(observation.playerState, {
+    hp: 20,
+    maxHp: 20,
+    level: 1,
+    xp: 0,
+    gold: 0,
+    equipment: { weapon: null, armor: null },
+  });
   assert.equal('snapshot' in observation, false);
 });
 
@@ -80,6 +88,10 @@ test('simulation executes real PlaySession actions and produces a cleared result
   assert.equal(result.simulation.result.metrics.trapsTriggered, 0);
   assert.equal(result.simulation.result.metrics.recoveryUsed, 1);
   assert.equal(result.simulation.result.metrics.interactions, 3);
+  assert.ok(result.simulation.result.metrics.xpEarned > 0);
+  assert.ok(result.simulation.result.metrics.goldEarned > 0);
+  assert.equal(result.simulation.result.metrics.lootCollected, 1);
+  assert.ok(result.simulation.result.playerState.gold > 0);
   assert.equal(JSON.stringify(spec), before);
 });
 

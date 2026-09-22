@@ -30,7 +30,7 @@ Current fields include:
 - currentRoomId / goalRoomId
 - visitedRoomIds
 - moves
-- `playerState: { hp, maxHp }`
+- `playerState: { hp, maxHp, level, xp, gold, equipment }`
 - gameplayState
 - event log
 
@@ -78,6 +78,23 @@ Recovery is one-shot and restores HP up to MaxHP.
 
 All outcomes continue to use the existing gameplay counters and event log rather than creating a second gameplay state system.
 
+## Progression and loot
+
+Player progression is deterministic runtime state:
+
+- Level starts at `1`;
+- XP starts at `0`;
+- Gold starts at `0`;
+- Weapon and Armor equipment slots start empty;
+- XP required for the next level is `level × 20`;
+- each level-up adds `2` MaxHP and restores up to `2` HP.
+
+Enemy defeat grants deterministic XP + Gold from `dungeonSeed + enemyId + loot table version`.
+
+Treasure OPEN grants deterministic Gold + one loot item from `dungeonSeed + treasureId + loot table version`. Loot is either Weapon or Armor, Tier 1–3. All loot is added to runtime inventory; a higher-tier item automatically replaces the currently equipped item in the matching slot.
+
+Reward generation never mutates the authored DungeonSpec.
+
 ## Movement
 
 Movement is permitted only between rooms connected by a runtime-enabled corridor in the execution snapshot.
@@ -94,6 +111,6 @@ A finished session produces a Result containing:
 - ordered route and unique visited rooms;
 - final / goal room;
 - final `playerState`;
-- gameplay metrics including interactions, Enemy / Treasure / Trap / Recovery counts, damage, healing and deaths.
+- gameplay metrics including interactions, Enemy / Treasure / Trap / Recovery counts, damage, healing, XP earned, Gold earned, level-ups, loot collected and deaths.
 
 The authoring/runtime separation invariant remains unchanged.
