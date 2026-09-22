@@ -312,6 +312,8 @@ function currentPlayState() {
     startedAt: playSession.startedAt,
     completedAt: playSession.completedAt,
     moves: playSession.moves,
+    floorIndex: dungeonRunSession?.currentFloorIndex ?? 0,
+    floorCount: dungeonRunSession?.floorCount ?? 1,
     visitedRoomIds: [...playSession.visitedRoomIds],
     map: clone(derivePlayMap(playSession)),
     playerState: clone(playSession.playerState),
@@ -1880,6 +1882,8 @@ function updatePlayReadout() {
   if (!playSession) {
     if (moveCount) moveCount.textContent = '0';
     if (mappedCount) mappedCount.textContent = '0';
+    if (playFloorCount) playFloorCount.textContent =
+      `${currentFloorIndex + 1}/${Math.max(1, floorSessions.length)}`;
     if (hpCount) hpCount.textContent = '0/0';
     if (levelCount) levelCount.textContent = '1';
     if (xpCount) xpCount.textContent = '0/20';
@@ -1900,6 +1904,8 @@ function updatePlayReadout() {
   }
   if (moveCount) moveCount.textContent = String(playSession.moves);
   if (mappedCount) mappedCount.textContent = String(map.exploredRoomIds.length);
+  if (playFloorCount) playFloorCount.textContent =
+    `${(dungeonRunSession?.currentFloorIndex ?? 0) + 1}/${dungeonRunSession?.floorCount ?? 1}`;
   if (hpCount) hpCount.textContent = `${playSession.playerState?.hp ?? 0}/${playSession.playerState?.maxHp ?? 0}`;
   const level = playSession.playerState?.level ?? 1;
   if (levelCount) levelCount.textContent = String(level);
@@ -2177,7 +2183,7 @@ function returnToEdit() {
     playModeLabel.textContent = '';
     playModeLabel.hidden = true;
   }
-  setEditStatus(returningFromMystery ? 'mystery run adopted into edit' : 'returned to edit');
+  setEditStatus(returningFromMystery ? 'mystery adopted into edit' : 'returned to edit');
   renderPathStatus();
   renderActiveSpec();
   canvas.focus();
