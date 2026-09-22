@@ -5,6 +5,11 @@ import {
   projectDungeonScenePlan,
   shouldRenderMarkerForRuntime,
 } from './scene-plan.js';
+import {
+  DEFAULT_CHARACTER_COLORS,
+  createEnemyCharacterDefinition,
+  createPlayerCharacterDefinition,
+} from './programmatic-characters.js';
 
 const DEFAULT_CLEAR_COLOR = 0x202834;
 const DEFAULT_SELECTION_COLOR = 0x66ccff;
@@ -125,6 +130,62 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
       emissive: 0x315f73,
       emissiveIntensity: 0.42,
     }),
+    playerBody: new THREE.MeshStandardMaterial({
+      color: DEFAULT_CHARACTER_COLORS.playerBody,
+      roughness: 0.72,
+      metalness: 0,
+      emissive: 0x0c4a6e,
+      emissiveIntensity: 0.2,
+    }),
+    playerAccent: new THREE.MeshStandardMaterial({
+      color: DEFAULT_CHARACTER_COLORS.playerAccent,
+      roughness: 0.55,
+      metalness: 0.08,
+    }),
+    playerSkin: new THREE.MeshStandardMaterial({
+      color: DEFAULT_CHARACTER_COLORS.playerSkin,
+      roughness: 0.78,
+      metalness: 0,
+    }),
+    playerBoot: new THREE.MeshStandardMaterial({
+      color: DEFAULT_CHARACTER_COLORS.playerBoot,
+      roughness: 0.9,
+      metalness: 0,
+    }),
+    playerWeapon: new THREE.MeshStandardMaterial({
+      color: DEFAULT_CHARACTER_COLORS.playerWeapon,
+      roughness: 0.32,
+      metalness: 0.62,
+    }),
+    playerArmor: new THREE.MeshStandardMaterial({
+      color: DEFAULT_CHARACTER_COLORS.playerArmor,
+      roughness: 0.5,
+      metalness: 0.3,
+    }),
+    enemyBody: new THREE.MeshStandardMaterial({
+      color: DEFAULT_CHARACTER_COLORS.enemyBody,
+      roughness: 0.78,
+      metalness: 0,
+      emissive: 0x3f0d12,
+      emissiveIntensity: 0.2,
+    }),
+    enemySkin: new THREE.MeshStandardMaterial({
+      color: DEFAULT_CHARACTER_COLORS.enemySkin,
+      roughness: 0.72,
+      metalness: 0,
+      emissive: 0x5a1111,
+      emissiveIntensity: 0.22,
+    }),
+    enemyDark: new THREE.MeshStandardMaterial({
+      color: DEFAULT_CHARACTER_COLORS.enemyDark,
+      roughness: 0.9,
+      metalness: 0,
+    }),
+    enemyHorn: new THREE.MeshStandardMaterial({
+      color: DEFAULT_CHARACTER_COLORS.enemyHorn,
+      roughness: 0.65,
+      metalness: 0.04,
+    }),
     draftOpen: new THREE.MeshBasicMaterial({
       color: 0x66ccff,
       transparent: true,
@@ -163,6 +224,7 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
   let roomDraftRoomId = null;
   let roomDraftEntityIds = [];
   let roomDraftHelper = null;
+  let runtimePlayerGroup = null;
 
   function assertAlive() {
     if (disposed) throw new Error('Three renderer adapter has been disposed.');
@@ -268,6 +330,7 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
       disposeObjectTree(child);
     }
     runtimeBySpecId.clear();
+    runtimePlayerGroup = null;
     lastPlan = null;
   }
 
@@ -287,8 +350,99 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     targetMap.set(definition.specId, group);
   }
 
+  function characterGeometry(definition) {
+    if (definition.primitive === 'box') return new THREE.BoxGeometry(1, 1, 1);
+    if (definition.primitive === 'sphere') {
+      return new THREE.SphereGeometry(
+        0.5,
+        definition.segments?.width ?? 8,
+        definition.segments?.height ?? 6,
+      );
+    }
+    if (definition.primitive === 'cone') {
+      return new THREE.ConeGeometry(
+        0.5,
+        1,
+        definition.segments?.radial ?? 6,
+      );
+    }
+    if (definition.primitive === 'cylinder') {
+      return new THREE.CylinderGeometry(
+        0.5,
+        0.5,
+        1,
+        definition.segments?.radial ?? 8,
+      );
+    }
+    throw new TypeError(`Unsupported programmatic character primitive: ${definition.primitive}`);
+  }
+
+  function addCharacterDefinition(
+    targetRoot,
+    targetMap,
+    definition,
+    { specId = null, kind, roomId, runtimeOnly = false } = {},
+  ) {
+    const group = new THREE.Group();
+    group.name = runtimeOnly
+      ? `${kind}:runtime`
+      : `${kind}:${specId}`;
+    group.userData.kind = kind;
+    group.userData.roomId = roomId;
+    group.userData.presentationKind = definition.kind;
+    group.userData.partNames = definition.parts.map((entry) => entry.name);
+    group.userData.equipment = definition.equipment ? { ...definition.equipment } : null;
+    group.userData.level = definition.level ?? null;
+    if (!runtimeOnly && specId) group.userData.specId = specId;
+    group.position.set(definition.position.x, definition.position.y, definition.position.z);
+
+    for (const partDefinition of definition.parts) {
+      const geometry = characterGeometry(partDefinition);
+      const material = materials[partDefinition.materialRole];
+      if (!material) throw new Error(`Unknown character material role: ${partDefinition.materialRole}`);
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.name = `${kind}:${partDefinition.name}`;
+      mesh.userData.kind = kind;
+      mesh.userData.roomId = roomId;
+      mesh.userData.part = partDefinition.name;
+      if (!runtimeOnly && specId) mesh.userData.specId = specId;
+      mesh.position.set(
+        partDefinition.position.x,
+        partDefinition.position.y,
+        partDefinition.position.z,
+      );
+      mesh.scale.set(
+        partDefinition.scale.x,
+        partDefinition.scale.y,
+        partDefinition.scale.z,
+      );
+      if (partDefinition.rotation) {
+        mesh.rotation.set(
+          partDefinition.rotation.x ?? 0,
+          partDefinition.rotation.y ?? 0,
+          partDefinition.rotation.z ?? 0,
+        );
+      }
+      group.add(mesh);
+    }
+
+    targetRoot.add(group);
+    if (!runtimeOnly && specId) targetMap.set(specId, group);
+    return group;
+  }
+
   function addMarker(targetRoot, targetMap, marker, entityStates = null) {
     if (!shouldRenderMarkerForRuntime(marker, entityStates)) return;
+    if (marker.type === 'enemy') {
+      const definition = createEnemyCharacterDefinition(marker);
+      addCharacterDefinition(targetRoot, targetMap, definition, {
+        specId: marker.specId,
+        kind: 'enemy',
+        roomId: marker.roomId,
+      });
+      return;
+    }
+
     const group = makeSpecGroup(marker.specId, marker.type);
     group.userData.roomId = marker.roomId;
     let geometry;
@@ -300,9 +454,6 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     } else if (marker.type === 'goal') {
       geometry = new THREE.ConeGeometry(0.8, marker.height * 1.5, 20);
       material = materials.goal;
-    } else if (marker.type === 'enemy') {
-      geometry = new THREE.OctahedronGeometry(0.72, 0);
-      material = materials.enemy;
     } else if (marker.type === 'treasure') {
       geometry = new THREE.BoxGeometry(1.0, marker.height, 0.78);
       material = materials.treasure;
@@ -328,7 +479,10 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     targetMap.set(marker.specId, group);
   }
 
-  function buildStagingScene(plan, { resultMode = false, entityStates = null } = {}) {
+  function buildStagingScene(
+    plan,
+    { resultMode = false, entityStates = null, showPlayer = false, playerState = null } = {},
+  ) {
     const stagingRoot = new THREE.Group();
     const stagingMap = new Map();
 
@@ -347,6 +501,28 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
       }
       for (const marker of plan.markers) addMarker(stagingRoot, stagingMap, marker, entityStates);
 
+      let playerGroup = null;
+      if (showPlayer && plan.visibility?.currentRoomId) {
+        const currentRoom = plan.roomGroups.find((group) => group.specId === plan.visibility.currentRoomId);
+        const floor = currentRoom?.boxes?.find((box) => box.part === 'floor');
+        if (floor) {
+          const definition = createPlayerCharacterDefinition({
+            roomId: plan.visibility.currentRoomId,
+            playerState,
+            position: {
+              x: floor.position.x + Math.min(1.45, floor.size.x * 0.18),
+              y: 0,
+              z: floor.position.z,
+            },
+          });
+          playerGroup = addCharacterDefinition(stagingRoot, stagingMap, definition, {
+            kind: 'player',
+            roomId: plan.visibility.currentRoomId,
+            runtimeOnly: true,
+          });
+        }
+      }
+
       if (plan.visibility?.currentRoomId) {
         const currentRoom = plan.roomGroups.find((group) => group.specId === plan.visibility.currentRoomId);
         const floor = currentRoom?.boxes?.find((box) => box.part === 'floor');
@@ -362,7 +538,7 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
         }
       }
 
-      return { stagingRoot, stagingMap };
+      return { stagingRoot, stagingMap, playerGroup };
     } catch (error) {
       disposeObjectTree(stagingRoot);
       throw error;
@@ -386,12 +562,26 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     renderer.render(scene, camera);
   }
 
-  function render(spec, { visibility = null, resultMode = false, entityStates = null } = {}) {
+  function render(
+    spec,
+    {
+      visibility = null,
+      resultMode = false,
+      entityStates = null,
+      showPlayer = false,
+      playerState = null,
+    } = {},
+  ) {
     assertAlive();
     const previousPlan = lastPlan;
     const fullPlan = createDungeonScenePlan(spec);
     const plan = visibility ? projectDungeonScenePlan(fullPlan, visibility) : fullPlan;
-    const { stagingRoot, stagingMap } = buildStagingScene(plan, { resultMode, entityStates });
+    const { stagingRoot, stagingMap, playerGroup } = buildStagingScene(plan, {
+      resultMode,
+      entityStates,
+      showPlayer,
+      playerState,
+    });
     const previousVisibility = previousPlan?.visibility ?? null;
     const nextVisibility = plan.visibility ?? null;
     const visibilityChanged =
@@ -412,6 +602,7 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
       root.add(child);
     }
     for (const [specId, object] of stagingMap) runtimeBySpecId.set(specId, object);
+    runtimePlayerGroup = playerGroup ?? null;
 
     if (shouldFitCamera) fitCamera(plan.bounds, { playMode: Boolean(visibility) });
     lastPlan = plan;
@@ -795,6 +986,34 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     };
   }
 
+  function getCharacterPresentationSummary() {
+    assertAlive();
+    const enemies = [];
+    for (const [specId, object] of runtimeBySpecId) {
+      if (object.userData?.presentationKind !== 'enemy-character') continue;
+      enemies.push({
+        specId,
+        roomId: object.userData.roomId ?? null,
+        partNames: [...(object.userData.partNames ?? [])],
+      });
+    }
+    enemies.sort((a, b) => a.specId.localeCompare(b.specId));
+
+    return {
+      player: runtimePlayerGroup
+        ? {
+            roomId: runtimePlayerGroup.userData.roomId ?? null,
+            partNames: [...(runtimePlayerGroup.userData.partNames ?? [])],
+            equipment: runtimePlayerGroup.userData.equipment
+              ? { ...runtimePlayerGroup.userData.equipment }
+              : null,
+            level: runtimePlayerGroup.userData.level ?? null,
+          }
+        : null,
+      enemies,
+    };
+  }
+
   function dispose() {
     if (disposed) return;
     clearRenderedSpec();
@@ -829,6 +1048,7 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     getScreenPositionForSpecId,
     getScreenPositionForWorldPoint,
     getScreenPositionForRoomWall,
+    getCharacterPresentationSummary,
     dispose,
     get selectedSpecId() {
       return selectedSpecId;
