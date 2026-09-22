@@ -333,6 +333,16 @@ function snapshotState() {
     language: getLanguage(),
     floorCount: Math.max(1, floorSessions.length || 1),
     currentFloorIndex,
+    floorSummaries: floorSessions.map((entry, index) => {
+      const floorSpec = entry.spec;
+      return {
+        floorIndex: index,
+        dungeonId: floorSpec.id,
+        seed: floorSpec.seed,
+        roomCount: floorSpec.rooms.length,
+        entityCount: floorSpec.entities.length,
+      };
+    }),
     run: dungeonRunSession ? {
       status: dungeonRunSession.status,
       failureReason: dungeonRunSession.failureReason,
@@ -348,7 +358,7 @@ function snapshotState() {
     targetRoomId: entityRoom?.value || null,
     canUndo: Boolean(session?.canUndo),
     canRedo: Boolean(session?.canRedo),
-    startAllowed: gate.allowed,
+    startAllowed: gate.allowed && authoringRunSpec().ok,
     validationCriticalCount: gate.criticalCount,
     validationErrors: gate.errors.map((entry) => ({ ...entry })),
     generationBusy,
@@ -905,6 +915,16 @@ function applyPlayRuntimeResult(result, failurePrefix) {
   }
   playSession = result.session;
   selectedRoomId = playSession.currentRoomId;
+  if (dungeonRunSession && playSession.status === 'playing') {
+    const synced = syncDungeonRunFloor(dungeonRunSession, playSession, {
+      at: playActionClock,
+    });
+    if (!synced.ok) {
+      setEditStatus(`Run sync failed: ${synced.error?.code ?? 'UNKNOWN'}`);
+      return false;
+    }
+    dungeonRunSession = synced.run;
+  }
   updatePlayReadout();
   if (finalizePlayIfNeeded()) return true;
   renderActiveSpec();
@@ -2866,9 +2886,9 @@ async function run() {
     moveEntityButton.addEventListener('click', moveEntityToTargetRoom);
     removeEntityButton.addEventListener('click', removeEntity);
     generationPrompt.addEventListener('input', updateUi);
-    floorCountInput?.addEventListener('input', () => {
-      const count = requestedFloorCount();
-      if (floorCountInput.value !== String(count)) floorCountInput.value = String(count);
+    floorCountInput?.addEventListener('input', updateUi);
+    floorCountInput?.addEventListener('change', () => {
+      floorCountInput.value = String(requestedFloorCount());
       updateUi();
     });
     floorSelect?.addEventListener('change', () => selectFloor(floorSelect.value));
