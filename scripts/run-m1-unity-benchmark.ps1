@@ -36,7 +36,7 @@ function Show-UnityLogTail {
 }
 
 if (-not (Test-Path $LockPath)) {
-    throw 'Audited package-lock.json is missing. Keep the previously reviewed lockfile in the repository working tree.'
+    throw 'Tracked audited package-lock.json is missing from the repository checkout.'
 }
 
 $ActualLockSha256 = (Get-FileHash -Algorithm SHA256 -Path $LockPath).Hash.ToLowerInvariant()
