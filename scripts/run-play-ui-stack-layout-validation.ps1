@@ -2,6 +2,8 @@ $ErrorActionPreference = 'Stop'
 
 $steps = @(
   @{ Label = 'Play UI stack layout smoke'; Command = @('run', 'smoke:play-ui-stack-layout') },
+  @{ Label = 'START-gate browser smoke'; Command = @('run', 'smoke:start-gate') },
+  @{ Label = 'Exploration UX browser smoke'; Command = @('run', 'smoke:exploration-ux') },
   @{ Label = 'Room-event browser smoke'; Command = @('run', 'smoke:room-events') },
   @{ Label = 'Multi-floor browser smoke'; Command = @('run', 'smoke:multi-floor-run') },
   @{ Label = 'Programmatic characters smoke'; Command = @('run', 'smoke:programmatic-characters') },
