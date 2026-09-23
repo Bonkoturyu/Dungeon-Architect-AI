@@ -217,6 +217,15 @@ Rechecked unresolved counts:
 
 No other PR in #1–#47 had an actionable unresolved inline review thread during the audit scan.
 
+## Subsequent project progress
+
+After this historical audit was completed:
+
+- DAI-097 Audio presentation was accepted and merged;
+- DAI-098 multi-floor simulation / balance became the active product task.
+
+The original remaining-work bullets below are retained as the state at audit completion.
+
 ## Remaining intentionally unresolved project work
 
 This audit does not convert real future work into completed work.
