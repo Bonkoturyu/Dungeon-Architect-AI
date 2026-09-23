@@ -2,7 +2,7 @@
 
 - Candidate: Unity Editor / Unity WebGL
 - Version: 6000.3.23f1
-- Status: Candidate / user tier-eligibility confirmation required
+- Status: Historical benchmark candidate / retained tier-eligibility confirmation not present
 - Purpose: DAI-010 renderer comparison and, if selected by DAI-011, production Unity implementation baseline
 - Third-party assets: none
 - Pre-production implementation reused: No
@@ -22,6 +22,12 @@ Unity's current public licensing guidance states:
 - Unity's legal information was updated effective 2026-06-30.
 - Unity states that AI/automated tools may interact with Unity through an authorized framework and users remain responsible for tools acting on their behalf.
 - Unity Runtime Fee language was removed from the current Unity plan model.
+
+## 2026-09-23 evidence correction
+
+The repository does not retain an explicit operator confirmation that the Unity plan/tier eligibility gate was satisfied for the historical 2026-09-13 benchmark execution.
+
+The historical run and its raw hash remain preserved, but it must not be represented as fully decision-quality licensing evidence. No new Unity benchmark should be accepted until the operator explicitly confirms current tier eligibility under current Unity terms.
 
 ## Project rule
 
