@@ -6,6 +6,13 @@
 
 Decision date: 2026-09-13
 
+
+Review correction: 2026-09-23
+
+A historical PR-review audit found that the original DAI-010 timing protocol was not apples-to-apples for several metrics: browser-library RAF samples did not render each frame, browser libraries ran headless while Unity ran headed, and first-render milestones differed. The repository also does not retain an explicit Unity tier-eligibility confirmation for that historical run.
+
+The raw benchmark hashes and table are retained for traceability, but **FPS, navigation-complete, and first-render values from that run are no longer decision-quality comparative evidence**. The Three.js decision remains confirmed based on the architecture boundary below and extensive subsequent production evidence on the selected renderer.
+
 ## Context
 
 Dungeon Architect AI requires a browser experience that can:
@@ -58,40 +65,30 @@ Renderer boundary:
 
 ## Why
 
-The production benchmark shows no meaningful steady-state FPS advantage for Babylon.js or Unity under the fixed fixture.
+Three.js remains the production choice because it fits the browser-first boundary with low integration complexity and has since been validated directly in the product:
 
-Three.js provides the best measured browser-start/render profile of the three candidates:
+- the production Three.js adapter renders the shared DungeonSpec without leaking renderer types into Core;
+- picking, room/corridor editing, visibility projection, and programmatic gameplay presentation are implemented and regression-tested;
+- browser/performance gates and the hosted public E2E have passed on the selected stack;
+- later DAI-085–096 and Play-UI acceptance runs continued to pass on the same renderer boundary.
 
-- lowest median navigation-complete time,
-- lowest median scene-generation time,
-- lowest median first-render time.
-
-This matches the MVP's browser-first `DESCRIBE → GENERATE → EDIT → START → PLAY` loop, where repeated transitions into visible 3D output are a first-order concern.
+The historical DAI-010 timing table is retained as context only. It is not used to claim that Three.js won steady-state FPS or first-frame performance against Babylon.js/Unity.
 
 ## Rejected alternatives
 
 ### Babylon.js 9.18.0
 
-Rejected for the current MVP renderer selection.
+Not selected for the current MVP renderer.
 
-Reason:
-
-- steady-state frame cadence is effectively tied with Three.js,
-- scene generation and first-render medians are higher in the production fixture,
-- no measured benefit currently offsets those differences.
+The historical benchmark timing is no longer used as the reason for rejection. Three.js had already been selected and subsequently accumulated the production adapter, editing, hosted-E2E, and regression evidence required by the current browser MVP. No current requirement justifies paying the migration cost to Babylon.js.
 
 This is not a statement that Babylon.js is generally inferior; it is a project-specific selection.
 
 ### Unity WebGL 6000.3.23f1
 
-Rejected for the current browser MVP renderer selection.
+Not selected for the current browser MVP renderer.
 
-Reason:
-
-- steady-state FPS is competitive,
-- scene generation is reasonably close to Three.js,
-- browser first-render/startup cost is materially higher in the production fixture,
-- navigation-complete median is also higher.
+The historical Unity timing is no longer used as a comparative rejection reason because browser mode/first-frame milestones differed and a retained operator tier-eligibility confirmation is missing. The current browser-first application is already implemented and accepted on Three.js, and no current requirement requires a Unity runtime.
 
 Unity remains useful elsewhere in the developer's toolset, but this ADR does not select it for Dungeon Architect AI's browser MVP.
 
