@@ -203,6 +203,20 @@ Runner:
 
 DAI-005 remains IN PROGRESS until this runner passes on the owner's Windows/Chrome environment.
 
+## Review-thread closure
+
+After applying the dispositions above, each originally actionable unresolved inline thread was replied to with its concrete fix/disposition and marked Resolved.
+
+Rechecked unresolved counts:
+
+- PR #1: 0 / 2 unresolved;
+- PR #2: 0 / 3 unresolved;
+- PR #3: 0 / 5 unresolved;
+- PR #4: 0 / 1 unresolved;
+- PR #41: 0 / 12 unresolved.
+
+No other PR in #1–#47 had an actionable unresolved inline review thread during the audit scan.
+
 ## Remaining intentionally unresolved project work
 
 This audit does not convert real future work into completed work.
