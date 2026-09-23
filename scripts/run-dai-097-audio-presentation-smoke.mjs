@@ -123,7 +123,13 @@ async function finishCurrentFloor(page) {
   const s = await state(page);
   const route = shortestPath(s.play.snapshot, s.play.currentRoomId, [s.play.goalRoomId]);
   if (route.length < 2) throw new Error("No route to current floor goal.");
-  await moveAlong(page, route);
+
+  for (const target of route.slice(1, -1)) {
+    await resolveBlockingEvents(page);
+    await moveOne(page, target);
+  }
+  await resolveBlockingEvents(page);
+  await moveOne(page, route.at(-1));
 }
 
 function generatedIntent() {
