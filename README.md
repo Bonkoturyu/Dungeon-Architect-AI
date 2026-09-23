@@ -81,7 +81,7 @@ Key boundaries:
 - mobile is outside the supported submission acceptance scope;
 - no Safari/Firefox acceptance claim has been made;
 - there are no accounts, persistent project storage, analytics or telemetry;
-- the historical public candidate/video/freeze predate later DAI-085–096 and Play-UI work; DAI-097 Audio, DAI-098 multi-floor simulation/balance, and DAI-099 refreshed deployment/public-E2E/video/freeze remain before final submission.
+- the historical public candidate/video/freeze predate later DAI-085–097 work; DAI-098 multi-floor simulation/balance is in progress, and DAI-099 refreshed deployment/public-E2E/video/freeze remains before final submission.
 
 ## Sample prompts
 
