@@ -61,13 +61,13 @@ The browser runner records:
 
 ## Dependency reproducibility gate
 
-The runner requires the already reviewed `package-lock.json` to remain in the local working tree.
+The already reviewed `package-lock.json` is now tracked at repository root.
 Its SHA-256 must be exactly:
 
 `ce94a9ee4241ee798c0c32c0fda55f00cb4462fb6ba6244acdd3d53589d261cc`
 
 If the lockfile is missing or differs, the benchmark stops before dependency installation.
-The runner then uses `npm ci --ignore-scripts` so the audited dependency graph is reproduced rather than re-resolved.
+The runner then uses `npm ci --ignore-scripts` so a clean checkout reproduces the audited dependency graph rather than re-resolving it.
 
 ## Unity licensing gate
 
@@ -84,7 +84,7 @@ From the existing local repository clone, run this as one PowerShell command:
 git fetch origin; git switch feat/m1-unity-benchmark; git pull --ff-only origin feat/m1-unity-benchmark; powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-m1-unity-benchmark.ps1
 ```
 
-The command intentionally does not delete untracked files, so the previously reviewed local `package-lock.json` is preserved for hash verification.
+The tracked root `package-lock.json` is part of the clean checkout and is hash-verified before installation.
 
 The runner expects Unity `6000.3.23f1` at the standard Unity Hub location. If installed elsewhere, set `UNITY_EDITOR` to the exact `Unity.exe` path before running.
 
