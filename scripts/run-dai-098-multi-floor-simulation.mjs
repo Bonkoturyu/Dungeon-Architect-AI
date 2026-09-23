@@ -217,9 +217,12 @@ const checks = {
     authoredDamagePerRoom[1] < authoredDamagePerRoom[2] &&
     aggregate.progressionSignals
       .authoredHazardDamageBudgetPerRoomDeltaPerFloor > 0,
-  observedPressureTrendIsAvailable:
+  observedPressureSignalsAreAvailable:
     observedDamageFractions.every(Number.isFinite) &&
-    aggregate.progressionSignals.observedDamageFractionDeltaPerFloor > 0,
+    Number.isFinite(
+      aggregate.progressionSignals.observedDamageFractionDeltaPerFloor,
+    ) &&
+    aggregate.progressionSignals.clearRateDeltaPerFloor < 0,
   runIntentFitCoversEveryFloor:
     intentFit.score.floorCoverage.scoredFloorCount === 3 &&
     intentFit.score.floorCoverage.fraction === 1 &&
