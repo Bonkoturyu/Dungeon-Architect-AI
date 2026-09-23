@@ -7,12 +7,12 @@ GitHub Issues are not created unless explicitly authorized.
 - DAI-002 Clean production repository — DONE
 - DAI-003 Governance baseline — DONE on production branch
 - DAI-004 Knowledge-only migration — DONE
-- DAI-005 Verification baseline — IN PROGRESS (`npm test` active; renderer/editor/play/door browser smoke passed; stack-specific format/typecheck/build remain pending)
+- DAI-005 Verification baseline — IN PROGRESS (review-debt cleanup adds tracked audited `package-lock.json`, repo-wide JS/MJS/CJS syntax validation, full `npm test`, hosting build/smoke, legal/public-doc audits, and `git diff --check` under `scripts/run-review-debt-validation.ps1`. Local Windows/Chrome acceptance remains pending before DONE.)
 - DAI-006 Decision Log / ADR baseline — DONE
 
 ## M1
-- DAI-010 Re-measure 3D stack — DONE (Three.js/Babylon.js/Unity WebGL production comparison complete)
-- DAI-011 Select 3D stack via ADR — DONE (ADR-001 selects Three.js 0.185.1)
+- DAI-010 Re-measure 3D stack — DONE as historical candidate-evaluation record (2026-09-23 audit found the original cross-engine timing protocol was not apples-to-apples: browser candidates did not render each sampled frame, browser mode differed from Unity, first-render milestones differed, and retained Unity tier confirmation is absent. Raw hashes/numbers remain historical evidence; unsupported timing-winner claims were withdrawn; future browser harness is hardened.)
+- DAI-011 Select 3D stack via ADR — DONE (ADR-001 retains Three.js 0.185.1. After the 2026-09-23 evidence correction, the decision is grounded in the browser-first architecture plus substantial later production renderer/editor/hosted-E2E/gameplay evidence rather than treating the historical DAI-010 timing table as a controlled winner.)
 - DAI-012 Clean-room DungeonSpec v1 — DONE
 - DAI-013 Fixed-spec parser/validator — DONE
 - DAI-014 Minimal renderer adapter — DONE (Three.js minimal renderer + production Chrome smoke passed)
