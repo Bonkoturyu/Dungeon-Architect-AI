@@ -7,6 +7,7 @@ const rawBaseUrl = String(
   process.env.DAI_PUBLIC_URL || 'https://dungeon-architect-ai.pages.dev/',
 ).trim();
 const outputDir = path.resolve('artifacts/dai-099-public');
+const localBuildInfoPath = path.resolve('dist/build-info.json');
 const generationPrompt =
   'Create a fair but tense two-floor dungeon with exploration, combat, readable traps, and dangerous rewards.';
 const editPrompt = 'Move the treasure to the room that contains the goal.';
@@ -15,6 +16,18 @@ if (!/^https:\/\//i.test(rawBaseUrl)) {
   throw new Error('DAI_PUBLIC_URL must be an https:// URL.');
 }
 if (!fs.existsSync(chromePath)) throw new Error(`Chrome not found: ${chromePath}`);
+if (!fs.existsSync(localBuildInfoPath)) {
+  throw new Error('dist/build-info.json is missing. Run npm run build:hosting before DAI-099 public validation.');
+}
+
+const localBuildInfo = JSON.parse(fs.readFileSync(localBuildInfoPath, 'utf8'));
+if (
+  localBuildInfo?.schemaVersion !== '1.0' ||
+  typeof localBuildInfo?.runtimeBundleSha256 !== 'string' ||
+  localBuildInfo.runtimeBundleSha256.length !== 64
+) {
+  throw new Error('Local dist/build-info.json is invalid.');
+}
 
 fs.mkdirSync(outputDir, { recursive: true });
 const baseUrl = rawBaseUrl.replace(/\/+$/, '');
@@ -189,6 +202,14 @@ try {
     }
   });
 
+  const buildInfoResponse = await page.request.get(`${baseUrl}/build-info.json`, {
+    headers: { 'cache-control': 'no-cache' },
+  });
+  const remoteBuildInfoStatus = buildInfoResponse.status();
+  const remoteBuildInfo = remoteBuildInfoStatus === 200
+    ? await buildInfoResponse.json()
+    : null;
+
   const navigationStarted = performance.now();
   await page.goto(editorUrl, { waitUntil: 'networkidle', timeout: 90_000 });
   await page.waitForFunction(
@@ -360,6 +381,16 @@ try {
 
   const checks = {
     httpsDeployment: editorUrl.startsWith('https://'),
+    buildFingerprintEndpointAvailable:
+      remoteBuildInfoStatus === 200 &&
+      remoteBuildInfo?.schemaVersion === '1.0',
+    publicRuntimeBundleMatchesLocalCandidate:
+      remoteBuildInfo?.runtimeBundleSha256 ===
+      localBuildInfo.runtimeBundleSha256,
+    publicCommitMatchesLocalCandidate:
+      typeof localBuildInfo.commitSha === 'string' &&
+      localBuildInfo.commitSha.length === 40 &&
+      remoteBuildInfo?.commitSha === localBuildInfo.commitSha,
     refreshedUiPresent:
       currentUi.testLabel.includes('Test') &&
       currentUi.mysteryLabel.includes('Mystery') &&
@@ -436,6 +467,11 @@ try {
     navigationReadyMs,
     passed: falseChecks.length === 0,
     checks,
+    buildFingerprint: {
+      local: localBuildInfo,
+      remoteStatus: remoteBuildInfoStatus,
+      remote: remoteBuildInfo,
+    },
     falseChecks,
     currentUi,
     audioAfterUnlock,
