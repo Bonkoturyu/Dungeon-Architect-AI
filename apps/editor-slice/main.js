@@ -926,7 +926,9 @@ function roomBlocksExit() {
 
 function applyPlayRuntimeResult(result, failurePrefix) {
   if (!result?.ok) {
-    setEditStatus(`${failurePrefix}: ${result?.error?.code ?? 'UNKNOWN'}`);
+    const message = `${failurePrefix}: ${result?.error?.code ?? 'UNKNOWN'}`;
+    setEditStatus(message);
+    showViewportNotice(message);
     return false;
   }
   playSession = result.session;
@@ -936,7 +938,9 @@ function applyPlayRuntimeResult(result, failurePrefix) {
       at: playActionClock,
     });
     if (!synced.ok) {
-      setEditStatus(`Run sync failed: ${synced.error?.code ?? 'UNKNOWN'}`);
+      const message = `Run sync failed: ${synced.error?.code ?? 'UNKNOWN'}`;
+      setEditStatus(message);
+      showViewportNotice(message);
       return false;
     }
     dungeonRunSession = synced.run;
@@ -1076,6 +1080,15 @@ function renderRoomEvents() {
     card.append(type, note, actions);
     cards.push(card);
   }
+
+  const entityOrder = new Map(
+    (playSession.snapshot?.entities ?? []).map((entity, index) => [entity.id, index]),
+  );
+  cards.sort((left, right) => {
+    const leftOrder = entityOrder.get(left.dataset.entityId) ?? Number.MAX_SAFE_INTEGER;
+    const rightOrder = entityOrder.get(right.dataset.entityId) ?? Number.MAX_SAFE_INTEGER;
+    return leftOrder - rightOrder || String(left.dataset.entityId).localeCompare(String(right.dataset.entityId));
+  });
 
   roomEventItems.replaceChildren(...cards);
   roomEventBar.hidden = cards.length === 0;
@@ -2925,6 +2938,7 @@ async function run() {
       getCameraState: () => adapter.getCameraState(),
       getRenderedSelection: () => adapter.selectedSpecId,
       getCharacterPresentation: () => adapter.getCharacterPresentationSummary(),
+      showViewportNoticeForTest: (message, options) => showViewportNotice(message, options),
       getCurrentRoomPlan: () => {
         const roomId = playSession?.currentRoomId ?? selectedRoomId;
         const group = adapter.plan?.roomGroups.find((room) => room.specId === roomId) ?? null;
