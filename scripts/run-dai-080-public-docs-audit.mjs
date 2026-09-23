@@ -62,16 +62,18 @@ for (const [file, text] of Object.entries(texts)) {
 
 const checks = {
   requiredPublicDocsExist: publicDocs.every((file) => fs.existsSync(file)),
-  readmeClaimsVerifiedFullFlow:
+  readmeSeparatesCurrentLocalFlowFromHistoricalPublicEvidence:
     readme.includes('https://dungeon-architect-ai.pages.dev/') &&
     readme.includes('DESCRIBE') &&
     readme.includes('GENERATE') &&
     readme.includes('EDIT') &&
     readme.includes('VALIDATE') &&
-    readme.includes('START') &&
-    readme.includes('PLAY') &&
+    readme.includes('TEST / MYSTERY') &&
+    readme.includes('EXPLORE + ROOM EVENTS') &&
     readme.includes('RESULT') &&
-    readme.includes('production public E2E'),
+    readme.includes('locally regression-tested') &&
+    readme.includes('historical production public-E2E evidence') &&
+    readme.includes('DAI-099'),
   readmeLinksRequiredPublicDocs:
     allIncludes(readme, [
       'docs/submission/JUDGE_QUICKSTART.md',
