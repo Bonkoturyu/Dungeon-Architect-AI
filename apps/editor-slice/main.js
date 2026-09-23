@@ -988,6 +988,7 @@ function renderRoomEvents() {
     card.className = 'room-event is-blocking';
     card.dataset.entityId = enemy.id;
     card.dataset.kind = 'enemy';
+    card.setAttribute('role', 'dialog');
 
     const type = document.createElement('span');
     type.className = 'room-event-type';
@@ -1019,6 +1020,7 @@ function renderRoomEvents() {
     card.className = `room-event${blocking ? ' is-blocking' : ''}`;
     card.dataset.entityId = entity.id;
     card.dataset.kind = entity.type;
+    card.setAttribute('role', 'dialog');
 
     const type = document.createElement('span');
     type.className = 'room-event-type';
