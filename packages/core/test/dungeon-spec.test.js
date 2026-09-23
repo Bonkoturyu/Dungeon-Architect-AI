@@ -101,3 +101,25 @@ test("corridor doorway side preferences accept cardinal sides and reject invalid
   assert.equal(invalidResult.valid, false);
   assert.ok(invalidResult.errors.some((error) => error.code === "CORRIDOR_SIDE_INVALID"));
 });
+
+
+test("cyclic and runtime-only values are rejected before START snapshotting", async () => {
+  const cyclic = await loadFixture();
+  cyclic.rooms[0].runtime = {};
+  cyclic.rooms[0].runtime.self = cyclic.rooms[0].runtime;
+  const cyclicResult = validateDungeonSpec(cyclic);
+  assert.equal(cyclicResult.valid, false);
+  assert.ok(cyclicResult.errors.some((error) => error.code === "JSON_CYCLE"));
+
+  const callable = await loadFixture();
+  callable.rooms[0].runtimeCallback = () => {};
+  const callableResult = validateDungeonSpec(callable);
+  assert.equal(callableResult.valid, false);
+  assert.ok(callableResult.errors.some((error) => error.code === "JSON_VALUE_UNSUPPORTED"));
+
+  const runtimeObject = await loadFixture();
+  runtimeObject.rooms[0].runtimeObject = new Date(0);
+  const runtimeObjectResult = validateDungeonSpec(runtimeObject);
+  assert.equal(runtimeObjectResult.valid, false);
+  assert.ok(runtimeObjectResult.errors.some((error) => error.code === "JSON_OBJECT_UNSUPPORTED"));
+});
