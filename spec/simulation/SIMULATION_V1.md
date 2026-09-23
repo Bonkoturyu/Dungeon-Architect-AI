@@ -41,7 +41,8 @@ DAI-060 supports one atomic action per simulation step:
 
 - `move`
 - `encounter-enemy`
-- `defeat-enemy`
+- `combat-enemy` — resolve real deterministic enemy combat, including Player damage, defeat, XP/Gold and possible player death
+- `defeat-enemy` — legacy/direct defeat action retained for backward-compatible simulation fixtures; does not model combat damage
 - `inspect-treasure`
 - `open-treasure`
 - `inspect-trap`
