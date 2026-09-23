@@ -707,17 +707,39 @@
     .preview-cover-card strong { display: block; margin-bottom: 7px; font-size: 1rem; }
     .preview-cover-card span { color: var(--text-muted); font-size: 0.76rem; line-height: 1.5; }
 
+    .play-bottom-hud {
+      position: absolute;
+      z-index: 6;
+      left: 50%;
+      bottom: 14px;
+      display: none;
+      width: max-content;
+      max-width: calc(100% - 32px);
+      transform: translateX(-50%);
+      grid-template-rows: auto auto;
+      justify-items: center;
+      gap: 8px;
+      pointer-events: none;
+    }
+    body[data-mode="play"] .play-bottom-hud { display: grid; }
+
     .play-summary {
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-wrap: wrap;
-      gap: 8px;
-      width: 100%;
-      margin-top: 10px;
-      min-height: 34px;
+      width: max-content;
+      max-width: 100%;
+      min-height: 36px;
+      padding: 8px 14px;
+      border: 1px solid rgba(93, 109, 135, 0.52);
+      border-radius: 10px;
+      background: rgba(22, 28, 38, 0.90);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24);
+      backdrop-filter: blur(8px);
       text-align: center;
+      pointer-events: none;
     }
+    .play-bottom-hud .play-mode-pill { display: none !important; }
     .play-mode-pill {
       flex: 0 0 auto;
       padding: 5px 8px;
@@ -731,27 +753,29 @@
     }
     .play-metrics {
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       align-items: center;
       justify-content: center;
-      gap: 6px 10px;
+      gap: 8px 18px;
       margin: 0;
-      color: var(--text-soft);
-      font: 0.78rem ui-monospace, SFMono-Regular, Consolas, monospace;
-      letter-spacing: 0.01em;
+      color: #f4f7fb;
+      font: 1rem ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-weight: 780;
+      letter-spacing: 0.015em;
     }
     .metric {
       display: inline-flex;
-      align-items: center;
-      gap: 4px;
+      align-items: baseline;
+      gap: 5px;
       white-space: nowrap;
     }
     .metric-label {
-      color: var(--text-muted);
-      font-size: 0.62rem;
-      font-weight: 850;
-      letter-spacing: 0.08em;
+      color: #b9c5d4;
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0.075em;
     }
+    .play-aux-metrics { display: none !important; }
     .result-banner {
       margin: 12px 0 0;
       padding: 14px 12px;
@@ -791,7 +815,8 @@
       grid-template-columns: minmax(0, 1fr);
     }
 
-    body[data-mode="play"] aside,
+    body[data-mode="play"] aside { display: none; }
+
     body[data-mode="result"] aside {
       position: absolute;
       z-index: 5;
@@ -806,7 +831,6 @@
       pointer-events: none;
     }
 
-    body[data-mode="play"] aside .panel-play,
     body[data-mode="result"] aside .panel-play {
       pointer-events: auto;
       margin: 0;
@@ -826,7 +850,7 @@
 
     .viewport-notice {
       position: absolute;
-      z-index: 12;
+      z-index: 20;
       top: auto;
       bottom: 28px;
       left: 50%;
@@ -834,16 +858,31 @@
       width: max-content;
       max-width: min(620px, calc(100% - 40px));
       padding: 10px 14px;
-      border: 1px solid rgba(255, 158, 158, 0.58);
+      border: 1px solid rgba(255, 158, 158, 0.64);
       border-radius: 10px;
-      background: rgba(84, 38, 42, 0.94);
-      color: #ffe0e0;
-      font-size: 0.78rem;
-      font-weight: 760;
+      background: rgba(84, 38, 42, 0.96);
+      color: #ffe7e7;
+      font-size: 0.82rem;
+      font-weight: 780;
       line-height: 1.45;
       text-align: center;
-      box-shadow: var(--shadow);
+      box-shadow: 0 18px 54px rgba(0, 0, 0, 0.42);
+      backdrop-filter: blur(9px);
       pointer-events: none;
+    }
+    body[data-mode="play"] .viewport-notice,
+    body[data-mode="result"] .viewport-notice {
+      top: 50%;
+      bottom: auto;
+      transform: translate(-50%, -50%);
+      min-width: min(360px, calc(100% - 40px));
+      max-width: min(560px, calc(100% - 40px));
+      padding: 15px 18px;
+      border-color: rgba(255, 158, 158, 0.76);
+      border-radius: 13px;
+      background: rgba(65, 28, 34, 0.97);
+      font-size: 0.94rem;
+      line-height: 1.5;
     }
     .play-reticle {
       position: absolute;
@@ -877,55 +916,59 @@
 
     .room-events {
       position: absolute;
-      z-index: 4;
+      z-index: 8;
       left: 50%;
-      top: calc(50% + 34px);
-      transform: translateX(-50%);
-      width: min(390px, calc(100% - 36px));
-      padding: 9px;
-      border: 1px solid rgba(113, 128, 153, 0.5);
-      border-radius: 14px;
-      background: rgba(29, 36, 48, 0.88);
-      backdrop-filter: blur(8px);
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: min(440px, calc(100% - 40px));
+      max-height: min(62vh, 520px);
+      overflow: auto;
+      padding: 10px;
+      border: 1px solid rgba(113, 128, 153, 0.58);
+      border-radius: 15px;
+      background: rgba(21, 27, 36, 0.91);
+      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+      backdrop-filter: blur(9px);
     }
     .room-event-heading {
       display: block;
-      margin: 0 0 6px 2px;
-      color: #94a1b4;
-      font-size: 0.58rem;
-      font-weight: 850;
+      margin: 0 0 7px 2px;
+      color: #aab6c7;
+      font-size: 0.66rem;
+      font-weight: 900;
       letter-spacing: 0.11em;
     }
     #roomEventItems {
       display: grid;
-      gap: 6px;
+      gap: 8px;
     }
     .room-event {
       display: grid;
-      grid-template-columns: minmax(72px, auto) 1fr auto;
+      grid-template-columns: minmax(82px, auto) 1fr auto;
       align-items: center;
-      gap: 8px;
-      min-height: 34px;
-      padding: 6px 7px;
-      border: 1px solid rgba(87, 101, 125, 0.58);
-      border-radius: 9px;
-      background: rgba(41, 50, 64, 0.78);
+      gap: 10px;
+      min-height: 42px;
+      padding: 8px 9px;
+      border: 1px solid rgba(87, 101, 125, 0.66);
+      border-radius: 10px;
+      background: rgba(43, 53, 68, 0.92);
+      box-shadow: 0 5px 16px rgba(0, 0, 0, 0.16);
     }
     .room-event.is-blocking {
       border-color: rgba(228, 167, 104, 0.74);
       background: rgba(91, 61, 38, 0.28);
     }
     .room-event-type {
-      color: #eff3f9;
-      font-size: 0.66rem;
+      color: #f3f6fb;
+      font-size: 0.74rem;
       font-weight: 900;
       letter-spacing: 0.07em;
     }
     .room-event-note {
       min-width: 0;
       overflow: hidden;
-      color: #9eabba;
-      font-size: 0.62rem;
+      color: #b1bdcd;
+      font-size: 0.70rem;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
@@ -934,10 +977,10 @@
       gap: 5px;
     }
     .room-event-actions button {
-      min-height: 27px;
-      padding: 4px 7px;
+      min-height: 31px;
+      padding: 5px 9px;
       border-radius: 7px;
-      font-size: 0.62rem;
+      font-size: 0.68rem;
       font-weight: 850;
       letter-spacing: 0.04em;
     }
@@ -951,24 +994,26 @@
     }
 
     .play-exits {
-      position: absolute;
-      z-index: 4;
-      left: 50%;
-      bottom: 18px;
-      transform: translateX(-50%);
-      padding: 6px;
-      border: 1px solid rgba(130, 148, 181, 0.46);
+      position: relative;
+      z-index: 1;
+      left: auto;
+      bottom: auto;
+      transform: none;
+      padding: 7px;
+      border: 1px solid rgba(130, 148, 181, 0.52);
       border-radius: 16px;
-      background: rgba(29, 36, 48, 0.78);
+      background: rgba(25, 32, 43, 0.90);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.24);
       backdrop-filter: blur(8px);
+      pointer-events: auto;
     }
     .exit-prompt {
       display: block;
-      margin: 1px 0 3px;
-      color: #96a4b8;
+      margin: 1px 0 4px;
+      color: #aab6c7;
       text-align: center;
-      font-size: 0.58rem;
-      font-weight: 850;
+      font-size: 0.66rem;
+      font-weight: 900;
       letter-spacing: 0.11em;
     }
     #playExitButtons {
@@ -1516,12 +1561,12 @@
 
     .play-mode-pill,
     .mode-note,
-    .metric-label,
     .room-event-heading,
     .exit-prompt {
       font-size: 0.75rem;
     }
-    .play-metrics { font-size: 0.875rem; }
+    .metric-label { font-size: 0.8125rem; }
+    .play-metrics { font-size: 1rem; }
     .room-event {
       min-height: 40px;
       gap: var(--ui-space-1);
@@ -1723,7 +1768,7 @@
           <span id="roomContentsRoom"></span>
           <div id="roomContentsItems"></div>
         </div>
-        <div id="viewportNotice" class="viewport-notice" hidden></div>
+        <div id="viewportNotice" class="viewport-notice" role="alert" aria-live="assertive" hidden></div>
         <div id="playReticle" class="play-reticle" hidden aria-hidden="true"></div>
         <div id="authoringPreviewCover" class="preview-cover" hidden>
           <div class="preview-cover-card">
@@ -1735,9 +1780,25 @@
           <span class="room-event-heading" data-i18n="roomEvent.heading">ROOM</span>
           <div id="roomEventItems"></div>
         </div>
-        <div id="playExitBar" class="play-exits" hidden>
-          <span class="exit-prompt" data-i18n="exit.choose">CHOOSE EXIT</span>
-          <div id="playExitButtons" aria-label="Available exits"></div>
+        <div id="playBottomHud" class="play-bottom-hud">
+          <div id="playExitBar" class="play-exits" hidden>
+            <span class="exit-prompt" data-i18n="exit.choose">CHOOSE EXIT</span>
+            <div id="playExitButtons" aria-label="Available exits"></div>
+          </div>
+          <div class="play-summary">
+            <span id="playModeLabel" class="play-mode-pill" hidden></span>
+            <div id="playStatus" class="play-metrics" aria-live="polite">
+              <span class="metric"><span class="metric-label">LV</span><span id="levelCount">1</span></span>
+              <span class="metric"><span class="metric-label">HP</span><span id="hpCount">0/0</span></span>
+              <span class="metric"><span class="metric-label">EXP</span><span id="xpCount">0/20</span></span>
+              <span class="metric"><span class="metric-label">G</span><span id="goldCount">0</span></span>
+            </div>
+            <div class="play-aux-metrics" aria-hidden="true">
+              <span id="moveCount">0</span>
+              <span id="mappedCount">0</span>
+              <span id="playFloorCount">1/1</span>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -1790,18 +1851,6 @@
             <button id="mysteryPlay" class="mystery-action" type="button" disabled title="Reroll routes and content with a fresh seed. Generator V1 may keep a similar room layout." data-i18n="play.mystery">🎲 Mystery</button>
           </div>
           <p class="mode-note editor-only" data-i18n="play.note">Test = current · Mystery = unseen</p>
-          <div class="play-summary">
-            <span id="playModeLabel" class="play-mode-pill" hidden></span>
-            <div id="playStatus" class="play-metrics" aria-live="polite">
-              <span class="metric"><span class="metric-label" data-i18n="play.move">MOVE</span><span id="moveCount">0</span></span>
-              <span class="metric"><span class="metric-label" data-i18n="play.map">MAP</span><span id="mappedCount">0</span></span>
-              <span class="metric"><span class="metric-label">FLOOR</span><span id="playFloorCount">1/1</span></span>
-              <span class="metric"><span class="metric-label">HP</span><span id="hpCount">0/0</span></span>
-              <span class="metric"><span class="metric-label">LV</span><span id="levelCount">1</span></span>
-              <span class="metric"><span class="metric-label">XP</span><span id="xpCount">0/20</span></span>
-              <span class="metric"><span class="metric-label">G</span><span id="goldCount">0</span></span>
-            </div>
-          </div>
           <p id="resultStatus" class="result-banner" aria-live="polite" hidden></p>
           <div id="resultMetrics" class="result-metrics" hidden></div>
         </fieldset>

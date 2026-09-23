@@ -62,6 +62,7 @@
     "validate:multi-floor-run": "node scripts/run-dai-095-multi-floor.mjs",
     "smoke:multi-floor-run": "node scripts/run-dai-095-multi-floor-smoke.mjs",
     "smoke:programmatic-characters": "node scripts/run-dai-096-programmatic-characters-smoke.mjs",
+    "smoke:play-ui-stack-layout": "node scripts/run-play-ui-stack-layout-smoke.mjs",
     "smoke:owner-ui-review": "node scripts/run-owner-ui-review-smoke.mjs"
   },
   "devDependencies": {
