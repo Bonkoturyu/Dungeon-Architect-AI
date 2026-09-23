@@ -2,6 +2,8 @@ import {
   aggregateSimulationMetrics,
   projectSimulationMetrics,
 } from './metrics.js';
+import { DEFAULT_ENEMY_DAMAGE } from '../../play-core/src/enemy-runtime.js';
+import { DEFAULT_TRAP_DAMAGE } from '../../play-core/src/interaction-runtime.js';
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -26,6 +28,39 @@ function sum(values) {
 
 function entityCount(spec, type) {
   return (spec?.entities ?? []).filter((entity) => entity.type === type).length;
+}
+
+function damageBudget(spec, type, defaultDamage) {
+  return (spec?.entities ?? [])
+    .filter((entity) => entity.type === type)
+    .reduce((sum, entity) => {
+      const damage = Number.isSafeInteger(entity.damage) && entity.damage >= 0
+        ? entity.damage
+        : defaultDamage;
+      return sum + damage;
+    }, 0);
+}
+
+function authoredFloorProfile(spec) {
+  const roomCount = spec?.rooms?.length ?? 0;
+  const enemyDamageBudget = damageBudget(spec, 'enemy', DEFAULT_ENEMY_DAMAGE);
+  const trapDamageBudget = damageBudget(spec, 'trap', DEFAULT_TRAP_DAMAGE);
+  const hazardDamageBudget = enemyDamageBudget + trapDamageBudget;
+
+  return {
+    roomCount,
+    enemyCount: entityCount(spec, 'enemy'),
+    trapCount: entityCount(spec, 'trap'),
+    treasureCount: entityCount(spec, 'treasure'),
+    recoveryCount: entityCount(spec, 'recovery'),
+    hazardDensity: density(spec, ['enemy', 'trap']),
+    rewardDensity: density(spec, ['treasure', 'recovery']),
+    enemyDamageBudget,
+    trapDamageBudget,
+    hazardDamageBudget,
+    hazardDamageBudgetPerRoom:
+      roomCount > 0 ? round(hazardDamageBudget / roomCount) : null,
+  };
 }
 
 function density(spec, types) {
@@ -92,15 +127,7 @@ function projectFloor(runSpec, floorSimulation) {
     status: metrics.status,
     success: metrics.success,
     failureReason: metrics.failureReason,
-    authored: {
-      roomCount: floor.dungeon.rooms?.length ?? 0,
-      enemyCount: entityCount(floor.dungeon, 'enemy'),
-      trapCount: entityCount(floor.dungeon, 'trap'),
-      treasureCount: entityCount(floor.dungeon, 'treasure'),
-      recoveryCount: entityCount(floor.dungeon, 'recovery'),
-      hazardDensity: density(floor.dungeon, ['enemy', 'trap']),
-      rewardDensity: density(floor.dungeon, ['treasure', 'recovery']),
-    },
+    authored: authoredFloorProfile(floor.dungeon),
     startingPlayerState: clone(start),
     endingPlayerState: clone(end),
     progression: {
@@ -236,15 +263,7 @@ export function aggregateDungeonRunSimulationMetrics(runSpec, simulations) {
       floorNumber: floorIndex + 1,
       floorId: floor.id,
       dungeonId: floor.dungeon.id,
-      authored: {
-        roomCount: floor.dungeon.rooms?.length ?? 0,
-        enemyCount: entityCount(floor.dungeon, 'enemy'),
-        trapCount: entityCount(floor.dungeon, 'trap'),
-        treasureCount: entityCount(floor.dungeon, 'treasure'),
-        recoveryCount: entityCount(floor.dungeon, 'recovery'),
-        hazardDensity: density(floor.dungeon, ['enemy', 'trap']),
-        rewardDensity: density(floor.dungeon, ['treasure', 'recovery']),
-      },
+      authored: authoredFloorProfile(floor.dungeon),
       reachedCount,
       reachRate: round(reachedCount / runs.length),
       clearedCount,
@@ -317,6 +336,9 @@ export function aggregateDungeonRunSimulationMetrics(runSpec, simulations) {
       ),
       authoredRewardDensityDeltaPerFloor: deltaPerFloor(
         floorProfiles.map((floor) => floor.authored.rewardDensity),
+      ),
+      authoredHazardDamageBudgetPerRoomDeltaPerFloor: deltaPerFloor(
+        floorProfiles.map((floor) => floor.authored.hazardDamageBudgetPerRoom),
       ),
       observedDamageFractionDeltaPerFloor: deltaPerFloor(
         floorProfiles.map((floor) => floor.means.damageFractionOfStartMaxHp),
