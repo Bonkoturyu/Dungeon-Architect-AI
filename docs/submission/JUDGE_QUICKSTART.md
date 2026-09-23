@@ -5,7 +5,7 @@
 https://dungeon-architect-ai.pages.dev/
 
 
-> **Current-status note (2026-09-23):** this URL is the historical deployed candidate. The repository has newer DAI-085–096 / Play-UI changes that are locally accepted but not yet revalidated on the public deployment. DAI-099 will redeploy and refresh this guide before final submission.
+> **Current-status note (2026-09-23):** this URL is the historical deployed candidate. The repository has newer DAI-085–098 / Play-UI changes that are locally accepted but not yet revalidated on the public deployment. DAI-099 will redeploy and refresh this guide before final submission.
 
 ## Supported judging environment
 
@@ -22,9 +22,10 @@ The steps below describe the current repository UI. Use them for final judging o
 1. Open the live demo. The five-step Guide opens at Welcome and includes Describe, Edit, Validate and Play.
 2. In **Create**, enter:
    ```text
-   Create a fair but tense 5-minute dungeon with exploration and a few dangerous rewards.
+   Create a fair but tense two-floor dungeon with exploration, combat, readable traps, and dangerous rewards.
    ```
-3. Click **Generate dungeon**. The production cloud path returns validated DesignIntent and the browser builds a deterministic DungeonSpec.
+   Set **Floors** to `2`.
+3. Click **Generate**. The production cloud path returns validated DesignIntent and the browser builds a deterministic two-floor DungeonRunSpec.
 4. Confirm the validation pill shows `✓ Valid`.
 5. Select **Edit**. Use the Entity inspector for a manual authoring change if desired.
 6. In **Natural-language edit**, enter:
@@ -33,10 +34,11 @@ The steps below describe the current repository UI. Use them for final judging o
    ```
 7. Confirm the AI edit applies one constrained `move-entity` command.
 8. Select **Play**, then press **▶ Test** to play the current authored dungeon. **🎲 Mystery** instead uses a fresh Seed to reroll routes/content without exposing the authored map. Generator V1 can still produce a similar room layout because its spatial embedding is fixed for a given room count.
-9. Play begins with Fog of War. If a Room Event blocks exits, resolve it first (for example **CLEAR** an Enemy or **AVOID / RISK** a Trap).
+9. Play begins with Fog of War and the lower **LV / HP / EXP / G** HUD. If a centered Room Event blocks exits, resolve it first (for example **CLEAR** an Enemy or **AVOID / RISK** a Trap).
 10. Move using the directional **CHOOSE EXIT** pad. Explored rooms and traversed corridors remain mapped; hidden topology and the Goal stay concealed until discovered.
-11. Reach the Goal and confirm Result shows `✓ CLEARED` with compact run metrics.
-12. Use **Return to Edit**; the generated authoring spec remains available.
+11. Clear Floor 1, continue into Floor 2 with PlayerState carried forward, then reach the final Goal.
+12. Confirm Result shows the cleared **Floor 2/2** run state and compact metrics.
+13. Use **Return to Edit**; the generated authoring run remains available.
 
 ## AI/data boundary
 
