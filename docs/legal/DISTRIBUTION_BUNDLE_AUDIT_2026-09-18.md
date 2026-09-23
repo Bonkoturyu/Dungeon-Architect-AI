@@ -53,9 +53,21 @@ Transitive through Vite and approved only for build/dev tooling. They are not tr
 
 Renderer benchmark candidate only. No Unity WebGL output is part of the selected production browser distribution.
 
+## 2026-09-23 DAI-097 follow-up
+
+DAI-097 adds a local source module that synthesizes low-volume BGM/SE with the browser Web Audio API.
+
+- no new external runtime package;
+- no sampled/audio creative-asset file;
+- no AI-generated audio file;
+- production external import closure remains Three.js-only;
+- audio presentation is project-authored source code bundled with the application.
+
+The final DAI-099 candidate must rerun this distribution audit against the refreshed build.
+
 ## Creative assets
 
-The production browser candidate contains no third-party creative assets. UI and dungeon visuals use project-authored HTML/CSS and programmatic geometry/materials. No external image, texture, audio, font, 3D model, or animation is required by the production build.
+The production browser candidate contains no third-party creative assets. UI/dungeon visuals use project-authored HTML/CSS and programmatic geometry/materials; DAI-097 audio uses project-authored Web Audio synthesis. No external image, texture, sampled audio/music, font, 3D model, or animation is required by the production build.
 
 See `docs/legal/THIRD_PARTY_ASSETS.md`.
 
