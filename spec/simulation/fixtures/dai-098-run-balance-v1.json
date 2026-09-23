@@ -1,0 +1,255 @@
+{
+  "schemaVersion": "1.0",
+  "id": "dai-098-run-fixture",
+  "floors": [
+    {
+      "id": "floor-01",
+      "dungeon": {
+        "schemaVersion": "1.0",
+        "id": "dai-098-f1",
+        "seed": 98000,
+        "rooms": [
+          {
+            "id": "f1-start",
+            "x": 0,
+            "z": 0,
+            "width": 8,
+            "depth": 8
+          },
+          {
+            "id": "f1-middle",
+            "x": 12,
+            "z": 0,
+            "width": 8,
+            "depth": 8
+          },
+          {
+            "id": "f1-goal",
+            "x": 24,
+            "z": 0,
+            "width": 8,
+            "depth": 8
+          }
+        ],
+        "corridors": [
+          {
+            "id": "f1-corridor-1",
+            "fromRoomId": "f1-start",
+            "toRoomId": "f1-middle",
+            "width": 3
+          },
+          {
+            "id": "f1-corridor-2",
+            "fromRoomId": "f1-middle",
+            "toRoomId": "f1-goal",
+            "width": 3
+          }
+        ],
+        "entities": [
+          {
+            "id": "f1-start-entity",
+            "type": "start",
+            "roomId": "f1-start"
+          },
+          {
+            "id": "f1-enemy",
+            "type": "enemy",
+            "roomId": "f1-middle",
+            "damage": 3
+          },
+          {
+            "id": "f1-treasure",
+            "type": "treasure",
+            "roomId": "f1-middle",
+            "warning": "optional reward"
+          },
+          {
+            "id": "f1-trap",
+            "type": "trap",
+            "roomId": "f1-middle",
+            "warning": "pressure plate",
+            "damage": 4
+          },
+          {
+            "id": "f1-recovery",
+            "type": "recovery",
+            "roomId": "f1-middle",
+            "healing": 8
+          },
+          {
+            "id": "f1-goal-entity",
+            "type": "goal",
+            "roomId": "f1-goal"
+          }
+        ],
+        "events": []
+      }
+    },
+    {
+      "id": "floor-02",
+      "dungeon": {
+        "schemaVersion": "1.0",
+        "id": "dai-098-f2",
+        "seed": 98001,
+        "rooms": [
+          {
+            "id": "f2-start",
+            "x": 0,
+            "z": 0,
+            "width": 8,
+            "depth": 8
+          },
+          {
+            "id": "f2-middle",
+            "x": 12,
+            "z": 0,
+            "width": 8,
+            "depth": 8
+          },
+          {
+            "id": "f2-goal",
+            "x": 24,
+            "z": 0,
+            "width": 8,
+            "depth": 8
+          }
+        ],
+        "corridors": [
+          {
+            "id": "f2-corridor-1",
+            "fromRoomId": "f2-start",
+            "toRoomId": "f2-middle",
+            "width": 3
+          },
+          {
+            "id": "f2-corridor-2",
+            "fromRoomId": "f2-middle",
+            "toRoomId": "f2-goal",
+            "width": 3
+          }
+        ],
+        "entities": [
+          {
+            "id": "f2-start-entity",
+            "type": "start",
+            "roomId": "f2-start"
+          },
+          {
+            "id": "f2-enemy",
+            "type": "enemy",
+            "roomId": "f2-middle",
+            "damage": 4
+          },
+          {
+            "id": "f2-treasure",
+            "type": "treasure",
+            "roomId": "f2-middle",
+            "warning": "optional reward"
+          },
+          {
+            "id": "f2-trap",
+            "type": "trap",
+            "roomId": "f2-middle",
+            "warning": "pressure plate",
+            "damage": 8
+          },
+          {
+            "id": "f2-recovery",
+            "type": "recovery",
+            "roomId": "f2-middle",
+            "healing": 8
+          },
+          {
+            "id": "f2-goal-entity",
+            "type": "goal",
+            "roomId": "f2-goal"
+          }
+        ],
+        "events": []
+      }
+    },
+    {
+      "id": "floor-03",
+      "dungeon": {
+        "schemaVersion": "1.0",
+        "id": "dai-098-f3",
+        "seed": 98002,
+        "rooms": [
+          {
+            "id": "f3-start",
+            "x": 0,
+            "z": 0,
+            "width": 8,
+            "depth": 8
+          },
+          {
+            "id": "f3-middle",
+            "x": 12,
+            "z": 0,
+            "width": 8,
+            "depth": 8
+          },
+          {
+            "id": "f3-goal",
+            "x": 24,
+            "z": 0,
+            "width": 8,
+            "depth": 8
+          }
+        ],
+        "corridors": [
+          {
+            "id": "f3-corridor-1",
+            "fromRoomId": "f3-start",
+            "toRoomId": "f3-middle",
+            "width": 3
+          },
+          {
+            "id": "f3-corridor-2",
+            "fromRoomId": "f3-middle",
+            "toRoomId": "f3-goal",
+            "width": 3
+          }
+        ],
+        "entities": [
+          {
+            "id": "f3-start-entity",
+            "type": "start",
+            "roomId": "f3-start"
+          },
+          {
+            "id": "f3-enemy",
+            "type": "enemy",
+            "roomId": "f3-middle",
+            "damage": 5
+          },
+          {
+            "id": "f3-treasure",
+            "type": "treasure",
+            "roomId": "f3-middle",
+            "warning": "optional reward"
+          },
+          {
+            "id": "f3-trap",
+            "type": "trap",
+            "roomId": "f3-middle",
+            "warning": "pressure plate",
+            "damage": 12
+          },
+          {
+            "id": "f3-recovery",
+            "type": "recovery",
+            "roomId": "f3-middle",
+            "healing": 8
+          },
+          {
+            "id": "f3-goal-entity",
+            "type": "goal",
+            "roomId": "f3-goal"
+          }
+        ],
+        "events": []
+      }
+    }
+  ]
+}

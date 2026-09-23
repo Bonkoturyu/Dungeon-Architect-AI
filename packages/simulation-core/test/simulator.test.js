@@ -141,3 +141,29 @@ test('policy exceptions are normalized and do not escape the simulator', () => {
   assert.equal(result.error.code, 'SIM_POLICY_ERROR');
   assert.match(result.error.message, /policy exploded/);
 });
+
+
+test('combat-enemy simulation action uses real damage and progression reward', () => {
+  const actions = [
+    { type: 'move', roomId: 'room-middle' },
+    { type: 'combat-enemy', enemyId: 'enemy-1' },
+    { type: 'move', roomId: 'room-goal' },
+  ];
+  let index = 0;
+  const result = simulateDungeon(
+    fixture(),
+    () => actions[index++],
+    { policyId: 'real-combat', maxSteps: 8 },
+  );
+
+  assert.equal(result.ok, true, JSON.stringify(result.error));
+  assert.equal(result.simulation.status, 'cleared');
+  assert.equal(result.simulation.result.playerState.hp, 16);
+  assert.ok(result.simulation.result.playerState.xp > 0);
+  assert.ok(result.simulation.result.playerState.gold > 0);
+  assert.equal(result.simulation.result.metrics.damageTaken, 4);
+  assert.equal(result.simulation.result.metrics.enemiesCleared, 1);
+  assert.ok(
+    result.simulation.trace.some((entry) => entry.action.type === 'combat-enemy'),
+  );
+});

@@ -57,7 +57,7 @@ Authoring/play state is in memory for the active page session.
 
 The historical hosted demo, under-three-minute demo video, short description, focus category, and DAI-084 rollback point were completed for the earlier M8 candidate.
 
-Judge-facing/runtime work has changed since that freeze: DAI-085 through DAI-096 plus the 2026-09-23 Play UI follow-up are complete, while DAI-097 Audio and DAI-098 multi-floor simulation/balance remain planned.
+Judge-facing/runtime work has changed since that freeze: DAI-085 through DAI-097 plus the 2026-09-23 Play UI follow-up are complete. DAI-098 multi-floor simulation/balance is in progress, followed by DAI-099 refreshed deployment/public-E2E/video/docs/audits/freeze.
 
 DAI-099 therefore still needs to:
 

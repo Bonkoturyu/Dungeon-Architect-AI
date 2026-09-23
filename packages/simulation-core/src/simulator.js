@@ -1,5 +1,5 @@
 import { isRuntimeCorridorEnabled } from '../../play-core/src/event-runtime.js';
-import { defeatEnemy, listRoomEnemies, recordEnemyEncounter } from '../../play-core/src/enemy-runtime.js';
+import { defeatEnemy, listRoomEnemies, recordEnemyEncounter, resolveEnemyCombat } from '../../play-core/src/enemy-runtime.js';
 import {
   avoidTrap,
   inspectTrap,
@@ -19,6 +19,7 @@ import {
 export const SIMULATION_ACTION_TYPES = Object.freeze([
   'move',
   'encounter-enemy',
+  'combat-enemy',
   'defeat-enemy',
   'inspect-treasure',
   'open-treasure',
@@ -82,6 +83,7 @@ function availableActions(adjacentRoomIds, enemies, interactables) {
 
   for (const enemy of enemies) {
     actions.push({ type: 'encounter-enemy', enemyId: enemy.id });
+    actions.push({ type: 'combat-enemy', enemyId: enemy.id });
     actions.push({ type: 'defeat-enemy', enemyId: enemy.id });
   }
 
@@ -162,6 +164,11 @@ export function applySimulationAction(session, action, { at = 0 } = {}) {
       const invalid = requireActionId(action, 'enemyId');
       if (invalid) return invalid;
       return recordEnemyEncounter(session, action.enemyId, { at });
+    }
+    case 'combat-enemy': {
+      const invalid = requireActionId(action, 'enemyId');
+      if (invalid) return invalid;
+      return resolveEnemyCombat(session, action.enemyId, { at });
     }
     case 'defeat-enemy': {
       const invalid = requireActionId(action, 'enemyId');
