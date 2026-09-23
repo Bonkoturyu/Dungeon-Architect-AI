@@ -100,7 +100,11 @@ const checks = {
     readme.includes('refreshed'),
   judgeGuideCurrentFlowTruthful:
     quick.includes('https://dungeon-architect-ai.pages.dev/') &&
-    quick.includes('Create a fair but tense 5-minute dungeon with exploration and a few dangerous rewards.') &&
+    quick.includes('Create a fair but tense two-floor dungeon with exploration, combat, readable traps, and dangerous rewards.') &&
+    quick.includes('Floors') &&
+    quick.includes('2') &&
+    quick.includes('LV / HP / EXP / G') &&
+    quick.includes('Floor 2/2') &&
     quick.includes('Move the treasure to the room that contains the goal.') &&
     quick.includes('desktop Google Chrome on Windows'),
   knownLimitationsComplete:
