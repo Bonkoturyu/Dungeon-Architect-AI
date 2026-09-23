@@ -36,6 +36,27 @@ test("START rejects an invalid authoring spec", () => {
   assert.ok(result.errors.some((error) => error.code === "GOAL_UNREACHABLE"));
 });
 
+test("START blocks cyclic authoring values instead of throwing during snapshot clone", () => {
+  const spec = fixture();
+  spec.rooms[0].runtime = {};
+  spec.rooms[0].runtime.self = spec.rooms[0].runtime;
+
+  const result = startPlaySession(spec);
+  assert.equal(result.ok, false);
+  assert.equal(result.blocked, true);
+  assert.ok(result.errors.some((error) => error.code === "JSON_CYCLE"));
+});
+
+test("movement returns SESSION_NOT_PLAYING for a missing session", () => {
+  const nullResult = movePlaySession(null, "room-002");
+  assert.equal(nullResult.ok, false);
+  assert.equal(nullResult.error.code, "SESSION_NOT_PLAYING");
+
+  const undefinedResult = movePlaySession(undefined, "room-002");
+  assert.equal(undefinedResult.ok, false);
+  assert.equal(undefinedResult.error.code, "SESSION_NOT_PLAYING");
+});
+
 test("START creates an execution snapshot independent from later authoring changes", () => {
   const spec = fixture();
   const result = startPlaySession(spec, { startedAt: 100 });

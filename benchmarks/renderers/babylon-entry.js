@@ -70,8 +70,10 @@ exposeResult({
 });
 
 runFrameSampler({
-  onComplete: (frames) => {
+  onFrame: () => {
     scene.render();
+  },
+  onComplete: (frames) => {
     finishResult({
       ...frames,
       drawCalls: null,

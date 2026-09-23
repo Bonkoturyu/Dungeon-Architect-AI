@@ -44,6 +44,7 @@
     "validate:explainable-summary": "node scripts/run-dai-064-explainable-summary.mjs",
     "validate:hosting": "npm run build:hosting && npm run smoke:hosting",
     "validate:legal-registers": "node scripts/run-dai-073-legal-audit.mjs",
+    "validate:syntax": "node scripts/run-syntax-check.mjs",
     "test": "npm run test:core && npm run test:generator && npm run test:intent && npm run test:cloud-intent && npm run test:editor && npm run test:play && npm run test:run && npm run test:simulation && npm run test:onboarding && npm run test:hosting && npm run test:benchmark-fixture && npm run test:renderer-three",
     "validate:secret-privacy": "node scripts/run-dai-074-secret-privacy-audit.mjs",
     "smoke:mobile-scope": "node scripts/run-dai-075-mobile-scope-smoke.mjs",

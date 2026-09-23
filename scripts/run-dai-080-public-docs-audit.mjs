@@ -62,16 +62,18 @@ for (const [file, text] of Object.entries(texts)) {
 
 const checks = {
   requiredPublicDocsExist: publicDocs.every((file) => fs.existsSync(file)),
-  readmeClaimsVerifiedFullFlow:
+  readmeSeparatesCurrentLocalFlowFromHistoricalPublicEvidence:
     readme.includes('https://dungeon-architect-ai.pages.dev/') &&
     readme.includes('DESCRIBE') &&
     readme.includes('GENERATE') &&
     readme.includes('EDIT') &&
     readme.includes('VALIDATE') &&
-    readme.includes('START') &&
-    readme.includes('PLAY') &&
+    readme.includes('TEST / MYSTERY') &&
+    readme.includes('EXPLORE + ROOM EVENTS') &&
     readme.includes('RESULT') &&
-    readme.includes('production public E2E'),
+    readme.includes('locally regression-tested') &&
+    readme.includes('historical production public-E2E evidence') &&
+    readme.includes('DAI-099'),
   readmeLinksRequiredPublicDocs:
     allIncludes(readme, [
       'docs/submission/JUDGE_QUICKSTART.md',
@@ -90,11 +92,12 @@ const checks = {
   readmeDesktopScopeExplicit:
     readme.includes('desktop Google Chrome on Windows') &&
     readme.includes('mobile/narrow layouts are best-effort only'),
-  readmePendingSubmissionItemsExplicit:
+  readmeCandidateGenerationExplicit:
     readme.includes('Focus category: **AI 3D Scene Generation**') &&
-    readme.includes('DAI-084') &&
-    readme.includes('DAI-082 demo video is complete') &&
-    readme.includes('GitHub repository is still private'),
+    readme.includes('Historical DAI-084 rollback point') &&
+    readme.includes('historical evidence') &&
+    readme.includes('DAI-099') &&
+    readme.includes('refreshed'),
   judgeGuideCurrentFlowTruthful:
     quick.includes('https://dungeon-architect-ai.pages.dev/') &&
     quick.includes('Create a fair but tense 5-minute dungeon with exploration and a few dangerous rewards.') &&
@@ -108,28 +111,27 @@ const checks = {
       'Player locomotion is room-graph based',
       'Mobile is outside the supported submission scope',
       'No persistence/accounts',
-      'Submission packaging is still open',
+      'Submission packaging requires a refreshed candidate',
+      'DAI-099',
     ]),
   samplePromptsReflectPublicE2E:
     prompts.includes('Verified public generation prompt') &&
     prompts.includes('Create a fair but tense 5-minute dungeon with exploration and a few dangerous rewards.') &&
     prompts.includes('Verified public natural-language edit') &&
     prompts.includes('Move the treasure to the room that contains the goal.'),
-  checklistTracksCurrentCandidate:
-    checklist.includes('- [x] Hosted browser demo') &&
-    checklist.includes('- [x] Fresh-browser public demo pass') &&
-    checklist.includes('- [x] Third-party disclosure complete') &&
-    checklist.includes('- [x] AI usage disclosure complete') &&
-    checklist.includes('- [x] LICENSE / NOTICE complete') &&
-    checklist.includes('- [ ] Public repository') &&
-    checklist.includes('- [x] Demo video under 3 minutes') &&
-    checklist.includes('- [x] Short description') &&
-    checklist.includes('- [x] Focus category') &&
-    checklist.includes('- [x] DAI-081 privacy/public-doc re-audit after generation endpoint integration'),
-  storyboardFinalCaptureAccepted:
-    storyboard.includes('DAI-082 FINAL CAPTURE ACCEPTED') &&
-    storyboard.includes('49.5 seconds') &&
-    storyboard.includes('corrected DAI-026 public candidate'),
+  checklistSeparatesHistoricalAndRefreshed:
+    checklist.includes('## Historical M8 evidence retained') &&
+    checklist.includes('## Refreshed final candidate — pending') &&
+    checklist.includes('- [x] Historical fresh-browser public E2E passed') &&
+    checklist.includes('- [x] Historical demo video under 3 minutes recorded and reviewed') &&
+    checklist.includes('- [ ] DAI-099 refreshed public E2E against the current runtime') &&
+    checklist.includes('- [ ] DAI-099 refreshed demo video under 3 minutes') &&
+    checklist.includes('- [ ] DAI-099 new candidate hash / rollback point including tracked `package-lock.json`') &&
+    checklist.includes('- [ ] DAI-092 submission completed before 2026-11-11 23:30 JST'),
+  storyboardRefreshPendingTruthful:
+    storyboard.includes('REFRESH REQUIRED UNDER DAI-099') &&
+    storyboard.includes('49.5-second capture remains historical evidence') &&
+    storyboard.includes('DAI-099 has deployed the refreshed runtime'),
   submissionMetadataFinalized:
     submissionMetadata.includes('**AI 3D Scene Generation**') &&
     submissionMetadata.includes('513 characters') &&
@@ -151,8 +153,9 @@ const evidence = {
   placeholderFindings,
   boundaries: {
     repositoryVisibilityChangedByDAI080: false,
-    hostedUrlClaimedComplete: true,
-    generationUiClaimedComplete: true,
+    historicalHostedEvidencePreserved: true,
+    refreshedHostedAcceptanceStillPending: true,
+    generationUiClaimedCompleteLocally: true,
   },
 };
 

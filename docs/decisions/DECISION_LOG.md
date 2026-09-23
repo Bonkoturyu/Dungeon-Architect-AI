@@ -34,9 +34,10 @@
 - Status: Confirmed
 - DAI-010: DONE after clean-room production measurements for Three.js 0.185.1, Babylon.js 9.18.0, and Unity WebGL 6000.3.23f1.
 - DAI-011: Three.js 0.185.1 selected for the browser MVP.
-- Primary reasons: lowest measured median navigation-complete, scene-generation, and first-render times; steady-state FPS was effectively tied.
-- Unity 6000.3.23f1 completed 5/5 clean runs with zero runtime/browser/network errors after benchmark hardening.
-- Three.js run-1 404/navigation outlier remains a follow-up item; it did not recur in runs 2–5.
+- Original 2026-09-13 rationale referenced measured navigation/scene-generation/first-render timing and an apparent FPS tie.
+- 2026-09-23 review correction: the historical browser-library sampler did not render every sampled frame, browser mode differed from Unity, and first-render milestones differed; those timing values are retained as historical observations but are no longer treated as controlled cross-engine evidence.
+- The repository does not retain an explicit Unity tier-eligibility confirmation for the historical run, so that run is not treated as decision-quality licensing evidence.
+- Three.js remains selected because the browser-first architecture and substantial subsequent production evidence (renderer adapter, editing/picking, browser/performance gates, hosted E2E, and gameplay/UI regressions) validate the current stack.
 - Three.js production runtime scope is Approved under the exact reviewed version.
 - See `docs/architecture/adr/ADR-001-PRODUCTION-RENDERER-THREEJS.md`.
 

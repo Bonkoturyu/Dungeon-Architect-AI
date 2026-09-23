@@ -1,8 +1,8 @@
 # Demo Storyboard
 
-**Status: REFRESH REQUIRED AFTER DAI-085–088 POLISH.**
+**Status: REFRESH REQUIRED UNDER DAI-099 AFTER CURRENT RUNTIME FINALIZATION.**
 
-Requirement: **under 3 minutes**. The previously accepted 49.5-second capture remains historical evidence for the pre-polish candidate and must not be treated as the final post-polish submission video.
+Requirement: **under 3 minutes**. The previously accepted 49.5-second capture remains historical evidence for the earlier M8 candidate and must not be treated as the final video for the current DAI-085–096 / Play-UI-expanded runtime.
 
 Use the actual public candidate:
 
@@ -54,6 +54,6 @@ The pre-DAI-026 and misframed interim captures are rejected. The accepted captur
 
 ## Recording rule
 
-Record the real hosted candidate only after the DAI-085–088 polish branch is merged, Cloudflare has deployed it, and refreshed DAI-081 public E2E passes. Cuts/titles/narration are allowed, but do not use the historical pre-polish capture as the final judge-facing video.
+Record the real hosted candidate only after DAI-097 and DAI-098 are complete, DAI-099 has deployed the refreshed runtime, and refreshed public E2E passes. Cuts/titles/narration are allowed, but do not use the historical pre-polish capture as the final judge-facing video.
 
 See `docs/testing/DAI-082_VIDEO.md`.

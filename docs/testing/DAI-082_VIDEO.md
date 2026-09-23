@@ -156,21 +156,42 @@ Visual review of the MP4 confirmed:
 
 The final capture is intentionally concise at 49.5 seconds. The hackathon requirement is only that the demo video be under 3 minutes; no minimum duration, narration, or audio requirement is recorded in the current official-requirements snapshot.
 
-## Completion gate
+## Historical M8 completion gate — 2026-09-19
 
-DAI-082 completion review confirms all of the following:
+The reviewed 49.5-second M8 capture remains valid historical evidence for the candidate that existed at that time. It demonstrated:
 
-- actual duration is strictly below 180 seconds;
-- the video uses the public candidate;
+- public HTTPS candidate;
+- DESCRIBE → GENERATE;
+- manual room Edit and Undo;
+- one constrained natural-language Edit;
+- the then-current START / Play flow reaching a cleared Result;
+- Return to Edit;
+- no browser chrome, desktop taskbar, terminal, translation popup, provider key, or private data;
+- duration strictly below 180 seconds.
+
+It **does not** demonstrate the later DAI-085–096 / 2026-09-23 judge-facing Play UI, including the current ▶ Test / Mystery presentation, centered Room Event stack, programmatic Player/Enemy presentation, multi-floor run behavior, or the current lower-center Play HUD.
+
+## Refreshed DAI-099 video gate — PENDING
+
+Before final submission, DAI-099 must capture and visually approve a new public-demo video using the refreshed deployed candidate.
+
+Required checks for that refreshed capture:
+
+- actual duration strictly below 180 seconds;
+- source is the refreshed public candidate;
 - DESCRIBE → GENERATE is visibly demonstrated;
-- manual Edit is visibly demonstrated;
-- natural-language partial Edit is visibly demonstrated;
-- `✓ Valid` and the Play choice are visible;
-- ▶ Test reaches Goal through Room Events / directional exits and shows `✓ CLEARED`;
-- no browser chrome, desktop taskbar, terminal, translation popup, provider key, or private data is visible;
-- the full left edge of the application, including the `DAI Editor / Play Gate` title, is visible;
-- no claim exceeds the documented production behavior;
-- the final file is suitable for the submission form or its required host.
+- manual Edit remains visibly demonstrated;
+- constrained natural-language Edit remains visibly demonstrated;
+- current validation / Play choice is visible;
+- current ▶ Test flow is shown;
+- current Room Event dialog stack and directional exit controls are shown;
+- current Player/Enemy presentation is visible where encountered;
+- current Result is shown after a successful run;
+- Return to Edit is shown;
+- no browser chrome, desktop taskbar, terminal, translation popup, provider key, or private data;
+- no claim exceeds the documented production behavior.
+
+Until those checks are performed against the refreshed public candidate, the submission video status remains **REFRESH REQUIRED**.
 
 ## Boundaries
 

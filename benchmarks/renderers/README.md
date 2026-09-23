@@ -30,13 +30,13 @@ Unity remains a separate candidate and must be handled under the frozen producti
 
 ## Install
 
-After dependency approval has been verified in the production legal register:
+The audited root `package-lock.json` is tracked. Use the reviewed dependency graph:
 
 ```bash
-npm install
+npm ci --ignore-scripts
 ```
 
-The resulting lockfile and resolved package identities must be reviewed before using the result as final evidence.
+Do not use a newly resolved dependency graph as benchmark evidence without a fresh dependency review.
 
 ## Run fixture tests
 
@@ -59,20 +59,22 @@ A reviewed result should be copied into `docs/testing/` with environment metadat
 
 ## Recorded metrics
 
-- navigation-to-complete time
-- scene generation time
-- first render time
-- frame time median / p95 / p99
-- median FPS
-- object count
-- draw calls where directly available
-- active triangle count where directly available
-- console/page errors
+- navigation-to-complete time;
+- scene generation time;
+- engine-reported/render-submission timing (diagnostic only unless a common first-visible-frame milestone is defined);
+- frame time median / p95 / p99 while the browser scene is rendered on every sampled frame;
+- median FPS derived from those rendered-frame intervals;
+- object count;
+- draw calls where directly available;
+- active triangle count where directly available;
+- console/page errors.
 
 ## Evidence rules
 
 - Do not compare results from different devices as if they were one controlled benchmark.
 - Do not substitute Pre results for production results.
 - Do not declare a renderer selected until production evidence is recorded in an ADR.
-- Do not treat headless performance alone as user-visible UX evidence.
+- Run browser candidates in the same headed/headless mode and with equivalent browser launch constraints before comparing timing.
+- Render the candidate scene on every sampled frame when interpreting frame/FPS metrics.
+- Do not compare engine-specific `firstRenderMs` values unless all candidates use one common externally observable first-visible-frame milestone.
 - If candidate equivalence differs materially, fix the fixture before interpreting performance.
