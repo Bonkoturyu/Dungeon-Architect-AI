@@ -18,7 +18,7 @@ const checks = {
 
   refreshedPublicCandidateRequired:
     videoDoc.includes('https://dungeon-architect-ai.pages.dev/') &&
-    videoDoc.includes('build-fingerprint matching') &&
+    videoDoc.includes('matching build fingerprint') &&
     storyboard.includes('matching build fingerprint'),
 
   currentFlowCovered:
