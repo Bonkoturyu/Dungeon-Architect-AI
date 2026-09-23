@@ -7,7 +7,7 @@ GitHub Issues are not created unless explicitly authorized.
 - DAI-002 Clean production repository — DONE
 - DAI-003 Governance baseline — DONE on production branch
 - DAI-004 Knowledge-only migration — DONE
-- DAI-005 Verification baseline — IN PROGRESS (review-debt cleanup adds tracked audited `package-lock.json`, repo-wide JS/MJS/CJS syntax validation, full `npm test`, hosting build/smoke, legal/public-doc audits, and `git diff --check` under `scripts/run-review-debt-validation.ps1`. Local Windows/Chrome acceptance remains pending before DONE.)
+- DAI-005 Verification baseline — DONE (2026-09-23 JST: exact audited tracked `package-lock.json`; repo-wide JS/MJS/CJS syntax gate; full `npm test`; hosting build/smoke; legal/provenance audit; corrected public-doc truthfulness audit; and final `git diff --check` all accepted on the owner Windows/Chrome environment. The initial public-doc assertion failure was a stale audit expectation and was corrected without changing runtime behavior.)
 - DAI-006 Decision Log / ADR baseline — DONE
 
 ## M1
