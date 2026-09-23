@@ -65,13 +65,13 @@ Then run the normal validation/build path and restore through a PR or deploy the
 
 ## Dependency reproducibility boundary
 
-The project has intentionally kept the already reviewed `package-lock.json` as a local untracked audit artifact rather than adding it to Git.
+At the time of the historical DAI-084 freeze, the reviewed `package-lock.json` was kept as a local untracked audit artifact. That was a reproducibility weakness in the frozen 2026-09-19 candidate.
 
-Rollback/rebuild validation therefore requires that local file to exist with exact SHA-256:
+On 2026-09-23, the exact preserved lockfile was recovered and tracked on the current repository line with the same audited SHA-256:
 
 `ce94a9ee4241ee798c0c32c0fda55f00cb4462fb6ba6244acdd3d53589d261cc`
 
-The freeze audit stops before dependency installation when the lockfile is missing or different.
+The historical rollback commit itself is unchanged and therefore still does not contain the lockfile. DAI-099 must create a new refreshed candidate/rollback point that includes the tracked lockfile and current judge-facing runtime.
 
 ## Production artifact identity
 
