@@ -1,70 +1,13 @@
-import { createDungeonRunSpec } from '../../run-core/src/dungeon-run.js';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
-function floorDungeon(index) {
-  const prefix = `f${index + 1}`;
-  return {
-    schemaVersion: '1.0',
-    id: `dai-098-${prefix}`,
-    seed: 98000 + index,
-    rooms: [
-      { id: `${prefix}-start`, x: 0, z: 0, width: 8, depth: 8 },
-      { id: `${prefix}-middle`, x: 12, z: 0, width: 8, depth: 8 },
-      { id: `${prefix}-goal`, x: 24, z: 0, width: 8, depth: 8 },
-    ],
-    corridors: [
-      {
-        id: `${prefix}-corridor-1`,
-        fromRoomId: `${prefix}-start`,
-        toRoomId: `${prefix}-middle`,
-        width: 3,
-      },
-      {
-        id: `${prefix}-corridor-2`,
-        fromRoomId: `${prefix}-middle`,
-        toRoomId: `${prefix}-goal`,
-        width: 3,
-      },
-    ],
-    entities: [
-      { id: `${prefix}-start-entity`, type: 'start', roomId: `${prefix}-start` },
-      {
-        id: `${prefix}-enemy`,
-        type: 'enemy',
-        roomId: `${prefix}-middle`,
-        damage: 3 + index,
-      },
-      {
-        id: `${prefix}-treasure`,
-        type: 'treasure',
-        roomId: `${prefix}-middle`,
-        warning: 'optional reward',
-      },
-      {
-        id: `${prefix}-trap`,
-        type: 'trap',
-        roomId: `${prefix}-middle`,
-        warning: 'pressure plate',
-        damage: 4 + (index * 4),
-      },
-      {
-        id: `${prefix}-recovery`,
-        type: 'recovery',
-        roomId: `${prefix}-middle`,
-        healing: 8,
-      },
-      { id: `${prefix}-goal-entity`, type: 'goal', roomId: `${prefix}-goal` },
-    ],
-    events: [],
-  };
-}
+const fixtureUrl = new URL(
+  '../../../spec/simulation/fixtures/dai-098-run-balance-v1.json',
+  import.meta.url,
+);
 
 export function runFixture() {
-  const created = createDungeonRunSpec(
-    [floorDungeon(0), floorDungeon(1), floorDungeon(2)],
-    { id: 'dai-098-run-fixture' },
-  );
-  if (!created.ok) throw new Error(JSON.stringify(created.errors));
-  return created.spec;
+  return JSON.parse(fs.readFileSync(fileURLToPath(fixtureUrl), 'utf8'));
 }
 
 function nextUnvisitedRoom(observation) {
