@@ -201,7 +201,7 @@ Runner:
 .\scripts\run-review-debt-validation.ps1
 ```
 
-DAI-005 remains IN PROGRESS until this runner passes on the owner's Windows/Chrome environment.
+DAI-005 is accepted as DONE. The owner Windows/Chrome run passed dependency install, syntax, full Node tests, hosting build/smoke, legal/provenance checks, and the corrected public-doc audit; the final independently rerun `git diff --check origin/main...HEAD` also passed after `.gitattributes` documented the intentionally preserved CRLF semantics of the audited lockfile.
 
 ## Review-thread closure
 
