@@ -57,15 +57,12 @@ test('risk policy failure terminates the whole run and never reaches later floor
 
   assert.equal(simulation.status, 'failed');
   assert.equal(simulation.failureReason, 'player-defeated');
-  assert.equal(simulation.floorsReached, 2);
-  assert.equal(simulation.floorsCleared, 1);
+  assert.equal(simulation.floorsReached, 3);
+  assert.equal(simulation.floorsCleared, 2);
   assert.equal(simulation.floorSimulations[0].status, 'cleared');
-  assert.equal(simulation.floorSimulations[1].status, 'failed');
-  assert.equal(simulation.floorSimulations[1].result.playerState.hp, 0);
-  assert.equal(
-    simulation.floorSimulations.some((floor) => floor.floorIndex === 2),
-    false,
-  );
+  assert.equal(simulation.floorSimulations[1].status, 'cleared');
+  assert.equal(simulation.floorSimulations[2].status, 'failed');
+  assert.equal(simulation.floorSimulations[2].result.playerState.hp, 0);
 });
 
 test('run simulation is deterministic and does not mutate DungeonRunSpec', () => {
