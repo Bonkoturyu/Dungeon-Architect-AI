@@ -37,6 +37,7 @@ import {
   startDungeonRun,
   syncDungeonRunFloor,
 } from '../../packages/run-core/src/dungeon-run.js';
+import { createProgrammaticAudio } from '../../packages/audio-presentation/src/programmatic-audio.js';
 import {
   bindLanguageSwitchers,
   getLanguage,
@@ -64,6 +65,7 @@ const redoButton = document.querySelector('#redo');
 const startButton = document.querySelector('#start');
 const mysteryPlayButton = document.querySelector('#mysteryPlay');
 const returnEditButton = document.querySelector('#returnEdit');
+const audioToggle = document.querySelector('#audioToggle');
 const playExitBar = document.querySelector('#playExitBar');
 const playExitButtons = document.querySelector('#playExitButtons');
 const roomEventBar = document.querySelector('#roomEventBar');
@@ -158,6 +160,64 @@ let canvasPointerOrigin = null;
 let corridorDraft = null;
 let roomDrag = null;
 let viewportNoticeTimer = null;
+
+const audioPresentation = createProgrammaticAudio();
+
+function audioModeForUi() {
+  if (mode === 'play') return 'play';
+  if (mode === 'result') {
+    const resultState = lastDungeonRunResult?.status ?? lastPlayResult?.status ?? 'failed';
+    return resultState === 'cleared' ? 'result-cleared' : 'result-failed';
+  }
+  return 'edit';
+}
+
+function syncAudioMode() {
+  audioPresentation.setMode(audioModeForUi());
+}
+
+function renderAudioToggle() {
+  if (!audioToggle) return;
+  const audio = audioPresentation.getState();
+  const label = audio.muted ? t('audio.unmute') : t('audio.mute');
+
+  audioToggle.disabled = !audio.available;
+  audioToggle.textContent = audio.muted ? '🔇' : '🔊';
+  audioToggle.dataset.audioState = !audio.available
+    ? 'unavailable'
+    : audio.muted
+      ? 'muted'
+      : audio.unlocked
+        ? 'ready'
+        : 'locked';
+  audioToggle.title = label;
+  audioToggle.setAttribute('aria-label', label);
+  audioToggle.setAttribute('aria-pressed', String(audio.muted));
+}
+
+function emitAudioCue(cue) {
+  audioPresentation.playCue(cue);
+  renderAudioToggle();
+}
+
+async function unlockAudioFromGesture() {
+  const unlocked = await audioPresentation.unlock();
+  syncAudioMode();
+  renderAudioToggle();
+
+  if (unlocked) {
+    document.removeEventListener('pointerdown', unlockAudioFromGesture, true);
+    window.removeEventListener('keydown', unlockAudioFromGesture, true);
+  }
+
+  return unlocked;
+}
+
+function toggleAudioMuted() {
+  const muted = audioPresentation.toggleMuted();
+  renderAudioToggle();
+  return muted;
+}
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -331,6 +391,7 @@ function snapshotState() {
     workflowTab,
     inspectorTab,
     language: getLanguage(),
+    audio: audioPresentation.getState(),
     floorCount: Math.max(1, floorSessions.length || 1),
     currentFloorIndex,
     floorSummaries: floorSessions.map((entry, index) => {
@@ -784,6 +845,8 @@ function updateUi() {
 
   document.body.dataset.mode = mode;
   document.body.dataset.workflowTab = workflowTab;
+  syncAudioMode();
+  renderAudioToggle();
   if (inspectorShell) inspectorShell.dataset.inspectorTab = inspectorTab;
   if (hint) hint.hidden = true;
 
@@ -953,10 +1016,9 @@ function applyPlayRuntimeResult(result, failurePrefix) {
 
 function clearEnemy(enemyId) {
   if (!playSession || mode !== 'play') return false;
-  return applyPlayRuntimeResult(
-    resolveEnemyCombat(playSession, enemyId, { at: nextPlayActionAt() }),
-    'Combat failed',
-  );
+  const resolved = resolveEnemyCombat(playSession, enemyId, { at: nextPlayActionAt() });
+  if (resolved?.ok) emitAudioCue('combat');
+  return applyPlayRuntimeResult(resolved, 'Combat failed');
 }
 
 function interactWithRoomEntity(action, entityId) {
@@ -970,7 +1032,18 @@ function interactWithRoomEntity(action, entityId) {
   };
   const handler = handlers[action];
   if (!handler) return false;
-  return applyPlayRuntimeResult(handler(), 'Interaction failed');
+
+  const result = handler();
+  if (result?.ok) {
+    const cueByAction = {
+      'open-treasure': 'treasure',
+      'avoid-trap': 'trap-avoid',
+      'trigger-trap': 'trap-trigger',
+      'use-recovery': 'recovery',
+    };
+    emitAudioCue(cueByAction[action]);
+  }
+  return applyPlayRuntimeResult(result, 'Interaction failed');
 }
 
 function renderRoomEvents() {
@@ -1831,6 +1904,7 @@ async function generateDungeonFromPrompt() {
     resultStatus.textContent = '';
     resultStatus.hidden = true;
     renderActiveSpec();
+    emitAudioCue('generated');
     setGenerationStatus(floorCount > 1
       ? t('generation.generatedRun', { floors: floorCount, count: lastGeneration.roomCount })
       : t('generation.generated', { count: lastGeneration.roomCount }));
@@ -2008,6 +2082,8 @@ function finalizePlayIfNeeded() {
     resultStatus.textContent = lastPlayResult.status === 'cleared' ? t('result.cleared') : t('result.ended');
     resultStatus.hidden = false;
     renderResultMetrics(lastPlayResult);
+    syncAudioMode();
+    emitAudioCue(lastPlayResult.status === 'cleared' ? 'run-clear' : 'run-fail');
     renderActiveSpec();
     return true;
   }
@@ -2035,6 +2111,8 @@ function finalizePlayIfNeeded() {
     resultStatus.hidden = true;
     updatePlayReadout();
     setEditStatus(`${t('run.floor')} ${currentFloorIndex + 1}/${dungeonRunSession.floorCount}`);
+    syncAudioMode();
+    emitAudioCue('floor-advance');
     renderActiveSpec();
     return true;
   }
@@ -2053,6 +2131,8 @@ function finalizePlayIfNeeded() {
   resultStatus.textContent = lastDungeonRunResult.status === 'cleared' ? t('result.cleared') : t('result.ended');
   resultStatus.hidden = false;
   renderResultMetrics(lastPlayResult);
+  syncAudioMode();
+  emitAudioCue(lastDungeonRunResult.status === 'cleared' ? 'run-clear' : 'run-fail');
   renderActiveSpec();
   return true;
 }
@@ -2092,6 +2172,8 @@ function beginDungeonRun(runSpec, source) {
   setEditStatus(source === 'mystery'
     ? `mystery run started · ${dungeonRunSession.floorCount} floor(s)`
     : `test run started · ${dungeonRunSession.floorCount} floor(s)`);
+  syncAudioMode();
+  emitAudioCue(source === 'mystery' ? 'mystery-start' : 'play-start');
   renderActiveSpec();
   finalizePlayIfNeeded();
   return true;
@@ -2167,13 +2249,12 @@ function movePlayToRoom(roomId, corridorId = null) {
     setEditStatus('Resolve room event before leaving');
     return false;
   }
-  return applyPlayRuntimeResult(
-    movePlaySession(playSession, roomId, {
-      at: nextPlayActionAt(),
-      corridorId,
-    }),
-    'Move blocked',
-  );
+  const moved = movePlaySession(playSession, roomId, {
+    at: nextPlayActionAt(),
+    corridorId,
+  });
+  if (moved?.ok) emitAudioCue('move');
+  return applyPlayRuntimeResult(moved, 'Move blocked');
 }
 
 function returnToEdit() {
@@ -2208,6 +2289,8 @@ function returnToEdit() {
   }
 
   mode = 'edit';
+  syncAudioMode();
+  emitAudioCue('return-edit');
   playSession = null;
   playSource = null;
   dungeonRunSession = null;
@@ -2878,7 +2961,12 @@ async function run() {
     canvas.addEventListener('pointerup', handleCanvasPointerUp, true);
     canvas.addEventListener('pointercancel', handleCanvasPointerCancel, true);
     window.addEventListener('resize', resize);
+    document.addEventListener('pointerdown', unlockAudioFromGesture, true);
+    window.addEventListener('keydown', unlockAudioFromGesture, true);
     window.addEventListener('keydown', handleKeyboard);
+    window.addEventListener('beforeunload', () => audioPresentation.dispose(), { once: true });
+    audioToggle?.addEventListener('click', toggleAudioMuted);
+    renderAudioToggle();
     undoButton.addEventListener('click', undo);
     redoButton.addEventListener('click', redo);
     for (const button of workflowTabButtons) {
@@ -2940,6 +3028,13 @@ async function run() {
       getCameraState: () => adapter.getCameraState(),
       getRenderedSelection: () => adapter.selectedSpecId,
       getCharacterPresentation: () => adapter.getCharacterPresentationSummary(),
+      getAudioPresentation: () => audioPresentation.getState(),
+      unlockAudioForTest: async () => {
+        const unlocked = await audioPresentation.unlock();
+        syncAudioMode();
+        renderAudioToggle();
+        return unlocked;
+      },
       showViewportNoticeForTest: (message, options) => showViewportNotice(message, options),
       getCurrentRoomPlan: () => {
         const roomId = playSession?.currentRoomId ?? selectedRoomId;
