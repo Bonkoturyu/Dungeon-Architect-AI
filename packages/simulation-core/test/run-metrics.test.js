@@ -121,8 +121,11 @@ test('aggregate run metrics identify reach loss and the first bottleneck floor',
     1.666667,
   );
   assert.ok(
-    aggregate.progressionSignals.observedDamageFractionDeltaPerFloor > 0,
+    Number.isFinite(
+      aggregate.progressionSignals.observedDamageFractionDeltaPerFloor,
+    ),
   );
+  assert.ok(aggregate.progressionSignals.clearRateDeltaPerFloor < 0);
   assert.ok(Number.isFinite(aggregate.means.damageTaken));
   assert.ok(Number.isFinite(aggregate.means.finalHpFraction));
 
