@@ -45,6 +45,20 @@ Write-Host "[DAI-099 PUBLIC] Testing $env:DAI_PUBLIC_URL"
 npm.cmd run smoke:refreshed-public
 if ($LASTEXITCODE -ne 0) { throw 'DAI-099 refreshed public E2E failed.' }
 
+Write-Host '[DAI-099 PUBLIC] Re-running candidate legal/privacy/metadata gates on main...'
+npm.cmd run validate:legal-registers
+if ($LASTEXITCODE -ne 0) { throw 'legal/provenance audit failed.' }
+
+npm.cmd run validate:secret-privacy
+if ($LASTEXITCODE -ne 0) { throw 'secret/privacy audit failed.' }
+
+npm.cmd run validate:submission-metadata
+if ($LASTEXITCODE -ne 0) { throw 'submission metadata audit failed.' }
+
+npm.cmd run validate:refreshed-video-plan
+if ($LASTEXITCODE -ne 0) { throw 'refreshed video-plan audit failed.' }
+
 Write-Host ''
 Write-Host '[DAI-099 PUBLIC] REFRESHED PUBLIC E2E PASSED.'
+Write-Host '[DAI-099 PUBLIC] Candidate legal/privacy/metadata/video-plan gates also passed.'
 Write-Host 'Next: visually confirm the deployment, then run npm run demo:refreshed-video.'
