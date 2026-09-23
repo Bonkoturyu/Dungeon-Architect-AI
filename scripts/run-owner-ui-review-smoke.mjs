@@ -772,12 +772,17 @@ try {
   const eventLayout = await page.evaluate(() => {
     const reticle = document.querySelector('#playReticle')?.getBoundingClientRect();
     const events = document.querySelector('#roomEventBar')?.getBoundingClientRect();
+    const viewport = document.querySelector('.viewport-shell')?.getBoundingClientRect();
     const eventVisible = document.querySelector('#roomEventBar')?.hidden === false;
     return {
       reticleVisible: document.querySelector('#playReticle')?.hidden === false,
       eventVisible,
       reticleCenterY: reticle ? reticle.top + reticle.height / 2 : null,
       eventTop: events?.top ?? null,
+      eventCenterX: events ? events.left + events.width / 2 : null,
+      eventCenterY: events ? events.top + events.height / 2 : null,
+      viewportCenterX: viewport ? viewport.left + viewport.width / 2 : null,
+      viewportCenterY: viewport ? viewport.top + viewport.height / 2 : null,
     };
   });
 
@@ -1104,11 +1109,14 @@ try {
       playResultCentering.modeLampTextGap >= 8,
     returnEditUsesSolidTriangle:
       playResultCentering.returnEditText.startsWith('◀'),
-    roomEventCommandsAppearBelowReticle:
+    roomEventStackCentered:
       eventLayout.eventVisible === false ||
-      (Number.isFinite(eventLayout.eventTop) &&
-       Number.isFinite(eventLayout.reticleCenterY) &&
-       eventLayout.eventTop > eventLayout.reticleCenterY),
+      (Number.isFinite(eventLayout.eventCenterX) &&
+       Number.isFinite(eventLayout.eventCenterY) &&
+       Number.isFinite(eventLayout.viewportCenterX) &&
+       Number.isFinite(eventLayout.viewportCenterY) &&
+       Math.abs(eventLayout.eventCenterX - eventLayout.viewportCenterX) <= 3 &&
+       Math.abs(eventLayout.eventCenterY - eventLayout.viewportCenterY) <= 3),
     goalRoomDisabledForStartEntity: goalOptionDisabledForStart === true,
     sameRoomStartGoalFailsValidation:
       sameRoomGate.allowed === false &&
