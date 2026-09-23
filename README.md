@@ -24,7 +24,7 @@ EXPLORE + ROOM EVENTS
 RESULT
 ```
 
-The production public E2E has verified this complete flow over HTTPS using the deployed Cloudflare Pages + Pages Functions environment and the production cloud AI path.
+The current repository flow above is locally regression-tested. The existing Cloudflare Pages deployment has historical production public-E2E evidence from the earlier M8 candidate; DAI-099 must redeploy and rerun public E2E after the later DAI-085–096 / Play-UI changes before final submission.
 
 ## Judge quick start
 
@@ -54,12 +54,12 @@ Then confirm `✓ Valid`, open **Play**, choose **▶ Test** (current authored d
 
 | Area | Current status |
 |---|---|
-| Public demo | Cloudflare Pages HTTPS deployment with live Generate + AI edit E2E |
-| Renderer | Three.js `0.185.1`, selected by production benchmark / ADR-001 |
+| Public demo | Historical Cloudflare Pages HTTPS candidate exists; refreshed deployment + public E2E for the current runtime is pending DAI-099 |
+| Renderer | Three.js `0.185.1`, retained by ADR-001; historical benchmark limitations are documented and later production evidence validates the current stack |
 | DungeonSpec | Renderer-independent schema, parser, validation, deterministic generation |
 | Procedural core | Deterministic graph/layout, corridors, Start/Goal, route-choice controls, Seed reproducibility |
 | Natural-language generation | OpenAI Responses cloud path + deterministic fallback → validated DesignIntent → bounded DungeonSpec mapping |
-| Play core | Session snapshot, Fog of War / auto-map, directional exits, enemy/treasure/trap/recovery Room Events, Test/Mystery play, clear/failure Result |
+| Play core | Session snapshot, Fog of War / auto-map, directional exits, Room Events, HP/Level/XP/Gold/equipment, 1–10 floor runs with PlayerState carry, Test/Mystery play, clear/failure Result |
 | Natural-language edit | Live-tested constrained `move-entity` translation through server-side OpenAI path |
 | Edit mode | Room select/move/resize/add/remove; corridor add/remove + N/E/S/W endpoint-side editing; entity add/move/remove; Undo/Redo; Start→Goal route check |
 | UI languages | English (default), Japanese, Simplified Chinese, Traditional Chinese, Korean; live switching also available in onboarding |
@@ -81,7 +81,7 @@ Key boundaries:
 - mobile is outside the supported submission acceptance scope;
 - no Safari/Firefox acceptance claim has been made;
 - there are no accounts, persistent project storage, analytics or telemetry;
-- the GitHub repository visibility switch remains a submission task. DAI-085 UI/UX polish is reopened for the 2026-09-21 owner-review revalidation; the historical DAI-084 freeze remains a rollback point until the refreshed public demo/video are revalidated and a new final freeze is created.
+- the historical public candidate/video/freeze predate later DAI-085–096 and Play-UI work; DAI-097 Audio, DAI-098 multi-floor simulation/balance, and DAI-099 refreshed deployment/public-E2E/video/freeze remain before final submission.
 
 ## Sample prompts
 
@@ -186,7 +186,7 @@ See:
 
 ## Submission status
 
-DAI-081 hosted demo is complete at:
+Historical DAI-081 hosted-demo evidence exists at:
 
 https://dungeon-architect-ai.pages.dev/
 
@@ -204,7 +204,7 @@ Historical DAI-084 rollback point:
 
 See [DAI-084 Candidate Freeze / Rollback Point](docs/submission/DAI-084_CANDIDATE_FREEZE.md). A new final freeze will be created after the refreshed public-demo and video gates.
 
-The previous DAI-082 capture remains historical evidence for the pre-polish candidate. A refreshed demo video is required after the DAI-085–088 public deployment is revalidated.
+The previous DAI-082 capture remains historical evidence for the earlier M8 candidate. A refreshed demo video is required under DAI-099 after the current DAI-085–098 runtime is finalized, redeployed, and public-E2E revalidated.
 
 The GitHub repository is still private and must be switched to Public before submission.
 
