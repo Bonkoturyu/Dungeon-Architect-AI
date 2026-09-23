@@ -51,7 +51,16 @@ async function waitForServer() {
   throw new Error('Vite server did not become ready.');
 }
 
-const browser = await chromium.launch({ executablePath: chromePath, headless: true });
+const browser = await chromium.launch({
+  executablePath: chromePath,
+  headless: false,
+  args: [
+    '--disable-background-timer-throttling',
+    '--disable-renderer-backgrounding',
+    '--enable-webgl',
+    '--ignore-gpu-blocklist',
+  ],
+});
 
 try {
   await waitForServer();
