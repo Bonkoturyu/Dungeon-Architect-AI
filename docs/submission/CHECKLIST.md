@@ -20,7 +20,7 @@ These checks describe the earlier M8 candidate and must not be interpreted as ac
 ## Refreshed final candidate — pending
 
 - [x] Complete DAI-097 Audio presentation
-- [ ] Complete DAI-098 multi-floor simulation / balance
+- [x] Complete DAI-098 multi-floor simulation / balance
 - [ ] DAI-099 refreshed production build
 - [ ] DAI-099 refreshed Cloudflare deployment
 - [ ] DAI-099 refreshed public E2E against the current runtime
