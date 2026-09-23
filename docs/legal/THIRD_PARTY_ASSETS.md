@@ -4,15 +4,15 @@ Only CC0 1.0 Universal creative assets may be Approved.
 
 ## Current submission-candidate status
 
-**No third-party creative assets are included in the current production browser submission candidate as of 2026-09-18.**
+**No third-party creative assets are included in the current production browser submission candidate. DAI-097 adds only project-authored programmatic Web Audio synthesis; no external audio asset file is introduced.**
 
-The current editor/play surface uses project-authored HTML/CSS/JavaScript and programmatic Three.js geometry/materials. No external image, texture, audio, font, 3D model, animation, icon pack, or other creative-asset file is required by the production build.
+The current editor/play surface uses project-authored HTML/CSS/JavaScript, programmatic Three.js geometry/materials, and project-authored Web Audio oscillator/envelope definitions. No external image, texture, sampled audio/music, font, 3D model, animation, icon pack, or other creative-asset file is required by the production build.
 
 AI usage is tracked separately in `docs/legal/AI_USAGE.md`. The current submission candidate also contains no AI-generated image/audio/font/texture/3D/animation asset.
 
 | ID | Asset | Type | Author | Source URL | Retrieved | License | Filename | SHA-256 | Usage | Evidence | Status |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| — | None | — | — | — | — | — | — | — | Production browser candidate contains no external creative assets | DAI-073 repository scan / production build audit | N/A |
+| — | None | — | — | — | — | — | — | — | Production browser candidate contains no external creative assets; DAI-097 audio is synthesized from project-authored source constants at runtime | DAI-073 repository scan / DAI-097 acceptance | N/A |
 
 ## Admission rule
 
