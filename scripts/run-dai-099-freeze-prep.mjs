@@ -16,8 +16,10 @@ const evidenceFiles = {
   videoRun: 'artifacts/dai-099-video/dai-099-recording-run.json',
   legal: 'artifacts/legal/dai-073-legal-registers.json',
   privacy: 'artifacts/privacy/dai-074-secret-privacy.json',
-  publicDocs: 'artifacts/public-docs/dai-080-public-docs.json',
   metadata: 'artifacts/submission-metadata/dai-083-submission-metadata.json',
+};
+const optionalEvidenceFiles = {
+  predeployPublicDocs: 'artifacts/public-docs/dai-080-public-docs.json',
 };
 const videoPath = 'artifacts/dai-099-video/dai-099-refreshed-demo.mp4';
 const buildInfoPath = 'dist/build-info.json';
@@ -77,7 +79,6 @@ const videoPlan = readJson(evidenceFiles.videoPlan);
 const videoRun = readJson(evidenceFiles.videoRun);
 const legal = readJson(evidenceFiles.legal);
 const privacy = readJson(evidenceFiles.privacy);
-const publicDocs = readJson(evidenceFiles.publicDocs);
 const metadata = readJson(evidenceFiles.metadata);
 const buildFingerprint = readJson(evidenceFiles.buildFingerprint);
 
@@ -116,6 +117,11 @@ const distManifestSha256 = crypto
 const evidenceSha256 = Object.fromEntries(
   Object.entries(evidenceFiles).map(([name, file]) => [name, sha256File(file)]),
 );
+const optionalEvidenceSha256 = Object.fromEntries(
+  Object.entries(optionalEvidenceFiles)
+    .filter(([, file]) => fs.existsSync(file))
+    .map(([name, file]) => [name, sha256File(file)]),
+);
 
 const remoteBuild = publicEvidence.buildFingerprint?.remote ?? null;
 const checks = {
@@ -147,7 +153,6 @@ const checks = {
     videoDurationSeconds < 180,
   legalAuditPassed: legal.passed === true,
   privacyAuditPassed: privacy.passed === true,
-  publicDocsAuditPassed: publicDocs.passed === true,
   submissionMetadataAuditPassed: metadata.passed === true,
   distPresent: distManifest.length > 0,
   distHasBuildInfo:
@@ -188,6 +193,9 @@ const evidence = {
     sizeBytes: fs.statSync(videoPath).size,
   },
   evidenceSha256,
+  optionalEvidenceSha256,
+  finalPublicDocsBoundary:
+    'Final public-doc truthfulness is re-audited after public/video acceptance during freeze bookkeeping.',
   build: {
     fileCount: distManifest.length,
     manifestSha256: distManifestSha256,
