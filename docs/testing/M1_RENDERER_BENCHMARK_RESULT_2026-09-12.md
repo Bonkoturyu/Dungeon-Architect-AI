@@ -1,5 +1,18 @@
 # M1 Renderer Benchmark Result — 2026-09-12
 
+## 2026-09-23 review correction
+
+This file preserves the historical 2026-09-12 measurements, but a later PR-review audit found protocol limitations that prevent several columns from being used as controlled renderer-comparison evidence:
+
+- the original Three.js/Babylon.js frame sampler measured `requestAnimationFrame` cadence without rendering the scene on each sampled frame;
+- the browser-library run used headless Chrome while the Unity WebGL run used headed Chrome;
+- `firstRenderMs` did not represent the same first-visible-frame milestone across browser libraries and Unity.
+
+Therefore the historical frame/FPS, navigation-complete, and first-render values below are retained as raw historical observations, **not** as apples-to-apples performance proof. The benchmark harness was corrected on 2026-09-23 for future browser-library reruns (headed Chrome and rendering on every sampled frame).
+
+The Three.js production decision remains in force because subsequent production implementation and browser acceptance demonstrated the selected renderer is suitable for this browser MVP; ADR-001 no longer treats the flawed historical timing comparison as decisive evidence.
+
+
 ## Evidence
 
 User-executed production benchmark on Windows using the clean-room benchmark harness from `feat/m1-renderer-benchmark`.
@@ -46,22 +59,19 @@ Run 1 recorded a navigation-complete outlier of 18219.59 ms and one console 404.
 
 Babylon.js draw-call data was not directly available from the current harness and is therefore not compared as if measured.
 
-## Comparison
+## Corrected interpretation
 
-- Steady-state FPS/frame time is effectively tied under this fixture.
-- Three.js has materially lower scene-generation time in this production run.
-- Three.js also has lower median navigation-complete and first-render times.
-- The Three.js first-run navigation outlier and 404 require follow-up, but the remaining four Three.js runs are internally consistent.
-- No runtime error occurred in either renderer across the measured runs.
+- The recorded browser-library frame/FPS values measure RAF cadence from the historical harness and must not be described as steady-state renderer throughput.
+- Browser-library versus Unity navigation/first-render timing is not directly comparable because browser mode and first-frame milestones differed.
+- The Three.js run-1 navigation outlier and 404 remain part of the historical record.
+- No runtime error occurred in the recorded Three.js/Babylon.js runs, but absence of runtime errors does not repair the timing-protocol mismatch.
 
 ## Current decision
 
-**Browser-renderer production evidence currently favors Three.js over Babylon.js for this project.**
+DAI-011 subsequently selected Three.js and that architecture decision remains confirmed, but **the historical timing table is no longer treated as the decisive basis for the selection**.
 
-This is not yet the final DAI-011 architecture decision because Unity remains an unrejected candidate under the frozen protocol. Production ADR selection must explicitly address Unity rather than treating absence of a browser-harness result as rejection.
+The corrected basis is documented in ADR-001: browser-first architectural fit plus the substantial production evidence accumulated after selection (renderer adapter, editing/picking, public hosted E2E, performance/browser gates, and later gameplay/UI regressions).
 
-## Next actions
+## Follow-up
 
-1. Decide/execute the production Unity comparison path required by the frozen protocol.
-2. Resolve or characterize the single Three.js 404 before final renderer ADR if it is reproducible.
-3. After all required candidate evidence is complete, record DAI-011 as an ADR with selection, rejected alternatives, evidence and reversal conditions.
+The browser benchmark harness now renders every sampled frame and uses headed Chrome with the same WebGL-related launch flags used by the Unity browser runner. A future comparative benchmark must also define one common externally observable first-visible-frame milestone before using first-frame timing across engines.
