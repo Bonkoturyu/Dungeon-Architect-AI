@@ -129,9 +129,10 @@ const checks = {
     checklist.includes('- [ ] DAI-099 new candidate hash / rollback point including tracked `package-lock.json`') &&
     checklist.includes('- [ ] DAI-092 submission completed before 2026-11-11 23:30 JST'),
   storyboardRefreshPendingTruthful:
-    storyboard.includes('REFRESH REQUIRED UNDER DAI-099') &&
+    storyboard.includes('DAI-099 REFRESH IN PROGRESS') &&
     storyboard.includes('49.5-second capture remains historical evidence') &&
-    storyboard.includes('DAI-099 has deployed the refreshed runtime'),
+    storyboard.includes('DAI-099 has deployed the refreshed runtime') &&
+    storyboard.includes('matching build fingerprint'),
   submissionMetadataFinalized:
     submissionMetadata.includes('**AI 3D Scene Generation**') &&
     submissionMetadata.includes('513 characters') &&
