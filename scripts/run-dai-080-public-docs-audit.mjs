@@ -124,9 +124,14 @@ const checks = {
     checklist.includes('## Refreshed final candidate — pending') &&
     checklist.includes('- [x] Historical fresh-browser public E2E passed') &&
     checklist.includes('- [x] Historical demo video under 3 minutes recorded and reviewed') &&
-    checklist.includes('- [ ] DAI-099 refreshed public E2E against the current runtime') &&
-    checklist.includes('- [ ] DAI-099 refreshed demo video under 3 minutes') &&
-    checklist.includes('- [ ] DAI-099 new candidate hash / rollback point including tracked `package-lock.json`') &&
+    checklist.includes('- [x] Complete DAI-097 Audio presentation') &&
+    checklist.includes('- [x] Complete DAI-098 multi-floor simulation / balance') &&
+    checklist.includes('- [ ] DAI-099 predeploy validation passes on the refreshed branch') &&
+    checklist.includes('- [ ] DAI-099 public commit/runtime fingerprint matches the local candidate') &&
+    checklist.includes('- [ ] DAI-099 refreshed public E2E against the current 2-floor runtime passes') &&
+    checklist.includes('- [ ] DAI-099 refreshed demo video under 3 minutes is captured') &&
+    checklist.includes('- [ ] DAI-099 freeze-prep evidence passes') &&
+    checklist.includes('- [ ] DAI-099 new candidate hash / tree / runtime fingerprint / rollback point recorded') &&
     checklist.includes('- [ ] DAI-092 submission completed before 2026-11-11 23:30 JST'),
   storyboardRefreshPendingTruthful:
     storyboard.includes('DAI-099 REFRESH IN PROGRESS') &&
