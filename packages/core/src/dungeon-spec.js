@@ -62,6 +62,72 @@ function isJsonScalar(value) {
   return value === null || typeof value === "boolean" || typeof value === "string" || isFiniteNumber(value);
 }
 
+function validateJsonSafeValue(value, path, errors, ancestors = new WeakSet()) {
+  if (value === null || typeof value === "string" || typeof value === "boolean") return;
+
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) {
+      pushError(errors, "JSON_NUMBER_INVALID", path, "JSON numbers must be finite.");
+    }
+    return;
+  }
+
+  if (typeof value !== "object") {
+    pushError(
+      errors,
+      "JSON_VALUE_UNSUPPORTED",
+      path,
+      `Unsupported non-JSON value type: ${typeof value}.`
+    );
+    return;
+  }
+
+  if (ancestors.has(value)) {
+    pushError(errors, "JSON_CYCLE", path, "DungeonSpec must not contain cyclic references.");
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    ancestors.add(value);
+    for (let index = 0; index < value.length; index += 1) {
+      if (!Object.prototype.hasOwnProperty.call(value, index)) {
+        pushError(errors, "JSON_ARRAY_HOLE", `${path}[${index}]`, "JSON arrays must not contain holes.");
+        continue;
+      }
+      validateJsonSafeValue(value[index], `${path}[${index}]`, errors, ancestors);
+    }
+    ancestors.delete(value);
+    return;
+  }
+
+  let prototype;
+  let descriptors;
+  try {
+    prototype = Object.getPrototypeOf(value);
+    descriptors = Object.getOwnPropertyDescriptors(value);
+  } catch {
+    pushError(errors, "JSON_OBJECT_UNREADABLE", path, "DungeonSpec objects must be ordinary readable JSON objects.");
+    return;
+  }
+
+  if (prototype !== Object.prototype && prototype !== null) {
+    pushError(errors, "JSON_OBJECT_UNSUPPORTED", path, "DungeonSpec must not contain class/runtime object instances.");
+    return;
+  }
+
+  ancestors.add(value);
+  for (const [key, descriptor] of Object.entries(descriptors)) {
+    if (!descriptor.enumerable) continue;
+    const childPath = path === "$" ? `$.${key}` : `${path}.${key}`;
+    if (!Object.prototype.hasOwnProperty.call(descriptor, "value")) {
+      pushError(errors, "JSON_ACCESSOR_UNSUPPORTED", childPath, "DungeonSpec must not contain accessor properties.");
+      continue;
+    }
+    validateJsonSafeValue(descriptor.value, childPath, errors, ancestors);
+  }
+  ancestors.delete(value);
+}
+
 function validateId(value, path, errors) {
   if (typeof value !== "string" || value.trim() === "") {
     pushError(errors, "ID_REQUIRED", path, "ID must be a non-empty string.");
@@ -490,6 +556,8 @@ export function validateDungeonSpec(spec) {
     pushError(errors, "SPEC_NOT_OBJECT", "$", "DungeonSpec must be an object.");
     return { valid: false, errors };
   }
+
+  validateJsonSafeValue(spec, "$", errors);
 
   if (spec.schemaVersion !== DUNGEON_SPEC_VERSION) {
     pushError(errors, "SCHEMA_VERSION_UNSUPPORTED", "schemaVersion", `Expected schemaVersion ${DUNGEON_SPEC_VERSION}.`);
