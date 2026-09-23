@@ -2,7 +2,7 @@
 
 ## Status
 
-**REFRESH REQUIRED.** The 2026-09-19 corrected-corridor capture remains accepted historical evidence for the pre-polish candidate. DAI-085–088 changed the judge-facing Play UX, so a new public-demo capture is required after redeployment and refreshed DAI-081 public E2E.
+**HISTORICAL EVIDENCE ONLY.** The 2026-09-19 corrected-corridor capture remains accepted evidence for the old M8 candidate. DAI-085–098 changed the judge-facing runtime. The current replacement capture is tracked by DAI-099 in `DAI-099_REFRESHED_VIDEO.md`.
 
 ## Official requirement
 
@@ -191,7 +191,7 @@ Required checks for that refreshed capture:
 - no browser chrome, desktop taskbar, terminal, translation popup, provider key, or private data;
 - no claim exceeds the documented production behavior.
 
-Until those checks are performed against the refreshed public candidate, the submission video status remains **REFRESH REQUIRED**.
+Until those checks are performed against the refreshed public candidate, the submission video status remains **REFRESH REQUIRED**. Use `npm run demo:refreshed-video` and `docs/testing/DAI-099_REFRESHED_VIDEO.md` for the current capture; the older `npm run demo:video` path is historical.
 
 ## Boundaries
 
