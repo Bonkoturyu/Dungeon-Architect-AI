@@ -1,6 +1,6 @@
 # DAI-097 — Programmatic Audio Presentation Validation
 
-Date: 2026-09-23 JST  
+Date: 2026-09-23 JST
 Branch: `feat/dai-097-audio-presentation`
 
 ## Scope
