@@ -1,0 +1,199 @@
+# DAI-099 — Refreshed Submission Candidate
+
+## Status
+
+**IN PROGRESS.**
+
+DAI-085 through DAI-098 changed the runtime after the historical M8 candidate. DAI-099 creates a new final candidate without rewriting the historical DAI-081/082/084 evidence.
+
+## Goal
+
+Produce one refreshed judge-facing candidate with:
+
+- current browser runtime;
+- current 2-floor-capable generation/play loop;
+- current programmatic characters;
+- current Play UI stack;
+- current programmatic audio;
+- current run simulation/balance work;
+- refreshed public HTTPS E2E;
+- refreshed <3-minute demo video;
+- refreshed legal/privacy/public-doc evidence;
+- a new candidate commit/tree/build fingerprint;
+- a new rollback branch.
+
+## Phase A — predeploy candidate
+
+Branch:
+
+`feat/dai-099-refreshed-submission-candidate`
+
+Run:
+
+```powershell
+.\scripts\run-dai-099-predeploy-validation.ps1
+```
+
+The runner verifies:
+
+- exact audited tracked package-lock;
+- syntax;
+- complete Node suite;
+- DAI-098 run simulation evidence;
+- START / Exploration / Room Event / multi-floor browser regressions;
+- programmatic characters;
+- programmatic audio;
+- current Play UI;
+- owner UI;
+- production build;
+- build fingerprint;
+- hosting smoke;
+- browser/performance gate;
+- legal/provenance;
+- secret/privacy;
+- desktop/mobile scope;
+- public-doc truthfulness;
+- submission metadata;
+- refreshed video plan;
+- git diff check.
+
+Passing this phase means the branch is suitable to merge/deploy. It does **not** mean public E2E/video/freeze are complete.
+
+## Build fingerprint
+
+`npm run build:hosting` now emits:
+
+`dist/build-info.json`
+
+It records:
+
+- schema version;
+- source commit SHA;
+- commit-source environment;
+- deterministic runtime-bundle SHA-256;
+- build timestamp.
+
+The runtime-bundle hash is computed from every deployed static file except `build-info.json` itself.
+
+`build-info.json` is served with `Cache-Control: no-store`.
+
+This prevents a stale public deployment from being accepted accidentally.
+
+## Phase B — merge and deploy
+
+After Phase A passes:
+
+1. merge the DAI-099 preparation PR to `main`;
+2. sync local `main`;
+3. wait for Cloudflare Pages production deployment of that main commit;
+4. do not change runtime code between public validation and freeze.
+
+Cloudflare Git integration remains the selected deployment path.
+
+## Phase C — refreshed public E2E
+
+From synchronized `main`:
+
+```powershell
+.\scripts\run-dai-099-public-validation.ps1
+```
+
+This rebuilds the same candidate locally and requires the public site to expose a matching:
+
+- commit SHA;
+- runtime bundle SHA-256.
+
+Then the public smoke verifies:
+
+- HTTPS;
+- current ▶ Test / Mystery / audio / floor-count UI;
+- current LV / HP / EXP / G HUD;
+- live cloud Generate;
+- two generated floors;
+- live natural-language Edit;
+- both live API routes returning HTTP 200;
+- centered Room Event stack;
+- programmatic Player/Enemy presentation;
+- real combat changing PlayerState;
+- exact PlayerState carry to Floor 2;
+- cleared two-floor Result;
+- Result audio mode;
+- zero external audio assets;
+- Return to Edit;
+- zero browser/page/request/HTTP errors.
+
+Evidence:
+
+- `artifacts/dai-099-public/dai-099-refreshed-public.json`
+- `artifacts/dai-099-public/dai-099-refreshed-public.png`
+
+## Phase D — refreshed demo video
+
+Only after Phase C passes:
+
+```powershell
+npm run demo:refreshed-video
+```
+
+See:
+
+`docs/testing/DAI-099_REFRESHED_VIDEO.md`
+
+The automated runner can create/probe the MP4, but final visual review remains human-required.
+
+## Phase E — freeze preparation
+
+After the refreshed public E2E, legal/privacy/docs/metadata evidence, and final reviewed MP4 exist:
+
+```powershell
+npm run prepare:refreshed-freeze
+```
+
+The freeze-prep script requires:
+
+- current branch is `main`;
+- local main exactly matches `origin/main`;
+- tracked working tree is clean;
+- audited lock hash matches;
+- local build fingerprint matches current candidate commit;
+- refreshed public evidence passed;
+- public commit and runtime-bundle fingerprint match the candidate;
+- refreshed video evidence passed;
+- actual MP4 exists and ffprobe proves duration <180 seconds;
+- legal audit passed;
+- privacy audit passed;
+- public-doc audit passed;
+- metadata audit passed.
+
+It writes:
+
+- `artifacts/dai-099-freeze/dai-099-freeze-prep.json`
+- `artifacts/dai-099-freeze/dai-099-dist-manifest.txt`
+
+It does **not** create the rollback branch or edit freeze documentation.
+
+## Phase F — rollback / bookkeeping
+
+After freeze-prep passes:
+
+1. create a new rollback branch at the exact candidate commit;
+2. record candidate commit/tree/timestamp/message;
+3. record rollback branch;
+4. record runtime bundle hash;
+5. record public E2E evidence hash;
+6. record final MP4 SHA-256 and duration;
+7. record legal/privacy/docs/metadata evidence hashes;
+8. record dist manifest hash;
+9. validate the bookkeeping without modifying the frozen runtime.
+
+This mirrors the historical DAI-084 separation between candidate runtime and freeze bookkeeping.
+
+## Remaining after DAI-099
+
+DAI-099 completion unblocks:
+
+- DAI-090 unexpected-prompt checks;
+- DAI-091 final compliance;
+- DAI-092 final submission.
+
+DAI-017 PCE remains a separate blocked evidence track and is not fabricated by DAI-099.
