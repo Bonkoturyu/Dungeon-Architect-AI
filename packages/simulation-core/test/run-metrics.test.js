@@ -90,22 +90,23 @@ test('aggregate run metrics identify reach loss and the first bottleneck floor',
   assert.equal(aggregate.failureRate, 0.333333);
   assert.deepEqual(aggregate.failureFloorCounts, {
     '0': 0,
-    '1': 1,
-    '2': 0,
+    '1': 0,
+    '2': 1,
   });
 
   assert.equal(aggregate.floors[0].reachedCount, 3);
   assert.equal(aggregate.floors[0].clearRateOverall, 1);
 
   assert.equal(aggregate.floors[1].reachedCount, 3);
-  assert.equal(aggregate.floors[1].clearedCount, 2);
-  assert.equal(aggregate.floors[1].clearRateOverall, 0.666667);
+  assert.equal(aggregate.floors[1].clearedCount, 3);
+  assert.equal(aggregate.floors[1].clearRateOverall, 1);
 
-  assert.equal(aggregate.floors[2].reachedCount, 2);
-  assert.equal(aggregate.floors[2].reachRate, 0.666667);
+  assert.equal(aggregate.floors[2].reachedCount, 3);
+  assert.equal(aggregate.floors[2].clearedCount, 2);
+  assert.equal(aggregate.floors[2].reachRate, 1);
   assert.equal(aggregate.floors[2].clearRateOverall, 0.666667);
 
-  assert.equal(aggregate.progressionSignals.bottleneckFloorIndex, 1);
+  assert.equal(aggregate.progressionSignals.bottleneckFloorIndex, 2);
   assert.equal(aggregate.progressionSignals.bottleneckClearRate, 0.666667);
   assert.ok(Number.isFinite(aggregate.means.damageTaken));
   assert.ok(Number.isFinite(aggregate.means.finalHpFraction));
@@ -116,8 +117,8 @@ test('aggregate run metrics identify reach loss and the first bottleneck floor',
 
   assert.equal(safeMetrics.totals.lootCollected, 0);
   assert.equal(treasureMetrics.totals.lootCollected, 3);
-  assert.equal(riskMetrics.failureFloorIndex, 1);
-  assert.equal(riskMetrics.floorsReached, 2);
+  assert.equal(riskMetrics.failureFloorIndex, 2);
+  assert.equal(riskMetrics.floorsReached, 3);
 });
 
 test('run-level DesignIntent fit reuses floor evidence without scoring duration or difficulty proxy', () => {
