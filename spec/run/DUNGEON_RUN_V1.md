@@ -81,7 +81,7 @@ A terminal DungeonRun result includes:
 - final PlayerState;
 - ordered per-floor real PlayResults.
 
-Run-level balance aggregation and cross-floor simulation metrics remain DAI-098 scope.
+Run-level balance aggregation and cross-floor simulation metrics are implemented by DAI-098 in `spec/simulation/RUN_SIMULATION_V1.md`; this Run Core contract remains the authoritative floor-transition / PlayerState-carry boundary.
 
 ## Rendering and Editor constraints
 
