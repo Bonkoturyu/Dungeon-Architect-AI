@@ -169,7 +169,7 @@ The reviewed 49.5-second M8 capture remains valid historical evidence for the ca
 - no browser chrome, desktop taskbar, terminal, translation popup, provider key, or private data;
 - duration strictly below 180 seconds.
 
-It **does not** demonstrate the later DAI-085–096 / 2026-09-23 judge-facing Play UI, including the current ▶ Test / Mystery presentation, centered Room Event stack, programmatic Player/Enemy presentation, multi-floor run behavior, or the current lower-center Play HUD.
+It **does not** demonstrate the later DAI-085–098 / 2026-09-23 judge-facing runtime, including the current ▶ Test / Mystery presentation, centered Room Event stack, programmatic Player/Enemy presentation, multi-floor run behavior, or the current lower-center Play HUD.
 
 ## Refreshed DAI-099 video gate — PENDING
 
