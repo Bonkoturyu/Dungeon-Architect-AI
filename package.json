@@ -67,7 +67,11 @@
     "smoke:programmatic-characters": "node scripts/run-dai-096-programmatic-characters-smoke.mjs",
     "smoke:audio-presentation": "node scripts/run-dai-097-audio-presentation-smoke.mjs",
     "smoke:play-ui-stack-layout": "node scripts/run-play-ui-stack-layout-smoke.mjs",
-    "smoke:owner-ui-review": "node scripts/run-owner-ui-review-smoke.mjs"
+    "smoke:owner-ui-review": "node scripts/run-owner-ui-review-smoke.mjs",
+    "validate:refreshed-build-fingerprint": "node scripts/run-dai-099-build-fingerprint-audit.mjs",
+    "smoke:refreshed-public": "node scripts/run-dai-099-public-smoke.mjs",
+    "demo:refreshed-video": "node scripts/run-dai-099-recording-demo.mjs",
+    "validate:refreshed-video-plan": "node scripts/run-dai-099-video-plan-audit.mjs"
   },
   "devDependencies": {
     "@babylonjs/core": "9.18.0",
