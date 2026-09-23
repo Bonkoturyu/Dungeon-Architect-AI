@@ -10,6 +10,7 @@ Record AI services/models/tools used to create production code, documentation, a
 ## Boundaries
 
 - No AI-generated image, audio, font, texture, 3D model, animation, or other creative asset is included in the current submission candidate.
+- DAI-097 audio is project-authored programmatic Web Audio synthesis defined as source-code oscillator/frequency/envelope constants; it is not an AI-generated audio asset and does not bundle generated/sample audio files.
 - AI development assistance does not bypass project review gates. Production tasks are not marked DONE solely because an AI system generated code or text.
 - Runtime model output is not arbitrary executable code. The current production paths accept constrained structured data and independently validate it before use.
 - `OPENAI_API_KEY`, account IDs, private chats, and full sensitive prompts must not be stored in this register or the public repository.
