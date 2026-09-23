@@ -1,5 +1,19 @@
 # M1 Renderer Final Comparison — 2026-09-13
 
+## 2026-09-23 review correction
+
+This document preserves the historical three-candidate run, but the original comparison protocol was not strict enough to support the performance conclusions previously attached to it.
+
+Review findings:
+
+- Three.js/Babylon.js did not render on every sampled RAF frame;
+- Three.js/Babylon.js were run headless while Unity WebGL was run headed;
+- browser-library `firstRenderMs` and Unity `firstRenderMs` used different milestones;
+- the repository does not retain an explicit operator confirmation of the Unity plan/tier eligibility gate for the historical run.
+
+Accordingly, the timing table below is **historical observation only**. It must not be used to claim an apples-to-apples FPS, startup, or first-frame winner. The raw hashes remain preserved so the evidence history is not rewritten.
+
+
 ## Status
 
 DAI-010 production evidence is complete for the three candidates required by the current renderer decision:
@@ -41,14 +55,12 @@ The Unity run passed the hardened zero-error gate:
 | Babylon.js 9.18.0 | 6891.43 ms | 24.40 ms | 67.60 ms | 31.20 ms | 31.60 ms | 32.05 |
 | Unity WebGL 6000.3.23f1 | 8477.78 ms | 7.00 ms | 2115.00 ms | 31.00 ms | 32.00 ms | 32.26 |
 
-## Interpretation
+## Corrected interpretation
 
-- Steady-state frame cadence is effectively tied for this fixture; all three are around 32 FPS.
-- Three.js has the lowest median navigation-complete time.
-- Three.js has the lowest median scene-generation time.
-- Three.js has the lowest median first-render time.
-- Unity's scene-generation time is competitive with the browser libraries, but its first-render/startup cost is materially higher in this browser workflow.
-- Babylon.js remains viable but does not lead any measured decision metric used here.
+- Do not compare the recorded frame/FPS values as steady-state renderer performance; the browser-library sampler did not render on every sampled frame.
+- Do not compare the recorded navigation-complete or first-render values across browser libraries and Unity as controlled measurements; browser mode and first-frame milestones differed.
+- Scene-generation values remain useful only as implementation-specific diagnostics, not as a complete renderer ranking.
+- The Unity run's zero runtime/browser/network errors is retained as an execution observation, but the missing retained tier-eligibility confirmation prevents treating the run as fully decision-quality production evidence.
 
 ### Three.js run-1 anomaly
 
@@ -64,12 +76,12 @@ The missing resource was not identified in the raw evidence. The anomaly remains
 
 ## DAI-010 result
 
-**DONE.**
+**DONE as a historical candidate-evaluation record.**
 
-The production renderer benchmark now has valid evidence for all three candidates required by the current decision set.
+The 2026-09-13 run exercised all three candidate paths, but the 2026-09-23 audit means its timing table is not a controlled cross-engine performance proof.
 
-## DAI-011 recommendation
+## DAI-011 disposition
 
-Select **Three.js 0.185.1** as the production renderer for the browser MVP.
+Retain **Three.js 0.185.1** as the production renderer for the browser MVP.
 
-This recommendation is limited to the current Dungeon Architect AI browser MVP and may be reversed if the reversal conditions in ADR-001 are met.
+The retained decision is now grounded in ADR-001's browser-first architecture boundary and the later production evidence accumulated on Three.js, rather than in a claimed timing winner from the historical benchmark. Reversal conditions in ADR-001 still apply.
