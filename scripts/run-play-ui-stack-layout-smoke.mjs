@@ -152,6 +152,11 @@ try {
     };
   });
 
+  await page.screenshot({
+    path: path.join(outputDir, "play-ui-bottom-hud.png"),
+    fullPage: true,
+  });
+
   const snapshot = startState.play.snapshot;
   const eventRoomIds = [...new Set(snapshot.entities
     .filter((entity) => !["start", "goal"].includes(entity.type))
@@ -258,7 +263,7 @@ try {
       JSON.stringify(bottomLayout.labels) === JSON.stringify(["LV", "HP", "EXP", "G"]),
     statusFontIsReadable:
       Number.isFinite(bottomLayout.statsFontPx) &&
-      bottomLayout.statsFontPx >= 14,
+      bottomLayout.statsFontPx >= 16,
     statusHasReadableBackplate:
       typeof bottomLayout.plateBackground === "string" &&
       bottomLayout.plateBackground !== "rgba(0, 0, 0, 0)" &&
