@@ -1165,6 +1165,8 @@ function renderActiveSpec() {
     visibility,
     resultMode: mode === 'result',
     entityStates: mode === 'edit' ? null : playSession?.gameplayState?.entityStates ?? null,
+    showPlayer: mode !== 'edit' && Boolean(playSession),
+    playerState: mode === 'edit' ? null : playSession?.playerState ?? null,
   });
   ensureRoomOptions();
   ensureEntityOptions();
@@ -2922,6 +2924,7 @@ async function run() {
       getScreenPositionForWorldPoint: (point) => adapter.getScreenPositionForWorldPoint(point),
       getCameraState: () => adapter.getCameraState(),
       getRenderedSelection: () => adapter.selectedSpecId,
+      getCharacterPresentation: () => adapter.getCharacterPresentationSummary(),
       getCurrentRoomPlan: () => {
         const roomId = playSession?.currentRoomId ?? selectedRoomId;
         const group = adapter.plan?.roomGroups.find((room) => room.specId === roomId) ?? null;
