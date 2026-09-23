@@ -15,7 +15,7 @@ export function summarizeFrameTimes(frameTimes) {
   };
 }
 
-export function runFrameSampler({ frames = 180, onComplete }) {
+export function runFrameSampler({ frames = 180, onFrame = null, onComplete }) {
   const samples = [];
   let previous = performance.now();
   let remaining = frames;
@@ -23,6 +23,8 @@ export function runFrameSampler({ frames = 180, onComplete }) {
   function tick(now) {
     samples.push(now - previous);
     previous = now;
+
+    if (typeof onFrame === "function") onFrame();
     remaining -= 1;
 
     if (remaining <= 0) {
