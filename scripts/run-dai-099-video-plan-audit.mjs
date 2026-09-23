@@ -57,7 +57,7 @@ const checks = {
     runner.includes("await page.click('#start')") &&
     runner.includes('clear-enemy') &&
     runner.includes('#playExitButtons .exit-button') &&
-    runner.includes('s.play?.floorIndex === 1') &&
+    runner.includes('play?.floorIndex === 1') &&
     runner.includes('result.run?.floorsCompleted === 2'),
 
   runnerCapturesViewportOnly:
