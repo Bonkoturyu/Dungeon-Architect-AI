@@ -31,7 +31,7 @@ function floorDungeon(index) {
         id: `${prefix}-enemy`,
         type: 'enemy',
         roomId: `${prefix}-middle`,
-        damage: 4,
+        damage: 3 + index,
       },
       {
         id: `${prefix}-treasure`,
@@ -44,7 +44,7 @@ function floorDungeon(index) {
         type: 'trap',
         roomId: `${prefix}-middle`,
         warning: 'pressure plate',
-        damage: 8,
+        damage: 4 + (index * 4),
       },
       {
         id: `${prefix}-recovery`,
