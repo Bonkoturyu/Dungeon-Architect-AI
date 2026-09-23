@@ -64,7 +64,10 @@ test('run metrics expose carry-aware progression and whole-run totals', () => {
   assert.ok(metrics.final.level >= 2);
   assert.ok(metrics.final.gold > 0);
 
-  for (const floor of metrics.floors) {
+  const expectedDamageBudgets = [7, 12, 17];
+  const expectedDamagePerRoom = [2.333333, 4, 5.666667];
+
+  for (const [index, floor] of metrics.floors.entries()) {
     assert.equal(floor.authored.roomCount, 3);
     assert.equal(floor.authored.enemyCount, 1);
     assert.equal(floor.authored.trapCount, 1);
@@ -72,6 +75,11 @@ test('run metrics expose carry-aware progression and whole-run totals', () => {
     assert.equal(floor.authored.recoveryCount, 1);
     assert.equal(floor.authored.hazardDensity, 0.666667);
     assert.equal(floor.authored.rewardDensity, 0.666667);
+    assert.equal(floor.authored.hazardDamageBudget, expectedDamageBudgets[index]);
+    assert.equal(
+      floor.authored.hazardDamageBudgetPerRoom,
+      expectedDamagePerRoom[index],
+    );
     assert.ok(Number.isFinite(floor.pressure.endHpFraction));
   }
 });
@@ -108,6 +116,13 @@ test('aggregate run metrics identify reach loss and the first bottleneck floor',
 
   assert.equal(aggregate.progressionSignals.bottleneckFloorIndex, 2);
   assert.equal(aggregate.progressionSignals.bottleneckClearRate, 0.666667);
+  assert.equal(
+    aggregate.progressionSignals.authoredHazardDamageBudgetPerRoomDeltaPerFloor,
+    1.666667,
+  );
+  assert.ok(
+    aggregate.progressionSignals.observedDamageFractionDeltaPerFloor > 0,
+  );
   assert.ok(Number.isFinite(aggregate.means.damageTaken));
   assert.ok(Number.isFinite(aggregate.means.finalHpFraction));
 
