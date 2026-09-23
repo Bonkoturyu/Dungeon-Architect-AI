@@ -100,7 +100,11 @@ const checks = {
     readme.includes('refreshed'),
   judgeGuideCurrentFlowTruthful:
     quick.includes('https://dungeon-architect-ai.pages.dev/') &&
-    quick.includes('Create a fair but tense 5-minute dungeon with exploration and a few dangerous rewards.') &&
+    quick.includes('Create a fair but tense two-floor dungeon with exploration, combat, readable traps, and dangerous rewards.') &&
+    quick.includes('Floors') &&
+    quick.includes('2') &&
+    quick.includes('LV / HP / EXP / G') &&
+    quick.includes('Floor 2/2') &&
     quick.includes('Move the treasure to the room that contains the goal.') &&
     quick.includes('desktop Google Chrome on Windows'),
   knownLimitationsComplete:
@@ -114,9 +118,12 @@ const checks = {
       'Submission packaging requires a refreshed candidate',
       'DAI-099',
     ]),
-  samplePromptsReflectPublicE2E:
-    prompts.includes('Verified public generation prompt') &&
+  samplePromptsSeparateHistoricalAndRefreshedE2E:
+    prompts.includes('Verified public generation prompt — historical M8') &&
     prompts.includes('Create a fair but tense 5-minute dungeon with exploration and a few dangerous rewards.') &&
+    prompts.includes('DAI-099 refreshed public validation prompt') &&
+    prompts.includes('Create a fair but tense two-floor dungeon with exploration, combat, readable traps, and dangerous rewards.') &&
+    prompts.includes('matching build fingerprint') &&
     prompts.includes('Verified public natural-language edit') &&
     prompts.includes('Move the treasure to the room that contains the goal.'),
   checklistSeparatesHistoricalAndRefreshed:
@@ -124,14 +131,20 @@ const checks = {
     checklist.includes('## Refreshed final candidate — pending') &&
     checklist.includes('- [x] Historical fresh-browser public E2E passed') &&
     checklist.includes('- [x] Historical demo video under 3 minutes recorded and reviewed') &&
-    checklist.includes('- [ ] DAI-099 refreshed public E2E against the current runtime') &&
-    checklist.includes('- [ ] DAI-099 refreshed demo video under 3 minutes') &&
-    checklist.includes('- [ ] DAI-099 new candidate hash / rollback point including tracked `package-lock.json`') &&
+    checklist.includes('- [x] Complete DAI-097 Audio presentation') &&
+    checklist.includes('- [x] Complete DAI-098 multi-floor simulation / balance') &&
+    checklist.includes('- [ ] DAI-099 predeploy validation passes on the refreshed branch') &&
+    checklist.includes('- [ ] DAI-099 public commit/runtime fingerprint matches the local candidate') &&
+    checklist.includes('- [ ] DAI-099 refreshed public E2E against the current 2-floor runtime passes') &&
+    checklist.includes('- [ ] DAI-099 refreshed demo video under 3 minutes is captured') &&
+    checklist.includes('- [ ] DAI-099 freeze-prep evidence passes') &&
+    checklist.includes('- [ ] DAI-099 new candidate hash / tree / runtime fingerprint / rollback point recorded') &&
     checklist.includes('- [ ] DAI-092 submission completed before 2026-11-11 23:30 JST'),
   storyboardRefreshPendingTruthful:
-    storyboard.includes('REFRESH REQUIRED UNDER DAI-099') &&
+    storyboard.includes('DAI-099 REFRESH IN PROGRESS') &&
     storyboard.includes('49.5-second capture remains historical evidence') &&
-    storyboard.includes('DAI-099 has deployed the refreshed runtime'),
+    storyboard.includes('DAI-099 has deployed the refreshed runtime') &&
+    storyboard.includes('matching build fingerprint'),
   submissionMetadataFinalized:
     submissionMetadata.includes('**AI 3D Scene Generation**') &&
     submissionMetadata.includes('513 characters') &&

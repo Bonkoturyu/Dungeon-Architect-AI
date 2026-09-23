@@ -1,18 +1,32 @@
 # Sample Prompts
 
-## Verified public generation prompt
+## Verified public generation prompt — historical M8
 
-The live public candidate has end-to-end evidence for:
+The historical M8 public candidate has end-to-end evidence for:
 
 ```text
 Create a fair but tense 5-minute dungeon with exploration and a few dangerous rewards.
 ```
 
-Verified path:
+Historical verified path:
 
 `DESCRIBE → cloud DesignIntent → deterministic DungeonSpec → START → Goal → Result`
 
-The public run generated a valid five-room dungeon and completed it in four moves.
+That historical public run generated a valid five-room dungeon and completed it in four moves.
+
+## DAI-099 refreshed public validation prompt
+
+The refreshed candidate uses:
+
+```text
+Create a fair but tense two-floor dungeon with exploration, combat, readable traps, and dangerous rewards.
+```
+
+Expected refreshed path:
+
+`DESCRIBE → cloud DesignIntent → deterministic 2-floor DungeonRunSpec → ▶ Test → Room Events / CHOOSE EXIT → Floor 2 → Result`
+
+This prompt becomes **refreshed verified public evidence only after the DAI-099 postdeploy public smoke passes with a matching build fingerprint**.
 
 ## Verified public natural-language edit
 
@@ -20,12 +34,14 @@ The public run generated a valid five-room dungeon and completed it in four move
 Move the treasure to the room that contains the goal.
 ```
 
-Verified behavior:
+Historical M8 verified behavior:
 
 - translated into one constrained `move-entity` command;
 - applied to the generated authoring spec;
 - START remained valid;
 - public `/api/natural-edit` returned HTTP 200.
+
+DAI-099 reuses this same constrained request and requires a fresh HTTP 200 plus the current 2-floor runtime result before final freeze.
 
 ## DesignIntent regression corpus
 

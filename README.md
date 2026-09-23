@@ -24,7 +24,7 @@ EXPLORE + ROOM EVENTS
 RESULT
 ```
 
-The current repository flow above is locally regression-tested. The existing Cloudflare Pages deployment has historical production public-E2E evidence from the earlier M8 candidate; DAI-099 must redeploy and rerun public E2E after the later DAI-085–096 / Play-UI changes before final submission.
+The current repository flow above is locally regression-tested. The existing Cloudflare Pages deployment has historical production public-E2E evidence from the earlier M8 candidate; DAI-099 must redeploy and rerun public E2E after the later DAI-085–098 / Play-UI changes before final submission.
 
 ## Judge quick start
 
@@ -36,10 +36,10 @@ Recommended judging environment:
 - 1440 × 900 or comparable desktop viewport;
 - mobile/narrow layouts are best-effort only.
 
-Suggested generation prompt:
+Suggested refreshed-candidate generation prompt:
 
 ```text
-Create a fair but tense 5-minute dungeon with exploration and a few dangerous rewards.
+Create a fair but tense two-floor dungeon with exploration, combat, readable traps, and dangerous rewards.
 ```
 
 Suggested natural-language edit:
@@ -81,13 +81,13 @@ Key boundaries:
 - mobile is outside the supported submission acceptance scope;
 - no Safari/Firefox acceptance claim has been made;
 - there are no accounts, persistent project storage, analytics or telemetry;
-- the historical public candidate/video/freeze predate later DAI-085–097 work; DAI-098 multi-floor simulation/balance is in progress, and DAI-099 refreshed deployment/public-E2E/video/freeze remains before final submission.
+- the historical public candidate/video/freeze predate later DAI-085–098 work. DAI-099 refreshed build/deployment/public-E2E/video/audits/freeze is now the active final-candidate task before final compliance/submission.
 
 ## Sample prompts
 
 See **[Sample Prompts](docs/submission/SAMPLE_PROMPTS.md)**.
 
-The public candidate has live E2E evidence for both the generation prompt and the natural-language edit prompt shown above.
+The historical M8 public candidate has live E2E evidence for its original one-floor generation prompt and the natural-language edit prompt. The two-floor prompt shown above is the DAI-099 refreshed-candidate validation prompt and is not claimed as refreshed public evidence until the postdeploy fingerprint-matched smoke passes.
 
 The repository also retains the frozen ten-case DesignIntent regression corpus at:
 
