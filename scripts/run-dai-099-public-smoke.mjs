@@ -206,9 +206,15 @@ try {
     headers: { 'cache-control': 'no-cache' },
   });
   const remoteBuildInfoStatus = buildInfoResponse.status();
-  const remoteBuildInfo = remoteBuildInfoStatus === 200
-    ? await buildInfoResponse.json()
-    : null;
+  let remoteBuildInfo = null;
+  let remoteBuildInfoParseError = null;
+  if (remoteBuildInfoStatus === 200) {
+    try {
+      remoteBuildInfo = await buildInfoResponse.json();
+    } catch (error) {
+      remoteBuildInfoParseError = error instanceof Error ? error.message : String(error);
+    }
+  }
 
   const navigationStarted = performance.now();
   await page.goto(editorUrl, { waitUntil: 'networkidle', timeout: 90_000 });
@@ -471,6 +477,7 @@ try {
       local: localBuildInfo,
       remoteStatus: remoteBuildInfoStatus,
       remote: remoteBuildInfo,
+      parseError: remoteBuildInfoParseError,
     },
     falseChecks,
     currentUi,
