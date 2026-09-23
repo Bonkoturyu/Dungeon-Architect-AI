@@ -44,6 +44,16 @@ Cloudflare Pages can connect directly to GitHub and automatically deploy branch 
 
 For this repository, the public deployment is intentionally deferred to DAI-081 so the submission URL is created from a reviewed main candidate rather than an intermediate implementation branch.
 
+## DAI-099 refreshed-candidate fingerprint
+
+The production build now emits `dist/build-info.json`.
+
+It contains the source commit SHA and a runtime-bundle SHA-256 calculated from the deployed static bundle. The file is served with `Cache-Control: no-store`.
+
+DAI-099 refreshed public acceptance rebuilds the candidate locally and refuses to accept the public URL unless both the public commit SHA and runtime-bundle SHA-256 match the local candidate.
+
+This check is specifically intended to catch a stale Cloudflare Pages production deployment.
+
 ## Public deployment validation
 
 After a Pages URL exists, run:
