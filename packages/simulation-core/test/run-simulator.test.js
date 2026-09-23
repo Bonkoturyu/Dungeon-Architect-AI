@@ -47,7 +47,7 @@ test('multi-floor simulation carries PlayerState exactly between reached floors'
   );
 });
 
-test('risk policy failure terminates the whole run and never reaches later floors', () => {
+test('risk policy failure terminates the whole run on the final floor', () => {
   const simulation = requireSimulation(
     simulateDungeonRun(runFixture(), RISK_FACTORY, {
       policyId: 'risk-run',
