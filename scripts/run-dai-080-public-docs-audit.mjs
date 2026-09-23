@@ -114,9 +114,12 @@ const checks = {
       'Submission packaging requires a refreshed candidate',
       'DAI-099',
     ]),
-  samplePromptsReflectPublicE2E:
-    prompts.includes('Verified public generation prompt') &&
+  samplePromptsSeparateHistoricalAndRefreshedE2E:
+    prompts.includes('Verified public generation prompt — historical M8') &&
     prompts.includes('Create a fair but tense 5-minute dungeon with exploration and a few dangerous rewards.') &&
+    prompts.includes('DAI-099 refreshed public validation prompt') &&
+    prompts.includes('Create a fair but tense two-floor dungeon with exploration, combat, readable traps, and dangerous rewards.') &&
+    prompts.includes('matching build fingerprint') &&
     prompts.includes('Verified public natural-language edit') &&
     prompts.includes('Move the treasure to the room that contains the goal.'),
   checklistSeparatesHistoricalAndRefreshed:
