@@ -53,9 +53,22 @@ The MVP has no accounts, cloud save, database, analytics/telemetry, or persisten
 
 Authoring/play state is in memory for the active page session.
 
-## 8. Submission packaging is still open
+## 8. Submission packaging requires a refreshed candidate
 
-The hosted demo, under-three-minute demo video, short description, focus category, and historical DAI-084 rollback point are complete. DAI-085 UI/UX polish is in progress and requires a renewed final candidate freeze afterward; repository visibility remains open.
+The historical hosted demo, under-three-minute demo video, short description, focus category, and DAI-084 rollback point were completed for the earlier M8 candidate.
+
+Judge-facing/runtime work has changed since that freeze: DAI-085 through DAI-096 plus the 2026-09-23 Play UI follow-up are complete, while DAI-097 Audio and DAI-098 multi-floor simulation/balance remain planned.
+
+DAI-099 therefore still needs to:
+
+- rebuild and redeploy the refreshed candidate;
+- rerun public E2E on the refreshed runtime;
+- update submission/public docs;
+- record a new under-three-minute demo video showing the current UI;
+- rerun legal/privacy/security checks;
+- create a new candidate freeze and rollback point that includes the tracked audited lockfile.
+
+Final compliance/submission remains DAI-091/DAI-092.
 
 ## Reopen rule
 
