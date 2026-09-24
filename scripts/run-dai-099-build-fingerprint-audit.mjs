@@ -12,6 +12,13 @@ function sha256(buffer) {
   return crypto.createHash('sha256').update(buffer).digest('hex');
 }
 
+function canonicalFingerprintPath(relativePath) {
+  return relativePath.replace(
+    /^assets\/index-[^/]+\.(js|css)$/i,
+    (_match, extension) => `assets/index.${extension.toLowerCase()}`,
+  );
+}
+
 function canonicalFingerprintBytes(relativePath, bytes) {
   const textLike =
     relativePath === '_headers' ||
@@ -20,7 +27,13 @@ function canonicalFingerprintBytes(relativePath, bytes) {
 
   if (!textLike) return bytes;
 
-  const text = bytes.toString('utf8').replace(/\r\n?/g, '\n');
+  let text = bytes.toString('utf8').replace(/\r\n?/g, '\n');
+  if (relativePath === 'index.html') {
+    text = text.replace(
+      /\/assets\/index-[^"'\s>]+\.(js|css)/gi,
+      (_match, extension) => `/assets/index.${extension.toLowerCase()}`,
+    );
+  }
   return Buffer.from(text, 'utf8');
 }
 
@@ -44,7 +57,7 @@ function collect(dir) {
       const bytes = fs.readFileSync(full);
       const fingerprintBytes = canonicalFingerprintBytes(relative, bytes);
       entries.push({
-        path: relative,
+        path: canonicalFingerprintPath(relative),
         bytes: fingerprintBytes.length,
         sha256: sha256(fingerprintBytes),
       });
