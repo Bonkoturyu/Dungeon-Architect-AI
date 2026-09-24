@@ -38,6 +38,13 @@ function gitHead() {
   return { commitSha: null, source: 'unavailable' };
 }
 
+function canonicalFingerprintPath(relativePath) {
+  return relativePath.replace(
+    /^assets\/index-[^/]+\.(js|css)$/i,
+    (_match, extension) => `assets/index.${extension.toLowerCase()}`,
+  );
+}
+
 function canonicalFingerprintBytes(relativePath, bytes) {
   const textLike =
     relativePath === '_headers' ||
@@ -46,7 +53,13 @@ function canonicalFingerprintBytes(relativePath, bytes) {
 
   if (!textLike) return bytes;
 
-  const text = bytes.toString('utf8').replace(/\r\n?/g, '\n');
+  let text = bytes.toString('utf8').replace(/\r\n?/g, '\n');
+  if (relativePath === 'index.html') {
+    text = text.replace(
+      /\/assets\/index-[^"'\s>]+\.(js|css)/gi,
+      (_match, extension) => `/assets/index.${extension.toLowerCase()}`,
+    );
+  }
   return Buffer.from(text, 'utf8');
 }
 
@@ -67,7 +80,7 @@ async function collectDistManifest(dir, { exclude = new Set() } = {}) {
       const bytes = await fs.readFile(full);
       const fingerprintBytes = canonicalFingerprintBytes(relative, bytes);
       entries.push({
-        path: relative,
+        path: canonicalFingerprintPath(relative),
         bytes: fingerprintBytes.length,
         sha256: crypto.createHash('sha256').update(fingerprintBytes).digest('hex'),
       });
