@@ -294,6 +294,15 @@ try {
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().workflowTab === 'edit');
   const afterMysteryReturn = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
 
+  const roomDirectionLabels = await page.evaluate(() =>
+    Object.fromEntries(
+      [...document.querySelectorAll('[data-room-add-direction]')].map((button) => [
+        button.dataset.roomAddDirection,
+        button.textContent?.replace(/\\s+/g, ' ').trim() ?? '',
+      ]),
+    ),
+  );
+
   const sidebarHierarchy = await page.evaluate(() => {
     const goal = document.querySelector('.goal-check-card').getBoundingClientRect();
     const modes = document.querySelector('.workflow-tabs').getBoundingClientRect();
@@ -870,7 +879,12 @@ try {
       languageSamples.en.legacyDialogLanguageButtons === 0 &&
       languageSamples.en.headerCycleText === 'EN ▶ 日本語' &&
       languageSamples.en.dialogCycleText === 'EN ▶ 日本語',
-    sidebarHierarchyMatchesAiFirstWorkflow:
+    roomDirectionSymbolsConsistent:
+      roomDirectionLabels.north === '▲ North' &&
+      roomDirectionLabels.east === 'East ▶' &&
+      roomDirectionLabels.south === '▼ South' &&
+      roomDirectionLabels.west === '◀ West',
+        sidebarHierarchyMatchesAiFirstWorkflow:
       sidebarHierarchy.goal.bottom <= sidebarHierarchy.modes.top &&
       sidebarHierarchy.modes.bottom <= sidebarHierarchy.ai.top &&
       sidebarHierarchy.ai.bottom <= sidebarHierarchy.inspector.top &&
@@ -1136,6 +1150,7 @@ try {
     passed: falseChecks.length === 0,
     checks,
     languageSamples,
+    roomDirectionLabels,
     englishRestored,
     sidebarHierarchy,
     uiScale,

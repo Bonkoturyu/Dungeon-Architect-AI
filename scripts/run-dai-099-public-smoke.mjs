@@ -83,12 +83,13 @@ async function resolveBlockingEvents(page, evidence) {
     if (await enemy.count()) {
       const roomEvent = await page.locator('#roomEventBar').evaluate((element) => {
         const rect = element.getBoundingClientRect();
+        const viewport = document.querySelector('.viewport-shell')?.getBoundingClientRect();
         return {
           hidden: element.hidden,
           centerX: rect.left + rect.width / 2,
           centerY: rect.top + rect.height / 2,
-          viewportCenterX: window.innerWidth / 2,
-          viewportCenterY: window.innerHeight / 2,
+          viewportCenterX: viewport ? viewport.left + viewport.width / 2 : null,
+          viewportCenterY: viewport ? viewport.top + viewport.height / 2 : null,
         };
       });
       evidence.roomEventObservations.push(roomEvent);
@@ -106,12 +107,13 @@ async function resolveBlockingEvents(page, evidence) {
     if (await trap.count()) {
       const roomEvent = await page.locator('#roomEventBar').evaluate((element) => {
         const rect = element.getBoundingClientRect();
+        const viewport = document.querySelector('.viewport-shell')?.getBoundingClientRect();
         return {
           hidden: element.hidden,
           centerX: rect.left + rect.width / 2,
           centerY: rect.top + rect.height / 2,
-          viewportCenterX: window.innerWidth / 2,
-          viewportCenterY: window.innerHeight / 2,
+          viewportCenterX: viewport ? viewport.left + viewport.width / 2 : null,
+          viewportCenterY: viewport ? viewport.top + viewport.height / 2 : null,
         };
       });
       evidence.roomEventObservations.push(roomEvent);
@@ -382,7 +384,11 @@ try {
     (entry) => (entry?.enemies ?? []).length > 0,
   );
   const characterPlayerObserved = evidenceRuntime.characterObservations.some(
-    (entry) => entry?.player?.visible === true,
+    (entry) =>
+      typeof entry?.player?.roomId === 'string' &&
+      Array.isArray(entry?.player?.partNames) &&
+      entry.player.partNames.includes('head') &&
+      entry.player.partNames.includes('torso'),
   );
 
   const checks = {

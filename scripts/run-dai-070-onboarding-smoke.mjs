@@ -63,6 +63,9 @@ try {
   const initial = await page.evaluate(() => window.__DAI_ONBOARDING__.getState());
   const initialVisible = await page.locator('#onboarding').isVisible();
   const backDisabledInitially = await page.locator('#onboardingBack').isDisabled();
+  const initialBackLabel = await page.locator('#onboardingBack').textContent();
+  const initialNextLabel = await page.locator('#onboardingNext').textContent();
+  const initialLanguageCycleLabel = await page.locator('#onboardingLanguageCycle').textContent();
 
   await page.locator('#onboardingNext').click();
   const afterDescribe = await page.evaluate(() => window.__DAI_ONBOARDING__.getState());
@@ -118,6 +121,10 @@ try {
     editorReadyAndValid: editorState.mode === 'edit' && editorState.startAllowed === true && editorState.validationCriticalCount === 0,
     opensAutomatically: initialVisible && initial.open === true && initial.step?.id === 'welcome' && initial.stepCount === 5 && initial.language === 'en',
     backDisabledAtFirstStep: backDisabledInitially,
+    navigationSymbolsConsistent:
+      initialBackLabel === '◀ Back' &&
+      initialNextLabel === 'Next ▶' &&
+      initialLanguageCycleLabel === 'EN ▶ 日本語',
     nextMovesToDescribe: afterDescribe.step?.id === 'describe' && afterDescribe.stepIndex === 1,
     nextMovesToEdit: afterEdit.step?.id === 'edit' && afterEdit.stepIndex === 2,
     nextMovesToValidate: afterValidate.step?.id === 'validate' && afterValidate.stepIndex === 3,
@@ -126,7 +133,7 @@ try {
       japanese.state?.language === 'ja' &&
       japanese.htmlLang === 'ja' &&
       japanese.title === 'ダンジョンを調整' &&
-      japanese.next === '次へ' &&
+      japanese.next === '次へ ▶' &&
       japanese.cycleText === '日本語 ▶ 简中',
     simplifiedChineseSwitchWorks:
       simplified.htmlLang === 'zh-Hans' &&
