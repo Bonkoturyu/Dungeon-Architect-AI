@@ -12,6 +12,18 @@ function sha256(buffer) {
   return crypto.createHash('sha256').update(buffer).digest('hex');
 }
 
+function canonicalFingerprintBytes(relativePath, bytes) {
+  const textLike =
+    relativePath === '_headers' ||
+    relativePath === '_routes.json' ||
+    /\.(?:html|css|js|json|txt)$/i.test(relativePath);
+
+  if (!textLike) return bytes;
+
+  const text = bytes.toString('utf8').replace(/\r\n?/g, '\n');
+  return Buffer.from(text, 'utf8');
+}
+
 function git(args) {
   return execFileSync('git', args, { encoding: 'utf8' }).trim();
 }
@@ -30,10 +42,11 @@ function collect(dir) {
       const relative = path.relative(dir, full).replaceAll('\\', '/');
       if (relative === 'build-info.json') continue;
       const bytes = fs.readFileSync(full);
+      const fingerprintBytes = canonicalFingerprintBytes(relative, bytes);
       entries.push({
         path: relative,
-        bytes: bytes.length,
-        sha256: sha256(bytes),
+        bytes: fingerprintBytes.length,
+        sha256: sha256(fingerprintBytes),
       });
     }
   }
