@@ -12,6 +12,40 @@ function sha256(buffer) {
   return crypto.createHash('sha256').update(buffer).digest('hex');
 }
 
+const runtimeSourcePathspecs = [
+  'apps/editor-slice',
+  'functions',
+  'packages/audio-presentation/src',
+  'packages/core/src',
+  'packages/editor-core/src',
+  'packages/generator/src',
+  'packages/intent/src',
+  'packages/onboarding/src',
+  'packages/play-core/src',
+  'packages/renderer-three/src',
+  'packages/run-core/src',
+  'spec/dungeon/fixtures/minimal-valid-v1.json',
+  'THIRD_PARTY_NOTICES.txt',
+  'package.json',
+  'package-lock.json',
+  'scripts/build-hosting.mjs',
+];
+
+function runtimeSourceFingerprint() {
+  const manifest = execFileSync(
+    'git',
+    ['ls-files', '-s', '--', ...runtimeSourcePathspecs],
+    { encoding: 'utf8' },
+  )
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b))
+    .join('\n') + '\n';
+
+  return sha256(Buffer.from(manifest, 'utf8'));
+}
+
 function canonicalFingerprintPath(relativePath) {
   return relativePath.replace(
     /^assets\/index-[^/]+\.(js|css)$/i,
@@ -75,6 +109,7 @@ if (!fs.existsSync(buildInfoPath)) {
 
 const buildInfo = JSON.parse(fs.readFileSync(buildInfoPath, 'utf8'));
 const head = git(['rev-parse', 'HEAD']).toLowerCase();
+const recomputedRuntimeSourceSha256 = runtimeSourceFingerprint();
 const manifest = collect(distDir);
 const manifestText = manifest
   .map((entry) => `${entry.path}\t${entry.bytes}\t${entry.sha256}\n`)
@@ -89,6 +124,10 @@ const checks = {
     /^[0-9a-f]{40}$/.test(buildInfo.commitSha ?? ''),
   localBuildCommitMatchesHead:
     buildInfo.commitSha === head,
+  runtimeSourceHashPresent:
+    /^[0-9a-f]{64}$/.test(buildInfo.runtimeSourceSha256 ?? ''),
+  runtimeSourceHashRecomputes:
+    buildInfo.runtimeSourceSha256 === recomputedRuntimeSourceSha256,
   runtimeBundleHashPresent:
     /^[0-9a-f]{64}$/.test(buildInfo.runtimeBundleSha256 ?? ''),
   runtimeBundleHashRecomputes:
@@ -113,6 +152,7 @@ const evidence = {
   falseChecks,
   head,
   buildInfo,
+  recomputedRuntimeSourceSha256,
   recomputedBundleSha256,
   fileCountExcludingBuildInfo: manifest.length,
   manifest,
