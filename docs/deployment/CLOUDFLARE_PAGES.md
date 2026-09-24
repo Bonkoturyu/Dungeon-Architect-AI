@@ -48,11 +48,11 @@ For this repository, the public deployment is intentionally deferred to DAI-081 
 
 The production build now emits `dist/build-info.json`.
 
-It contains the source commit SHA and a runtime-bundle SHA-256 calculated from the deployed static bundle. The file is served with `Cache-Control: no-store`.
+It contains the source commit SHA, a deterministic runtime-source SHA-256, and a locally calculated runtime-bundle SHA-256 diagnostic. The file is served with `Cache-Control: no-store`.
 
-DAI-099 refreshed public acceptance rebuilds the candidate locally and refuses to accept the public URL unless both the public commit SHA and runtime-bundle SHA-256 match the local candidate.
+The runtime-source fingerprint is derived from tracked production source/dependency Git blobs and is therefore stable across Windows-local and Cloudflare Linux checkouts. The runtime-bundle hash remains useful for same-environment diagnostics, but Vite/Rolldown output bytes are not assumed to be bit-for-bit reproducible across operating systems.
 
-This check is specifically intended to catch a stale Cloudflare Pages production deployment.
+DAI-099 refreshed public acceptance refuses to accept the public URL unless both the public commit SHA and deterministic runtime-source SHA-256 match the local candidate. This check is specifically intended to catch a stale or source-mismatched Cloudflare Pages production deployment.
 
 ## Public deployment validation
 
