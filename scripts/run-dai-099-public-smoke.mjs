@@ -23,6 +23,8 @@ if (!fs.existsSync(localBuildInfoPath)) {
 const localBuildInfo = JSON.parse(fs.readFileSync(localBuildInfoPath, 'utf8'));
 if (
   localBuildInfo?.schemaVersion !== '1.0' ||
+  typeof localBuildInfo?.runtimeSourceSha256 !== 'string' ||
+  localBuildInfo.runtimeSourceSha256.length !== 64 ||
   typeof localBuildInfo?.runtimeBundleSha256 !== 'string' ||
   localBuildInfo.runtimeBundleSha256.length !== 64
 ) {
@@ -396,9 +398,9 @@ try {
     buildFingerprintEndpointAvailable:
       remoteBuildInfoStatus === 200 &&
       remoteBuildInfo?.schemaVersion === '1.0',
-    publicRuntimeBundleMatchesLocalCandidate:
-      remoteBuildInfo?.runtimeBundleSha256 ===
-      localBuildInfo.runtimeBundleSha256,
+    publicRuntimeSourceMatchesLocalCandidate:
+      remoteBuildInfo?.runtimeSourceSha256 ===
+      localBuildInfo.runtimeSourceSha256,
     publicCommitMatchesLocalCandidate:
       typeof localBuildInfo.commitSha === 'string' &&
       localBuildInfo.commitSha.length === 40 &&
@@ -484,6 +486,8 @@ try {
       remoteStatus: remoteBuildInfoStatus,
       remote: remoteBuildInfo,
       parseError: remoteBuildInfoParseError,
+      bundleDiagnosticMatches:
+        remoteBuildInfo?.runtimeBundleSha256 === localBuildInfo.runtimeBundleSha256,
     },
     falseChecks,
     currentUi,
