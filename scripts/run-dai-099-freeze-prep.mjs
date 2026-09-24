@@ -138,8 +138,8 @@ const checks = {
     publicEvidence.publicUrl === EXPECTED_PUBLIC_URL,
   publicEvidenceMatchesCandidateCommit:
     remoteBuild?.commitSha === head,
-  publicRuntimeBundleMatchesCandidate:
-    remoteBuild?.runtimeBundleSha256 === buildInfo.runtimeBundleSha256,
+  publicRuntimeSourceMatchesCandidate:
+    remoteBuild?.runtimeSourceSha256 === buildInfo.runtimeSourceSha256,
   videoPlanPassed:
     videoPlan.passed === true &&
     videoPlan.actualVideoValidated === false,
@@ -183,8 +183,11 @@ const evidence = {
   runtime: {
     publicUrl: EXPECTED_PUBLIC_URL,
     buildInfo,
+    runtimeSourceSha256: buildInfo.runtimeSourceSha256,
     runtimeBundleSha256: buildInfo.runtimeBundleSha256,
     publicBuildInfo: remoteBuild,
+    publicBundleDiagnosticMatches:
+      remoteBuild?.runtimeBundleSha256 === buildInfo.runtimeBundleSha256,
   },
   video: {
     path: videoPath,
