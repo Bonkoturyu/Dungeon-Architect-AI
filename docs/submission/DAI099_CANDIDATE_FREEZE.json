@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "1.0",
+  "candidateId": "dai-099-refreshed-submission-candidate-2026-09-24",
+  "candidateCommit": "027b0f3f6a5adc648dbff4cd00e28c0abe4778a3",
+  "candidateTree": "1ee24b750bec04a4488c94ca2e7cc54ec015530f",
+  "commitTimestamp": "2026-09-24T20:16:48+09:00",
+  "commitMessage": "DAI-099: make public fingerprint cross-platform deterministic (#54)",
+  "rollbackBranch": "rollback/submission-candidate-dai-099-2026-09-24",
+  "publicUrl": "https://dungeon-architect-ai.pages.dev/",
+  "nodeVersion": "24.15.0",
+  "auditedPackageLockSha256": "ce94a9ee4241ee798c0c32c0fda55f00cb4462fb6ba6244acdd3d53589d261cc",
+  "runtime": {
+    "runtimeSourceSha256": "dcdb3518c3a3ca77a3d646a34f5027c65103e82e9ded1929626ad68590596fb6",
+    "localRuntimeBundleSha256": "cb4fc00bbbec96b2d9eebe67f6dea586f90eacf74f1cb5248ffecee7bc1846b3",
+    "publicRuntimeBundleSha256Diagnostic": "82e64667c53a523ae701e9a9d4ef2a4ea06caad8cbbf011ac2ca7ee18feaf5c9",
+    "publicBundleDiagnosticMatches": false
+  },
+  "video": {
+    "path": "artifacts/dai-099-video/dai-099-refreshed-demo.mp4",
+    "sha256": "deaf1b4c1961abc27c7810b88b6af0f83198c9637da997d981c46c7a19bfebf7",
+    "durationSeconds": 59.9,
+    "sizeBytes": 808130,
+    "manualVisualReviewAccepted": true
+  },
+  "freezePrep": {
+    "generatedAt": "2026-09-24T12:17:54.675Z",
+    "passed": true,
+    "falseChecks": [],
+    "distManifestSha256": "9c324ad9d787a8e07788b80db2ec6358c7eb4440eb040eeb20e955ea82b4cf79"
+  },
+  "evidenceSha256": {
+    "buildFingerprint": "0b7edbc12fadde4ae6154d6eacebb794698b164a624f2cbd1b4a85d455ba7da4",
+    "publicE2E": "984ab73f0a1ceeb44f4fbf3cebb60a7b2802e9f10a01ec44721c03224e4e8866",
+    "videoPlan": "730cb5bc51773849871d4fda67c81c63c978fa79a7465a7d3245d49f6e89a33b",
+    "videoRun": "70077268fb3553c681a71bb884ef8a5a69320d4bf1fce06762ff2385b8d9d9fa",
+    "legal": "5b49981114370cd682b841cd0edb39d2bba6da050807ddff7e73cde673617bae",
+    "privacy": "799c566c5c13a5993fdadcc05565bc615b96575cc0b140935c0f58eb416ef123",
+    "metadata": "9f9f850397949e4140a24fbfc5c12249c8ca55adc9edb7f6521868eac69bdaad",
+    "predeployPublicDocs": "335d392df8c1e9b99888830ef52fdf1acbf1d43ea6e1447f8a752fa3b7d59f50"
+  },
+  "policy": {
+    "candidateCommitMustRemainImmutable": true,
+    "rollbackBranchMustRemainImmutable": true,
+    "bookkeepingBranchMayOnlyChangeFreezeDocumentationAndAuditCode": true,
+    "doNotMergeBookkeepingIntoMainWhileExactCandidateDeploymentMustRemainPublished": true
+  }
+}
