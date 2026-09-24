@@ -38,6 +38,40 @@ function gitHead() {
   return { commitSha: null, source: 'unavailable' };
 }
 
+const runtimeSourcePathspecs = [
+  'apps/editor-slice',
+  'functions',
+  'packages/audio-presentation/src',
+  'packages/core/src',
+  'packages/editor-core/src',
+  'packages/generator/src',
+  'packages/intent/src',
+  'packages/onboarding/src',
+  'packages/play-core/src',
+  'packages/renderer-three/src',
+  'packages/run-core/src',
+  'spec/dungeon/fixtures/minimal-valid-v1.json',
+  'THIRD_PARTY_NOTICES.txt',
+  'package.json',
+  'package-lock.json',
+  'scripts/build-hosting.mjs',
+];
+
+function runtimeSourceFingerprint() {
+  const manifest = execFileSync(
+    'git',
+    ['ls-files', '-s', '--', ...runtimeSourcePathspecs],
+    { cwd: repoRoot, encoding: 'utf8' },
+  )
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b))
+    .join('\n') + '\n';
+
+  return crypto.createHash('sha256').update(manifest, 'utf8').digest('hex');
+}
+
 function canonicalFingerprintPath(relativePath) {
   return relativePath.replace(
     /^assets\/index-[^/]+\.(js|css)$/i,
@@ -145,11 +179,13 @@ const distManifestWithoutBuildInfo = await collectDistManifest(distDir, {
   exclude: new Set(['build-info.json']),
 });
 const runtimeBundleSha256 = manifestSha256(distManifestWithoutBuildInfo);
+const runtimeSourceSha256 = runtimeSourceFingerprint();
 const source = gitHead();
 const buildInfo = {
   schemaVersion: '1.0',
   commitSha: source.commitSha,
   commitSource: source.source,
+  runtimeSourceSha256,
   runtimeBundleSha256,
   generatedAt: new Date().toISOString(),
 };
