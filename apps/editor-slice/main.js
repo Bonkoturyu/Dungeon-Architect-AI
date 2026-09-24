@@ -1170,7 +1170,7 @@ function renderRoomEvents() {
 }
 
 function sideIcon(side) {
-  return ({ north: '↑', east: '→', south: '↓', west: '←' })[side] ?? '◇';
+  return ({ north: '▲', east: '▶', south: '▼', west: '◀' })[side] ?? '◇';
 }
 
 function renderPlayExits() {
