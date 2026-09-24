@@ -70,10 +70,11 @@ It records:
 - schema version;
 - source commit SHA;
 - commit-source environment;
-- deterministic runtime-bundle SHA-256;
+- deterministic runtime-source SHA-256;
+- local runtime-bundle SHA-256 diagnostic;
 - build timestamp.
 
-The runtime-bundle hash is computed from every deployed static file except `build-info.json` itself.
+The runtime-source hash is derived from the tracked production source/dependency boundary using Git blob identities, so it is stable across Windows and Cloudflare Linux checkouts. The runtime-bundle hash is still computed from the locally built static output as a diagnostic, but compiled bundle bytes are not required to be identical across operating systems.
 
 `build-info.json` is served with `Cache-Control: no-store`.
 
@@ -101,7 +102,9 @@ From synchronized `main`:
 This rebuilds the same candidate locally and requires the public site to expose a matching:
 
 - commit SHA;
-- runtime bundle SHA-256.
+- deterministic runtime-source SHA-256.
+
+The local/public runtime-bundle SHA-256 values are retained as diagnostics rather than a cross-platform acceptance invariant.
 
 Then the public smoke verifies:
 
@@ -157,7 +160,7 @@ The freeze-prep script requires:
 - audited lock hash matches;
 - local build fingerprint matches current candidate commit;
 - refreshed public evidence passed;
-- public commit and runtime-bundle fingerprint match the candidate;
+- public commit and runtime-source fingerprint match the candidate;
 - refreshed video evidence passed;
 - actual MP4 exists and ffprobe proves duration <180 seconds;
 - legal audit passed;
@@ -179,7 +182,7 @@ After freeze-prep passes:
 1. create a new rollback branch at the exact candidate commit;
 2. record candidate commit/tree/timestamp/message;
 3. record rollback branch;
-4. record runtime bundle hash;
+4. record runtime source hash and local/public runtime bundle diagnostics;
 5. record public E2E evidence hash;
 6. record final MP4 SHA-256 and duration;
 7. record legal/privacy/docs/metadata evidence hashes;
