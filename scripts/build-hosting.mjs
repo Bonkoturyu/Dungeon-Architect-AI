@@ -82,9 +82,15 @@ await build({
   },
 });
 
+async function copyNormalizedUtf8(sourcePath, targetPath) {
+  const text = await fs.readFile(sourcePath, 'utf8');
+  const normalized = text.replace(/\r\n?/g, '\n');
+  await fs.writeFile(targetPath, normalized, 'utf8');
+}
+
 await fs.mkdir(path.dirname(fixtureTarget), { recursive: true });
-await fs.copyFile(fixtureSource, fixtureTarget);
-await fs.copyFile(noticesSource, noticesTarget);
+await copyNormalizedUtf8(fixtureSource, fixtureTarget);
+await copyNormalizedUtf8(noticesSource, noticesTarget);
 
 const headers = [
   '/*',
