@@ -38,6 +38,18 @@ function gitHead() {
   return { commitSha: null, source: 'unavailable' };
 }
 
+function canonicalFingerprintBytes(relativePath, bytes) {
+  const textLike =
+    relativePath === '_headers' ||
+    relativePath === '_routes.json' ||
+    /\.(?:html|css|js|json|txt)$/i.test(relativePath);
+
+  if (!textLike) return bytes;
+
+  const text = bytes.toString('utf8').replace(/\r\n?/g, '\n');
+  return Buffer.from(text, 'utf8');
+}
+
 async function collectDistManifest(dir, { exclude = new Set() } = {}) {
   const entries = [];
 
@@ -53,10 +65,11 @@ async function collectDistManifest(dir, { exclude = new Set() } = {}) {
       const relative = path.relative(dir, full).replaceAll('\\', '/');
       if (exclude.has(relative)) continue;
       const bytes = await fs.readFile(full);
+      const fingerprintBytes = canonicalFingerprintBytes(relative, bytes);
       entries.push({
         path: relative,
-        bytes: bytes.length,
-        sha256: crypto.createHash('sha256').update(bytes).digest('hex'),
+        bytes: fingerprintBytes.length,
+        sha256: crypto.createHash('sha256').update(fingerprintBytes).digest('hex'),
       });
     }
   }
@@ -82,15 +95,9 @@ await build({
   },
 });
 
-async function copyNormalizedUtf8(sourcePath, targetPath) {
-  const text = await fs.readFile(sourcePath, 'utf8');
-  const normalized = text.replace(/\r\n?/g, '\n');
-  await fs.writeFile(targetPath, normalized, 'utf8');
-}
-
 await fs.mkdir(path.dirname(fixtureTarget), { recursive: true });
-await copyNormalizedUtf8(fixtureSource, fixtureTarget);
-await copyNormalizedUtf8(noticesSource, noticesTarget);
+await fs.copyFile(fixtureSource, fixtureTarget);
+await fs.copyFile(noticesSource, noticesTarget);
 
 const headers = [
   '/*',
