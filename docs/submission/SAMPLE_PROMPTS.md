@@ -26,7 +26,7 @@ Expected refreshed path:
 
 `DESCRIBE → cloud DesignIntent → deterministic 2-floor DungeonRunSpec → ▶ Test → Room Events / CHOOSE EXIT → Floor 2 → Result`
 
-This prompt becomes **refreshed verified public evidence only after the DAI-099 postdeploy public smoke passes with a matching build fingerprint**.
+This prompt is **refreshed verified public evidence**: DAI-099 production public E2E passed against the exact candidate commit and matching runtime-source fingerprint.
 
 ## Verified public natural-language edit
 
@@ -34,14 +34,15 @@ This prompt becomes **refreshed verified public evidence only after the DAI-099 
 Move the treasure to the room that contains the goal.
 ```
 
-Historical M8 verified behavior:
+Refreshed DAI-099 verified behavior:
 
 - translated into one constrained `move-entity` command;
-- applied to the generated authoring spec;
-- START remained valid;
-- public `/api/natural-edit` returned HTTP 200.
+- applied to the generated two-floor authoring run;
+- the current Test flow remained valid;
+- public `/api/natural-edit` returned HTTP 200;
+- the two-floor run cleared through Floor 2/2.
 
-DAI-099 reuses this same constrained request and requires a fresh HTTP 200 plus the current 2-floor runtime result before final freeze.
+DAI-090 also exercised unexpected and unsupported natural-edit requests against the same frozen public candidate; all 20 total DAI-090 cases passed without expanding the supported command vocabulary.
 
 ## DesignIntent regression corpus
 
