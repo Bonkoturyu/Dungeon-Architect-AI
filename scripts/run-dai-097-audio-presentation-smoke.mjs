@@ -217,6 +217,22 @@ try {
   await page.click("#audioToggle");
   const unmuted = await state(page);
 
+  await page.locator("#bgmVolume").evaluate((input) => {
+    input.value = "34";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await page.locator("#seVolume").evaluate((input) => {
+    input.value = "86";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  const mixed = await state(page);
+  const mixerUi = await page.evaluate(() => ({
+    bgm: document.querySelector("#bgmVolume")?.value ?? null,
+    se: document.querySelector("#seVolume")?.value ?? null,
+    bgmText: document.querySelector("#bgmVolumeValue")?.textContent ?? null,
+    seText: document.querySelector("#seVolumeValue")?.textContent ?? null,
+  }));
+
   // Built-in fixture: deterministic Enemy + Treasure in room-middle.
   const started = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.startDungeon());
   if (!started) throw new Error("Built-in test dungeon did not start.");
@@ -303,6 +319,17 @@ try {
       unmuted.audio.muted === false &&
       audioButtonBeforeMute.text === "🔊" &&
       audioButtonBeforeMute.pressed === "false",
+    musicalProgramAndMixerAreActive:
+      mixed.audio.version === "2.0" &&
+      mixed.audio.activeBgmVoices >= 2 &&
+      mixed.audio.motifScheduledSeconds > 120 &&
+      mixed.audio.crossfadeSeconds === 0.45 &&
+      mixed.audio.bgmVolume === 0.34 &&
+      mixed.audio.seVolume === 0.86 &&
+      mixerUi.bgm === "34" &&
+      mixerUi.se === "86" &&
+      mixerUi.bgmText === "34%" &&
+      mixerUi.seText === "86%",
     playSwitchesBgmAndSchedulesStartCue:
       playStart.audio.activeMode === "play" &&
       playStart.audio.lastCue === "play-start" &&
