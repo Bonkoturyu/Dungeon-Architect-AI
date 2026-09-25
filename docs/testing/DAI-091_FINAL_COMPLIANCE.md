@@ -65,11 +65,12 @@ Already accepted:
 
 Still open:
 
-1. GitHub repository visibility must be changed from Private to Public.
-2. Final public-doc audit must be rerun on this branch.
-3. DAI-091 final compliance audit must pass after public visibility is confirmed.
-4. Check whether the Organizer has requested any additional submission materials since the current official Building Period article / Terms review.
-5. DAI-092 must complete the actual submission before the deadline.
+1. Complete the dedicated **pre-public exposure audit** across the current tree, reachable Git history, commit metadata, and fetched remote branches.
+2. Resolve any exposure finding before changing repository visibility.
+3. GitHub repository visibility must then be changed from Private to Public.
+4. DAI-091 final compliance audit must pass after public visibility is confirmed.
+5. Check whether the Organizer has requested any additional submission materials since the current official Building Period article / Terms review.
+6. DAI-092 must complete the actual submission before the deadline.
 
 ## Verification branch
 
@@ -87,7 +88,12 @@ npm run validate:secret-privacy
 npm run validate:submission-metadata
 npm run validate:public-docs
 node scripts/run-dai-090-unexpected-prompt-regression.mjs
+node scripts/run-dai-091-pre-public-audit.mjs
 ```
+
+The pre-public audit additionally scans tracked content, reachable Git patch history, commit author/committer email metadata, and every fetched `origin/*` branch file list for secret-bearing paths, financial/direct privacy identifiers, unexpected personal email addresses, and risky binary/document files.
+
+Only after that audit passes should repository visibility be changed.
 
 Then run:
 
@@ -95,11 +101,13 @@ Then run:
 node scripts/run-dai-091-final-compliance.mjs
 ```
 
-Before repository publication, the expected blocker is:
+Before repository publication, the expected final-compliance blocker is:
 
 ```text
 repositoryPublic
 ```
+
+but only **after** the dedicated pre-public audit reports `passed: true` and `falseChecks: []`.
 
 After the repository is made public and all other checks remain green, DAI-091 must report:
 
