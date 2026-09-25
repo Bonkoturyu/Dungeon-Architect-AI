@@ -14,7 +14,7 @@ Historical verified path:
 
 That historical public run generated a valid five-room dungeon and completed it in four moves.
 
-## DAI-099 refreshed public validation prompt
+## Verified public generation prompt — refreshed DAI-099
 
 The refreshed candidate uses:
 
@@ -22,11 +22,11 @@ The refreshed candidate uses:
 Create a fair but tense two-floor dungeon with exploration, combat, readable traps, and dangerous rewards.
 ```
 
-Expected refreshed path:
+Verified refreshed path:
 
 `DESCRIBE → cloud DesignIntent → deterministic 2-floor DungeonRunSpec → ▶ Test → Room Events / CHOOSE EXIT → Floor 2 → Result`
 
-This prompt becomes **refreshed verified public evidence only after the DAI-099 postdeploy public smoke passes with a matching build fingerprint**.
+This prompt is **refreshed verified public evidence** from the DAI-099 production public smoke with matching commit and runtime-source fingerprint.
 
 ## Verified public natural-language edit
 
@@ -41,7 +41,7 @@ Historical M8 verified behavior:
 - START remained valid;
 - public `/api/natural-edit` returned HTTP 200.
 
-DAI-099 reuses this same constrained request and requires a fresh HTTP 200 plus the current 2-floor runtime result before final freeze.
+DAI-099 revalidated this same constrained request with a fresh HTTP 200 on the current 2-floor runtime before freeze.
 
 ## DesignIntent regression corpus
 
@@ -84,3 +84,14 @@ Complete corpus:
 `spec/design-intent/fixtures/dai-045-prompt-regression-v1.json`
 
 The corpus also includes contradictory and arbitrary-code requests. The DesignIntent path remains schema-constrained and does not convert prompt text into executable runtime code.
+
+
+## DAI-090 unexpected-prompt verification
+
+The frozen public runtime also passed a 20-case post-freeze regression covering malformed JSON, empty/non-string/oversize input, contradictory requests, code-injection-style requests, secret-exfiltration requests, unsupported natural edits, nonexistent IDs, and mixed-language/symbol input.
+
+Verification materials:
+
+`spec/prompt-regression/fixtures/dai-090-unexpected-prompt-v1.json`
+
+`docs/testing/DAI-090_UNEXPECTED_PROMPT_REGRESSION.md`
