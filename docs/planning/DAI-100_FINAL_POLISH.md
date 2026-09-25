@@ -2,7 +2,7 @@
 
 ## Status
 
-**PLANNED / ACTIVE.**
+**ACTIVE — Audio Polish implementation complete, acceptance pending.**
 
 DAI-099 remains the accepted rollback candidate. DAI-100 is a new replacement-candidate track for presentation and judge-experience improvements. It must not silently mutate the frozen DAI-099 identity.
 
@@ -20,6 +20,24 @@ DAI-090 20/20 and the DAI-091 pre-public exposure audit are retained as release 
 The current candidate is functionally complete and safe to publish, but there is still schedule available before submission. The remaining opportunity is not basic correctness; it is stronger judge-facing polish, clearer AI authorship, stronger scene variation, and more memorable presentation.
 
 ## Priority A — Audio / presentation polish
+
+### Implemented in the first DAI-100 pass
+
+- Programmatic Audio V2 with deterministic long-form motifs for Edit / Play / Cleared / Failed;
+- ~0.45 second BGM mode crossfades;
+- stronger authored transition/event cue voicings;
+- separate BGM and SE runtime gains;
+- compact header mixer with BGM/SE sliders;
+- multilingual mixer labels;
+- no persistence and no external audio assets;
+- updated unit/browser smoke coverage;
+- one-command acceptance runner: `npm run validate:dai-100-audio`.
+
+Specification:
+
+`spec/audio/PROGRAMMATIC_AUDIO_V2.md`
+
+This phase is **not accepted yet** until the owner-local validation and listening/visual review pass.
 
 Current DAI-097 audio is intentionally minimal:
 
