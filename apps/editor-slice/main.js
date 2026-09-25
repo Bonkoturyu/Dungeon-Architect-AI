@@ -30,7 +30,10 @@ import {
 } from '../../packages/play-core/src/progression-runtime.js';
 import { createDungeonScenePlan, createThreeRendererAdapter } from '../../packages/renderer-three/src/index.js';
 import { generateDungeonFromDesignIntent } from '../../packages/generator/src/design-intent-generator.js';
-import { DEFAULT_GENERATOR_VERSION } from '../../packages/generator/src/generator-versions.js';
+import {
+  DEFAULT_GENERATOR_VERSION,
+  GENERATOR_VERSION_V2,
+} from '../../packages/generator/src/generator-versions.js';
 import {
   createDungeonRunResult,
   createDungeonRunSpec,
@@ -289,6 +292,7 @@ function derivedFloorSeed(baseSeed, floorIndex) {
 function generateFloorSet(intent, { prompt, count, baseSeed = null, idPrefix = null } = {}) {
   const total = Math.max(1, Math.min(10, Number.isInteger(count) ? count : 1));
   const first = generateDungeonFromDesignIntent(intent, {
+    version: GENERATOR_VERSION_V2,
     prompt,
     ...(baseSeed === null ? {} : { seed: baseSeed >>> 0 }),
     ...(idPrefix ? { id: idPrefix } : {}),
@@ -300,6 +304,7 @@ function generateFloorSet(intent, { prompt, count, baseSeed = null, idPrefix = n
   for (let floorIndex = 1; floorIndex < total; floorIndex += 1) {
     const seed = derivedFloorSeed(rootSeed, floorIndex);
     generated.push(generateDungeonFromDesignIntent(intent, {
+      version: GENERATOR_VERSION_V2,
       prompt,
       seed,
       id: `${rootId}-floor-${String(floorIndex + 1).padStart(2, '0')}`,
