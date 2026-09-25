@@ -160,7 +160,10 @@ for (const file of distFiles) {
 
 const prompt = 'DAI074 private request sentinel: move the treasure to goal.';
 const context = {
-  rooms: [{ id: 'room-start' }, { id: 'room-goal' }],
+  rooms: [
+    { id: 'room-start', x: 0, z: 0, width: 8, depth: 8 },
+    { id: 'room-goal', x: 12, z: 0, width: 8, depth: 8 },
+  ],
   entities: [
     { id: 'treasure-1', type: 'treasure', roomId: 'room-start' },
     { id: 'goal-1', type: 'goal', roomId: 'room-goal' },
@@ -238,7 +241,7 @@ const checks = {
   naturalEditStoreFalse: editRequest.store === false,
   naturalEditInputShapeBounded:
     Object.keys(parsedEditInput).sort().join(',') === 'context,request' &&
-    roomContextKeys.join(',') === 'id' &&
+    roomContextKeys.join(',') === 'depth,id,width,x,z' &&
     entityContextKeys.join(',') === 'id,roomId,type',
   functionResponseDoesNotEchoPrompt: !functionResponseText.includes(prompt),
   functionResponseDoesNotEchoSecret: !functionResponseText.includes(secret),
@@ -255,8 +258,16 @@ const checks = {
     editorSource.includes('body: JSON.stringify({ prompt })'),
   browserNaturalEditUsesBoundedContext:
     editorSource.includes('body: JSON.stringify({ prompt, context: naturalEditContext() })') &&
-    editorSource.includes("rooms: authoringSpec().rooms.map((room) => ({ id: room.id }))") &&
-    editorSource.includes("entities: authoringSpec().entities.map((entity) => ({ id: entity.id, type: entity.type, roomId: entity.roomId }))"),
+    editorSource.includes('rooms: authoringSpec().rooms.map((room) => ({') &&
+    editorSource.includes('id: room.id') &&
+    editorSource.includes('x: room.x') &&
+    editorSource.includes('z: room.z') &&
+    editorSource.includes('width: room.width') &&
+    editorSource.includes('depth: room.depth') &&
+    editorSource.includes('entities: authoringSpec().entities.map((entity) => ({') &&
+    editorSource.includes('id: entity.id') &&
+    editorSource.includes('type: entity.type') &&
+    editorSource.includes('roomId: entity.roomId'),
 };
 
 const passed = Object.values(checks).every(Boolean);
