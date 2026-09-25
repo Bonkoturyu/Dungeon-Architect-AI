@@ -13,9 +13,13 @@ const results = [];
 
 for (const [index, step] of steps.entries()) {
   console.log(`[DAI-100 AUDIO] ${index + 1}/${steps.length} ${step.label}`);
-  const result = spawnSync(step.command, step.args, {
+  const executable =
+    process.platform === 'win32' && step.command === 'npm'
+      ? 'npm.cmd'
+      : step.command;
+  const result = spawnSync(executable, step.args, {
     stdio: 'inherit',
-    shell: process.platform === 'win32',
+    windowsHide: true,
   });
   const passed = result.status === 0 && !result.error;
   results.push({ label: step.label, passed, status: result.status ?? null });
