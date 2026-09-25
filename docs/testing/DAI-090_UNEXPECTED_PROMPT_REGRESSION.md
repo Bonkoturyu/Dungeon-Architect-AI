@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS.**
+**DONE.**
 
 DAI-090 is a post-freeze verification track for the already published DAI-099 candidate. It must not silently change the frozen runtime.
 
@@ -132,3 +132,32 @@ If DAI-090 exposes a runtime defect, do **not** modify the frozen rollback branc
 6. redeploy/revalidate/freeze the replacement candidate.
 
 If DAI-090 passes without runtime changes, keep this verification branch / evidence separate and proceed to DAI-091 final compliance.
+
+
+## Reviewed production run — 2026-09-25
+
+Owner-local execution against the frozen public candidate completed successfully.
+
+- Node.js: `v24.15.0`
+- public candidate commit:
+  `027b0f3f6a5adc648dbff4cd00e28c0abe4778a3`
+- runtime-source SHA-256:
+  `dcdb3518c3a3ca77a3d646a34f5027c65103e82e9ded1929626ad68590596fb6`
+- cases: `20 / 20 PASS`
+- `falseChecks: []`
+- `failedCaseIds: []`
+- full-prompt response echo: none detected
+- sensitive-term response leakage: none detected
+- runtime fix required: no
+
+Notable bounded outcomes:
+
+- code-injection and secret-exfiltration DesignIntent requests still returned independently valid DesignIntent objects;
+- malformed / empty / oversize requests returned sanitized 400/422 error envelopes;
+- mixed-language supported natural edit returned one independently validated `move-entity` command;
+- unsupported natural-edit requests either returned one context-bounded `move-entity` command or a sanitized 422 failure;
+- no arbitrary command vocabulary, invented IDs, raw provider detail, or secret-bearing response was accepted.
+
+The generated local evidence is:
+
+`artifacts/dai-090/dai-090-unexpected-prompt-regression.json`
