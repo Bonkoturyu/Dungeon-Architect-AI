@@ -42,7 +42,7 @@ function riskyExtension(file) {
 }
 
 const highConfidencePatterns = [
-  { name: 'openai-api-key', regex: /\bsk-[A-Za-z0-9_-]{20,}\b/g },
+  { name: 'openai-api-key', regex: /\bsk-(?:proj-)?[A-Za-z0-9_-]{20,}\b/g },
   { name: 'github-token', regex: /\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}\b/g },
   { name: 'github-fine-grained-token', regex: /\bgithub_pat_[A-Za-z0-9_]{20,}\b/g },
   { name: 'aws-access-key', regex: /\b(?:AKIA|ASIA)[A-Z0-9]{16}\b/g },
@@ -51,10 +51,27 @@ const highConfidencePatterns = [
   { name: 'private-key-block', regex: /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/g },
 ];
 
+const syntheticSecretMarkers = [
+  'test-secret',
+  'never-log',
+  'do-not-leak',
+  'dummy',
+  'placeholder',
+  'example',
+];
+
+function isSyntheticSecret(value) {
+  const normalized = String(value ?? '').toLowerCase();
+  return syntheticSecretMarkers.some((marker) => normalized.includes(marker));
+}
+
 const privacyPatterns = [
   { name: 'iban-like', regex: /\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b/g },
   { name: 'japanese-phone-like', regex: /\b0\d{1,4}-\d{1,4}-\d{3,4}\b/g },
-  { name: 'japanese-postal-code-like', regex: /\b\d{3}-\d{4}\b/g },
+  {
+    name: 'japanese-postal-code-like',
+    regex: /(?<![\d-])\b\d{3}-\d{4}\b(?![\d-])/g,
+  },
   { name: 'windows-user-home', regex: /\b[A-Z]:\\Users\\[^\\\s]+/gi },
 ];
 
@@ -94,13 +111,20 @@ function redactFinding(name, file, extra = {}) {
 
 function scanText(text, file) {
   const secretFindings = [];
+  const ignoredSyntheticSecretFindings = [];
   const privacyFindings = [];
   const emailFindings = [];
 
   for (const pattern of highConfidencePatterns) {
     pattern.regex.lastIndex = 0;
-    if (pattern.regex.test(text)) {
-      secretFindings.push(redactFinding(pattern.name, file));
+    for (const match of text.matchAll(pattern.regex)) {
+      if (isSyntheticSecret(match[0])) {
+        ignoredSyntheticSecretFindings.push(
+          redactFinding(pattern.name, file),
+        );
+      } else {
+        secretFindings.push(redactFinding(pattern.name, file));
+      }
     }
   }
 
@@ -127,13 +151,19 @@ function scanText(text, file) {
     }
   }
 
-  return { secretFindings, privacyFindings, emailFindings };
+  return {
+    secretFindings,
+    ignoredSyntheticSecretFindings,
+    privacyFindings,
+    emailFindings,
+  };
 }
 
 function parseHistoryPatch(text) {
   const secretFindings = [];
   const privacyFindings = [];
   const emailFindings = [];
+  const ignoredSyntheticSecretFindings = [];
   let commit = null;
   let file = null;
 
@@ -155,6 +185,9 @@ function parseHistoryPatch(text) {
     for (const finding of scanned.secretFindings) {
       secretFindings.push({ ...finding, commit });
     }
+    for (const finding of scanned.ignoredSyntheticSecretFindings) {
+      ignoredSyntheticSecretFindings.push({ ...finding, commit });
+    }
     for (const finding of scanned.privacyFindings) {
       privacyFindings.push({ ...finding, commit });
     }
@@ -163,7 +196,12 @@ function parseHistoryPatch(text) {
     }
   }
 
-  return { secretFindings, privacyFindings, emailFindings };
+  return {
+    secretFindings,
+    ignoredSyntheticSecretFindings,
+    privacyFindings,
+    emailFindings,
+  };
 }
 
 const branch = git(['branch', '--show-current']);
@@ -176,6 +214,7 @@ const forbiddenTrackedPaths = trackedFiles.filter(isForbiddenTrackedPath);
 const riskyTrackedFiles = trackedFiles.filter(riskyExtension);
 
 const currentSecretFindings = [];
+const currentIgnoredSyntheticSecretFindings = [];
 const currentPrivacyFindings = [];
 const currentEmailFindings = [];
 
@@ -191,6 +230,9 @@ for (const file of trackedFiles) {
   const text = bytes.toString('utf8');
   const scanned = scanText(text, file);
   currentSecretFindings.push(...scanned.secretFindings);
+  currentIgnoredSyntheticSecretFindings.push(
+    ...scanned.ignoredSyntheticSecretFindings,
+  );
   currentPrivacyFindings.push(...scanned.privacyFindings);
   currentEmailFindings.push(...scanned.emailFindings);
 }
@@ -277,10 +319,16 @@ const findings = {
   forbiddenTrackedPaths: [...new Set(forbiddenTrackedPaths)],
   riskyTrackedFiles: [...new Set(riskyTrackedFiles)],
   currentSecretFindings: uniqueFindings(currentSecretFindings),
+  ignoredSyntheticSecretFindingsCurrent: uniqueFindings(
+    currentIgnoredSyntheticSecretFindings,
+  ),
   currentPrivacyFindings: uniqueFindings(currentPrivacyFindings),
   currentEmailFindings: uniqueFindings(currentEmailFindings),
   nonNoreplyCommitEmails: uniqueFindings(nonNoreplyCommitEmails),
   historySecretFindings: uniqueFindings(history.secretFindings),
+  ignoredSyntheticSecretFindingsHistory: uniqueFindings(
+    history.ignoredSyntheticSecretFindings,
+  ),
   historyPrivacyFindings: uniqueFindings(history.privacyFindings),
   historyEmailFindings: uniqueFindings(history.emailFindings),
   remoteBranchForbiddenPaths: uniqueFindings(remoteBranchForbiddenPaths),
@@ -336,6 +384,8 @@ const evidence = {
     scansCommitAuthorAndCommitterEmailMetadata: true,
     scansAllFetchedOriginBranchFilePaths: true,
     valuesRedactedFromEvidence: true,
+    syntheticSecretMarkersIgnoredOnlyWhenExplicitlyTestLike: true,
+    postalCodePatternRejectsHyphenatedTaskAndBranchTokens: true,
   },
   findings,
   externalReviewBoundary: {
