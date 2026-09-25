@@ -85,7 +85,7 @@ Deterministic visible-Chrome coverage exercises all five browser application pat
 
 `npm run validate:dai-100-ai-edit`
 
-This phase is **not accepted yet** until owner-local validation passes. Live-provider/public semantic verification will occur after the replacement runtime is ready to deploy.
+Owner-local acceptance passed on 2026-09-26 JST: Cloud-intent 32/32, Editor Core 30/30, Hosting 14/14, visible-Chrome five-command smoke PASS, production build PASS, DAI-074 secret/privacy re-audit PASS, syntax PASS, and git diff check PASS. Live-provider/public semantic verification remains a replacement-candidate deployment gate.
 
 The manual Editor already supports more than the AI path:
 
