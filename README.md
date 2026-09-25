@@ -24,7 +24,7 @@ EXPLORE + ROOM EVENTS
 RESULT
 ```
 
-The current repository flow above is locally regression-tested. The existing Cloudflare Pages deployment has historical production public-E2E evidence from the earlier M8 candidate; DAI-099 must redeploy and rerun public E2E after the later DAI-085–098 / Play-UI changes before final submission.
+The current repository flow above is regression-tested and the refreshed Cloudflare Pages production candidate passed DAI-099 public E2E on 2026-09-24. DAI-090 then passed the final 20-case unexpected-prompt regression against that frozen production runtime.
 
 ## Judge quick start
 
@@ -54,7 +54,7 @@ Then confirm `✓ Valid`, open **Play**, choose **▶ Test** (current authored d
 
 | Area | Current status |
 |---|---|
-| Public demo | Historical Cloudflare Pages HTTPS candidate exists; refreshed deployment + public E2E for the current runtime is pending DAI-099 |
+| Public demo | Refreshed Cloudflare Pages HTTPS candidate deployed; DAI-099 public E2E passed against the current 2-floor runtime |
 | Renderer | Three.js `0.185.1`, retained by ADR-001; historical benchmark limitations are documented and later production evidence validates the current stack |
 | DungeonSpec | Renderer-independent schema, parser, validation, deterministic generation |
 | Procedural core | Deterministic graph/layout, corridors, Start/Goal, route-choice controls, Seed reproducibility |
@@ -81,13 +81,13 @@ Key boundaries:
 - mobile is outside the supported submission acceptance scope;
 - no Safari/Firefox acceptance claim has been made;
 - there are no accounts, persistent project storage, analytics or telemetry;
-- the historical public candidate/video/freeze predate later DAI-085–098 work. DAI-099 refreshed build/deployment/public-E2E/video/audits/freeze is now the active final-candidate task before final compliance/submission.
+- the refreshed DAI-099 public candidate/video/freeze is complete; DAI-090 unexpected-prompt regression also passed. Final repository visibility, final compliance, and submission remain.
 
 ## Sample prompts
 
 See **[Sample Prompts](docs/submission/SAMPLE_PROMPTS.md)**.
 
-The historical M8 public candidate has live E2E evidence for its original one-floor generation prompt and the natural-language edit prompt. The two-floor prompt shown above is the DAI-099 refreshed-candidate validation prompt and is not claimed as refreshed public evidence until the postdeploy fingerprint-matched smoke passes.
+The historical M8 evidence is retained for audit history. The two-floor prompt shown above is now refreshed public evidence from the DAI-099 fingerprint-matched production smoke; the same constrained natural-language edit was also revalidated on the refreshed runtime.
 
 The repository also retains the frozen ten-case DesignIntent regression corpus at:
 
@@ -202,11 +202,21 @@ Historical DAI-084 rollback point:
 - rollback branch: `rollback/submission-candidate-m8-2026-09-19`;
 - dist manifest SHA-256: `387287bfba2aaad91a7ef4c9d98ebb522e8ce8e1e0768825d39d33d949d8ea6d`.
 
-See [DAI-084 Candidate Freeze / Rollback Point](docs/submission/DAI-084_CANDIDATE_FREEZE.md). A new final freeze will be created after the refreshed public-demo and video gates.
+See [DAI-084 Candidate Freeze / Rollback Point](docs/submission/DAI-084_CANDIDATE_FREEZE.md).
 
-The previous DAI-082 capture remains historical evidence for the earlier M8 candidate. A refreshed demo video is required under DAI-099 after the current DAI-085–098 runtime is finalized, redeployed, and public-E2E revalidated.
+Refreshed DAI-099 candidate:
 
-The GitHub repository is still private and must be switched to Public before submission.
+- candidate commit: `027b0f3f6a5adc648dbff4cd00e28c0abe4778a3`;
+- candidate tree: `1ee24b750bec04a4488c94ca2e7cc54ec015530f`;
+- rollback branch: `rollback/submission-candidate-dai-099-2026-09-24`;
+- runtime-source SHA-256: `dcdb3518c3a3ca77a3d646a34f5027c65103e82e9ded1929626ad68590596fb6`;
+- refreshed public E2E: PASS;
+- refreshed demo video: 59.9 s, SHA-256 `deaf1b4c1961abc27c7810b88b6af0f83198c9637da997d981c46c7a19bfebf7`;
+- DAI-090 unexpected-prompt regression: 20/20 PASS.
+
+The previous DAI-082 capture remains historical evidence for the earlier M8 candidate.
+
+**Submission blocker:** the GitHub repository is still private and must be switched to Public before final submission and kept accessible during judging.
 
 See [Submission Checklist](docs/submission/CHECKLIST.md).
 
