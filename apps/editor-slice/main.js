@@ -66,6 +66,10 @@ const startButton = document.querySelector('#start');
 const mysteryPlayButton = document.querySelector('#mysteryPlay');
 const returnEditButton = document.querySelector('#returnEdit');
 const audioToggle = document.querySelector('#audioToggle');
+const bgmVolumeInput = document.querySelector('#bgmVolume');
+const seVolumeInput = document.querySelector('#seVolume');
+const bgmVolumeValue = document.querySelector('#bgmVolumeValue');
+const seVolumeValue = document.querySelector('#seVolumeValue');
 const playExitBar = document.querySelector('#playExitBar');
 const playExitButtons = document.querySelector('#playExitButtons');
 const roomEventBar = document.querySelector('#roomEventBar');
@@ -177,22 +181,36 @@ function syncAudioMode() {
 }
 
 function renderAudioToggle() {
-  if (!audioToggle) return;
   const audio = audioPresentation.getState();
-  const label = audio.muted ? t('audio.unmute') : t('audio.mute');
+  if (audioToggle) {
+    const label = audio.muted ? t('audio.unmute') : t('audio.mute');
+    audioToggle.disabled = !audio.available;
+    audioToggle.textContent = audio.muted ? '🔇' : '🔊';
+    audioToggle.dataset.audioState = !audio.available
+      ? 'unavailable'
+      : audio.muted
+        ? 'muted'
+        : audio.unlocked
+          ? 'ready'
+          : 'locked';
+    audioToggle.title = label;
+    audioToggle.setAttribute('aria-label', label);
+    audioToggle.setAttribute('aria-pressed', String(audio.muted));
+  }
 
-  audioToggle.disabled = !audio.available;
-  audioToggle.textContent = audio.muted ? '🔇' : '🔊';
-  audioToggle.dataset.audioState = !audio.available
-    ? 'unavailable'
-    : audio.muted
-      ? 'muted'
-      : audio.unlocked
-        ? 'ready'
-        : 'locked';
-  audioToggle.title = label;
-  audioToggle.setAttribute('aria-label', label);
-  audioToggle.setAttribute('aria-pressed', String(audio.muted));
+  if (bgmVolumeInput) {
+    const value = String(Math.round(audio.bgmVolume * 100));
+    if (bgmVolumeInput.value !== value) bgmVolumeInput.value = value;
+    bgmVolumeInput.disabled = !audio.available;
+    if (bgmVolumeValue) bgmVolumeValue.textContent = `${value}%`;
+  }
+
+  if (seVolumeInput) {
+    const value = String(Math.round(audio.seVolume * 100));
+    if (seVolumeInput.value !== value) seVolumeInput.value = value;
+    seVolumeInput.disabled = !audio.available;
+    if (seVolumeValue) seVolumeValue.textContent = `${value}%`;
+  }
 }
 
 function emitAudioCue(cue) {
@@ -217,6 +235,22 @@ function toggleAudioMuted() {
   const muted = audioPresentation.toggleMuted();
   renderAudioToggle();
   return muted;
+}
+
+function setBgmVolumeFromControl() {
+  if (!bgmVolumeInput) return audioPresentation.getState().bgmVolume;
+  const value = Number(bgmVolumeInput.value) / 100;
+  const level = audioPresentation.setBgmVolume(value);
+  renderAudioToggle();
+  return level;
+}
+
+function setSeVolumeFromControl() {
+  if (!seVolumeInput) return audioPresentation.getState().seVolume;
+  const value = Number(seVolumeInput.value) / 100;
+  const level = audioPresentation.setSeVolume(value);
+  renderAudioToggle();
+  return level;
 }
 
 function clone(value) {
@@ -2966,6 +3000,8 @@ async function run() {
     window.addEventListener('keydown', handleKeyboard);
     window.addEventListener('beforeunload', () => audioPresentation.dispose(), { once: true });
     audioToggle?.addEventListener('click', toggleAudioMuted);
+    bgmVolumeInput?.addEventListener('input', setBgmVolumeFromControl);
+    seVolumeInput?.addEventListener('input', setSeVolumeFromControl);
     renderAudioToggle();
     undoButton.addEventListener('click', undo);
     redoButton.addEventListener('click', redo);
