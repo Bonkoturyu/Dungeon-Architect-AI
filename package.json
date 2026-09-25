@@ -72,7 +72,8 @@
     "smoke:refreshed-public": "node scripts/run-dai-099-public-smoke.mjs",
     "demo:refreshed-video": "node scripts/run-dai-099-recording-demo.mjs",
     "validate:refreshed-video-plan": "node scripts/run-dai-099-video-plan-audit.mjs",
-    "prepare:refreshed-freeze": "node scripts/run-dai-099-freeze-prep.mjs"
+    "prepare:refreshed-freeze": "node scripts/run-dai-099-freeze-prep.mjs",
+    "validate:dai-100-audio": "node scripts/run-dai-100-audio-polish-validation.mjs"
   },
   "devDependencies": {
     "@babylonjs/core": "9.18.0",
