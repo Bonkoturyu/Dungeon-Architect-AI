@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS.**
+**DONE.**
 
 DAI-085 through DAI-098 changed the runtime after the historical M8 candidate. DAI-099 creates a new final candidate without rewriting the historical DAI-081/082/084 evidence.
 
@@ -200,3 +200,25 @@ DAI-099 completion unblocks:
 - DAI-092 final submission.
 
 DAI-017 PCE remains a separate blocked evidence track and is not fabricated by DAI-099.
+
+
+## Final accepted DAI-099 record
+
+Accepted on 2026-09-24 JST.
+
+- candidate commit:
+  `027b0f3f6a5adc648dbff4cd00e28c0abe4778a3`
+- candidate tree:
+  `1ee24b750bec04a4488c94ca2e7cc54ec015530f`
+- runtime-source SHA-256:
+  `dcdb3518c3a3ca77a3d646a34f5027c65103e82e9ded1929626ad68590596fb6`
+- 22/22 predeploy gates: PASS
+- refreshed production public E2E: PASS
+- refreshed final MP4: 59.9 s / 1920×1080 / 30 fps
+- MP4 SHA-256:
+  `deaf1b4c1961abc27c7810b88b6af0f83198c9637da997d981c46c7a19bfebf7`
+- freeze-prep: PASS / `falseChecks: []`
+- rollback branch:
+  `rollback/submission-candidate-dai-099-2026-09-24`
+
+DAI-090 subsequently passed 20/20 unexpected-prompt cases against the same frozen production runtime without requiring a runtime fix.
