@@ -60,20 +60,47 @@ for (const [file, text] of Object.entries(texts)) {
   if (/\b(?:TODO|TBD)\b/i.test(text)) placeholderFindings.push(file);
 }
 
+const staleFinalCandidateFindings = [];
+const stalePatterns = [
+  /DAI-099 REFRESH IN PROGRESS/i,
+  /FINAL CAPTURE PENDING/i,
+  /refreshed deployment[^\n]*pending DAI-099/i,
+  /DAI-099 must redeploy/i,
+  /not claimed as refreshed public evidence until/i,
+];
+for (const [file, text] of Object.entries(texts)) {
+  if (stalePatterns.some((pattern) => pattern.test(text))) {
+    staleFinalCandidateFindings.push(file);
+  }
+}
+
+const candidateCommit = '027b0f3f6a5adc648dbff4cd00e28c0abe4778a3';
+const runtimeSourceSha256 =
+  'dcdb3518c3a3ca77a3d646a34f5027c65103e82e9ded1929626ad68590596fb6';
+const finalVideoSha256 =
+  'deaf1b4c1961abc27c7810b88b6af0f83198c9637da997d981c46c7a19bfebf7';
+
 const checks = {
   requiredPublicDocsExist: publicDocs.every((file) => fs.existsSync(file)),
-  readmeSeparatesCurrentLocalFlowFromHistoricalPublicEvidence:
-    readme.includes('https://dungeon-architect-ai.pages.dev/') &&
-    readme.includes('DESCRIBE') &&
-    readme.includes('GENERATE') &&
-    readme.includes('EDIT') &&
-    readme.includes('VALIDATE') &&
-    readme.includes('TEST / MYSTERY') &&
-    readme.includes('EXPLORE + ROOM EVENTS') &&
-    readme.includes('RESULT') &&
-    readme.includes('locally regression-tested') &&
-    readme.includes('historical production public-E2E evidence') &&
-    readme.includes('DAI-099'),
+
+  readmeReflectsRefreshedPublicCandidate:
+    allIncludes(readme, [
+      'https://dungeon-architect-ai.pages.dev/',
+      'DESCRIBE',
+      'GENERATE',
+      'EDIT',
+      'VALIDATE',
+      'TEST / MYSTERY',
+      'EXPLORE + ROOM EVENTS',
+      'RESULT',
+      'DAI-099 predeploy acceptance passed 22/22',
+      'DAI-090 unexpected-prompt verification passed 20/20',
+      candidateCommit,
+      runtimeSourceSha256,
+      '59.9 seconds',
+      finalVideoSha256,
+    ]),
+
   readmeLinksRequiredPublicDocs:
     allIncludes(readme, [
       'docs/submission/JUDGE_QUICKSTART.md',
@@ -89,25 +116,23 @@ const checks = {
       'docs/submission/DAI-083_DESCRIPTION_CATEGORY.md',
       'docs/submission/CHECKLIST.md',
     ]),
+
   readmeDesktopScopeExplicit:
     readme.includes('desktop Google Chrome on Windows') &&
     readme.includes('mobile/narrow layouts are best-effort only'),
-  readmeCandidateGenerationExplicit:
-    readme.includes('Focus category: **AI 3D Scene Generation**') &&
-    readme.includes('Historical DAI-084 rollback point') &&
-    readme.includes('historical evidence') &&
-    readme.includes('DAI-099') &&
-    readme.includes('refreshed'),
-  judgeGuideCurrentFlowTruthful:
-    quick.includes('https://dungeon-architect-ai.pages.dev/') &&
-    quick.includes('Create a fair but tense two-floor dungeon with exploration, combat, readable traps, and dangerous rewards.') &&
-    quick.includes('Floors') &&
-    quick.includes('2') &&
-    quick.includes('LV / HP / EXP / G') &&
-    quick.includes('Floor 2/2') &&
-    quick.includes('Move the treasure to the room that contains the goal.') &&
-    quick.includes('desktop Google Chrome on Windows'),
-  knownLimitationsComplete:
+
+  judgeGuideMatchesAcceptedProduction:
+    allIncludes(quick, [
+      'refreshed DAI-099 production candidate',
+      'DAI-090 unexpected-prompt verification passed 20/20',
+      'Create a fair but tense two-floor dungeon with exploration, combat, readable traps, and dangerous rewards.',
+      'Move the treasure to the room that contains the goal.',
+      'LV / HP / EXP / G',
+      'Floor 2/2',
+      'desktop Google Chrome on Windows',
+    ]),
+
+  knownLimitationsCurrent:
     allIncludes(limits, [
       'DesignIntent → DungeonSpec mapping is deliberately bounded',
       'Natural-language edit vocabulary is narrow',
@@ -115,64 +140,92 @@ const checks = {
       'Player locomotion is room-graph based',
       'Mobile is outside the supported submission scope',
       'No persistence/accounts',
-      'Submission packaging requires a refreshed candidate',
-      'DAI-099',
+      'The refreshed DAI-099 candidate is complete',
+      'DAI-090 unexpected-prompt verification subsequently passed 20/20',
+      'DAI-091 final compliance/public repository readiness',
+      'DAI-092 submission',
     ]),
-  samplePromptsSeparateHistoricalAndRefreshedE2E:
-    prompts.includes('Verified public generation prompt — historical M8') &&
-    prompts.includes('Create a fair but tense 5-minute dungeon with exploration and a few dangerous rewards.') &&
-    prompts.includes('DAI-099 refreshed public validation prompt') &&
-    prompts.includes('Create a fair but tense two-floor dungeon with exploration, combat, readable traps, and dangerous rewards.') &&
-    prompts.includes('matching build fingerprint') &&
-    prompts.includes('Verified public natural-language edit') &&
-    prompts.includes('Move the treasure to the room that contains the goal.'),
-  checklistSeparatesHistoricalAndRefreshed:
-    checklist.includes('## Historical M8 evidence retained') &&
-    checklist.includes('## Refreshed final candidate — pending') &&
-    checklist.includes('- [x] Historical fresh-browser public E2E passed') &&
-    checklist.includes('- [x] Historical demo video under 3 minutes recorded and reviewed') &&
-    checklist.includes('- [x] Complete DAI-097 Audio presentation') &&
-    checklist.includes('- [x] Complete DAI-098 multi-floor simulation / balance') &&
-    checklist.includes('- [ ] DAI-099 predeploy validation passes on the refreshed branch') &&
-    checklist.includes('- [ ] DAI-099 public commit/runtime fingerprint matches the local candidate') &&
-    checklist.includes('- [ ] DAI-099 refreshed public E2E against the current 2-floor runtime passes') &&
-    checklist.includes('- [ ] DAI-099 refreshed demo video under 3 minutes is captured') &&
-    checklist.includes('- [ ] DAI-099 freeze-prep evidence passes') &&
-    checklist.includes('- [ ] DAI-099 new candidate hash / tree / runtime fingerprint / rollback point recorded') &&
-    checklist.includes('- [ ] DAI-092 submission completed before 2026-11-11 23:30 JST'),
-  storyboardRefreshPendingTruthful:
-    storyboard.includes('DAI-099 REFRESH IN PROGRESS') &&
-    storyboard.includes('49.5-second capture remains historical evidence') &&
-    storyboard.includes('DAI-099 has deployed the refreshed runtime') &&
-    storyboard.includes('matching build fingerprint'),
+
+  samplePromptsAreRefreshedPublicEvidence:
+    allIncludes(prompts, [
+      'DAI-099 refreshed public validation prompt',
+      'refreshed verified public evidence',
+      'Create a fair but tense two-floor dungeon with exploration, combat, readable traps, and dangerous rewards.',
+      'Verified public natural-language edit',
+      'Move the treasure to the room that contains the goal.',
+      'DAI-090',
+      'all 20 total DAI-090 cases passed',
+    ]),
+
+  checklistReflectsCompletedDAI099AndDAI090:
+    allIncludes(checklist, [
+      '## Refreshed final candidate',
+      '- [x] DAI-099 predeploy validation passes on the refreshed branch',
+      '- [x] DAI-099 refreshed public E2E against the current 2-floor runtime passes',
+      '- [x] DAI-099 refreshed demo video under 3 minutes is captured',
+      '- [x] DAI-099 freeze-prep evidence passes',
+      '- [x] DAI-099 new candidate hash / tree / runtime fingerprint / rollback point recorded',
+      '- [x] DAI-090 unexpected-prompt checks',
+      '- [ ] Final repository visibility requirement confirmed',
+      '- [ ] DAI-091 final compliance',
+      '- [ ] DAI-092 submission completed before 2026-11-11 23:30 JST',
+    ]),
+
+  storyboardRecordsAcceptedFinalCapture:
+    allIncludes(storyboard, [
+      'DAI-099 REFRESHED CAPTURE ACCEPTED',
+      '59.9 seconds',
+      '1920×1080',
+      finalVideoSha256,
+      'real hosted DAI-099 candidate',
+    ]),
+
   submissionMetadataFinalized:
     submissionMetadata.includes('**AI 3D Scene Generation**') &&
     submissionMetadata.includes('513 characters') &&
     submissionMetadata.includes('70 whitespace-delimited words') &&
     submissionMetadata.includes('215 characters') &&
     submissionMetadata.includes('27 whitespace-delimited words'),
+
   localMarkdownLinksResolve: missingLocalLinks.length === 0,
   noTodoOrTbdPlaceholders: placeholderFindings.length === 0,
+  noStaleFinalCandidateLanguage: staleFinalCandidateFindings.length === 0,
 };
 
-const passed = Object.values(checks).every(Boolean);
+const falseChecks = Object.entries(checks)
+  .filter(([, value]) => value !== true)
+  .map(([name]) => name);
+
 const evidence = {
   generatedAt: new Date().toISOString(),
   node: process.version,
-  passed,
+  passed: falseChecks.length === 0,
   checks,
+  falseChecks,
   publicDocs,
   missingLocalLinks,
   placeholderFindings,
+  staleFinalCandidateFindings,
+  candidate: {
+    commit: candidateCommit,
+    runtimeSourceSha256,
+    finalVideoSha256,
+  },
   boundaries: {
-    repositoryVisibilityChangedByDAI080: false,
-    historicalHostedEvidencePreserved: true,
-    refreshedHostedAcceptanceStillPending: true,
-    generationUiClaimedCompleteLocally: true,
+    repositoryVisibilityChangedByThisAudit: false,
+    refreshedHostedAcceptanceComplete: true,
+    refreshedVideoAcceptanceComplete: true,
+    DAI090UnexpectedPromptAcceptanceComplete: true,
+    DAI091RepositoryVisibilityStillSeparate: true,
   },
 };
 
 const serialized = JSON.stringify(evidence, null, 2);
 fs.writeFileSync(evidencePath, serialized + '\n');
 console.log(serialized);
-if (!passed) throw new Error(`DAI-080 public-doc invariant failed: ${JSON.stringify(checks)}`);
+
+if (!evidence.passed) {
+  throw new Error(
+    'DAI-080 final public-doc invariant failed: ' + falseChecks.join(', '),
+  );
+}
