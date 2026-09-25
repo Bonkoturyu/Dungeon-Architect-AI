@@ -28,6 +28,7 @@ const allowedVerificationChanges = new Set([
   'scripts/run-dai-080-public-docs-audit.mjs',
   'scripts/run-dai-090-unexpected-prompt-regression.mjs',
   'scripts/run-dai-091-final-compliance.mjs',
+  'scripts/run-dai-091-pre-public-audit.mjs',
   'spec/prompt-regression/fixtures/dai-090-unexpected-prompt-v1.json',
 ]);
 
