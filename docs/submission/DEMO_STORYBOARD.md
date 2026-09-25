@@ -1,8 +1,8 @@
 # Demo Storyboard
 
-**Status: DAI-099 REFRESH IN PROGRESS — FINAL CAPTURE PENDING.**
+**Status: DAI-099 REFRESHED CAPTURE ACCEPTED.**
 
-Requirement: **under 3 minutes**. The previously accepted 49.5-second capture remains historical evidence for the earlier M8 candidate and must not be treated as the final video for the current DAI-085–098 runtime.
+Requirement: **under 3 minutes**. The final refreshed public-demo capture is **59.9 seconds**, 1920×1080 at 30 fps, and passed automated capture checks plus manual visual review. SHA-256: `deaf1b4c1961abc27c7810b88b6af0f83198c9637da997d981c46c7a19bfebf7`. The previous 49.5-second M8 capture remains historical evidence only.
 
 Use the actual public candidate:
 
@@ -56,7 +56,7 @@ The pre-DAI-026 and misframed interim captures are rejected. The accepted captur
 
 ## Recording rule
 
-Record the real hosted candidate only after DAI-097 and DAI-098 are complete, DAI-099 has deployed the refreshed runtime, and refreshed public E2E passes with a matching build fingerprint. Cuts/titles/narration are allowed, but do not use the historical pre-polish capture as the final judge-facing video.
+The accepted final video records the real hosted DAI-099 candidate after DAI-097/098 completion and refreshed public E2E. The historical pre-polish capture is not the final judge-facing video.
 
 See `docs/testing/DAI-082_VIDEO.md`.
 
