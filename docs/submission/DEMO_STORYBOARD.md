@@ -1,8 +1,8 @@
 # Demo Storyboard
 
-**Status: DAI-099 REFRESH IN PROGRESS — FINAL CAPTURE PENDING.**
+**Status: FINAL REFRESHED CAPTURE ACCEPTED.**
 
-Requirement: **under 3 minutes**. The previously accepted 49.5-second capture remains historical evidence for the earlier M8 candidate and must not be treated as the final video for the current DAI-085–098 runtime.
+Requirement: **under 3 minutes**. The accepted refreshed capture is 59.9 seconds at 1920×1080 / 30 fps. The previous 49.5-second capture remains historical M8 evidence only.
 
 Use the actual public candidate:
 
@@ -10,53 +10,45 @@ https://dungeon-architect-ai.pages.dev/
 
 The pre-DAI-026 and misframed interim captures are rejected. The accepted capture uses the corrected DAI-026 public candidate and fullscreen viewport-only framing.
 
-## Final storyboard
+## Accepted capture timeline
 
-1. **0:00–0:08 — Title / problem**
-   - Dungeon Architect AI
-   - “Describe. Edit. Play.”
+The automated capture completed in 59.9 seconds:
 
-2. **0:08–0:32 — Describe / Generate**
-   - request a verified **2-floor** dungeon;
-   - click Generate;
-   - hold the generated 3D dungeon and current valid state;
-   - briefly expose the Floor selector to make multi-floor generation obvious.
+1. **0:00–0:07 — Describe / Generate**
+   - guide closes;
+   - verified 2-floor prompt entered;
+   - live cloud generation completes.
 
-3. **0:32–0:48 — Generated state**
-   - briefly show rooms/entities and the non-overlapping routed corridors.
+2. **0:09–0:12 — Manual Edit**
+   - room selected and moved;
+   - Undo restores the authored state.
 
-4. **0:48–1:05 — Manual Edit**
-   - select one room;
-   - move it;
-   - Undo.
+3. **0:12–0:15 — Natural-language Edit**
+   - verified treasure-relocation prompt entered;
+   - constrained edit applies successfully.
 
-5. **1:05–1:30 — Natural-language Edit**
-   - enter the verified treasure-relocation request;
-   - apply;
-   - show `applied: move-entity`.
+4. **0:15–0:37 — Test / Floor 1**
+   - **▶ Test** starts;
+   - directional exits are used;
+   - blocking Trap/Enemy Room Events are shown and resolved;
+   - programmatic combat presentation is visible.
 
-6. **1:30–2:05 — Test / Explore**
-   - select **Play** and press **▶ Test**;
-   - show the current **LV / HP / EXP / G** HUD;
-   - show Fog of War / auto-map;
-   - resolve a visible centered blocking Room Event;
-   - show the programmatic Player/Enemy presentation;
-   - traverse using the directional **CHOOSE EXIT** pad;
-   - show Floor 1 advancing into Floor 2.
+5. **0:37–0:55 — Floor 2**
+   - Floor 2 begins;
+   - additional Enemy/Trap Room Events are resolved;
+   - the run reaches the final Goal.
 
-7. **2:05–2:18 — Result**
-   - hold the cleared **Floor 2/2** Result and compact run/gameplay metrics.
+6. **0:55–0:58 — Result / Return**
+   - **CLEARED / FLOOR 2/2** is shown;
+   - the flow returns to Edit.
 
-8. **2:12–2:22 — Return to Edit**
-   - return to authoring view.
+Final MP4 SHA-256:
 
-9. **2:22–2:30 — End card**
-   - “Dungeon Architect AI — Describe. Edit. Play.”
-   - public demo URL.
+`deaf1b4c1961abc27c7810b88b6af0f83198c9637da997d981c46c7a19bfebf7`
 
 ## Recording rule
 
-Record the real hosted candidate only after DAI-097 and DAI-098 are complete, DAI-099 has deployed the refreshed runtime, and refreshed public E2E passes with a matching build fingerprint. Cuts/titles/narration are allowed, but do not use the historical pre-polish capture as the final judge-facing video.
+The accepted capture was recorded from the real hosted candidate after DAI-097/098 completion and DAI-099 refreshed public E2E. The historical pre-polish capture remains historical evidence only.
 
 See `docs/testing/DAI-082_VIDEO.md`.
 
