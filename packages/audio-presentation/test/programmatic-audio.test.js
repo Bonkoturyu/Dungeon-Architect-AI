@@ -120,7 +120,7 @@ test("audio presentation stays inert until unlock then starts desired BGM", asyn
 
   audio.setMode("play");
   assert.deepEqual(audio.getState(), {
-    version: "1.0",
+    version: "2.0",
     provenance: "project-authored-programmatic-web-audio",
     available: true,
     unlocked: false,
@@ -129,6 +129,10 @@ test("audio presentation stays inert until unlock then starts desired BGM", asyn
     desiredMode: "play",
     activeMode: null,
     activeBgmVoices: 0,
+    bgmVolume: 0.58,
+    seVolume: 0.78,
+    crossfadeSeconds: 0.45,
+    motifScheduledSeconds: 0,
     lastCue: null,
     cueHistory: [],
     modeHistory: ["edit", "play"],
@@ -139,7 +143,8 @@ test("audio presentation stays inert until unlock then starts desired BGM", asyn
   assert.equal(state.contextState, "running");
   assert.equal(state.unlocked, true);
   assert.equal(state.activeMode, "play");
-  assert.equal(state.activeBgmVoices, 2);
+  assert.equal(state.activeBgmVoices, 3);
+  assert.ok(state.motifScheduledSeconds > 120);
 });
 
 test("mode changes replace BGM voices without changing authored game state", async () => {
@@ -147,7 +152,7 @@ test("mode changes replace BGM voices without changing authored game state", asy
   await audio.unlock();
 
   assert.equal(audio.getState().activeMode, "edit");
-  assert.equal(audio.getState().activeBgmVoices, 2);
+  assert.equal(audio.getState().activeBgmVoices, 3);
 
   audio.setMode("result-cleared");
   assert.equal(audio.getState().activeMode, "result-cleared");
@@ -184,6 +189,40 @@ test("mute toggles independently from cue bookkeeping", async () => {
 
   assert.equal(audio.toggleMuted(), false);
   assert.equal(audio.getState().muted, false);
+});
+
+test("BGM and SE mix levels are independently adjustable and bounded", async () => {
+  const audio = createProgrammaticAudio({
+    AudioContextCtor: FakeAudioContext,
+    initialBgmVolume: 0.4,
+    initialSeVolume: 0.65,
+  });
+
+  assert.equal(audio.getState().bgmVolume, 0.4);
+  assert.equal(audio.getState().seVolume, 0.65);
+
+  await audio.unlock();
+  assert.equal(audio.setBgmVolume(0.25), 0.25);
+  assert.equal(audio.setSeVolume(0.9), 0.9);
+  assert.equal(audio.getState().bgmVolume, 0.25);
+  assert.equal(audio.getState().seVolume, 0.9);
+
+  assert.throws(() => audio.setBgmVolume(-0.1), /between 0 and 1/);
+  assert.throws(() => audio.setSeVolume(1.1), /between 0 and 1/);
+});
+
+test("mode changes schedule long-form motifs and retire previous voices", async () => {
+  const audio = createProgrammaticAudio({ AudioContextCtor: FakeAudioContext });
+  await audio.unlock();
+  const edit = audio.getState();
+  assert.equal(edit.activeMode, "edit");
+  assert.ok(edit.motifScheduledSeconds > 120);
+
+  audio.setMode("play");
+  const play = audio.getState();
+  assert.equal(play.activeMode, "play");
+  assert.equal(play.crossfadeSeconds, 0.45);
+  assert.ok(play.motifScheduledSeconds > 120);
 });
 
 test("cues before unlock are recorded as unscheduled and invalid names fail closed", () => {
