@@ -1410,8 +1410,12 @@ function clearPathCheck() {
   adapter?.setHighlightedSpecIds([]);
 }
 
-function applyCommand(command, successMessage) {
-  if (mode !== 'edit' || generationBusy || naturalEditBusy) return false;
+function applyCommand(command, successMessage, { allowNaturalBusy = false } = {}) {
+  if (
+    mode !== 'edit' ||
+    generationBusy ||
+    (naturalEditBusy && !allowNaturalBusy)
+  ) return false;
 
   const preview = applyEditCommand(authoringSpec(), command);
   if (!preview.ok) {
@@ -1955,8 +1959,18 @@ async function generateDungeonFromPrompt() {
 
 function naturalEditContext() {
   return {
-    rooms: authoringSpec().rooms.map((room) => ({ id: room.id })),
-    entities: authoringSpec().entities.map((entity) => ({ id: entity.id, type: entity.type, roomId: entity.roomId })),
+    rooms: authoringSpec().rooms.map((room) => ({
+      id: room.id,
+      x: room.x,
+      z: room.z,
+      width: room.width,
+      depth: room.depth,
+    })),
+    entities: authoringSpec().entities.map((entity) => ({
+      id: entity.id,
+      type: entity.type,
+      roomId: entity.roomId,
+    })),
   };
 }
 
@@ -1991,24 +2005,39 @@ async function applyNaturalEdit() {
     }
 
     const command = payload.command;
-    const result = session.apply(command);
-    if (!result.ok) {
-      setNaturalEditStatus(t('natural.rejected', { code: result.error.code }));
+    const applied = applyCommand(
+      command,
+      `natural edit: ${command.type}`,
+      { allowNaturalBusy: true },
+    );
+    if (!applied) {
+      setNaturalEditStatus(t('natural.rejected', { code: command.type }));
       return false;
     }
 
-    lastNaturalEditCommand = { ...command };
+    lastNaturalEditCommand = clone(command);
     if (command.type === 'move-entity') {
       selectedEntityId = command.entityId;
       selectedRoomId = null;
       selectedCorridorId = null;
       setInspectorTab('entities');
+    } else if (command.type === 'move-room' || command.type === 'resize-room') {
+      selectedRoomId = command.roomId;
+      selectedEntityId = null;
+      selectedCorridorId = null;
+      setInspectorTab('rooms');
+    } else if (command.type === 'add-entity') {
+      selectedEntityId = command.entity?.id ?? null;
+      selectedRoomId = null;
+      selectedCorridorId = null;
+      setInspectorTab('entities');
+    } else if (command.type === 'remove-entity') {
+      if (selectedEntityId === command.entityId) selectedEntityId = null;
+      selectedCorridorId = null;
+      setInspectorTab('entities');
     }
     naturalEditInput.value = '';
-    clearPathCheck();
-    renderActiveSpec();
     setNaturalEditStatus(t('natural.applied', { command: command.type }));
-    setEditStatus(`natural edit: ${command.type}`);
     return true;
   } catch {
     setNaturalEditStatus(t('natural.unavailable'));
