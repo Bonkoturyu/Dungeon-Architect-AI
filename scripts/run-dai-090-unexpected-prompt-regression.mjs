@@ -17,8 +17,17 @@ const baseUrl = rawBaseUrl.replace(/\/+$/, '');
 const REQUEST_TIMEOUT_MS = 60_000;
 
 const allowedVerificationChanges = new Set([
+  'README.md',
+  'docs/submission/CHECKLIST.md',
+  'docs/submission/DEMO_STORYBOARD.md',
+  'docs/submission/JUDGE_QUICKSTART.md',
+  'docs/submission/KNOWN_LIMITATIONS.md',
+  'docs/submission/SAMPLE_PROMPTS.md',
   'docs/testing/DAI-090_UNEXPECTED_PROMPT_REGRESSION.md',
+  'docs/testing/DAI-091_FINAL_COMPLIANCE.md',
+  'scripts/run-dai-080-public-docs-audit.mjs',
   'scripts/run-dai-090-unexpected-prompt-regression.mjs',
+  'scripts/run-dai-091-final-compliance.mjs',
   'spec/prompt-regression/fixtures/dai-090-unexpected-prompt-v1.json',
 ]);
 
