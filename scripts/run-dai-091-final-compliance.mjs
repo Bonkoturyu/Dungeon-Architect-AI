@@ -27,6 +27,7 @@ const evidenceFiles = {
   privacy: 'artifacts/privacy/dai-074-secret-privacy.json',
   metadata: 'artifacts/submission-metadata/dai-083-submission-metadata.json',
   dai090: 'artifacts/dai-090/dai-090-unexpected-prompt-regression.json',
+  prePublic: 'artifacts/dai-091/dai-091-pre-public-audit.json',
 };
 
 const videoPath =
@@ -44,6 +45,7 @@ const allowedVerificationChanges = new Set([
   'scripts/run-dai-080-public-docs-audit.mjs',
   'scripts/run-dai-090-unexpected-prompt-regression.mjs',
   'scripts/run-dai-091-final-compliance.mjs',
+  'scripts/run-dai-091-pre-public-audit.mjs',
   'spec/prompt-regression/fixtures/dai-090-unexpected-prompt-v1.json',
 ]);
 
@@ -295,6 +297,10 @@ const checks = {
     evidence.dai090?.passed === true &&
     Array.isArray(evidence.dai090?.failedCaseIds) &&
     evidence.dai090.failedCaseIds.length === 0,
+  prePublicExposureAuditPassed:
+    evidence.prePublic?.passed === true &&
+    Array.isArray(evidence.prePublic?.falseChecks) &&
+    evidence.prePublic.falseChecks.length === 0,
 
   finalVideoExact:
     videoSha256 === FINAL_VIDEO_SHA256,
