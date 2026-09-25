@@ -93,18 +93,37 @@ Each endpoint may be `north`, `east`, `south`, `west`, or `auto`/null. The rende
 
 Natural-language authoring does not bypass `EditCommand`.
 
-The first DAI-053 MVP path translates one natural-language request into exactly one existing `move-entity` command. The provider receives a bounded context containing only current room IDs and entity ID/type/location triples. Structured output is constrained to exact current IDs, independently validated, and then passed to the normal `EditSession.apply()` boundary.
+The original DAI-053 MVP translated one natural-language request into exactly one existing `move-entity` command.
+
+DAI-100 AI Edit V2 keeps the **single-command** boundary but expands the safe translation set to:
+
+- `move-entity`;
+- `move-room`;
+- `resize-room`;
+- `add-entity`;
+- `remove-entity`.
+
+The provider receives only bounded authoring context:
+
+- rooms: `id`, `x`, `z`, `width`, `depth`;
+- entities: `id`, `type`, `roomId`.
+
+The structured provider output is a fixed command envelope. Existing IDs must come from the exact context enums. For `add-entity`, the model does **not** invent an ID: it returns a supported entity type plus an existing room ID, and the server deterministically allocates an `*-ai-NNN` ID before returning the ordinary core `add-entity` EditCommand.
 
 The natural-language translator:
 
 - cannot emit arbitrary code;
 - cannot mutate DungeonSpec directly;
-- cannot invent entity or room IDs;
-- cannot emit multiple commands in the first MVP path;
-- rejects no-op moves;
+- cannot invent existing entity or room IDs;
+- cannot remove Start/Goal;
+- cannot create Start/Goal;
+- cannot emit more than one command;
+- bounds room coordinates and dimensions;
+- rejects no-op movement/resizing;
+- keeps room/corridor creation, corridor edits, event edits, and batch transactions unsupported;
 - remains behind the backend/provider boundary so browser code never receives the provider secret.
 
-The browser edit stays undoable/redoable because the translated result is an ordinary `move-entity` command.
+The browser applies the translated command through the same editor command/preflight path as manual authoring. Successful AI edits therefore remain undoable/redoable and structural room edits must also pass the normal renderer/route preflight before mutation.
 
 ## Invariants
 
@@ -122,4 +141,8 @@ The browser edit stays undoable/redoable because the translated result is an ord
 - doorway offset editing along a wall (v1 structural UI selects the cardinal wall side only)
 - shortcut/event logic editing from the manual UI
 - batch transactions
-- natural-language translation for commands other than the first `move-entity` path
+- natural-language room creation/removal
+- natural-language corridor creation/removal/reconnection
+- natural-language doorway-side editing
+- natural-language event-logic editing
+- multi-command natural-language transactions
