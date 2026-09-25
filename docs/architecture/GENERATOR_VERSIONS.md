@@ -24,9 +24,12 @@ Dungeon Architect AI の生成方式を、将来の改良で上書きせず追�
 
 | Version | 状態 | 既定 | 実装 |
 | --- | --- | --- | --- |
-| V1 | Frozen baseline | Yes | `packages/generator/src/versions/v1/` |
+| V1 | Frozen baseline | Yes (library default) | `packages/generator/src/versions/v1/` |
+| V2 | DAI-100 candidate | No (candidate browser selects explicitly) | `packages/generator/src/versions/v2/` |
 
 `DEFAULT_GENERATOR_VERSION = "1"`
+
+The DAI-100 browser candidate explicitly requests V2 while the library default remains V1 until the replacement candidate is accepted.
 
 ## Version 1 — 現行生成方式
 
@@ -144,6 +147,35 @@ V1 baseline source:
 | `versions/v1/design-intent-generator.js` | `1925a2197155fe4a7582a664bb0fffbbb63dbe77` |
 
 この表はV1 archive作成時点の参照値。V1の生成ロジックを変更する必要が生じた場合、原則としてV1を更新せずV2を追加する。
+
+## Version 2 — DAI-100 spatial-variation candidate
+
+V2 intentionally preserves the V1 gameplay-generation profile and Room Graph semantics while replacing only the spatial layout stage.
+
+Inherited from V1:
+
+- prompt hashing / default Seed;
+- targetDuration → roomCount mapping;
+- routeChoice → alternate-edge target;
+- guaranteed sequential Start→Goal backbone;
+- alternate-edge selection;
+- Enemy / Treasure / Trap / Recovery counts and seeded placement;
+- first-Treasure hint event.
+
+Changed in V2:
+
+- Seed selects one of multiple column counts;
+- Seed selects spacing from 12 / 13 / 14;
+- Seed selects one of eight rotation/mirror orientations;
+- Seed selects the first serpentine row direction;
+- each Room receives deterministic 7–9 × 7–9 dimensions from the same Seed stream;
+- coordinates are normalized after orientation so generated layouts remain easy to frame.
+
+The goal is visible spatial diversity for same-room-count generation and Mystery play without replacing the proven graph/gameplay semantics.
+
+V2 acceptance requires a multi-seed / multi-room-count / multi-routeChoice matrix to pass both DungeonSpec validation and Three.js scene-plan corridor routing.
+
+The DAI-100 candidate browser explicitly uses V2. V1 remains available unchanged for regression/reproduction.
 
 ## 新Version追加手順
 
