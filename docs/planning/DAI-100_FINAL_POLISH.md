@@ -123,6 +123,28 @@ Requirements:
 
 ## Priority C — Scene variation / visual identity
 
+### Implemented candidate — Generator V2 spatial variation
+
+Generator V2 is now registered under `packages/generator/src/versions/v2/` without modifying the frozen V1 implementation.
+
+The DAI-100 browser candidate explicitly uses V2 while the library default remains V1 for regression/reproduction.
+
+V2 preserves V1 graph/gameplay semantics but adds Seed-driven:
+
+- column-count variation;
+- 12/13/14 spacing variation;
+- eight rotation/mirror orientations;
+- first-row serpentine direction variation;
+- deterministic 7–9 × 7–9 Room dimensions.
+
+A dedicated acceptance matrix covers multiple Seeds × room counts × routeChoice values and requires both DungeonSpec validity and renderer scene-plan routeability.
+
+One-command validation:
+
+`npm run validate:dai-100-generator-v2`
+
+This phase is **not accepted yet** until the owner-local matrix and browser regressions pass.
+
 Generator V1 spatial embedding is deterministic serpentine placement for a given room count. That limits the visual effect of different prompts.
 
 Do not silently change Generator V1 semantics. Introduce any materially new layout method under a new generator version or an explicitly versioned presentation transform.
