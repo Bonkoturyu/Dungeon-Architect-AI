@@ -238,6 +238,74 @@
       border-color: rgba(232, 198, 122, 0.42);
       color: var(--warning);
     }
+    .audio-mixer {
+      position: relative;
+    }
+    .audio-mixer > summary {
+      min-width: 38px;
+      min-height: 30px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 8px;
+      border: 1px solid rgba(102, 117, 142, 0.72);
+      border-radius: 999px;
+      background: rgba(48, 58, 73, 0.62);
+      color: var(--text-soft);
+      font-size: 0.64rem;
+      font-weight: 800;
+      cursor: pointer;
+      user-select: none;
+      list-style: none;
+    }
+    .audio-mixer > summary::-webkit-details-marker { display: none; }
+    .audio-mixer[open] > summary,
+    .audio-mixer > summary:hover {
+      border-color: rgba(120, 216, 154, 0.52);
+      background: var(--surface-3);
+      color: var(--text);
+    }
+    .audio-mixer-popover {
+      position: absolute;
+      z-index: 80;
+      top: calc(100% + 8px);
+      right: 0;
+      width: 236px;
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--line-strong);
+      border-radius: 10px;
+      background: rgba(26, 32, 42, 0.98);
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.32);
+    }
+    .audio-mix-row {
+      display: grid;
+      grid-template-columns: 36px minmax(0, 1fr) 42px;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-soft);
+      font-size: 0.72rem;
+      font-weight: 760;
+    }
+    .audio-mix-row input[type="range"] {
+      width: 100%;
+      min-width: 0;
+      accent-color: var(--success);
+    }
+    .audio-mix-row output {
+      justify-self: end;
+      color: var(--text-muted);
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 0.68rem;
+      font-weight: 700;
+    }
+    .audio-mix-note {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 0.64rem;
+      line-height: 1.35;
+    }
     #validationStatus {
       justify-self: start;
       display: inline-flex;
@@ -1737,6 +1805,22 @@
       <div class="header-actions">
         <button id="returnEdit" type="button" disabled data-i18n="action.returnEdit">◀ Edit</button>
         <button id="audioToggle" class="icon-button" type="button" title="Mute audio" aria-label="Mute audio" aria-pressed="false" data-audio-state="locked">🔊</button>
+        <details id="audioMixer" class="audio-mixer">
+          <summary title="Audio mix" aria-label="Audio mix">MIX</summary>
+          <div class="audio-mixer-popover" role="group" aria-label="Audio mix levels">
+            <label class="audio-mix-row" for="bgmVolume">
+              <span>BGM</span>
+              <input id="bgmVolume" type="range" min="0" max="100" step="1" value="58" aria-label="BGM volume">
+              <output id="bgmVolumeValue" for="bgmVolume">58%</output>
+            </label>
+            <label class="audio-mix-row" for="seVolume">
+              <span>SE</span>
+              <input id="seVolume" type="range" min="0" max="100" step="1" value="78" aria-label="Sound effect volume">
+              <output id="seVolumeValue" for="seVolume">78%</output>
+            </label>
+            <p class="audio-mix-note">Project-authored programmatic soundtrack · no external audio assets</p>
+          </div>
+        </details>
         <button id="languageCycle" class="language-cycle" type="button" data-language-cycle>EN ▶ 日本語</button>
         <button id="guide" class="secondary-accent icon-button" type="button" title="Open guide" aria-label="Open guide" data-i18n-title="action.guide" data-i18n-aria-label="action.guide">?</button>
       </div>
