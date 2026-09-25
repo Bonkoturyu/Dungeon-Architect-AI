@@ -61,6 +61,32 @@ Target:
 
 ## Priority B — AI Edit V2
 
+### Implemented candidate
+
+The first DAI-100 AI Edit V2 pass is now implemented with the existing single-command safety boundary.
+
+Supported natural-language commands:
+
+- `move-entity`;
+- `move-room`;
+- `resize-room`;
+- `add-entity`;
+- `remove-entity`.
+
+The provider receives bounded room geometry (`id/x/z/width/depth`) plus entity `id/type/roomId`. Existing IDs are schema-enumerated. New entity IDs are allocated server-side as deterministic `*-ai-NNN` IDs, so the provider never invents them.
+
+Structural room edits are routed through the same editor preflight used by manual authoring, and successful AI edits remain Undo/Redo compatible.
+
+Specification:
+
+`spec/edit-command/NATURAL_EDIT_V2.md`
+
+Deterministic visible-Chrome coverage exercises all five browser application paths. One-command validation:
+
+`npm run validate:dai-100-ai-edit`
+
+This phase is **not accepted yet** until owner-local validation passes. Live-provider/public semantic verification will occur after the replacement runtime is ready to deploy.
+
 The manual Editor already supports more than the AI path:
 
 - move-room
