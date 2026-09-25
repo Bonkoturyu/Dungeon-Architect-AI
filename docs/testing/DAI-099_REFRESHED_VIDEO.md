@@ -2,11 +2,11 @@
 
 ## Status
 
-**PENDING FINAL CAPTURE / VISUAL REVIEW.**
+**DONE. FINAL CAPTURE / VISUAL REVIEW ACCEPTED.**
 
 The historical DAI-082 49.5-second M8 video remains historical evidence only.
 
-DAI-099 requires a new capture from the refreshed public candidate after:
+The refreshed capture was produced from the public candidate after:
 
 1. DAI-097 Audio is merged;
 2. DAI-098 multi-floor simulation/balance is merged;
@@ -95,11 +95,9 @@ The runner requires:
 - scripted interaction duration under 165 seconds;
 - when ffmpeg capture is active: viewport capture present, at least 1280×720, and MP4 duration under 180 seconds.
 
-## Manual visual review still required
+## Manual visual review result
 
-Automation cannot certify the final presentation quality.
-
-Before final freeze, manually confirm:
+Automation cannot certify final presentation quality by itself. The final MP4 was manually reviewed and the following checks were accepted:
 
 - no browser tabs/address bar;
 - no Windows taskbar;
@@ -113,4 +111,12 @@ Before final freeze, manually confirm:
 - Floor 2/2 Result is visibly understandable;
 - no misleading narration claims unrestricted natural-language editing, physics locomotion, or unsupported mobile behavior.
 
-The final MP4 SHA-256 and reviewed duration remain **PENDING** until this review is complete.
+Accepted final MP4: `artifacts/dai-099-video/dai-099-refreshed-demo.mp4`.
+
+- duration: **59.9 seconds**;
+- resolution: **1920×1080**;
+- frame rate: **30 fps**;
+- size: **808130 bytes**;
+- SHA-256: `deaf1b4c1961abc27c7810b88b6af0f83198c9637da997d981c46c7a19bfebf7`;
+- automated runner: PASS;
+- manual visual review: ACCEPTED.
