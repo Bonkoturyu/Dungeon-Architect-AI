@@ -37,10 +37,10 @@ When the user presses **Apply AI edit**, the browser sends same-origin `POST /ap
 
 1. the edit request;
 2. bounded authoring context:
-   - room IDs only;
+   - room ID plus authoring geometry only: `x`, `z`, `width`, and `depth`;
    - entity ID, type, and room ID only.
 
-The browser does not send renderer objects, full runtime state, credentials, account data, or arbitrary files.
+The browser does not send renderer objects, corridor geometry, Play/Run state, credentials, account data, or arbitrary files. Room geometry is included only so the AI Edit V2 translator can express bounded `move-room` and `resize-room` commands using the existing authoring coordinate system.
 
 The Pages Function forwards the normalized request through the production OpenAI edit adapter. The OpenAI request explicitly uses `store: false`.
 
@@ -50,7 +50,7 @@ The generation endpoint returns validated DesignIntent and bounded provider/mode
 
 The edit endpoint returns:
 
-- one validated supported `EditCommand`;
+- one validated supported `EditCommand` (`move-entity`, `move-room`, `resize-room`, `add-entity`, or `remove-entity` in DAI-100 AI Edit V2);
 - provider/model identifiers;
 - bounded token-usage metadata when available.
 
@@ -84,3 +84,5 @@ DAI-074 must be reopened if the candidate adds:
 - file upload.
 
 DAI-081 added `/api/design-intent`, so the privacy audit is explicitly rerun before the hosted-demo PR merges.
+
+DAI-100 AI Edit V2 expands the bounded room context from ID-only to ID + `x/z/width/depth`. This is a documented outbound-data-field change, so DAI-074 must pass again before any DAI-100 replacement candidate is published.
