@@ -2011,7 +2011,9 @@ async function applyNaturalEdit() {
       { allowNaturalBusy: true },
     );
     if (!applied) {
-      setNaturalEditStatus(t('natural.rejected', { code: command.type }));
+      setNaturalEditStatus(
+        t('natural.rejected', { code: 'EDIT_COMMAND_REJECTED' }),
+      );
       return false;
     }
 
@@ -2036,6 +2038,7 @@ async function applyNaturalEdit() {
       selectedCorridorId = null;
       setInspectorTab('entities');
     }
+    renderActiveSpec();
     naturalEditInput.value = '';
     setNaturalEditStatus(t('natural.applied', { command: command.type }));
     return true;
