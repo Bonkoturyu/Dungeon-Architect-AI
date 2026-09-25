@@ -1806,19 +1806,19 @@
         <button id="returnEdit" type="button" disabled data-i18n="action.returnEdit">◀ Edit</button>
         <button id="audioToggle" class="icon-button" type="button" title="Mute audio" aria-label="Mute audio" aria-pressed="false" data-audio-state="locked">🔊</button>
         <details id="audioMixer" class="audio-mixer">
-          <summary title="Audio mix" aria-label="Audio mix">MIX</summary>
+          <summary title="Audio mix" aria-label="Audio mix" data-i18n-title="audio.mix" data-i18n-aria-label="audio.mix">MIX</summary>
           <div class="audio-mixer-popover" role="group" aria-label="Audio mix levels">
             <label class="audio-mix-row" for="bgmVolume">
               <span>BGM</span>
-              <input id="bgmVolume" type="range" min="0" max="100" step="1" value="58" aria-label="BGM volume">
+              <input id="bgmVolume" type="range" min="0" max="100" step="1" value="58" aria-label="BGM volume" data-i18n-aria-label="audio.bgmVolume">
               <output id="bgmVolumeValue" for="bgmVolume">58%</output>
             </label>
             <label class="audio-mix-row" for="seVolume">
               <span>SE</span>
-              <input id="seVolume" type="range" min="0" max="100" step="1" value="78" aria-label="Sound effect volume">
+              <input id="seVolume" type="range" min="0" max="100" step="1" value="78" aria-label="Sound effect volume" data-i18n-aria-label="audio.seVolume">
               <output id="seVolumeValue" for="seVolume">78%</output>
             </label>
-            <p class="audio-mix-note">Project-authored programmatic soundtrack · no external audio assets</p>
+            <p class="audio-mix-note" data-i18n="audio.programmaticNote">Project-authored programmatic soundtrack · no external audio assets</p>
           </div>
         </details>
         <button id="languageCycle" class="language-cycle" type="button" data-language-cycle>EN ▶ 日本語</button>
