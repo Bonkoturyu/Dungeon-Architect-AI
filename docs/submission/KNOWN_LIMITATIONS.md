@@ -53,22 +53,21 @@ The MVP has no accounts, cloud save, database, analytics/telemetry, or persisten
 
 Authoring/play state is in memory for the active page session.
 
-## 8. Submission packaging requires a refreshed candidate
+## 8. Submission freeze and final compliance
 
-The historical hosted demo, under-three-minute demo video, short description, focus category, and DAI-084 rollback point were completed for the earlier M8 candidate.
+The refreshed DAI-099 candidate is complete:
 
-Judge-facing/runtime work has changed since that freeze: DAI-085 through DAI-098 plus the 2026-09-23 Play UI follow-up are complete. DAI-099 refreshed build/deployment/public-E2E/video/docs/audits/freeze is now in progress.
+- 22/22 predeploy acceptance passed;
+- refreshed Cloudflare production deployment completed;
+- public E2E passed against the exact candidate commit/runtime-source fingerprint;
+- legal/privacy/metadata gates passed;
+- the refreshed 59.9-second demo video was captured and manually reviewed;
+- freeze preparation passed;
+- rollback branch `rollback/submission-candidate-dai-099-2026-09-24` was created.
 
-DAI-099 therefore still needs to:
+DAI-090 unexpected-prompt verification subsequently passed 20/20 malformed, contradictory, oversized, mixed-language, injection-like and unsupported-input cases without requiring a runtime fix.
 
-- rebuild and redeploy the refreshed candidate;
-- rerun public E2E on the refreshed runtime;
-- update submission/public docs;
-- record a new under-three-minute demo video showing the current UI;
-- rerun legal/privacy/security checks;
-- create a new candidate freeze and rollback point that includes the tracked audited lockfile.
-
-Final compliance/submission remains DAI-091/DAI-092.
+The remaining submission work is DAI-091 final compliance/public repository readiness and DAI-092 submission.
 
 ## Reopen rule
 
