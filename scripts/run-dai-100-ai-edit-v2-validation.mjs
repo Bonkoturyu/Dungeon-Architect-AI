@@ -49,11 +49,23 @@ for (const [index, step] of steps.entries()) {
   console.log(
     `[DAI-100 AI EDIT] ${index + 1}/${steps.length} ${step.label}`,
   );
-  const executable =
-    process.platform === 'win32' && step.command === 'npm'
-      ? 'npm.cmd'
-      : step.command;
-  const result = spawnSync(executable, step.args, {
+  let executable = step.command;
+  let args = step.args;
+
+  if (step.command === 'npm') {
+    const npmExecPath = process.env.npm_execpath;
+    if (!npmExecPath) {
+      throw new Error(
+        'npm_execpath is unavailable; run this validator through npm run.',
+      );
+    }
+    executable = process.execPath;
+    args = [npmExecPath, ...step.args];
+  } else if (step.command === 'node') {
+    executable = process.execPath;
+  }
+
+  const result = spawnSync(executable, args, {
     stdio: 'inherit',
     windowsHide: true,
   });
@@ -62,6 +74,13 @@ for (const [index, step] of steps.entries()) {
     label: step.label,
     passed,
     status: result.status ?? null,
+    error: result.error
+      ? {
+          name: result.error.name,
+          code: result.error.code ?? null,
+          message: result.error.message,
+        }
+      : null,
   });
   if (!passed) {
     console.error(
