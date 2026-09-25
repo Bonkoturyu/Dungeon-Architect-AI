@@ -74,7 +74,8 @@
     "validate:refreshed-video-plan": "node scripts/run-dai-099-video-plan-audit.mjs",
     "prepare:refreshed-freeze": "node scripts/run-dai-099-freeze-prep.mjs",
     "validate:dai-100-audio": "node scripts/run-dai-100-audio-polish-validation.mjs",
-    "validate:dai-100-ai-edit": "node scripts/run-dai-100-ai-edit-v2-validation.mjs"
+    "validate:dai-100-ai-edit": "node scripts/run-dai-100-ai-edit-v2-validation.mjs",
+    "validate:dai-100-generator-v2": "node scripts/run-dai-100-generator-v2-validation.mjs"
   },
   "devDependencies": {
     "@babylonjs/core": "9.18.0",
