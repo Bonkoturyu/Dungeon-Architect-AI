@@ -5,7 +5,7 @@
 https://dungeon-architect-ai.pages.dev/
 
 
-> **Current-status note (2026-09-23):** this URL is the historical deployed candidate. The repository has newer DAI-085–098 / Play-UI changes that are locally accepted but not yet revalidated on the public deployment. DAI-099 will redeploy and refresh this guide before final submission.
+> **Current-status note (2026-09-25):** this URL is the refreshed DAI-099 production candidate. Public E2E passed against the frozen candidate commit/runtime-source fingerprint, and DAI-090 unexpected-prompt verification passed 20/20 cases without a runtime fix.
 
 ## Supported judging environment
 
@@ -13,9 +13,9 @@ https://dungeon-architect-ai.pages.dev/
 - 1440 × 900 or comparable desktop viewport;
 - mobile/narrow is best-effort only and is not a supported submission target.
 
-## Current repository walkthrough
+## Current production walkthrough
 
-The steps below describe the current repository UI. Use them for final judging only after DAI-099 refreshes the public deployment.
+The steps below describe the refreshed production UI verified by DAI-099.
 
 ## Walkthrough
 
