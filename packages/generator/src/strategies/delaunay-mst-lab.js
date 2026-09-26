@@ -65,10 +65,10 @@ export const generatorStrategyDelaunayMstLab = createGeneratorStrategy({
         : {};
 
     const coreResult = generateDelaunayMstCore({
+      ...options,
       seed: request.seed,
       roomCount: baseline.profile.roomCount,
       loopRatio: baseline.profile.routeChoice,
-      ...options,
     });
 
     const spec = mapCoreToDungeonSpec(
