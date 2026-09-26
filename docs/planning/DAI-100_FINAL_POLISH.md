@@ -218,7 +218,19 @@ Dedicated Markdown + HTML documentation is available at:
 - `docs/generator-algorithms/DELAUNAY_MST.md`
 - `docs/generator-algorithms/DELAUNAY_MST.html`
 
-The strategy is **not yet registered in the Product selector**. First gate is `npm run validate:dai-100-delaunay-mst`; Product registration follows only after Core/Adapter acceptance.
+The first Core/Adapter acceptance gate passed locally on 2026-09-27 JST at `a603bd7b0586e726ba22ad078b77fa38a285a07c`: reusable Core tests 8/8 PASS, Generator/Algorithm Lab adapter tests 29/29 PASS, syntax validation 181 files PASS, and git diff/whitespace checks PASS.
+
+After that gate, the Delaunay strategy was registered into the Product Strategy catalog while Version 2 remains the default Recommended strategy. Product-level acceptance is now pending through an expanded `npm run validate:dai-100-delaunay-mst` gate covering:
+
+- reusable Core and Adapter regressions;
+- a 150-case Delaunay renderer routeability matrix;
+- production hosting build;
+- Owner UI / five-language selector regression;
+- V1 / V2 / Delaunay Product selector smoke;
+- Delaunay three-floor Test + Mystery browser flow;
+- syntax and git diff checks.
+
+The previous Windows `DEP0190` warning in the Delaunay acceptance runner was also removed by switching its npm subprocess execution to the same `npm_execpath` / Node spawning model used by the other DAI-100 validators.
 
 ## Priority D — Motion / feedback
 
