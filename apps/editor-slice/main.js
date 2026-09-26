@@ -3098,6 +3098,10 @@ async function run() {
       getScreenPositionForSpecId: (id) => adapter.getScreenPositionForSpecId(id),
       getScreenPositionForRoomWall: (roomId, side) => adapter.getScreenPositionForRoomWall(roomId, side),
       getScreenPositionForWorldPoint: (point) => adapter.getScreenPositionForWorldPoint(point),
+      probePointerAt: (clientX, clientY) => ({
+        hit: adapter.pickDetailedAt(clientX, clientY),
+        ground: adapter.getGroundPointAt(clientX, clientY),
+      }),
       getCameraState: () => adapter.getCameraState(),
       getRenderedSelection: () => adapter.selectedSpecId,
       getCharacterPresentation: () => adapter.getCharacterPresentationSummary(),
