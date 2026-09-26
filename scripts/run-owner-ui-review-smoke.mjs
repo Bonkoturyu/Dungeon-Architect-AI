@@ -567,16 +567,70 @@ try {
   const centeredRoomId = centeredAddState.selectedRoomId;
   if (!centeredRoomId) throw new Error('Centered room add did not select the new room.');
 
-  const centeredRoomScreen = await page.evaluate((roomId) => {
-    const room = window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === roomId);
-    return room
-      ? window.__DAI_EDITOR_SLICE__.getScreenPositionForWorldPoint({ x: room.x, y: 0, z: room.z })
-      : null;
-  }, centeredRoomId);
-  if (!centeredRoomScreen) throw new Error('Centered room floor screen point unavailable.');
+  const centeredRoomDragAnchor = await page.evaluate((roomId) => {
+    const api = window.__DAI_EDITOR_SLICE__;
+    const state = api.getState();
+    const room = state.rooms.find((entry) => entry.id === roomId);
+    const canvasRect = document.querySelector('#renderCanvas')?.getBoundingClientRect();
+    if (!room || !canvasRect) return null;
 
-  const centeredRoomDragPlan = await page.evaluate((roomId) => {
-    const state = window.__DAI_EDITOR_SLICE__.getState();
+    const fractions = [
+      [0, 0],
+      [0, -0.22], [0, 0.22], [-0.22, 0], [0.22, 0],
+      [-0.22, -0.22], [0.22, -0.22], [-0.22, 0.22], [0.22, 0.22],
+      [0, -0.34], [0, 0.34], [-0.34, 0], [0.34, 0],
+    ];
+
+    for (const [fx, fz] of fractions) {
+      const world = {
+        x: room.x + room.width * fx,
+        y: 0,
+        z: room.z + room.depth * fz,
+      };
+      const screen = api.getScreenPositionForWorldPoint(world);
+      if (!screen) continue;
+      const inside =
+        screen.x >= canvasRect.left + 8 &&
+        screen.x <= canvasRect.right - 8 &&
+        screen.y >= canvasRect.top + 8 &&
+        screen.y <= canvasRect.bottom - 8;
+      if (!inside) continue;
+
+      const probe = api.probePointerAt(screen.x, screen.y);
+      if (
+        probe?.hit?.kind === 'room' &&
+        probe.hit.specId === roomId &&
+        probe.hit.part === 'floor' &&
+        probe?.ground
+      ) {
+        return {
+          screen,
+          ground: probe.ground,
+          world,
+          room: {
+            x: room.x,
+            z: room.z,
+            width: room.width,
+            depth: room.depth,
+          },
+          canvasRect: {
+            left: canvasRect.left,
+            right: canvasRect.right,
+            top: canvasRect.top,
+            bottom: canvasRect.bottom,
+          },
+        };
+      }
+    }
+    return null;
+  }, centeredRoomId);
+  if (!centeredRoomDragAnchor?.screen) {
+    throw new Error('No visible pickable floor point available for isolated room drag.');
+  }
+
+  const centeredRoomDragPlan = await page.evaluate(({ roomId, anchor }) => {
+    const api = window.__DAI_EDITOR_SLICE__;
+    const state = api.getState();
     const room = state.rooms.find((entry) => entry.id === roomId);
     const canvasRect = document.querySelector('#renderCanvas')?.getBoundingClientRect();
     const overlaps = (candidate, other) => {
@@ -595,43 +649,48 @@ try {
       [16, 16], [-16, 16], [16, -16], [-16, -16],
       [24, 0], [-24, 0], [0, 24], [0, -24],
     ];
+
     for (const [dx, dz] of offsets) {
       const candidate = { ...room, x: room.x + dx, z: room.z + dz };
       if (state.rooms.some((other) => other.id !== roomId && overlaps(candidate, other))) {
         continue;
       }
-      const screen = window.__DAI_EDITOR_SLICE__.getScreenPositionForWorldPoint({
-        x: candidate.x,
+
+      // Keep the same relative floor grab point throughout the drag so the
+      // room-center delta is exactly dx/dz even when the initial grab is not
+      // at the room center.
+      const targetGrabWorld = {
+        x: anchor.ground.x + dx,
         y: 0,
-        z: candidate.z,
-      });
-      const screenInsideCanvas =
+        z: anchor.ground.z + dz,
+      };
+      const screen = api.getScreenPositionForWorldPoint(targetGrabWorld);
+      const inside =
         screen &&
         canvasRect &&
-        screen.x >= canvasRect.left + 16 &&
-        screen.x <= canvasRect.right - 16 &&
-        screen.y >= canvasRect.top + 16 &&
-        screen.y <= canvasRect.bottom - 16;
-      if (!screenInsideCanvas) continue;
+        screen.x >= canvasRect.left + 8 &&
+        screen.x <= canvasRect.right - 8 &&
+        screen.y >= canvasRect.top + 8 &&
+        screen.y <= canvasRect.bottom - 8;
+      if (!inside) continue;
+
       return {
         before: { x: room.x, z: room.z },
         target: { x: candidate.x, z: candidate.z },
         screen,
-        canvasRect: {
-          left: canvasRect.left,
-          right: canvasRect.right,
-          top: canvasRect.top,
-          bottom: canvasRect.bottom,
-        },
+        targetGrabWorld,
       };
     }
     return null;
-  }, centeredRoomId);
+  }, { roomId: centeredRoomId, anchor: centeredRoomDragAnchor });
   if (!centeredRoomDragPlan?.screen) {
     throw new Error('No visible safe target available for isolated room drag.');
   }
 
-  await page.mouse.move(centeredRoomScreen.x, centeredRoomScreen.y);
+  await page.mouse.move(
+    centeredRoomDragAnchor.screen.x,
+    centeredRoomDragAnchor.screen.y,
+  );
   await page.mouse.down({ button: 'left' });
   await page.mouse.move(
     centeredRoomDragPlan.screen.x,
