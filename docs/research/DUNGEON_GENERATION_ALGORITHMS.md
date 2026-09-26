@@ -2,6 +2,8 @@
 
 調査日: **2026-09-21**
 
+> 2026-09-26 実装更新: Version 2 は、V1のgameplay/topology semanticsを維持しつつSeed-driven spatial variationを追加する方式として実装・ローカル受入済み。今後はV1/V2を固定Versionとして残し、BSP / Delaunay+MST / Rooms+Mazes / Gameplay Graph等を交換可能な **Algorithm Lab Strategy** として追加する。最新の説明資料は `docs/generator-algorithms/` を参照。
+
 ## 目的
 
 Dungeon Architect AIで採用できるダンジョン生成方式を整理し、
@@ -499,9 +501,9 @@ Graph Grammar
 
 ---
 
-# 5. 今後のVersion候補として検討するポイント
+# 5. 今後のAlgorithm Lab / 次Version候補として検討するポイント
 
-まだVersion 2の方式は決定しない。
+Version 2の方式は決定・実装済み。以下はAlgorithm Labおよび将来のVersionで比較する。
 
 ただしV1で現在確認できている課題から、次Versionでは以下を比較対象にする。
 
