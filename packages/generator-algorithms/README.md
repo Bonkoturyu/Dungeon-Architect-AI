@@ -53,9 +53,9 @@ Generator Strategy Result
 DungeonSpec
 ```
 
-## Planned packages
+## Packages
 
-- `delaunay-mst/`
+- `delaunay-mst/` — implementation in progress; independent Core + app Adapter
 - `bsp/`
 - `rooms-mazes/`
 - `gameplay-graph/`
