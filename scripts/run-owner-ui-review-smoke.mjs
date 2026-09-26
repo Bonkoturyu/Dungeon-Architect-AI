@@ -98,6 +98,8 @@ try {
     htmlLang: document.documentElement.lang,
     title: document.querySelector('#onboardingTitle')?.textContent ?? '',
     createTab: document.querySelector('[data-workflow-tab="create"]')?.textContent ?? '',
+    generatorStrategyLabel: document.querySelector('[data-i18n="create.generatorStrategy"]')?.textContent ?? '',
+    generatorRecommendedText: document.querySelector('#generatorStrategy option:checked')?.textContent ?? '',
     headerCurrentLanguage: document.querySelector('#languageCycle')?.dataset.currentLanguage ?? null,
     headerNextLanguage: document.querySelector('#languageCycle')?.dataset.nextLanguage ?? null,
     dialogCurrentLanguage: document.querySelector('#onboardingLanguageCycle')?.dataset.currentLanguage ?? null,
@@ -111,19 +113,27 @@ try {
     stateLanguage: window.__DAI_EDITOR_SLICE__.getState().language,
   }));
 
-  for (const [language, expectedTitle, expectedCreate] of [
-    ['ja', 'Dungeon Architect AIへようこそ', '✨ 作成'],
-    ['zh-Hans', '欢迎使用 Dungeon Architect AI', '✨ 创建'],
-    ['zh-Hant', '歡迎使用 Dungeon Architect AI', '✨ 建立'],
-    ['ko', 'Dungeon Architect AI에 오신 것을 환영합니다', '✨ 생성'],
+  for (const [
+    language,
+    expectedTitle,
+    expectedCreate,
+    expectedGeneratorStrategy,
+    expectedRecommended,
+  ] of [
+    ['ja', 'Dungeon Architect AIへようこそ', '✨ 作成', '生成方式', 'Version 2 — 推奨'],
+    ['zh-Hans', '欢迎使用 Dungeon Architect AI', '✨ 创建', '生成方式', 'Version 2 — 推荐'],
+    ['zh-Hant', '歡迎使用 Dungeon Architect AI', '✨ 建立', '生成方式', 'Version 2 — 推薦'],
+    ['ko', 'Dungeon Architect AI에 오신 것을 환영합니다', '✨ 생성', '생성 방식', 'Version 2 — 권장'],
   ]) {
     await page.locator('#onboardingLanguageCycle').click();
     await page.waitForTimeout(30);
     languageSamples[language] = await page.evaluate(
-      ({ expectedTitle, expectedCreate }) => ({
+      ({ expectedTitle, expectedCreate, expectedGeneratorStrategy, expectedRecommended }) => ({
         htmlLang: document.documentElement.lang,
         title: document.querySelector('#onboardingTitle')?.textContent ?? '',
         createTab: document.querySelector('[data-workflow-tab="create"]')?.textContent ?? '',
+        generatorStrategyLabel: document.querySelector('[data-i18n="create.generatorStrategy"]')?.textContent ?? '',
+        generatorRecommendedText: document.querySelector('#generatorStrategy option:checked')?.textContent ?? '',
         headerCurrentLanguage: document.querySelector('#languageCycle')?.dataset.currentLanguage ?? null,
         headerNextLanguage: document.querySelector('#languageCycle')?.dataset.nextLanguage ?? null,
         dialogCurrentLanguage: document.querySelector('#onboardingLanguageCycle')?.dataset.currentLanguage ?? null,
@@ -133,8 +143,15 @@ try {
         stateLanguage: window.__DAI_EDITOR_SLICE__.getState().language,
         expectedTitle,
         expectedCreate,
+        expectedGeneratorStrategy,
+        expectedRecommended,
       }),
-      { expectedTitle, expectedCreate },
+      {
+        expectedTitle,
+        expectedCreate,
+        expectedGeneratorStrategy,
+        expectedRecommended,
+      },
     );
   }
 
@@ -144,6 +161,8 @@ try {
     htmlLang: document.documentElement.lang,
     title: document.querySelector('#onboardingTitle')?.textContent ?? '',
     createTab: document.querySelector('[data-workflow-tab="create"]')?.textContent ?? '',
+    generatorStrategyLabel: document.querySelector('[data-i18n="create.generatorStrategy"]')?.textContent ?? '',
+    generatorRecommendedText: document.querySelector('#generatorStrategy option:checked')?.textContent ?? '',
     headerCurrentLanguage: document.querySelector('#languageCycle')?.dataset.currentLanguage ?? null,
     headerNextLanguage: document.querySelector('#languageCycle')?.dataset.nextLanguage ?? null,
     dialogCurrentLanguage: document.querySelector('#onboardingLanguageCycle')?.dataset.currentLanguage ?? null,
@@ -975,13 +994,17 @@ try {
           sample.headerCurrentLanguage === language &&
           sample.dialogCurrentLanguage === language &&
           sample.headerCycleText === sample.dialogCycleText &&
-          sample.title.trim().length > 0 &&
-          sample.createTab.trim().length > 0) &&
+          sample.title === sample.expectedTitle &&
+          sample.createTab.trim() === sample.expectedCreate &&
+          sample.generatorStrategyLabel.trim() === sample.expectedGeneratorStrategy &&
+          sample.generatorRecommendedText.trim() === sample.expectedRecommended) &&
       englishRestored.htmlLang === 'en' &&
       englishRestored.stateLanguage === 'en' &&
       englishRestored.headerCurrentLanguage === 'en' &&
       englishRestored.dialogCurrentLanguage === 'en' &&
-      englishRestored.headerCycleText === englishRestored.dialogCycleText,
+      englishRestored.headerCycleText === englishRestored.dialogCycleText &&
+      englishRestored.generatorStrategyLabel.trim() === 'Generator' &&
+      englishRestored.generatorRecommendedText.trim() === 'Version 2 — Recommended',
     compactLanguageCycleControls:
       languageSamples.en.headerButtonCount === 1 &&
       languageSamples.en.dialogButtonCount === 1 &&
