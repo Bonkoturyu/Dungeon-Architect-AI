@@ -15,10 +15,6 @@ function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
-function normalizeHalfStep(value) {
-  return Math.round(value * 2) / 2;
-}
-
 function validateOptions({
   seed,
   roomCount,
@@ -44,8 +40,8 @@ function validateOptions({
     throw new RangeError('loopRatio must be between 0 and 1');
   }
   if (
-    !Number.isFinite(roomSizeMin) ||
-    !Number.isFinite(roomSizeMax) ||
+    !Number.isInteger(roomSizeMin) ||
+    !Number.isInteger(roomSizeMax) ||
     roomSizeMin <= 0 ||
     roomSizeMax < roomSizeMin
   ) {
@@ -155,8 +151,8 @@ function scatterPoints({
   const minZ = Math.min(...points.map((point) => point.z));
 
   return points.map((point) => ({
-    x: normalizeHalfStep(point.x - minX),
-    z: normalizeHalfStep(point.z - minZ),
+    x: quantize(point.x - minX, scatterStep),
+    z: quantize(point.z - minZ, scatterStep),
   }));
 }
 
