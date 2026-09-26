@@ -28,10 +28,16 @@ const failures = [];
 const layouts = new Set();
 let cases = 0;
 
+const totalCases = seeds.length * roomCounts.length * routeChoices.length;
+const startedAt = Date.now();
+
 for (const seed of seeds) {
   for (const roomCount of roomCounts) {
     for (const routeChoice of routeChoices) {
       cases += 1;
+      console.log(
+        `[DAI-100 GENERATOR V2 MATRIX] case ${cases}/${totalCases} seed=${seed} rooms=${roomCount} routeChoice=${routeChoice}`,
+      );
       const spec = generateDungeonSpecV2({
         seed,
         roomCount,
@@ -168,6 +174,7 @@ const evidence = {
     routeChoices,
     cases,
     uniqueSpatialLayouts: layouts.size,
+    durationMs: Date.now() - startedAt,
   },
   intentProfile: intentResult.profile,
   failures,
