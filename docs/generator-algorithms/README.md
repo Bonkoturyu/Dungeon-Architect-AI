@@ -142,7 +142,7 @@ application / selector UI
 | Version 1 Classic | 実装済 / Frozen | 回帰・比較・再現 |
 | Version 2 Recommended | 実装済 / Accepted candidate | 現行推奨 |
 | BSP | 設計対象 | Algorithm Lab |
-| Delaunay + MST + Loops | Core + Adapter実装中 / Product未登録 | Algorithm Lab / 最初の独立Core |
+| Delaunay + MST + Loops | Core accepted / Product登録候補を検証中 | Algorithm Lab / 最初の独立Core |
 | Rooms + Mazes | 設計対象 | Algorithm Lab |
 | Random Walk | 設計対象 | Cave系 |
 | Cellular Automata | 設計対象 | Cave系 |
