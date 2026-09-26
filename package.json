@@ -78,6 +78,8 @@
     "validate:dai-100-audio": "node scripts/run-dai-100-audio-polish-validation.mjs",
     "validate:dai-100-ai-edit": "node scripts/run-dai-100-ai-edit-v2-validation.mjs",
     "smoke:dai-100-generator-strategy-selector": "node scripts/run-dai-100-generator-strategy-selector-smoke.mjs",
+    "smoke:dai-100-delaunay-mst": "node scripts/run-dai-100-delaunay-mst-browser-smoke.mjs",
+    "validate:dai-100-delaunay-mst-matrix": "node scripts/run-dai-100-delaunay-mst-matrix.mjs",
     "validate:dai-100-generator-v2": "node scripts/run-dai-100-generator-v2-validation.mjs",
     "validate:dai-100-generator-v2:exhaustive": "node scripts/run-dai-100-generator-v2-validation.mjs",
     "validate:dai-100-generator-v2:fast": "node scripts/run-dai-100-generator-v2-fast-validation.mjs",
