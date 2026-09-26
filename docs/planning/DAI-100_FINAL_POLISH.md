@@ -196,6 +196,8 @@ Generator Strategy selector local browser acceptance passed on 2026-09-26 JST. T
 
 The integrated `validate:dai-100-generator-v2:fast` gate also passed 10/10 on 2026-09-26 JST at commit `59f2b236ac4bdda156a8adacd3fdd5a35b62474c`. It covered Strategy Core, Generator versioning, production hosting build, Owner UI, Generator selector, Generation surface, Exploration/Mystery, Multi-floor, syntax validation, and git diff/whitespace checks.
 
+Follow-up Generator-selector localization acceptance also passed on 2026-09-26 JST at `38e2a6df87b9371892eb14f35cad63b97333d25a`: Owner UI PASS with `allFiveLanguagesSwitchLive: true`, exact Generator/Recommended labels verified for EN/JA/zh-Hans/zh-Hant/KO, syntax validation PASS across 173 files, and git diff check PASS.
+
 ## Priority D — Motion / feedback
 
 Improve perceived quality without creating a second gameplay engine:
