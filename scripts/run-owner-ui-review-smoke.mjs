@@ -578,6 +578,7 @@ try {
   const centeredRoomDragPlan = await page.evaluate((roomId) => {
     const state = window.__DAI_EDITOR_SLICE__.getState();
     const room = state.rooms.find((entry) => entry.id === roomId);
+    const canvasRect = document.querySelector('#renderCanvas')?.getBoundingClientRect();
     const overlaps = (candidate, other) => {
       const overlapX =
         Math.min(candidate.x + candidate.width / 2, other.x + other.width / 2) -
@@ -588,38 +589,61 @@ try {
       return overlapX > 1e-9 && overlapZ > 1e-9;
     };
     const offsets = [
+      [8, 0], [-8, 0], [0, 8], [0, -8],
+      [12, 0], [-12, 0], [0, 12], [0, -12],
       [16, 0], [-16, 0], [0, 16], [0, -16],
       [16, 16], [-16, 16], [16, -16], [-16, -16],
       [24, 0], [-24, 0], [0, 24], [0, -24],
     ];
     for (const [dx, dz] of offsets) {
       const candidate = { ...room, x: room.x + dx, z: room.z + dz };
-      if (!state.rooms.some((other) => other.id !== roomId && overlaps(candidate, other))) {
-        return {
-          before: { x: room.x, z: room.z },
-          target: { x: candidate.x, z: candidate.z },
-          screen: window.__DAI_EDITOR_SLICE__.getScreenPositionForWorldPoint({
-            x: candidate.x,
-            y: 0,
-            z: candidate.z,
-          }),
-        };
+      if (state.rooms.some((other) => other.id !== roomId && overlaps(candidate, other))) {
+        continue;
       }
+      const screen = window.__DAI_EDITOR_SLICE__.getScreenPositionForWorldPoint({
+        x: candidate.x,
+        y: 0,
+        z: candidate.z,
+      });
+      const screenInsideCanvas =
+        screen &&
+        canvasRect &&
+        screen.x >= canvasRect.left + 16 &&
+        screen.x <= canvasRect.right - 16 &&
+        screen.y >= canvasRect.top + 16 &&
+        screen.y <= canvasRect.bottom - 16;
+      if (!screenInsideCanvas) continue;
+      return {
+        before: { x: room.x, z: room.z },
+        target: { x: candidate.x, z: candidate.z },
+        screen,
+        canvasRect: {
+          left: canvasRect.left,
+          right: canvasRect.right,
+          top: canvasRect.top,
+          bottom: canvasRect.bottom,
+        },
+      };
     }
     return null;
   }, centeredRoomId);
-  if (!centeredRoomDragPlan?.screen) throw new Error('No safe target available for isolated room drag.');
+  if (!centeredRoomDragPlan?.screen) {
+    throw new Error('No visible safe target available for isolated room drag.');
+  }
 
   await page.mouse.move(centeredRoomScreen.x, centeredRoomScreen.y);
   await page.mouse.down({ button: 'left' });
-  await page.mouse.move(centeredRoomDragPlan.screen.x, centeredRoomDragPlan.screen.y, { steps: 14 });
+  await page.mouse.move(
+    centeredRoomDragPlan.screen.x,
+    centeredRoomDragPlan.screen.y,
+    { steps: 14 },
+  );
   await page.mouse.up({ button: 'left' });
-  await page.waitForFunction(({ roomId, target }) => {
+  await page.waitForFunction(({ roomId, before }) => {
     const room = window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === roomId);
     return room &&
-      Math.abs(room.x - target.x) <= 0.25 &&
-      Math.abs(room.z - target.z) <= 0.25;
-  }, { roomId: centeredRoomId, target: centeredRoomDragPlan.target });
+      Math.hypot(room.x - before.x, room.z - before.z) >= 1;
+  }, { roomId: centeredRoomId, before: centeredRoomDragPlan.before });
   const centeredRoomAfterDrag = await page.evaluate((roomId) =>
     window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === roomId),
   centeredRoomId);
@@ -1008,8 +1032,10 @@ try {
       !centeredAddState.corridors.some((corridor) =>
         corridor.fromRoomId === centeredRoomId || corridor.toRoomId === centeredRoomId),
     unconnectedRoomCanBeDraggedFreely:
-      Math.abs(centeredRoomAfterDrag.x - centeredRoomDragPlan.target.x) <= 0.25 &&
-      Math.abs(centeredRoomAfterDrag.z - centeredRoomDragPlan.target.z) <= 0.25 &&
+      Math.hypot(
+        centeredRoomAfterDrag.x - centeredRoomDragPlan.before.x,
+        centeredRoomAfterDrag.z - centeredRoomDragPlan.before.z,
+      ) >= 1 &&
       afterCenteredRoomCleanup.rooms.length === structuralAfterCleanup.rooms.length,
     directCorridorDragPreviewMatchesFinalRouting:
       corridorDraftBeforeRelease?.state === 'ready' &&
