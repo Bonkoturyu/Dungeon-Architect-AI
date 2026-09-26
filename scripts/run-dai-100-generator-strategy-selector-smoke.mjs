@@ -150,14 +150,25 @@ try {
     await page.evaluate(() => window.__DAI_ONBOARDING__.close());
   }
 
-  const initial = await page.evaluate(() => ({
-    state: window.__DAI_EDITOR_SLICE__.getState(),
-    strategies: window.__DAI_EDITOR_SLICE__.getGeneratorStrategies(),
-    selectedValue: document.querySelector('#generatorStrategy')?.value ?? null,
-    optionValues: [
-      ...document.querySelectorAll('#generatorStrategy option'),
-    ].map((option) => option.value),
-  }));
+  const initial = await page.evaluate(() => {
+    const selector = document.querySelector('#generatorStrategy');
+    const rect = selector?.getBoundingClientRect() ?? null;
+    return {
+      state: window.__DAI_EDITOR_SLICE__.getState(),
+      strategies: window.__DAI_EDITOR_SLICE__.getGeneratorStrategies(),
+      selectedValue: selector?.value ?? null,
+      optionValues: [
+        ...document.querySelectorAll('#generatorStrategy option'),
+      ].map((option) => option.value),
+      selectorVisible:
+        Boolean(selector) &&
+        rect !== null &&
+        rect.width > 0 &&
+        rect.height > 0 &&
+        getComputedStyle(selector).visibility !== 'hidden' &&
+        getComputedStyle(selector).display !== 'none',
+    };
+  });
 
   await page.fill('#generationPrompt', prompt);
 
@@ -196,9 +207,7 @@ try {
   const recommendedLayout = layoutSignature(recommended);
 
   const checks = {
-    strategySelectorVisible:
-      (await page.locator('#generatorStrategy').count()) === 1 &&
-      (await page.locator('#generatorStrategy').isVisible()) === true,
+    strategySelectorVisible: initial.selectorVisible === true,
     registryListsClassicAndRecommended:
       initial.strategies.some(
         (entry) => entry.id === GENERATOR_STRATEGY_V1_CLASSIC_ID,
@@ -253,6 +262,7 @@ try {
       selectedValue: initial.selectedValue,
       strategies: initial.strategies,
       optionValues: initial.optionValues,
+      selectorVisible: initial.selectorVisible,
     },
     classic: {
       generatorVersion: classic.lastGeneration?.generatorVersion ?? null,
