@@ -9,6 +9,7 @@ import {
   GENERATOR_STRATEGY_V2_RECOMMENDED_ID,
   generatorStrategyV2Recommended,
 } from './strategies/v2-recommended.js';
+import { seedFromPromptV1 } from './versions/v1/design-intent-generator.js';
 
 export {
   GENERATOR_STRATEGY_V1_CLASSIC_ID,
@@ -17,6 +18,10 @@ export {
 
 export const RECOMMENDED_GENERATOR_STRATEGY_ID =
   GENERATOR_STRATEGY_V2_RECOMMENDED_ID;
+
+export function deriveGeneratorSeedFromPrompt(prompt) {
+  return seedFromPromptV1(prompt);
+}
 
 export function createBuiltinGeneratorStrategyRegistry() {
   return createGeneratorStrategyRegistry([
