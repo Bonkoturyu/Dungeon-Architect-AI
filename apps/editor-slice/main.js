@@ -32,6 +32,7 @@ import { createDungeonScenePlan, createThreeRendererAdapter } from '../../packag
 import {
   GENERATOR_STRATEGY_V1_CLASSIC_ID,
   GENERATOR_STRATEGY_V2_RECOMMENDED_ID,
+  GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID,
   RECOMMENDED_GENERATOR_STRATEGY_ID,
   createBuiltinGeneratorStrategyRegistry,
   deriveGeneratorSeedFromPrompt,
@@ -299,6 +300,9 @@ function generatorStrategyLabel(metadata) {
   }
   if (metadata.id === GENERATOR_STRATEGY_V1_CLASSIC_ID) {
     return t('create.generatorClassic');
+  }
+  if (metadata.id === GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID) {
+    return t('create.generatorDelaunayMst');
   }
   return metadata.displayName;
 }
