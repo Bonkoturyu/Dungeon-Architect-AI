@@ -97,7 +97,7 @@ try {
   languageSamples.en = await page.evaluate(() => ({
     htmlLang: document.documentElement.lang,
     title: document.querySelector('#onboardingTitle')?.textContent ?? '',
-    createTab: document.querySelector('[data-workflow-tab="create"]')?.textContent ?? '',
+    createTab: document.querySelector('.workflow-tab[data-workflow-tab="create"]')?.textContent ?? '',
     generatorStrategyLabel: document.querySelector('[data-i18n="create.generatorStrategy"]')?.textContent ?? '',
     generatorRecommendedText: document.querySelector('#generatorStrategy option:checked')?.textContent ?? '',
     headerCurrentLanguage: document.querySelector('#languageCycle')?.dataset.currentLanguage ?? null,
@@ -131,7 +131,7 @@ try {
       ({ expectedTitle, expectedCreate, expectedGeneratorStrategy, expectedRecommended }) => ({
         htmlLang: document.documentElement.lang,
         title: document.querySelector('#onboardingTitle')?.textContent ?? '',
-        createTab: document.querySelector('[data-workflow-tab="create"]')?.textContent ?? '',
+        createTab: document.querySelector('.workflow-tab[data-workflow-tab="create"]')?.textContent ?? '',
         generatorStrategyLabel: document.querySelector('[data-i18n="create.generatorStrategy"]')?.textContent ?? '',
         generatorRecommendedText: document.querySelector('#generatorStrategy option:checked')?.textContent ?? '',
         headerCurrentLanguage: document.querySelector('#languageCycle')?.dataset.currentLanguage ?? null,
@@ -160,7 +160,7 @@ try {
   const englishRestored = await page.evaluate(() => ({
     htmlLang: document.documentElement.lang,
     title: document.querySelector('#onboardingTitle')?.textContent ?? '',
-    createTab: document.querySelector('[data-workflow-tab="create"]')?.textContent ?? '',
+    createTab: document.querySelector('.workflow-tab[data-workflow-tab="create"]')?.textContent ?? '',
     generatorStrategyLabel: document.querySelector('[data-i18n="create.generatorStrategy"]')?.textContent ?? '',
     generatorRecommendedText: document.querySelector('#generatorStrategy option:checked')?.textContent ?? '',
     headerCurrentLanguage: document.querySelector('#languageCycle')?.dataset.currentLanguage ?? null,
