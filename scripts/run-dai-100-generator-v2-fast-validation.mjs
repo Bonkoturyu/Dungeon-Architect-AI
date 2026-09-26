@@ -17,6 +17,11 @@ const steps = [
     args: ['run', 'build:hosting'],
   },
   {
+    label: 'Generator strategy selector smoke',
+    command: 'npm',
+    args: ['run', 'smoke:dai-100-generator-strategy-selector'],
+  },
+  {
     label: 'Owner UI regression smoke',
     command: 'npm',
     args: ['run', 'smoke:owner-ui-review'],
