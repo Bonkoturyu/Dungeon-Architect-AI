@@ -194,6 +194,8 @@ The application selector wiring has now started. Version 2 remains the default R
 
 Generator Strategy selector local browser acceptance passed on 2026-09-26 JST. The visible-Chrome smoke verified that the selector is visible, both V1 Classic and V2 Recommended are registered/listed, V2 is selected by default, V1 and V2 dispatch to the expected generator versions, the same Prompt keeps the same deterministic Seed across strategies, V1/V2 produce different spatial embeddings, both outputs remain Start-eligible, the DesignIntent request shape remains unchanged, and browser/request errors are absent.
 
+The integrated `validate:dai-100-generator-v2:fast` gate also passed 10/10 on 2026-09-26 JST at commit `59f2b236ac4bdda156a8adacd3fdd5a35b62474c`. It covered Strategy Core, Generator versioning, production hosting build, Owner UI, Generator selector, Generation surface, Exploration/Mystery, Multi-floor, syntax validation, and git diff/whitespace checks.
+
 ## Priority D — Motion / feedback
 
 Improve perceived quality without creating a second gameplay engine:
