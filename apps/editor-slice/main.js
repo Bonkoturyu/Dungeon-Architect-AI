@@ -29,11 +29,13 @@ import {
   xpRequiredForNextLevel,
 } from '../../packages/play-core/src/progression-runtime.js';
 import { createDungeonScenePlan, createThreeRendererAdapter } from '../../packages/renderer-three/src/index.js';
-import { generateDungeonFromDesignIntent } from '../../packages/generator/src/design-intent-generator.js';
 import {
-  DEFAULT_GENERATOR_VERSION,
-  GENERATOR_VERSION_V2,
-} from '../../packages/generator/src/generator-versions.js';
+  GENERATOR_STRATEGY_V1_CLASSIC_ID,
+  GENERATOR_STRATEGY_V2_RECOMMENDED_ID,
+  RECOMMENDED_GENERATOR_STRATEGY_ID,
+  createBuiltinGeneratorStrategyRegistry,
+  deriveGeneratorSeedFromPrompt,
+} from '../../packages/generator/src/strategy-catalog.js';
 import {
   createDungeonRunResult,
   createDungeonRunSpec,
@@ -117,6 +119,7 @@ const addEntityButton = document.querySelector('#addEntity');
 const moveEntityButton = document.querySelector('#moveEntity');
 const removeEntityButton = document.querySelector('#removeEntity');
 const generationPrompt = document.querySelector('#generationPrompt');
+const generatorStrategySelect = document.querySelector('#generatorStrategy');
 const floorCountInput = document.querySelector('#floorCount');
 const floorSelect = document.querySelector('#floorSelect');
 const floorSummary = document.querySelector('#floorSummary');
@@ -168,6 +171,7 @@ let corridorDraft = null;
 let roomDrag = null;
 let viewportNoticeTimer = null;
 
+const generatorStrategyRegistry = createBuiltinGeneratorStrategyRegistry();
 const audioPresentation = createProgrammaticAudio();
 
 function audioModeForUi() {
@@ -289,26 +293,98 @@ function derivedFloorSeed(baseSeed, floorIndex) {
   return (baseSeed + Math.imul(floorIndex, 0x9e3779b9)) >>> 0;
 }
 
-function generateFloorSet(intent, { prompt, count, baseSeed = null, idPrefix = null } = {}) {
-  const total = Math.max(1, Math.min(10, Number.isInteger(count) ? count : 1));
-  const first = generateDungeonFromDesignIntent(intent, {
-    version: GENERATOR_VERSION_V2,
+function generatorStrategyLabel(metadata) {
+  if (metadata.id === GENERATOR_STRATEGY_V2_RECOMMENDED_ID) {
+    return t('create.generatorRecommended');
+  }
+  if (metadata.id === GENERATOR_STRATEGY_V1_CLASSIC_ID) {
+    return t('create.generatorClassic');
+  }
+  return metadata.displayName;
+}
+
+function renderGeneratorStrategyOptions() {
+  if (!generatorStrategySelect) return;
+  const available = generatorStrategyRegistry.list();
+  const previous =
+    generatorStrategyRegistry.has(generatorStrategySelect.value)
+      ? generatorStrategySelect.value
+      : RECOMMENDED_GENERATOR_STRATEGY_ID;
+
+  generatorStrategySelect.replaceChildren(...available.map((metadata) => {
+    const option = document.createElement('option');
+    option.value = metadata.id;
+    option.textContent = generatorStrategyLabel(metadata);
+    option.dataset.family = metadata.family;
+    option.dataset.algorithmVersion = metadata.algorithmVersion;
+    return option;
+  }));
+  generatorStrategySelect.value =
+    generatorStrategyRegistry.has(previous)
+      ? previous
+      : RECOMMENDED_GENERATOR_STRATEGY_ID;
+}
+
+function selectedGeneratorStrategyId() {
+  const selected = generatorStrategySelect?.value;
+  return generatorStrategyRegistry.has(selected)
+    ? selected
+    : RECOMMENDED_GENERATOR_STRATEGY_ID;
+}
+
+async function generateFloorSet(
+  intent,
+  {
     prompt,
-    ...(baseSeed === null ? {} : { seed: baseSeed >>> 0 }),
-    ...(idPrefix ? { id: idPrefix } : {}),
-  });
-  const rootSeed = first.profile.seed >>> 0;
-  const rootId = idPrefix ?? first.spec.id;
+    count,
+    baseSeed = null,
+    idPrefix = null,
+    strategyId = selectedGeneratorStrategyId(),
+  } = {},
+) {
+  const total = Math.max(1, Math.min(10, Number.isInteger(count) ? count : 1));
+  const rootSeed =
+    baseSeed === null
+      ? deriveGeneratorSeedFromPrompt(prompt)
+      : baseSeed >>> 0;
+  const rootId = idPrefix ?? `generated-${rootSeed}`;
+
+  async function generateFloor(seed, id) {
+    const result = await generatorStrategyRegistry.generate(strategyId, {
+      seed,
+      id,
+      prompt,
+      intent,
+    });
+    const profile = result.diagnostics?.profile ?? {};
+    return {
+      spec: result.spec,
+      profile: {
+        ...profile,
+        seed: result.provenance.seed,
+        roomCount: result.spec.rooms.length,
+        routeChoice:
+          profile.routeChoice ??
+          intent?.routeChoice ??
+          null,
+      },
+      generatorVersion: result.provenance.generatorVersion ?? null,
+      generatorStrategyId: result.provenance.strategyId,
+      algorithmVersion: result.provenance.algorithmVersion,
+      provenance: result.provenance,
+      diagnostics: result.diagnostics,
+    };
+  }
+
+  const first = await generateFloor(rootSeed, rootId);
   const generated = [first];
 
   for (let floorIndex = 1; floorIndex < total; floorIndex += 1) {
     const seed = derivedFloorSeed(rootSeed, floorIndex);
-    generated.push(generateDungeonFromDesignIntent(intent, {
-      version: GENERATOR_VERSION_V2,
-      prompt,
+    generated.push(await generateFloor(
       seed,
-      id: `${rootId}-floor-${String(floorIndex + 1).padStart(2, '0')}`,
-    }));
+      `${rootId}-floor-${String(floorIndex + 1).padStart(2, '0')}`,
+    ));
   }
 
   return generated;
@@ -463,6 +539,13 @@ function snapshotState() {
     validationCriticalCount: gate.criticalCount,
     validationErrors: gate.errors.map((entry) => ({ ...entry })),
     generationBusy,
+    generatorStrategyId: selectedGeneratorStrategyId(),
+    availableGeneratorStrategies: generatorStrategyRegistry.list().map((entry) => ({
+      id: entry.id,
+      displayName: entry.displayName,
+      family: entry.family,
+      algorithmVersion: entry.algorithmVersion,
+    })),
     lastDesignIntent: lastDesignIntent ? clone(lastDesignIntent) : null,
     lastGeneration: lastGeneration ? clone(lastGeneration) : null,
     promptHistory: [...promptHistory],
@@ -997,6 +1080,9 @@ function updateUi() {
   removeEntityButton.disabled = !editing || authoringBusy || !entity || entity.type === 'start' || entity.type === 'goal';
   addEntityButton.disabled = !editing || authoringBusy || !entityRoom.value;
   generationPrompt.disabled = !editing || authoringBusy;
+  if (generatorStrategySelect) {
+    generatorStrategySelect.disabled = !editing || authoringBusy;
+  }
   if (floorCountInput) floorCountInput.disabled = !editing || authoringBusy;
   const runValidation = authoringRunSpec();
   generateDungeonButton.disabled = !editing || authoringBusy || !generationPrompt.value.trim();
@@ -1899,7 +1985,12 @@ async function generateDungeonFromPrompt() {
     }
 
     const floorCount = requestedFloorCount();
-    const generatedFloors = generateFloorSet(payload.intent, { prompt, count: floorCount });
+    const generatorStrategyId = selectedGeneratorStrategyId();
+    const generatedFloors = await generateFloorSet(payload.intent, {
+      prompt,
+      count: floorCount,
+      strategyId: generatorStrategyId,
+    });
     const generated = generatedFloors[0];
     setAuthoringFloors(generatedFloors.map((entry) => entry.spec), 0);
     selectedRoomId = null;
@@ -1914,7 +2005,9 @@ async function generateDungeonFromPrompt() {
     lastNaturalEditCommand = null;
     lastDesignIntent = clone(payload.intent);
     lastGeneration = {
-      generatorVersion: generated.generatorVersion ?? DEFAULT_GENERATOR_VERSION,
+      generatorVersion: generated.generatorVersion,
+      generatorStrategyId: generated.generatorStrategyId,
+      algorithmVersion: generated.algorithmVersion,
       selectedProvider: payload.selectedProvider ?? 'unknown',
       seed: generated.profile.seed,
       roomCount: generated.profile.roomCount,
@@ -2274,19 +2367,25 @@ function freshMysterySeed() {
   return seed;
 }
 
-function startMysteryDungeon() {
+async function startMysteryDungeon() {
   if (mode !== 'edit' || generationBusy || naturalEditBusy || !lastDesignIntent) return false;
 
   const seed = freshMysterySeed();
-  const generatedFloors = generateFloorSet(lastDesignIntent, {
+  const generatorStrategyId =
+    lastGeneration?.generatorStrategyId ??
+    selectedGeneratorStrategyId();
+  const generatedFloors = await generateFloorSet(lastDesignIntent, {
     prompt: 'mystery-play',
     count: Math.max(1, floorSessions.length),
     baseSeed: seed,
     idPrefix: `mystery-${seed}`,
+    strategyId: generatorStrategyId,
   });
   const generated = generatedFloors[0];
   mysteryGeneration = {
-    generatorVersion: generated.generatorVersion ?? DEFAULT_GENERATOR_VERSION,
+    generatorVersion: generated.generatorVersion,
+    generatorStrategyId: generated.generatorStrategyId,
+    algorithmVersion: generated.algorithmVersion,
     seed: generated.profile.seed,
     roomCount: generated.profile.roomCount,
     routeChoice: generated.profile.routeChoice,
@@ -2923,6 +3022,7 @@ function handleCanvasPointerCancel(event) {
 
 function refreshLocalizedUi() {
   if (!session || !adapter) return;
+  renderGeneratorStrategyOptions();
   renderPromptHistory();
   ensureRoomOptions();
   ensureEntityOptions();
@@ -3049,6 +3149,7 @@ async function run() {
       button.addEventListener('click', () => setInspectorTab(button.dataset.inspectorTabTarget));
     }
     setInspectorTab(inspectorTab);
+    renderGeneratorStrategyOptions();
     startButton.addEventListener('click', startDungeon);
     mysteryPlayButton.addEventListener('click', startMysteryDungeon);
     returnEditButton.addEventListener('click', returnToEdit);
@@ -3080,6 +3181,7 @@ async function run() {
     moveEntityButton.addEventListener('click', moveEntityToTargetRoom);
     removeEntityButton.addEventListener('click', removeEntity);
     generationPrompt.addEventListener('input', updateUi);
+    generatorStrategySelect?.addEventListener('change', updateUi);
     floorCountInput?.addEventListener('input', updateUi);
     floorCountInput?.addEventListener('change', () => {
       floorCountInput.value = String(requestedFloorCount());
@@ -3136,6 +3238,13 @@ async function run() {
       removeSelectedCorridor,
       resizeSelectedRoom,
       checkStartGoalPath,
+      getGeneratorStrategies: () => generatorStrategyRegistry.list().map((entry) => ({ ...entry })),
+      setGeneratorStrategy: (id) => {
+        if (!generatorStrategyRegistry.has(id) || !generatorStrategySelect) return false;
+        generatorStrategySelect.value = id;
+        updateUi();
+        return true;
+      },
       generateDungeonFromPrompt,
       applyNaturalEdit,
       evaluateStartGateForSpec: (spec) => evaluateStartGate(spec),
