@@ -188,7 +188,9 @@ Documentation is maintained in paired Markdown + HTML under:
 
 `docs/generator-algorithms/`
 
-The existing application generation path is intentionally not switched yet. First gate is Strategy Core / V1-V2 equivalence validation; then the selector UI and first Algorithm Lab Core can be added.
+Strategy Core / V1-V2 equivalence validation passed locally on 2026-09-26 JST: Strategy Core 3/3, Generator 24/24, syntax validation 172 files PASS, and git diff check PASS.
+
+The application selector wiring has now started. Version 2 remains the default Recommended strategy; Version 1 remains the frozen Classic strategy. Algorithm Lab entries will be registered through the same catalog as their independent Core packages are implemented.
 
 ## Priority D — Motion / feedback
 
