@@ -1280,7 +1280,7 @@ try {
     noSelectionRoomUi,
     beforeCenteredAdd,
     centeredAddState,
-    centeredRoomScreen,
+    centeredRoomDragAnchor,
     centeredRoomDragPlan,
     centeredRoomAfterDrag,
     afterCenteredRoomCleanup,
