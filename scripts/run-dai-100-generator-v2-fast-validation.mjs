@@ -2,6 +2,11 @@ import { spawnSync } from 'node:child_process';
 
 const steps = [
   {
+    label: 'Generator strategy core tests',
+    command: 'npm',
+    args: ['run', 'test:generator-strategy-core'],
+  },
+  {
     label: 'Generator unit/versioning tests',
     command: 'npm',
     args: ['run', 'test:generator'],
