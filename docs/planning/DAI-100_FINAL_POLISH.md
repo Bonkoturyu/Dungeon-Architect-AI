@@ -143,7 +143,7 @@ One-command validation:
 
 `npm run validate:dai-100-generator-v2`
 
-This phase is **not accepted yet** until the owner-local matrix and browser regressions pass.
+Owner-local acceptance is complete as of 2026-09-26 JST. Evidence covers Generator tests 21/21, the exhaustive 300-case routeability matrix with 60 unique spatial layouts and zero failures, production hosting build, Generator V2 browser provenance, Exploration/Mystery, Multi-floor isolation/progression, Owner UI regression, syntax validation, and git diff checks. The final Owner UI fix changed only smoke/test code after the exhaustive runtime matrix, so the accepted Generator V2 runtime itself did not change between exhaustive and final UI evidence.
 
 Generator V1 spatial embedding is deterministic serpentine placement for a given room count. That limits the visual effect of different prompts.
 
