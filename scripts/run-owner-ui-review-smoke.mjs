@@ -768,9 +768,36 @@ try {
     };
   });
 
-  const startPoint = await page.evaluate((id) =>
-    window.__DAI_EDITOR_SLICE__.getScreenPositionForSpecId(id), startEntityId);
-  if (!startPoint) throw new Error('Start marker screen point unavailable.');
+  // Clear the room HUD before the 3D-entity click probe so DOM overlays
+  // cannot intercept a marker click on seed-varying V2 layouts.
+  await page.evaluate(() => window.__DAI_EDITOR_SLICE__.selectRoom(null));
+
+  const startPoint = await page.evaluate((id) => {
+    const api = window.__DAI_EDITOR_SLICE__;
+    const center = api.getScreenPositionForSpecId(id);
+    const canvas = document.querySelector('#renderCanvas');
+    const rect = canvas?.getBoundingClientRect();
+    if (!center || !canvas || !rect) return null;
+
+    for (let radius = 0; radius <= 28; radius += 4) {
+      for (let dx = -radius; dx <= radius; dx += 4) {
+        for (let dy = -radius; dy <= radius; dy += 4) {
+          if (Math.max(Math.abs(dx), Math.abs(dy)) !== radius) continue;
+          const x = center.x + dx;
+          const y = center.y + dy;
+          if (
+            x < rect.left + 2 || x > rect.right - 2 ||
+            y < rect.top + 2 || y > rect.bottom - 2
+          ) continue;
+          if (document.elementFromPoint(x, y) !== canvas) continue;
+          const probe = api.probePointerAt(x, y);
+          if (probe?.hit?.specId === id) return { x, y };
+        }
+      }
+    }
+    return null;
+  }, startEntityId);
+  if (!startPoint) throw new Error('Start marker has no visible pickable screen point.');
   await page.mouse.click(startPoint.x, startPoint.y);
   await page.waitForFunction((id) =>
     window.__DAI_EDITOR_SLICE__.getState().selectedEntityId === id, startEntityId);
