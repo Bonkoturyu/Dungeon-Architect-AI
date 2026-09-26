@@ -12,9 +12,15 @@ const steps = [
     args: ['scripts/run-dai-100-generator-v2-matrix.mjs'],
   },
   {
+    label: 'Production hosting build',
+    command: 'npm',
+    args: ['run', 'build:hosting'],
+  },
+  {
     label: 'Generation surface browser smoke',
     command: 'npm',
     args: ['run', 'smoke:generation-surface'],
+    env: { DAI_EXPECT_GENERATOR_VERSION: '2' },
   },
   {
     label: 'Exploration / Mystery browser smoke',
@@ -32,11 +38,6 @@ const steps = [
     args: ['run', 'smoke:owner-ui-review'],
   },
   {
-    label: 'Production hosting build',
-    command: 'npm',
-    args: ['run', 'build:hosting'],
-  },
-  {
     label: 'Syntax validation',
     command: 'npm',
     args: ['run', 'validate:syntax'],
@@ -46,7 +47,7 @@ const steps = [
     command: 'git',
     args: ['diff', '--check', 'origin/main...HEAD'],
   },
-];
+]
 
 const results = [];
 
@@ -74,6 +75,10 @@ for (const [index, step] of steps.entries()) {
   const result = spawnSync(executable, args, {
     stdio: 'inherit',
     windowsHide: true,
+    env: {
+      ...process.env,
+      ...(step.env ?? {}),
+    },
   });
   const passed = result.status === 0 && !result.error;
   results.push({
