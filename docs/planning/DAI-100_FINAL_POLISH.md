@@ -192,6 +192,8 @@ Strategy Core / V1-V2 equivalence validation passed locally on 2026-09-26 JST: S
 
 The application selector wiring has now started. Version 2 remains the default Recommended strategy; Version 1 remains the frozen Classic strategy. Algorithm Lab entries will be registered through the same catalog as their independent Core packages are implemented.
 
+Generator Strategy selector local browser acceptance passed on 2026-09-26 JST. The visible-Chrome smoke verified that the selector is visible, both V1 Classic and V2 Recommended are registered/listed, V2 is selected by default, V1 and V2 dispatch to the expected generator versions, the same Prompt keeps the same deterministic Seed across strategies, V1/V2 produce different spatial embeddings, both outputs remain Start-eligible, the DesignIntent request shape remains unchanged, and browser/request errors are absent.
+
 ## Priority D — Motion / feedback
 
 Improve perceived quality without creating a second gameplay engine:
