@@ -57,19 +57,28 @@ test('Delaunay adapter preserves DesignIntent-driven MVP content semantics', asy
     request,
   );
 
-  const entityTypes = new Set(
-    result.spec.entities.map((entity) => entity.type),
+  const counts = Object.fromEntries(
+    ['start', 'goal', 'enemy', 'treasure', 'trap', 'recovery'].map(
+      (type) => [
+        type,
+        result.spec.entities.filter((entity) => entity.type === type)
+          .length,
+      ],
+    ),
   );
-  for (const required of [
-    'start',
-    'goal',
-    'enemy',
-    'treasure',
-    'trap',
-    'recovery',
-  ]) {
-    assert.equal(entityTypes.has(required), true);
-  }
+
+  assert.equal(counts.start, 1);
+  assert.equal(counts.goal, 1);
+  assert.equal(counts.enemy, result.diagnostics.profile.enemyCount);
+  assert.equal(
+    counts.treasure,
+    result.diagnostics.profile.treasureCount,
+  );
+  assert.equal(counts.trap, result.diagnostics.profile.trapCount);
+  assert.equal(
+    counts.recovery,
+    result.diagnostics.profile.recoveryCount,
+  );
 
   assert.ok(result.spec.events.length >= 1);
   assert.equal(
@@ -81,6 +90,24 @@ test('Delaunay adapter preserves DesignIntent-driven MVP content semantics', asy
     result.spec.entities.find((entity) => entity.type === 'goal')
       ?.roomId,
     'room-010',
+  );
+});
+
+test('Delaunay adapter preserves conditional recovery placement', async () => {
+  const result = await generatorStrategyDelaunayMstLab.generate({
+    ...request,
+    intent: {
+      ...request.intent,
+      fairness: 0.8,
+    },
+  });
+
+  assert.equal(result.diagnostics.profile.recoveryCount, 1);
+  assert.equal(
+    result.spec.entities.filter(
+      (entity) => entity.type === 'recovery',
+    ).length,
+    1,
   );
 });
 
