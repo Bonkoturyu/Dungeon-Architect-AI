@@ -280,9 +280,9 @@ export function generateDelaunayMstCore({
     maxScatterAttemptsPerRoom,
   });
 
-  const scatterPrng = createPrng(seed ^ 0x8d12f3a1);
-  const roomPrng = createPrng(seed ^ 0x19a5c4e7);
-  const loopPrng = createPrng(seed ^ 0x53f91b2d);
+  const scatterPrng = createPrng((seed ^ 0x8d12f3a1) >>> 0);
+  const roomPrng = createPrng((seed ^ 0x19a5c4e7) >>> 0);
+  const loopPrng = createPrng((seed ^ 0x53f91b2d) >>> 0);
 
   const points = scatterPoints({
     prng: scatterPrng,
