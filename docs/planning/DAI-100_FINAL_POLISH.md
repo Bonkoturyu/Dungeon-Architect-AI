@@ -2,7 +2,7 @@
 
 ## Status
 
-**ACTIVE — Audio Polish implementation complete, acceptance pending.**
+**ACTIVE — Generator Algorithm Lab implementation in progress.**
 
 DAI-099 remains the accepted rollback candidate. DAI-100 is a new replacement-candidate track for presentation and judge-experience improvements. It must not silently mutate the frozen DAI-099 identity.
 
@@ -197,6 +197,28 @@ Generator Strategy selector local browser acceptance passed on 2026-09-26 JST. T
 The integrated `validate:dai-100-generator-v2:fast` gate also passed 10/10 on 2026-09-26 JST at commit `59f2b236ac4bdda156a8adacd3fdd5a35b62474c`. It covered Strategy Core, Generator versioning, production hosting build, Owner UI, Generator selector, Generation surface, Exploration/Mystery, Multi-floor, syntax validation, and git diff/whitespace checks.
 
 Follow-up Generator-selector localization acceptance also passed on 2026-09-26 JST at `38e2a6df87b9371892eb14f35cad63b97333d25a`: Owner UI PASS with `allFiveLanguagesSwitchLive: true`, exact Generator/Recommended labels verified for EN/JA/zh-Hans/zh-Hant/KO, syntax validation PASS across 173 files, and git diff check PASS.
+
+### First Algorithm Lab Core — Delaunay + MST + Loops
+
+Implementation has started under `packages/generator-algorithms/delaunay-mst/`.
+
+The reusable Core is intentionally independent from Dungeon Architect AI application layers:
+
+- no DOM / Three.js / Editor / Play / provider dependency;
+- explicit deterministic Seed;
+- project-authored scatter, Bowyer-Watson Delaunay triangulation, Kruskal MST, and bounded loop restoration;
+- algorithm-native plain-data output;
+- internal connectivity / duplicate-edge / room-overlap invariants;
+- suitable for later npm/WASM/DLL-style wrapping.
+
+The application-specific Adapter lives separately at `packages/generator/src/strategies/delaunay-mst-lab.js`. It maps the Core IR to DungeonSpec and, for this first gate, reuses the frozen V1 DesignIntent content/profile mapping so entity/event semantics remain stable while topology changes.
+
+Dedicated Markdown + HTML documentation is available at:
+
+- `docs/generator-algorithms/DELAUNAY_MST.md`
+- `docs/generator-algorithms/DELAUNAY_MST.html`
+
+The strategy is **not yet registered in the Product selector**. First gate is `npm run validate:dai-100-delaunay-mst`; Product registration follows only after Core/Adapter acceptance.
 
 ## Priority D — Motion / feedback
 
