@@ -1930,6 +1930,11 @@
             <span data-i18n="create.prompt">Prompt</span>
             <textarea id="generationPrompt" aria-label="Dungeon generation request" placeholder="Create a fair but tense 5-minute dungeon with exploration and a few dangerous rewards." data-i18n-placeholder="create.placeholder"></textarea>
           </label>
+          <label class="generator-strategy-field">
+            <span data-i18n="create.generatorStrategy">Generator</span>
+            <select id="generatorStrategy" aria-label="Dungeon generation strategy"></select>
+            <span class="muted generator-strategy-help" data-i18n="create.generatorHint">Choose the generation strategy. Algorithm Lab options will appear here as they are added.</span>
+          </label>
           <label>
             <span data-i18n="create.floors">Floors (1–10)</span>
             <input id="floorCount" type="number" min="1" max="10" step="1" value="1" inputmode="numeric" aria-label="Dungeon floor count">
