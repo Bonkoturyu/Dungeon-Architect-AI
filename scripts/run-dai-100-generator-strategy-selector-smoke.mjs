@@ -59,7 +59,7 @@ function layoutSignature(state) {
   );
 }
 
-const url = `http://127.0.0.1:${port}/`;
+const url = `http://127.0.0.1:${port}/apps/editor-slice/index.html`;
 let browser;
 
 try {
