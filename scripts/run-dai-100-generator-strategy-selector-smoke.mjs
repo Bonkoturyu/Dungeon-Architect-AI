@@ -6,6 +6,7 @@ import { DEFAULT_DESIGN_INTENT } from '../packages/intent/src/design-intent.js';
 import {
   GENERATOR_STRATEGY_V1_CLASSIC_ID,
   GENERATOR_STRATEGY_V2_RECOMMENDED_ID,
+  GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID,
 } from '../packages/generator/src/strategy-catalog.js';
 
 const chromePath =
@@ -198,6 +199,20 @@ try {
     () => window.__DAI_EDITOR_SLICE__.getState(),
   );
 
+  const selectedDelaunay = await page.evaluate(
+    (id) => window.__DAI_EDITOR_SLICE__.setGeneratorStrategy(id),
+    GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID,
+  );
+  if (!selectedDelaunay) {
+    throw new Error('Could not select Algorithm Lab Delaunay + MST + Loops.');
+  }
+  await page.evaluate(
+    () => window.__DAI_EDITOR_SLICE__.generateDungeonFromPrompt(),
+  );
+  const delaunay = await page.evaluate(
+    () => window.__DAI_EDITOR_SLICE__.getState(),
+  );
+
   await page.screenshot({
     path: path.join(outputDir, 'generator-strategy-selector.png'),
     fullPage: true,
@@ -205,19 +220,24 @@ try {
 
   const classicLayout = layoutSignature(classic);
   const recommendedLayout = layoutSignature(recommended);
+  const delaunayLayout = layoutSignature(delaunay);
 
   const checks = {
     strategySelectorVisible: initial.selectorVisible === true,
-    registryListsClassicAndRecommended:
+    registryListsClassicRecommendedAndDelaunay:
       initial.strategies.some(
         (entry) => entry.id === GENERATOR_STRATEGY_V1_CLASSIC_ID,
       ) &&
       initial.strategies.some(
         (entry) => entry.id === GENERATOR_STRATEGY_V2_RECOMMENDED_ID,
+      ) &&
+      initial.strategies.some(
+        (entry) => entry.id === GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID,
       ),
-    selectorListsClassicAndRecommended:
+    selectorListsClassicRecommendedAndDelaunay:
       initial.optionValues.includes(GENERATOR_STRATEGY_V1_CLASSIC_ID) &&
-      initial.optionValues.includes(GENERATOR_STRATEGY_V2_RECOMMENDED_ID),
+      initial.optionValues.includes(GENERATOR_STRATEGY_V2_RECOMMENDED_ID) &&
+      initial.optionValues.includes(GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID),
     recommendedSelectedByDefault:
       initial.selectedValue === GENERATOR_STRATEGY_V2_RECOMMENDED_ID &&
       initial.state.generatorStrategyId ===
@@ -230,15 +250,24 @@ try {
       recommended.lastGeneration?.generatorVersion === '2' &&
       recommended.lastGeneration?.generatorStrategyId ===
         GENERATOR_STRATEGY_V2_RECOMMENDED_ID,
+    delaunaySelectionUsesAlgorithmLabStrategy:
+      delaunay.lastGeneration?.generatorVersion === null &&
+      delaunay.lastGeneration?.generatorStrategyId ===
+        GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID &&
+      delaunay.lastGeneration?.algorithmVersion === '1',
     samePromptKeepsSameSeedAcrossStrategies:
-      classic.lastGeneration?.seed === recommended.lastGeneration?.seed,
-    samePromptProducesDifferentSpatialEmbedding:
-      classicLayout !== recommendedLayout,
-    bothOutputsRemainStartEligible:
+      classic.lastGeneration?.seed === recommended.lastGeneration?.seed &&
+      recommended.lastGeneration?.seed === delaunay.lastGeneration?.seed,
+    strategyLayoutsAreDistinct:
+      classicLayout !== recommendedLayout &&
+      recommendedLayout !== delaunayLayout &&
+      classicLayout !== delaunayLayout,
+    allOutputsRemainStartEligible:
       classic.startAllowed === true &&
-      recommended.startAllowed === true,
-    designIntentRequestedTwice:
-      designIntentRequests.length === 2 &&
+      recommended.startAllowed === true &&
+      delaunay.startAllowed === true,
+    designIntentRequestedThreeTimes:
+      designIntentRequests.length === 3 &&
       designIntentRequests.every((entry) => entry.promptMatches),
     browserErrorsAbsent:
       consoleErrors.length === 0 &&
@@ -284,6 +313,18 @@ try {
       seed: recommended.lastGeneration?.seed ?? null,
       roomCount: recommended.rooms.length,
       layoutSignature: recommendedLayout,
+    },
+    delaunay: {
+      generatorVersion:
+        delaunay.lastGeneration?.generatorVersion ?? null,
+      generatorStrategyId:
+        delaunay.lastGeneration?.generatorStrategyId ?? null,
+      algorithmVersion:
+        delaunay.lastGeneration?.algorithmVersion ?? null,
+      seed: delaunay.lastGeneration?.seed ?? null,
+      roomCount: delaunay.rooms.length,
+      corridorCount: delaunay.corridors.length,
+      layoutSignature: delaunayLayout,
     },
     consoleErrors,
     pageErrors,
