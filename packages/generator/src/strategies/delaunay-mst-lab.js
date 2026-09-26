@@ -1,6 +1,6 @@
 import { validateDungeonSpec } from '../../../core/src/dungeon-spec.js';
 import { createGeneratorStrategy } from '../../../generator-strategy-core/src/index.js';
-import { generateDelaunayMstCore } from '../../generator-algorithms/delaunay-mst/src/index.js';
+import { generateDelaunayMstCore } from '../../../generator-algorithms/delaunay-mst/src/index.js';
 import { generateDungeonFromDesignIntentV1 } from '../versions/v1/design-intent-generator.js';
 
 export const GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID =
