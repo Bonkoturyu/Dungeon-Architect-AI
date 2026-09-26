@@ -17,6 +17,11 @@ const steps = [
     args: ['run', 'build:hosting'],
   },
   {
+    label: 'Owner UI regression smoke',
+    command: 'npm',
+    args: ['run', 'smoke:owner-ui-review'],
+  },
+  {
     label: 'Generation surface browser smoke',
     command: 'npm',
     args: ['run', 'smoke:generation-surface'],
@@ -33,11 +38,6 @@ const steps = [
     args: ['run', 'smoke:multi-floor-run'],
   },
   {
-    label: 'Owner UI regression smoke',
-    command: 'npm',
-    args: ['run', 'smoke:owner-ui-review'],
-  },
-  {
     label: 'Syntax validation',
     command: 'npm',
     args: ['run', 'validate:syntax'],
@@ -48,8 +48,6 @@ const steps = [
     args: ['diff', '--check', 'origin/main...HEAD'],
   },
 ]
-
-const results = [];
 
 for (const [index, step] of steps.entries()) {
   console.log(
