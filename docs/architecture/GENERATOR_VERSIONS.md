@@ -10,7 +10,7 @@ Dungeon Architect AI の生成方式を、将来の改良で上書きせず追�
 
 - 現在の生成方式を **Version 1 / V1** とする。
 - V1 の実装は `packages/generator/src/versions/v1/` に保存する。
-- 将来 V2 を作る場合は `packages/generator/src/versions/v2/` を追加し、V1 を書き換えて代用しない。
+- 新しい生成方式を作る場合は次の `versions/vN/` を追加し、既存Versionを書き換えて代用しない。
 - V3 以降も同様に `versions/v3/`, `versions/v4/` ... と追加する。
 - `packages/generator/src/generator-versions.js` が対応バージョンと既定バージョンを管理する。
 - 公開 API は `version` を指定できる。省略時は `DEFAULT_GENERATOR_VERSION` を使う。
@@ -25,11 +25,24 @@ Dungeon Architect AI の生成方式を、将来の改良で上書きせず追�
 | Version | 状態 | 既定 | 実装 |
 | --- | --- | --- | --- |
 | V1 | Frozen baseline | Yes (library default) | `packages/generator/src/versions/v1/` |
-| V2 | DAI-100 candidate | No (candidate browser selects explicitly) | `packages/generator/src/versions/v2/` |
+| V2 | DAI-100 locally accepted candidate | No (candidate browser selects explicitly) | `packages/generator/src/versions/v2/` |
 
 `DEFAULT_GENERATOR_VERSION = "1"`
 
 The DAI-100 browser candidate explicitly requests V2 while the library default remains V1 until the replacement candidate is accepted.
+
+## Generator Strategy boundary
+
+Generator Versionと製品上の選択肢を分離する。
+
+- Generator Versionは再現性のため固定する。
+- `Recommended` は製品上のaliasで、受入済みの推奨Versionへ向ける。
+- Algorithm LabはBSP / Delaunay+MST / Rooms+Mazes等の独立Coreを同じStrategy contractから選択する。
+- 実装非依存contractは `packages/generator-strategy-core/`。
+- V1/V2 adapterは `packages/generator/src/strategies/`。
+- composition rootは `packages/generator/src/strategy-catalog.js`。
+
+詳細なMarkdown/HTML資料は `docs/generator-algorithms/` を参照する。
 
 ## Version 1 — 現行生成方式
 
