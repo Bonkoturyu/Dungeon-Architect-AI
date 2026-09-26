@@ -58,6 +58,10 @@ async function state(page) {
   return page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
 }
 
+function clone(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
 function adjacency(snapshot) {
   const graph = new Map(snapshot.rooms.map((room) => [room.id, []]));
   for (const corridor of snapshot.corridors) {
