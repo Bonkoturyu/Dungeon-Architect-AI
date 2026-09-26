@@ -10,6 +10,7 @@ import {
 import {
   GENERATOR_STRATEGY_V1_CLASSIC_ID,
   GENERATOR_STRATEGY_V2_RECOMMENDED_ID,
+  GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID,
   RECOMMENDED_GENERATOR_STRATEGY_ID,
   createBuiltinGeneratorStrategyRegistry,
 } from '../src/strategy-catalog.js';
@@ -24,13 +25,14 @@ const request = {
   },
 };
 
-test('built-in strategy catalog exposes Classic and Recommended without coupling the core registry to implementations', () => {
+test('built-in strategy catalog exposes versioned strategies plus accepted Algorithm Lab entries without coupling the core registry to implementations', () => {
   const registry = createBuiltinGeneratorStrategyRegistry();
   assert.deepEqual(
     registry.list().map((entry) => entry.id),
     [
       GENERATOR_STRATEGY_V1_CLASSIC_ID,
       GENERATOR_STRATEGY_V2_RECOMMENDED_ID,
+      GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID,
     ],
   );
   assert.equal(
