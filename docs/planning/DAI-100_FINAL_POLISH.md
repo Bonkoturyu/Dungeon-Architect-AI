@@ -158,6 +158,38 @@ Targets:
 - improved lighting, fog/depth, floor/readability, and event focus;
 - no external creative asset unless separately reviewed and licensed.
 
+## Priority C.5 — Generator Strategy / Algorithm Lab
+
+Started on 2026-09-26 JST.
+
+The next generator phase is no longer a single replacement algorithm. The product should expose:
+
+- Version 1 — Classic;
+- Version 2 — Recommended;
+- Algorithm Lab strategies such as BSP, Delaunay + MST + Loops, Rooms + Mazes, Random Walk, Cellular Automata, Maze Carving, Gameplay Graph, and WFC.
+
+A loose-coupled library boundary has been introduced before wiring the selector into the application:
+
+- `packages/generator-strategy-core/` — implementation-neutral request/result contract and registry;
+- `packages/generator/src/strategies/v1-classic.js` — frozen V1 adapter;
+- `packages/generator/src/strategies/v2-recommended.js` — accepted V2 adapter;
+- `packages/generator/src/strategy-catalog.js` — composition root and Recommended alias.
+
+Algorithm Core requirements:
+
+- pure-data / JSON-compatible input-output;
+- explicit Seed and Algorithm Version;
+- no DOM / Three.js / Editor / Play / network dependency;
+- Algorithm-native IR is allowed behind an Adapter;
+- valid DungeonSpec remains the application-facing output;
+- architecture must remain suitable for later npm package, WASM, DLL/.so/.dylib wrappers.
+
+Documentation is maintained in paired Markdown + HTML under:
+
+`docs/generator-algorithms/`
+
+The existing application generation path is intentionally not switched yet. First gate is Strategy Core / V1-V2 equivalence validation; then the selector UI and first Algorithm Lab Core can be added.
+
 ## Priority D — Motion / feedback
 
 Improve perceived quality without creating a second gameplay engine:
