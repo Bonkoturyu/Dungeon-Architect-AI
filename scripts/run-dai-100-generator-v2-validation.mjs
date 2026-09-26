@@ -59,6 +59,8 @@ const steps = [
   },
 ]
 
+const results = [];
+
 for (const [index, step] of steps.entries()) {
   console.log(
     `[DAI-100 GENERATOR V2] ${index + 1}/${steps.length} ${step.label}`,
