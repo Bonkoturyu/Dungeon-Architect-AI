@@ -277,7 +277,21 @@ BSP Core/Adapter acceptance passed locally on 2026-09-27 JST at `eec6772fff3aecc
 - syntax validation: 190 files PASS;
 - git diff / whitespace check: PASS.
 
-BSP is now registered in the Product Strategy catalog while Version 2 remains the default Recommended strategy. Product acceptance is pending through the expanded `npm run validate:dai-100-bsp` gate, which now adds a 150-case renderer routeability matrix, production build, Owner UI/five-language selector regression, V1/V2/Delaunay/BSP selector dispatch, BSP three-floor Test + Mystery flow, syntax validation, and git diff checks.
+BSP is registered in the Product Strategy catalog while Version 2 remains the default Recommended strategy.
+
+Functional Product acceptance passed locally on 2026-09-27 JST at `573f1f7c64d7d7f29606acc86a385b0ec631e4fe` through the expanded `npm run validate:dai-100-bsp` gate:
+
+- BSP reusable Core: 8/8 PASS;
+- Generator / BSP Algorithm Lab adapter suite: 33/33 PASS;
+- 150-case renderer routeability matrix: 150/150 PASS, 30 unique spatial layouts, zero failures;
+- production hosting build: PASS;
+- Owner UI / five-language selector regression: PASS;
+- V1 / V2 / Delaunay / BSP selector dispatch: PASS;
+- BSP three-floor Test + Mystery browser flow: PASS;
+- syntax validation: 192 files PASS;
+- git diff / whitespace check: PASS.
+
+However, BSP is **not yet considered performance-accepted**. The renderer matrix took `5,454,108 ms` and used `crossing-fallback` in 66/150 cases; several 16–20 Room cases required tens of seconds to more than two minutes. Because the same scene-plan routing runs in the Product UI, this is a user-visible responsiveness risk rather than merely a slow test. The next BSP task is renderer-routing optimization before final Algorithm Lab acceptance.
 
 ## Priority D — Motion / feedback
 
