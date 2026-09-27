@@ -53,6 +53,7 @@ import {
 } from './i18n.js';
 
 const canvas = document.querySelector('#renderCanvas');
+const viewportShell = document.querySelector('.viewport-shell');
 const status = document.querySelector('#status');
 const modeBadge = document.querySelector('#modeBadge');
 const selectionOverlay = document.querySelector('#selectionOverlay');
@@ -620,6 +621,35 @@ function showViewportNotice(message, { timeoutMs = 2200 } = {}) {
     viewportNotice.textContent = '';
     viewportNoticeTimer = null;
   }, timeoutMs);
+}
+
+let viewportTransitionTimer = null;
+
+function triggerViewportTransition(kind) {
+  if (!viewportShell) return false;
+  const className =
+    kind === 'generation'
+      ? 'is-generation-reveal'
+      : 'is-mode-transition';
+  viewportShell.classList.remove(
+    'is-generation-reveal',
+    'is-mode-transition',
+  );
+  if (viewportTransitionTimer) {
+    clearTimeout(viewportTransitionTimer);
+    viewportTransitionTimer = null;
+  }
+
+  // Force a new animation cycle even when the same transition repeats.
+  void viewportShell.offsetWidth;
+  viewportShell.classList.add(className);
+
+  const timeoutMs = kind === 'generation' ? 620 : 480;
+  viewportTransitionTimer = setTimeout(() => {
+    viewportShell.classList.remove(className);
+    viewportTransitionTimer = null;
+  }, timeoutMs);
+  return true;
 }
 
 function friendlyEditError(error) {
@@ -2048,6 +2078,7 @@ async function generateDungeonFromPrompt() {
     resultStatus.textContent = '';
     resultStatus.hidden = true;
     renderActiveSpec();
+    triggerViewportTransition('generation');
     emitAudioCue('generated');
     setGenerationStatus(floorCount > 1
       ? t('generation.generatedRun', { floors: floorCount, count: lastGeneration.roomCount })
@@ -2347,6 +2378,7 @@ function beginDungeonRun(runSpec, source) {
   syncAudioMode();
   emitAudioCue(source === 'mystery' ? 'mystery-start' : 'play-start');
   renderActiveSpec();
+  triggerViewportTransition('mode');
   finalizePlayIfNeeded();
   return true;
 }
@@ -2500,6 +2532,7 @@ function returnToEdit() {
   setEditStatus(returningFromMystery ? 'mystery adopted into edit' : 'returned to edit');
   renderPathStatus();
   renderActiveSpec();
+  triggerViewportTransition('mode');
   canvas.focus();
   return true;
 }
