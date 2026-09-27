@@ -382,12 +382,24 @@ Accepted invariants:
 
 This first presentation-only Motion / feedback slice is therefore **accepted**.
 
+Second presentation-only slice implemented:
+
+- Room-event panel gets a short intro emphasis only when its entity signature changes;
+- blocking event cards receive a brief pulse without changing interaction semantics;
+- Combat, Treasure, Trap and Recovery actions show short non-blocking HUD feedback;
+- multi-floor advance shows a Floor-clear feedback pill;
+- final clear/fail state shows a Result feedback pill;
+- all feedback is DOM/CSS presentation only and does not alter Play Core;
+- `prefers-reduced-motion` disables the new animations;
+- dedicated gate: `npm run validate:dai-100-event-feedback`.
+
+This second slice is **pending owner-local acceptance**.
+
 Remaining targets:
 
-- room-event emphasis;
 - Player/Enemy idle or encounter motion if performance remains acceptable;
-- combat/loot/floor-clear feedback;
-- Result transition continuity and any further camera/focus polish that can be added without changing gameplay semantics.
+- Result transition continuity beyond the accepted feedback pill;
+- any further camera/focus polish that can be added without changing gameplay semantics.
 
 ## Explicit non-goals for the first DAI-100 pass
 
