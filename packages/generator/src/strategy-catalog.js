@@ -11,8 +11,13 @@ import {
 } from './strategies/v2-recommended.js';
 import {
   GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID,
+  GENERATOR_STRATEGY_BSP_LAB_ID,
   generatorStrategyDelaunayMstLab,
 } from './strategies/delaunay-mst-lab.js';
+import {
+  GENERATOR_STRATEGY_BSP_LAB_ID,
+  generatorStrategyBspLab,
+} from './strategies/bsp-lab.js';
 import { seedFromPromptV1 } from './versions/v1/design-intent-generator.js';
 
 export {
@@ -33,5 +38,6 @@ export function createBuiltinGeneratorStrategyRegistry() {
     generatorStrategyV1Classic,
     generatorStrategyV2Recommended,
     generatorStrategyDelaunayMstLab,
+    generatorStrategyBspLab,
   ]);
 }
