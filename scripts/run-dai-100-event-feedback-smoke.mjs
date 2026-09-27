@@ -327,11 +327,20 @@ try {
   await page.waitForSelector('#roomEventBar.is-event-intro', {
     timeout: 2_000,
   });
-  const roomEventIntro = await page.evaluate(() => ({
-    className: document.querySelector('#roomEventBar')?.className ?? '',
-    blockingCount:
-      document.querySelectorAll('.room-event.is-blocking').length,
-  }));
+  const roomEventIntro = await page.evaluate(() => {
+    const event = document.querySelector('#roomEventBar')?.getBoundingClientRect();
+    const viewport =
+      document.querySelector('.viewport-shell')?.getBoundingClientRect();
+    return {
+      className: document.querySelector('#roomEventBar')?.className ?? '',
+      blockingCount:
+        document.querySelectorAll('.room-event.is-blocking').length,
+      eventCenterX: event ? (event.left + event.right) / 2 : null,
+      eventCenterY: event ? (event.top + event.bottom) / 2 : null,
+      viewportCenterX: viewport ? (viewport.left + viewport.right) / 2 : null,
+      viewportCenterY: viewport ? (viewport.top + viewport.bottom) / 2 : null,
+    };
+  });
 
   const blockingFeedback = await resolveBlockingEvents(page, {
     captureFirst: true,
@@ -368,6 +377,17 @@ try {
     roomEventIntroEmphasized:
       roomEventIntro.className.includes('is-event-intro') &&
       roomEventIntro.blockingCount > 0,
+    roomEventIntroPreservesCenter:
+      Number.isFinite(roomEventIntro.eventCenterX) &&
+      Number.isFinite(roomEventIntro.eventCenterY) &&
+      Number.isFinite(roomEventIntro.viewportCenterX) &&
+      Number.isFinite(roomEventIntro.viewportCenterY) &&
+      Math.abs(
+        roomEventIntro.eventCenterX - roomEventIntro.viewportCenterX,
+      ) <= 3 &&
+      Math.abs(
+        roomEventIntro.eventCenterY - roomEventIntro.viewportCenterY,
+      ) <= 3,
     blockingResolutionFeedbackVisible:
       Boolean(blockingFeedback) &&
       ['combat', 'trap'].includes(blockingFeedback.kind) &&
