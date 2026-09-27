@@ -6,16 +6,31 @@ import {
   createBuiltinGeneratorStrategyRegistry,
 } from '../packages/generator/src/strategy-catalog.js';
 
-const seeds = [
-  1,
-  7,
-  42,
-  20260927,
-  0xdeadbeef,
-  0xffffffff,
-];
-const roomCounts = [5, 8, 12, 16, 20];
-const routeChoices = [0, 0.25, 0.5, 0.75, 1];
+function parseNumericList(name, fallback) {
+  const raw = process.env[name]?.trim();
+  if (!raw) return fallback;
+  const values = raw
+    .split(',')
+    .map((entry) => Number(entry.trim()))
+    .filter((value) => Number.isFinite(value));
+  if (values.length === 0) {
+    throw new Error(`${name} did not contain any numeric values`);
+  }
+  return values;
+}
+
+const seeds = parseNumericList(
+  'DAI_BSP_MATRIX_SEEDS',
+  [1, 7, 42, 20260927, 0xdeadbeef, 0xffffffff],
+);
+const roomCounts = parseNumericList(
+  'DAI_BSP_MATRIX_ROOM_COUNTS',
+  [5, 8, 12, 16, 20],
+);
+const routeChoices = parseNumericList(
+  'DAI_BSP_MATRIX_ROUTE_CHOICES',
+  [0, 0.25, 0.5, 0.75, 1],
+);
 
 const registry = createBuiltinGeneratorStrategyRegistry();
 const failures = [];
@@ -120,6 +135,7 @@ const evidence = {
   passed: failures.length === 0,
   cases,
   seeds: seeds.length,
+  seedValues: seeds,
   roomCounts,
   routeChoices,
   uniqueSpatialLayouts: layoutSignatures.size,
