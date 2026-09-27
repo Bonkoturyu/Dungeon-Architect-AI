@@ -149,18 +149,44 @@ async function moveAlong(page, path) {
       )?.corridorId ?? null;
     }, targetRoomId);
     if (!corridorId) throw new Error(`No visible exit to ${targetRoomId}`);
-    const beforeMoves = (await state(page)).play?.moves ?? 0;
+
+    const before = await state(page);
+    const beforeMoves = before.play?.moves ?? 0;
+    const beforeFloorIndex = before.currentFloorIndex;
+
     await page.locator(
       `#playExitButtons .exit-button[data-corridor-id="${corridorId}"]`,
     ).click();
+
     await page.waitForFunction(
-      (moves) => {
+      ({ moves, floorIndex, target }) => {
         const s = window.__DAI_EDITOR_SLICE__.getState();
-        return s.mode !== 'play' || (s.play?.moves ?? -1) === moves + 1;
+
+        // A Goal move can immediately complete the run or advance to the
+        // next Floor, where the new PlaySession starts again at moves=0.
+        if (s.mode !== 'play') return true;
+        if (s.currentFloorIndex !== floorIndex) return true;
+
+        return (
+          s.play?.currentRoomId === target &&
+          (s.play?.moves ?? -1) === moves + 1
+        );
       },
-      beforeMoves,
+      {
+        moves: beforeMoves,
+        floorIndex: beforeFloorIndex,
+        target: targetRoomId,
+      },
       { timeout: 5_000 },
     );
+
+    const after = await state(page);
+    if (
+      after.mode !== 'play' ||
+      after.currentFloorIndex !== beforeFloorIndex
+    ) {
+      return;
+    }
   }
 }
 
@@ -188,6 +214,7 @@ async function visitTreasure(page, snapshot) {
 
 async function finishFloor(page) {
   let current = await state(page);
+  const startingFloorIndex = current.currentFloorIndex;
   const snapshot = current.play.snapshot;
   const path = shortestPath(
     snapshot,
@@ -195,8 +222,18 @@ async function finishFloor(page) {
     [current.play.goalRoomId],
   );
   if (path.length === 0) throw new Error('No path to Goal.');
+
   await moveAlong(page, path);
-  await resolveBlockingEvents(page);
+
+  current = await state(page);
+  if (
+    current.mode === 'play' &&
+    current.currentFloorIndex === startingFloorIndex
+  ) {
+    // Goal-room blockers must be resolved before completion, but never
+    // consume blockers from the newly advanced Floor.
+    await resolveBlockingEvents(page);
+  }
 }
 
 const url = `http://127.0.0.1:${port}/apps/editor-slice/index.html`;
