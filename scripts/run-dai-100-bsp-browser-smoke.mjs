@@ -383,7 +383,7 @@ try {
       mysteryPlay.play?.floorCount === 3 &&
       mysteryPlay.play?.snapshot?.seed !==
         generated.lastGeneration?.seed,
-    mysteryReturnAdoptsDelaunayRun:
+    mysteryReturnAdoptsBspRun:
       afterMysteryReturn.mode === 'edit' &&
       afterMysteryReturn.floorCount === 3 &&
       afterMysteryReturn.lastGeneration
