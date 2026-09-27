@@ -437,7 +437,10 @@
       .viewport-shell.is-mode-transition #renderCanvas,
       .viewport-shell.is-mode-transition .viewport-label,
       .viewport-shell.is-mode-transition .play-bottom-hud,
-      .viewport-shell.is-mode-transition .room-events {
+      .viewport-shell.is-mode-transition .room-events,
+      .action-feedback,
+      .room-events.is-event-intro,
+      .room-events.is-event-intro .room-event.is-blocking {
         animation: none !important;
       }
     }
@@ -1057,6 +1060,58 @@
       top: 10px;
       width: 18px;
       height: 2px;
+    }
+
+    .action-feedback {
+      position: absolute;
+      z-index: 12;
+      left: 50%;
+      top: calc(50% - 128px);
+      transform: translate(-50%, -50%);
+      min-width: 180px;
+      max-width: min(420px, calc(100% - 48px));
+      padding: 10px 16px;
+      border: 1px solid rgba(151, 168, 196, 0.72);
+      border-radius: 999px;
+      background: rgba(20, 27, 38, 0.92);
+      color: #f5f7fb;
+      text-align: center;
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0.09em;
+      box-shadow: 0 14px 42px rgba(0, 0, 0, 0.36);
+      backdrop-filter: blur(8px);
+      pointer-events: none;
+      animation: dai-action-feedback 760ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .action-feedback[data-kind="combat"] { border-color: rgba(255, 137, 137, 0.78); }
+    .action-feedback[data-kind="treasure"] { border-color: rgba(241, 210, 96, 0.82); }
+    .action-feedback[data-kind="trap"] { border-color: rgba(180, 139, 255, 0.8); }
+    .action-feedback[data-kind="recovery"] { border-color: rgba(130, 218, 196, 0.82); }
+    .action-feedback[data-kind="floor"],
+    .action-feedback[data-kind="result"] { border-color: rgba(120, 216, 154, 0.82); }
+
+    .room-events.is-event-intro {
+      animation: dai-room-event-intro 440ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .room-events.is-event-intro .room-event.is-blocking {
+      animation: dai-blocking-event-pulse 520ms ease-out both;
+    }
+
+    @keyframes dai-action-feedback {
+      0% { opacity: 0; transform: translate(-50%, -42%) scale(0.92); }
+      22% { opacity: 1; transform: translate(-50%, -50%) scale(1.025); }
+      74% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -58%) scale(0.98); }
+    }
+    @keyframes dai-room-event-intro {
+      from { opacity: 0; transform: translate(-50%, -48%) scale(0.97); }
+      to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+    @keyframes dai-blocking-event-pulse {
+      0% { box-shadow: 0 0 0 rgba(228, 167, 104, 0); }
+      45% { box-shadow: 0 0 0 5px rgba(228, 167, 104, 0.16); }
+      100% { box-shadow: 0 5px 16px rgba(0, 0, 0, 0.16); }
     }
 
     .room-events {
@@ -1931,6 +1986,7 @@
           <div id="roomContentsItems"></div>
         </div>
         <div id="viewportNotice" class="viewport-notice" role="alert" aria-live="assertive" hidden></div>
+        <div id="actionFeedback" class="action-feedback" role="status" aria-live="polite" hidden></div>
         <div id="playReticle" class="play-reticle" hidden aria-hidden="true"></div>
         <div id="authoringPreviewCover" class="preview-cover" hidden>
           <div class="preview-cover-card">
