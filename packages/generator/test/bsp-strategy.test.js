@@ -105,3 +105,48 @@ test('BSP-specific options stay behind request.options', async () => {
     ),
   );
 });
+
+
+test('BSP adapter emits deterministic directional corridor side hints', async () => {
+  const result =
+    await generatorStrategyBspLab.generate(request);
+
+  const roomById = new Map(
+    result.spec.rooms.map((room) => [room.id, room]),
+  );
+  const opposite = {
+    north: 'south',
+    south: 'north',
+    east: 'west',
+    west: 'east',
+  };
+
+  for (const corridor of result.spec.corridors) {
+    assert.ok(
+      ['north', 'south', 'east', 'west'].includes(
+        corridor.fromSide,
+      ),
+    );
+    assert.equal(
+      corridor.toSide,
+      opposite[corridor.fromSide],
+    );
+
+    const fromRoom = roomById.get(corridor.fromRoomId);
+    const toRoom = roomById.get(corridor.toRoomId);
+    const dx = toRoom.x - fromRoom.x;
+    const dz = toRoom.z - fromRoom.z;
+
+    if (Math.abs(dx) >= Math.abs(dz)) {
+      assert.equal(
+        corridor.fromSide,
+        dx >= 0 ? 'east' : 'west',
+      );
+    } else {
+      assert.equal(
+        corridor.fromSide,
+        dz >= 0 ? 'south' : 'north',
+      );
+    }
+  }
+});
