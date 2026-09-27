@@ -2,7 +2,7 @@
 
 ## Status
 
-**ACTIVE — Generator Algorithm Lab implementation in progress.**
+**ACTIVE — BSP Algorithm Lab accepted; Priority D Motion / feedback is next.**
 
 DAI-099 remains the accepted rollback candidate. DAI-100 is a new replacement-candidate track for presentation and judge-experience improvements. It must not silently mutate the frozen DAI-099 identity.
 
@@ -291,7 +291,24 @@ Functional Product acceptance passed locally on 2026-09-27 JST at `573f1f7c64d7d
 - syntax validation: 192 files PASS;
 - git diff / whitespace check: PASS.
 
-However, BSP is **not yet considered performance-accepted**. The renderer matrix took `5,454,108 ms` and used `crossing-fallback` in 66/150 cases; several 16–20 Room cases required tens of seconds to more than two minutes. Because the same scene-plan routing runs in the Product UI, this is a user-visible responsiveness risk rather than merely a slow test. The next BSP task is renderer-routing optimization before final Algorithm Lab acceptance.
+BSP final functional + performance acceptance passed locally on 2026-09-27 JST at commit `9046a3a676e7988d74bc04196654e00091d0bb3c`.
+
+The directional `fromSide` / `toSide` hints in the BSP Adapter removed the pathological wall-side search cost. The final 9-step `npm run validate:dai-100-bsp` gate passed end-to-end:
+
+- reusable BSP Core: 8/8 PASS;
+- Generator / BSP Algorithm Lab adapter suite: 34/34 PASS;
+- 150-case Renderer routeability matrix: 150/150 PASS, 30 unique spatial layouts, zero failures;
+- matrix duration: `229,665 ms` in the full acceptance run, down from the original `5,454,108 ms`;
+- routing modes: 86/150 `crossing-fallback`, 64/150 strict;
+- worst observed case in the repeated full run: `15,107 ms`;
+- production hosting build: PASS;
+- Owner UI / five-language selector regression: PASS;
+- V1 / V2 / Delaunay / BSP selector dispatch: PASS;
+- BSP three-floor Test + Mystery browser flow: PASS;
+- syntax validation: 192 files PASS;
+- git diff / whitespace check: PASS.
+
+BSP is therefore **functional + performance accepted** as an Algorithm Lab strategy. The remaining 10–15 second long-tail cases and the 86/150 `crossing-fallback` rate are retained as non-blocking renderer / visual-quality follow-ups. Version 2 remains the Recommended/default Product strategy.
 
 ## Priority D — Motion / feedback
 
