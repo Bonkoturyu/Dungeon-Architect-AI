@@ -50,7 +50,7 @@
     "validate:hosting": "npm run build:hosting && npm run smoke:hosting",
     "validate:legal-registers": "node scripts/run-dai-073-legal-audit.mjs",
     "validate:syntax": "node scripts/run-syntax-check.mjs",
-    "test": "npm run test:core && npm run test:generator-strategy-core && npm run test:generator-delaunay-mst && npm run test:generator-bsp && npm run test:generator && npm run test:intent && npm run test:cloud-intent && npm run test:editor && npm run test:play && npm run test:run && npm run test:simulation && npm run test:onboarding && npm run test:hosting && npm run test:benchmark-fixture && npm run test:renderer-three && npm run test:audio",
+    "test": "npm run test:core && npm run test:generator-strategy-core && npm run test:generator-delaunay-mst && npm run test:generator-bsp && npm run test:generator && npm run test:intent && npm run test:cloud-intent && npm run test:editor && npm run test:play && npm run test:run && npm run test:export-core && npm run test:simulation && npm run test:onboarding && npm run test:hosting && npm run test:benchmark-fixture && npm run test:renderer-three && npm run test:audio",
     "validate:secret-privacy": "node scripts/run-dai-074-secret-privacy-audit.mjs",
     "smoke:mobile-scope": "node scripts/run-dai-075-mobile-scope-smoke.mjs",
     "validate:public-docs": "node scripts/run-dai-080-public-docs-audit.mjs",
@@ -89,7 +89,10 @@
     "validate:dai-100-bsp-matrix": "node scripts/run-dai-100-bsp-matrix.mjs",
     "smoke:dai-100-bsp": "node scripts/run-dai-100-bsp-browser-smoke.mjs",
     "smoke:dai-100-motion-feedback": "node scripts/run-dai-100-motion-feedback-smoke.mjs",
-    "validate:dai-100-motion-feedback": "node scripts/run-dai-100-motion-feedback-validation.mjs"
+    "validate:dai-100-motion-feedback": "node scripts/run-dai-100-motion-feedback-validation.mjs",
+    "test:export-core": "node --test packages/export-core/test/*.test.js",
+    "smoke:dai-100-json-export": "node scripts/run-dai-100-json-export-smoke.mjs",
+    "validate:dai-100-json-export": "node scripts/run-dai-100-json-export-validation.mjs"
   },
   "devDependencies": {
     "@babylonjs/core": "9.18.0",
