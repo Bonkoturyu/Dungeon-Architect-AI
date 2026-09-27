@@ -92,7 +92,9 @@
     "validate:dai-100-motion-feedback": "node scripts/run-dai-100-motion-feedback-validation.mjs",
     "test:export-core": "node --test packages/export-core/test/*.test.js",
     "smoke:dai-100-json-export": "node scripts/run-dai-100-json-export-smoke.mjs",
-    "validate:dai-100-json-export": "node scripts/run-dai-100-json-export-validation.mjs"
+    "validate:dai-100-json-export": "node scripts/run-dai-100-json-export-validation.mjs",
+    "smoke:dai-100-event-feedback": "node scripts/run-dai-100-event-feedback-smoke.mjs",
+    "validate:dai-100-event-feedback": "node scripts/run-dai-100-event-feedback-validation.mjs"
   },
   "devDependencies": {
     "@babylonjs/core": "9.18.0",
