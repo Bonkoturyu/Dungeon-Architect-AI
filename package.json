@@ -85,7 +85,9 @@
     "validate:dai-100-generator-v2:exhaustive": "node scripts/run-dai-100-generator-v2-validation.mjs",
     "validate:dai-100-generator-v2:fast": "node scripts/run-dai-100-generator-v2-fast-validation.mjs",
     "validate:dai-100-delaunay-mst": "node scripts/run-dai-100-delaunay-mst-validation.mjs",
-    "validate:dai-100-bsp": "node scripts/run-dai-100-bsp-validation.mjs"
+    "validate:dai-100-bsp": "node scripts/run-dai-100-bsp-validation.mjs",
+    "validate:dai-100-bsp-matrix": "node scripts/run-dai-100-bsp-matrix.mjs",
+    "smoke:dai-100-bsp": "node scripts/run-dai-100-bsp-browser-smoke.mjs"
   },
   "devDependencies": {
     "@babylonjs/core": "9.18.0",
