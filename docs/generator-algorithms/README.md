@@ -141,7 +141,7 @@ application / selector UI
 | --- | --- | --- |
 | Version 1 Classic | 実装済 / Frozen | 回帰・比較・再現 |
 | Version 2 Recommended | 実装済 / Accepted candidate | 現行推奨 |
-| BSP | 設計対象 | Algorithm Lab |
+| BSP | Core + Adapter実装中 / Product未登録 | Algorithm Lab / 2番目の独立Core |
 | Delaunay + MST + Loops | Product accepted | Algorithm Lab / 最初の独立Core |
 | Rooms + Mazes | 設計対象 | Algorithm Lab |
 | Random Walk | 設計対象 | Cave系 |
@@ -156,6 +156,7 @@ application / selector UI
 - [ALGORITHM_GUIDE.md](./ALGORITHM_GUIDE.md) — 各方式の詳細説明と簡易図解
 - [CORE_ARCHITECTURE.md](./CORE_ARCHITECTURE.md) — 疎結合Core / Strategy契約 / DLL化を見据えた構成
 - [DELAUNAY_MST.md](./DELAUNAY_MST.md) — Delaunay + MST + Loops の詳細・実装構成
+- [BSP.md](./BSP.md) — Binary Space Partitioning の詳細・実装構成
 - [README.html](./README.html) — ブラウザで見やすい総合入口
 - [ALGORITHM_GUIDE.html](./ALGORITHM_GUIDE.html) — 図解付きHTML版
 - [CORE_ARCHITECTURE.html](./CORE_ARCHITECTURE.html) — アーキテクチャHTML版
