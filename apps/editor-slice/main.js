@@ -138,6 +138,7 @@ const exportFullJsonButton = document.querySelector('#exportFullJson');
 const generationHistory = document.querySelector('#generationHistory');
 const authoringPreviewCover = document.querySelector('#authoringPreviewCover');
 const viewportNotice = document.querySelector('#viewportNotice');
+const actionFeedback = document.querySelector('#actionFeedback');
 const playReticle = document.querySelector('#playReticle');
 const naturalEditInput = document.querySelector('#naturalEditInput');
 const applyNaturalEditButton = document.querySelector('#applyNaturalEdit');
@@ -180,6 +181,9 @@ let canvasPointerOrigin = null;
 let corridorDraft = null;
 let roomDrag = null;
 let viewportNoticeTimer = null;
+let actionFeedbackTimer = null;
+let roomEventIntroTimer = null;
+let lastRoomEventSignature = '';
 
 const generatorStrategyRegistry = createBuiltinGeneratorStrategyRegistry();
 const audioPresentation = createProgrammaticAudio();
@@ -703,6 +707,23 @@ function showViewportNotice(message, { timeoutMs = 2200 } = {}) {
     viewportNotice.textContent = '';
     viewportNoticeTimer = null;
   }, timeoutMs);
+}
+
+function showActionFeedback(message, kind = 'result') {
+  if (!actionFeedback) return false;
+  if (actionFeedbackTimer) clearTimeout(actionFeedbackTimer);
+  actionFeedback.hidden = true;
+  actionFeedback.textContent = String(message);
+  actionFeedback.dataset.kind = kind;
+  void actionFeedback.offsetWidth;
+  actionFeedback.hidden = false;
+  actionFeedbackTimer = setTimeout(() => {
+    actionFeedback.hidden = true;
+    actionFeedback.textContent = '';
+    delete actionFeedback.dataset.kind;
+    actionFeedbackTimer = null;
+  }, 780);
+  return true;
 }
 
 let viewportTransitionTimer = null;
@@ -1265,7 +1286,10 @@ function applyPlayRuntimeResult(result, failurePrefix) {
 function clearEnemy(enemyId) {
   if (!playSession || mode !== 'play') return false;
   const resolved = resolveEnemyCombat(playSession, enemyId, { at: nextPlayActionAt() });
-  if (resolved?.ok) emitAudioCue('combat');
+  if (resolved?.ok) {
+    emitAudioCue('combat');
+    showActionFeedback(`${t('entity.enemy').toUpperCase()} ✓`, 'combat');
+  }
   return applyPlayRuntimeResult(resolved, 'Combat failed');
 }
 
@@ -1290,6 +1314,14 @@ function interactWithRoomEntity(action, entityId) {
       'use-recovery': 'recovery',
     };
     emitAudioCue(cueByAction[action]);
+    const feedbackByAction = {
+      'open-treasure': [`${t('entity.treasure').toUpperCase()} ✓`, 'treasure'],
+      'avoid-trap': [`${t('entity.trap').toUpperCase()} · ${t('action.avoid')}`, 'trap'],
+      'trigger-trap': [`${t('entity.trap').toUpperCase()} · ${t('action.risk')}`, 'trap'],
+      'use-recovery': [`${t('roomEvent.rest').toUpperCase()} ✓`, 'recovery'],
+    };
+    const [message, kind] = feedbackByAction[action] ?? ['', 'result'];
+    if (message) showActionFeedback(message, kind);
   }
   return applyPlayRuntimeResult(result, 'Interaction failed');
 }
@@ -1415,6 +1447,21 @@ function renderRoomEvents() {
 
   roomEventItems.replaceChildren(...cards);
   roomEventBar.hidden = cards.length === 0;
+
+  const signature = cards
+    .map((card) => `${card.dataset.kind}:${card.dataset.entityId}`)
+    .join('|');
+  if (signature && signature !== lastRoomEventSignature) {
+    if (roomEventIntroTimer) clearTimeout(roomEventIntroTimer);
+    roomEventBar.classList.remove('is-event-intro');
+    void roomEventBar.offsetWidth;
+    roomEventBar.classList.add('is-event-intro');
+    roomEventIntroTimer = setTimeout(() => {
+      roomEventBar.classList.remove('is-event-intro');
+      roomEventIntroTimer = null;
+    }, 520);
+  }
+  lastRoomEventSignature = signature;
 }
 
 function sideIcon(side) {
@@ -2373,6 +2420,10 @@ function finalizePlayIfNeeded() {
     syncAudioMode();
     emitAudioCue(lastPlayResult.status === 'cleared' ? 'run-clear' : 'run-fail');
     renderActiveSpec();
+    showActionFeedback(
+      lastPlayResult.status === 'cleared' ? t('result.cleared') : t('result.ended'),
+      'result',
+    );
     return true;
   }
 
@@ -2402,6 +2453,7 @@ function finalizePlayIfNeeded() {
     syncAudioMode();
     emitAudioCue('floor-advance');
     renderActiveSpec();
+    showActionFeedback(`✓ ${t('run.floor')} ${currentFloorIndex}`, 'floor');
     return true;
   }
 
@@ -2422,6 +2474,10 @@ function finalizePlayIfNeeded() {
   syncAudioMode();
   emitAudioCue(lastDungeonRunResult.status === 'cleared' ? 'run-clear' : 'run-fail');
   renderActiveSpec();
+  showActionFeedback(
+    lastDungeonRunResult.status === 'cleared' ? t('result.cleared') : t('result.ended'),
+    'result',
+  );
   return true;
 }
 
@@ -3343,6 +3399,7 @@ async function run() {
         return unlocked;
       },
       showViewportNoticeForTest: (message, options) => showViewportNotice(message, options),
+      showActionFeedbackForTest: (message, kind) => showActionFeedback(message, kind),
       getCurrentRoomPlan: () => {
         const roomId = playSession?.currentRoomId ?? selectedRoomId;
         const group = adapter.plan?.roomGroups.find((room) => room.specId === roomId) ?? null;
