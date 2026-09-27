@@ -277,7 +277,7 @@ BSP Core/Adapter acceptance passed locally on 2026-09-27 JST at `eec6772fff3aecc
 - syntax validation: 190 files PASS;
 - git diff / whitespace check: PASS.
 
-BSP is now eligible for Product registration. Version 2 remains the default Recommended strategy. The next gate will add BSP renderer routeability, Product selector dispatch, multi-floor Test/Mystery, production build, Owner UI, syntax, and diff checks.
+BSP is now registered in the Product Strategy catalog while Version 2 remains the default Recommended strategy. Product acceptance is pending through the expanded `npm run validate:dai-100-bsp` gate, which now adds a 150-case renderer routeability matrix, production build, Owner UI/five-language selector regression, V1/V2/Delaunay/BSP selector dispatch, BSP three-floor Test + Mystery flow, syntax validation, and git diff checks.
 
 ## Priority D — Motion / feedback
 
