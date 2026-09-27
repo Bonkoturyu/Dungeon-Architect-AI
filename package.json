@@ -87,7 +87,9 @@
     "validate:dai-100-delaunay-mst": "node scripts/run-dai-100-delaunay-mst-validation.mjs",
     "validate:dai-100-bsp": "node scripts/run-dai-100-bsp-validation.mjs",
     "validate:dai-100-bsp-matrix": "node scripts/run-dai-100-bsp-matrix.mjs",
-    "smoke:dai-100-bsp": "node scripts/run-dai-100-bsp-browser-smoke.mjs"
+    "smoke:dai-100-bsp": "node scripts/run-dai-100-bsp-browser-smoke.mjs",
+    "smoke:dai-100-motion-feedback": "node scripts/run-dai-100-motion-feedback-smoke.mjs",
+    "validate:dai-100-motion-feedback": "node scripts/run-dai-100-motion-feedback-validation.mjs"
   },
   "devDependencies": {
     "@babylonjs/core": "9.18.0",
