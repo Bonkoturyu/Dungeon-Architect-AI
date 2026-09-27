@@ -310,6 +310,34 @@ The directional `fromSide` / `toSide` hints in the BSP Adapter removed the patho
 
 BSP is therefore **functional + performance accepted** as an Algorithm Lab strategy. The remaining 10–15 second long-tail cases and the 86/150 `crossing-fallback` rate are retained as non-blocking renderer / visual-quality follow-ups. Version 2 remains the Recommended/default Product strategy.
 
+## Priority C.75 — JSON export / pattern interchange
+
+Implemented candidate after Generator Algorithm Lab acceptance.
+
+Two JSON export surfaces are defined:
+
+1. **DungeonLayoutExchange v1** — generic, engine-independent pattern/layout format containing Floors, Room geometry, graph connections, Seed, Start/Goal roles, coordinate convention, and generator provenance while omitting game-specific Enemy/Treasure/Trap/Recovery/Event data.
+2. **Full Dungeon JSON** — reuses the existing `DungeonRunSpec v1` with complete `DungeonSpec v1` data per Floor instead of creating a duplicate full-export contract.
+
+Format material:
+
+- `spec/export/DUNGEON_LAYOUT_EXCHANGE_V1.md`
+- `spec/export/DUNGEON_LAYOUT_EXCHANGE_V1.schema.json`
+- `spec/export/FULL_DUNGEON_EXPORT_V1.md`
+- `spec/export/examples/layout-exchange-v1.example.json`
+
+Implementation:
+
+- reusable `packages/export-core/`;
+- deterministic pretty-printed JSON with no timestamps;
+- current edited authoring state can be exported, not only the initial generated result;
+- multi-floor export is one file in both modes;
+- Create panel exposes `Layout JSON` and `Full JSON` downloads;
+- visible-Chrome download smoke verifies actual downloaded files;
+- integrated local gate: `npm run validate:dai-100-json-export`.
+
+This phase is **pending owner-local acceptance**.
+
 ## Priority D — Motion / feedback
 
 First presentation-only slice implemented after BSP acceptance:
