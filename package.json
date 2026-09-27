@@ -7,6 +7,7 @@
     "test:generator": "node --test packages/generator/test/*.test.js",
     "test:generator-strategy-core": "node --test packages/generator-strategy-core/test/*.test.js",
     "test:generator-delaunay-mst": "node --test packages/generator-algorithms/delaunay-mst/test/*.test.js",
+    "test:generator-bsp": "node --test packages/generator-algorithms/bsp/test/*.test.js",
     "test:intent": "node --test packages/intent/test/*.test.js",
     "test:cloud-intent": "node --test packages/cloud-intent/test/*.test.js",
     "test:editor": "node --test packages/editor-core/test/*.test.js",
@@ -49,7 +50,7 @@
     "validate:hosting": "npm run build:hosting && npm run smoke:hosting",
     "validate:legal-registers": "node scripts/run-dai-073-legal-audit.mjs",
     "validate:syntax": "node scripts/run-syntax-check.mjs",
-    "test": "npm run test:core && npm run test:generator-strategy-core && npm run test:generator-delaunay-mst && npm run test:generator && npm run test:intent && npm run test:cloud-intent && npm run test:editor && npm run test:play && npm run test:run && npm run test:simulation && npm run test:onboarding && npm run test:hosting && npm run test:benchmark-fixture && npm run test:renderer-three && npm run test:audio",
+    "test": "npm run test:core && npm run test:generator-strategy-core && npm run test:generator-delaunay-mst && npm run test:generator-bsp && npm run test:generator && npm run test:intent && npm run test:cloud-intent && npm run test:editor && npm run test:play && npm run test:run && npm run test:simulation && npm run test:onboarding && npm run test:hosting && npm run test:benchmark-fixture && npm run test:renderer-three && npm run test:audio",
     "validate:secret-privacy": "node scripts/run-dai-074-secret-privacy-audit.mjs",
     "smoke:mobile-scope": "node scripts/run-dai-075-mobile-scope-smoke.mjs",
     "validate:public-docs": "node scripts/run-dai-080-public-docs-audit.mjs",
@@ -83,7 +84,8 @@
     "validate:dai-100-generator-v2": "node scripts/run-dai-100-generator-v2-validation.mjs",
     "validate:dai-100-generator-v2:exhaustive": "node scripts/run-dai-100-generator-v2-validation.mjs",
     "validate:dai-100-generator-v2:fast": "node scripts/run-dai-100-generator-v2-fast-validation.mjs",
-    "validate:dai-100-delaunay-mst": "node scripts/run-dai-100-delaunay-mst-validation.mjs"
+    "validate:dai-100-delaunay-mst": "node scripts/run-dai-100-delaunay-mst-validation.mjs",
+    "validate:dai-100-bsp": "node scripts/run-dai-100-bsp-validation.mjs"
   },
   "devDependencies": {
     "@babylonjs/core": "9.18.0",
