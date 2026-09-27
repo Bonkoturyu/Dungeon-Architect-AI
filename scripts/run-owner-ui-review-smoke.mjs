@@ -101,6 +101,7 @@ try {
     generatorStrategyLabel: document.querySelector('[data-i18n="create.generatorStrategy"]')?.textContent ?? '',
     generatorRecommendedText: document.querySelector('#generatorStrategy option[value="version-2-spatial"]')?.textContent ?? '',
     generatorDelaunayText: document.querySelector('#generatorStrategy option[value="algorithm-lab.delaunay-mst-loops"]')?.textContent ?? '',
+    generatorBspText: document.querySelector('#generatorStrategy option[value="algorithm-lab.bsp"]')?.textContent ?? '',
     headerCurrentLanguage: document.querySelector('#languageCycle')?.dataset.currentLanguage ?? null,
     headerNextLanguage: document.querySelector('#languageCycle')?.dataset.nextLanguage ?? null,
     dialogCurrentLanguage: document.querySelector('#onboardingLanguageCycle')?.dataset.currentLanguage ?? null,
@@ -136,6 +137,7 @@ try {
         generatorStrategyLabel: document.querySelector('[data-i18n="create.generatorStrategy"]')?.textContent ?? '',
         generatorRecommendedText: document.querySelector('#generatorStrategy option[value="version-2-spatial"]')?.textContent ?? '',
     generatorDelaunayText: document.querySelector('#generatorStrategy option[value="algorithm-lab.delaunay-mst-loops"]')?.textContent ?? '',
+    generatorBspText: document.querySelector('#generatorStrategy option[value="algorithm-lab.bsp"]')?.textContent ?? '',
         headerCurrentLanguage: document.querySelector('#languageCycle')?.dataset.currentLanguage ?? null,
         headerNextLanguage: document.querySelector('#languageCycle')?.dataset.nextLanguage ?? null,
         dialogCurrentLanguage: document.querySelector('#onboardingLanguageCycle')?.dataset.currentLanguage ?? null,
@@ -166,6 +168,7 @@ try {
     generatorStrategyLabel: document.querySelector('[data-i18n="create.generatorStrategy"]')?.textContent ?? '',
     generatorRecommendedText: document.querySelector('#generatorStrategy option[value="version-2-spatial"]')?.textContent ?? '',
     generatorDelaunayText: document.querySelector('#generatorStrategy option[value="algorithm-lab.delaunay-mst-loops"]')?.textContent ?? '',
+    generatorBspText: document.querySelector('#generatorStrategy option[value="algorithm-lab.bsp"]')?.textContent ?? '',
     headerCurrentLanguage: document.querySelector('#languageCycle')?.dataset.currentLanguage ?? null,
     headerNextLanguage: document.querySelector('#languageCycle')?.dataset.nextLanguage ?? null,
     dialogCurrentLanguage: document.querySelector('#onboardingLanguageCycle')?.dataset.currentLanguage ?? null,
@@ -1001,7 +1004,8 @@ try {
           sample.createTab.trim() === sample.expectedCreate &&
           sample.generatorStrategyLabel.trim() === sample.expectedGeneratorStrategy &&
           sample.generatorRecommendedText.trim() === sample.expectedRecommended &&
-          sample.generatorDelaunayText.trim() === 'Algorithm Lab — Delaunay + MST + Loops') &&
+          sample.generatorDelaunayText.trim() === 'Algorithm Lab — Delaunay + MST + Loops' &&
+          sample.generatorBspText.trim() === 'Algorithm Lab — BSP') &&
       englishRestored.htmlLang === 'en' &&
       englishRestored.stateLanguage === 'en' &&
       englishRestored.headerCurrentLanguage === 'en' &&
@@ -1009,7 +1013,8 @@ try {
       englishRestored.headerCycleText === englishRestored.dialogCycleText &&
       englishRestored.generatorStrategyLabel.trim() === 'Generator' &&
       englishRestored.generatorRecommendedText.trim() === 'Version 2 — Recommended' &&
-      englishRestored.generatorDelaunayText.trim() === 'Algorithm Lab — Delaunay + MST + Loops',
+      englishRestored.generatorDelaunayText.trim() === 'Algorithm Lab — Delaunay + MST + Loops' &&
+      englishRestored.generatorBspText.trim() === 'Algorithm Lab — BSP',
     compactLanguageCycleControls:
       languageSamples.en.headerButtonCount === 1 &&
       languageSamples.en.dialogButtonCount === 1 &&
