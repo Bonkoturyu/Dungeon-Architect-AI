@@ -17,6 +17,11 @@ const steps = [
     args: ['run', 'smoke:dai-100-json-export'],
   },
   {
+    label: 'Motion / feedback visible-Chrome smoke',
+    command: 'npm',
+    args: ['run', 'smoke:dai-100-motion-feedback'],
+  },
+  {
     label: 'Owner UI regression smoke',
     command: 'npm',
     args: ['run', 'smoke:owner-ui-review'],
