@@ -33,6 +33,7 @@ import {
   GENERATOR_STRATEGY_V1_CLASSIC_ID,
   GENERATOR_STRATEGY_V2_RECOMMENDED_ID,
   GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID,
+  GENERATOR_STRATEGY_BSP_LAB_ID,
   RECOMMENDED_GENERATOR_STRATEGY_ID,
   createBuiltinGeneratorStrategyRegistry,
   deriveGeneratorSeedFromPrompt,
@@ -303,6 +304,9 @@ function generatorStrategyLabel(metadata) {
   }
   if (metadata.id === GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID) {
     return t('create.generatorDelaunayMst');
+  }
+  if (metadata.id === GENERATOR_STRATEGY_BSP_LAB_ID) {
+    return t('create.generatorBsp');
   }
   return metadata.displayName;
 }
