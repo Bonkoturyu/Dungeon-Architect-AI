@@ -55,8 +55,8 @@ DungeonSpec
 
 ## Packages
 
-- `delaunay-mst/` — implementation in progress; independent Core + app Adapter
-- `bsp/`
+- `delaunay-mst/` — Product accepted; independent Core + app Adapter
+- `bsp/` — Core + app Adapter implementation in progress
 - `rooms-mazes/`
 - `gameplay-graph/`
 - `maze/`
