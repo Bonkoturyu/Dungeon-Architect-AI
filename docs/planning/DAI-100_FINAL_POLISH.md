@@ -2,7 +2,7 @@
 
 ## Status
 
-**ACTIVE — BSP Algorithm Lab accepted; Priority D Motion / feedback is next.**
+**ACTIVE — JSON export and the first Motion / feedback slice are accepted; Priority D follow-up remains.**
 
 DAI-099 remains the accepted rollback candidate. DAI-100 is a new replacement-candidate track for presentation and judge-experience improvements. It must not silently mutate the frozen DAI-099 identity.
 
@@ -336,7 +336,25 @@ Implementation:
 - visible-Chrome download smoke verifies actual downloaded files;
 - integrated local gate: `npm run validate:dai-100-json-export`.
 
-This phase is **pending owner-local acceptance**.
+Owner-local acceptance passed on 2026-09-27 JST at `a10f5bb8cddc06157d97b58541281908a9c3faca` through `npm run validate:dai-100-json-export`.
+
+Acceptance evidence:
+
+- Export Core tests: 4/4 PASS;
+- production hosting build: PASS;
+- visible-Chrome actual-download smoke: PASS;
+- Generic Layout filename/version contract: PASS (`*.layout.v1.json`);
+- Full Dungeon filename/version contract: PASS (`*.dungeon-run.v1.json`);
+- Generic `DungeonLayoutExchange v1`: 2-floor export PASS with generator provenance, XZ coordinate contract, Start/Goal roles, and no game-specific entity/event collections;
+- Full export: 2-floor `DungeonRunSpec v1` PASS with complete `DungeonSpec v1` payloads;
+- downloaded files exactly matched the in-memory export APIs;
+- browser console/page/request/HTTP errors: none;
+- Motion / feedback smoke: PASS on the same runtime;
+- Owner UI regression smoke: PASS;
+- syntax validation: 198 files PASS;
+- git diff / whitespace check: PASS.
+
+The JSON export / pattern interchange phase is therefore **accepted**.
 
 ## Priority D — Motion / feedback
 
@@ -351,7 +369,18 @@ First presentation-only slice implemented after BSP acceptance:
 - dedicated visible-Chrome smoke: `npm run smoke:dai-100-motion-feedback`;
 - integrated local gate: `npm run validate:dai-100-motion-feedback`.
 
-This slice is **pending owner-local acceptance**.
+Owner-local acceptance passed on 2026-09-27 JST. The dedicated `validate:dai-100-motion-feedback` gate passed first, and the same Motion / feedback smoke passed again inside the later JSON-export gate at `a10f5bb8cddc06157d97b58541281908a9c3faca`.
+
+Accepted invariants:
+
+- Generation reveal presentation is active while the authored layout remains concealed;
+- Room selection does not trigger a transition or recenter the camera;
+- Test start uses the short viewport camera-settle transition;
+- Return Edit uses the same presentation transition;
+- browser errors are absent;
+- Owner UI regression remains green.
+
+This first presentation-only Motion / feedback slice is therefore **accepted**.
 
 Remaining targets:
 
