@@ -24,10 +24,18 @@ const fallbackModes = new Map();
 let cases = 0;
 let totalExtraEdges = 0;
 
+const totalCases =
+  seeds.length * roomCounts.length * routeChoices.length;
+const startedAt = Date.now();
+
 for (const seed of seeds) {
   for (const roomCount of roomCounts) {
     for (const routeChoice of routeChoices) {
       cases += 1;
+      const caseStartedAt = Date.now();
+      console.log(
+        `[DAI-100 BSP MATRIX] case ${cases}/${totalCases} seed=${seed} rooms=${roomCount} routeChoice=${routeChoice}`,
+      );
       const intent = {
         ...DEFAULT_DESIGN_INTENT,
         targetDuration: roomCount * 60,
@@ -89,6 +97,10 @@ for (const seed of seeds) {
             ),
           ),
         );
+
+        console.log(
+          `[DAI-100 BSP MATRIX] PASS case ${cases}/${totalCases} ${Date.now() - caseStartedAt}ms routing=${mode}`,
+        );
       } catch (error) {
         failures.push({
           seed,
@@ -96,6 +108,9 @@ for (const seed of seeds) {
           routeChoice,
           error: String(error?.stack || error),
         });
+        console.error(
+          `[DAI-100 BSP MATRIX] FAIL case ${cases}/${totalCases} ${Date.now() - caseStartedAt}ms: ${String(error?.message ?? error)}`,
+        );
       }
     }
   }
@@ -109,6 +124,7 @@ const evidence = {
   routeChoices,
   uniqueSpatialLayouts: layoutSignatures.size,
   totalExtraEdges,
+  durationMs: Date.now() - startedAt,
   routingFallbackModes: Object.fromEntries(
     [...fallbackModes.entries()].sort(
       ([left], [right]) => left.localeCompare(right),
