@@ -220,15 +220,21 @@ Dedicated Markdown + HTML documentation is available at:
 
 The first Core/Adapter acceptance gate passed locally on 2026-09-27 JST at `a603bd7b0586e726ba22ad078b77fa38a285a07c`: reusable Core tests 8/8 PASS, Generator/Algorithm Lab adapter tests 29/29 PASS, syntax validation 181 files PASS, and git diff/whitespace checks PASS.
 
-After that gate, the Delaunay strategy was registered into the Product Strategy catalog while Version 2 remains the default Recommended strategy. Product-level acceptance is now pending through an expanded `npm run validate:dai-100-delaunay-mst` gate covering:
+After that gate, the Delaunay strategy was registered into the Product Strategy catalog while Version 2 remains the default Recommended strategy.
 
-- reusable Core and Adapter regressions;
-- a 150-case Delaunay renderer routeability matrix;
-- production hosting build;
-- Owner UI / five-language selector regression;
-- V1 / V2 / Delaunay Product selector smoke;
-- Delaunay three-floor Test + Mystery browser flow;
-- syntax and git diff checks.
+Product-level acceptance passed locally on 2026-09-27 JST at `4b25ab70b484489d2ed45f249d32bbd6f878b282` via `npm run validate:dai-100-delaunay-mst`:
+
+- reusable Core: 8/8 PASS;
+- Generator / Algorithm Lab adapter suite: 29/29 PASS;
+- 150-case Delaunay renderer routeability matrix: 150/150 PASS with 30 unique spatial layouts and zero failures;
+- production hosting build: PASS;
+- Owner UI / five-language selector regression: PASS;
+- V1 / V2 / Delaunay Product selector smoke: PASS;
+- Delaunay three-floor Test + Mystery browser flow: PASS;
+- syntax validation: 183 files PASS;
+- git diff / whitespace check: PASS.
+
+Renderer evidence recorded 133 strict routes and 17 cases using the existing `crossing-fallback` router mode. This is accepted for the experimental Algorithm Lab strategy because all 150 cases remained valid and renderable, but it remains a visual-quality optimization target rather than a correctness blocker.
 
 The previous Windows `DEP0190` warning in the Delaunay acceptance runner was also removed by switching its npm subprocess execution to the same `npm_execpath` / Node spawning model used by the other DAI-100 validators.
 
