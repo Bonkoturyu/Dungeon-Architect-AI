@@ -11,7 +11,6 @@ import {
 } from './strategies/v2-recommended.js';
 import {
   GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID,
-  GENERATOR_STRATEGY_BSP_LAB_ID,
   generatorStrategyDelaunayMstLab,
 } from './strategies/delaunay-mst-lab.js';
 import {
@@ -24,6 +23,7 @@ export {
   GENERATOR_STRATEGY_V1_CLASSIC_ID,
   GENERATOR_STRATEGY_V2_RECOMMENDED_ID,
   GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID,
+  GENERATOR_STRATEGY_BSP_LAB_ID,
 };
 
 export const RECOMMENDED_GENERATOR_STRATEGY_ID =
