@@ -312,14 +312,25 @@ BSP is therefore **functional + performance accepted** as an Algorithm Lab strat
 
 ## Priority D — Motion / feedback
 
-Improve perceived quality without creating a second gameplay engine:
+First presentation-only slice implemented after BSP acceptance:
 
-- camera easing / focus transitions;
+- short Generation reveal on the concealed authored-preview card;
+- short viewport camera-settle presentation on Test/Mystery start and Return Edit;
+- no gameplay-Core changes;
+- logical Three.js camera fit remains synchronous so picking/dragging semantics stay stable;
+- Room selection continues to avoid automatic recenter/transition;
+- `prefers-reduced-motion` disables the CSS presentation animations;
+- dedicated visible-Chrome smoke: `npm run smoke:dai-100-motion-feedback`;
+- integrated local gate: `npm run validate:dai-100-motion-feedback`.
+
+This slice is **pending owner-local acceptance**.
+
+Remaining targets:
+
 - room-event emphasis;
-- short generation reveal;
 - Player/Enemy idle or encounter motion if performance remains acceptable;
 - combat/loot/floor-clear feedback;
-- Result transition and return-to-edit continuity.
+- Result transition continuity and any further camera/focus polish that can be added without changing gameplay semantics.
 
 ## Explicit non-goals for the first DAI-100 pass
 
