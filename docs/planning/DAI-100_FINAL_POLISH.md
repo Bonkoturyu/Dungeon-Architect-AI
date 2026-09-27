@@ -270,11 +270,14 @@ Detailed paired documentation:
 - `docs/generator-algorithms/BSP.md`
 - `docs/generator-algorithms/BSP.html`
 
-BSP is **not registered in the Product selector yet**. First acceptance gate:
+BSP Core/Adapter acceptance passed locally on 2026-09-27 JST at `eec6772fff3aecc2383a28b51b0385aebacad509`:
 
-`npm run validate:dai-100-bsp`
+- BSP reusable Core: 8/8 PASS;
+- Generator / BSP Algorithm Lab adapter suite: 33/33 PASS;
+- syntax validation: 190 files PASS;
+- git diff / whitespace check: PASS.
 
-This gate covers BSP Core tests, Generator/Adapter tests, syntax validation, and git diff/whitespace checks. Product registration and browser routeability are deferred until this gate passes.
+BSP is now eligible for Product registration. Version 2 remains the default Recommended strategy. The next gate will add BSP renderer routeability, Product selector dispatch, multi-floor Test/Mystery, production build, Owner UI, syntax, and diff checks.
 
 ## Priority D — Motion / feedback
 
