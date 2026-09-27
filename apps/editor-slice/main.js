@@ -46,6 +46,11 @@ import {
 } from '../../packages/run-core/src/dungeon-run.js';
 import { createProgrammaticAudio } from '../../packages/audio-presentation/src/programmatic-audio.js';
 import {
+  createDungeonLayoutExchange,
+  createFullDungeonExport,
+  serializeJsonExport,
+} from '../../packages/export-core/src/layout-exchange.js';
+import {
   bindLanguageSwitchers,
   getLanguage,
   subscribeLanguage,
@@ -128,6 +133,8 @@ const floorSelect = document.querySelector('#floorSelect');
 const floorSummary = document.querySelector('#floorSummary');
 const generateDungeonButton = document.querySelector('#generateDungeon');
 const generationStatus = document.querySelector('#generationStatus');
+const exportLayoutJsonButton = document.querySelector('#exportLayoutJson');
+const exportFullJsonButton = document.querySelector('#exportFullJson');
 const generationHistory = document.querySelector('#generationHistory');
 const authoringPreviewCover = document.querySelector('#authoringPreviewCover');
 const viewportNotice = document.querySelector('#viewportNotice');
@@ -283,6 +290,81 @@ function authoringFloorSpecs() {
 
 function authoringRunSpec(id = 'editor-run') {
   return createDungeonRunSpec(authoringFloorSpecs(), { id });
+}
+
+function exportBaseName() {
+  const id = authoringFloorSpecs()[0]?.id ?? 'dungeon';
+  const normalized = String(id)
+    .trim()
+    .replace(/[^A-Za-z0-9._-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return normalized || 'dungeon';
+}
+
+function exportProvenance() {
+  return lastGeneration
+    ? {
+        generatorStrategyId:
+          lastGeneration.generatorStrategyId ?? null,
+        generatorVersion:
+          lastGeneration.generatorVersion ?? null,
+        algorithmVersion:
+          lastGeneration.algorithmVersion ?? null,
+      }
+    : null;
+}
+
+function currentLayoutExport() {
+  const base = exportBaseName();
+  return createDungeonLayoutExchange(
+    authoringFloorSpecs(),
+    {
+      id: `${base}-layout`,
+      provenance: exportProvenance(),
+    },
+  );
+}
+
+function currentFullDungeonExport() {
+  const base = exportBaseName();
+  return createFullDungeonExport(
+    authoringFloorSpecs(),
+    { id: `${base}-run` },
+  );
+}
+
+function downloadJsonExport(value, filename) {
+  const text = serializeJsonExport(value);
+  const blob = new Blob([text], {
+    type: 'application/json;charset=utf-8',
+  });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.hidden = true;
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+  setGenerationStatus(t('export.saved', { name: filename }));
+  return { filename, text };
+}
+
+function exportLayoutJson() {
+  const base = exportBaseName();
+  return downloadJsonExport(
+    currentLayoutExport(),
+    `${base}.layout.v1.json`,
+  );
+}
+
+function exportFullJson() {
+  const base = exportBaseName();
+  return downloadJsonExport(
+    currentFullDungeonExport(),
+    `${base}.dungeon-run.v1.json`,
+  );
 }
 
 function requestedFloorCount() {
@@ -1123,6 +1205,9 @@ function updateUi() {
   }
   if (floorCountInput) floorCountInput.disabled = !editing || authoringBusy;
   const runValidation = authoringRunSpec();
+  const exportBlocked = !editing || authoringBusy || !runValidation.ok;
+  if (exportLayoutJsonButton) exportLayoutJsonButton.disabled = exportBlocked;
+  if (exportFullJsonButton) exportFullJsonButton.disabled = exportBlocked;
   generateDungeonButton.disabled = !editing || authoringBusy || !generationPrompt.value.trim();
   naturalEditInput.disabled = !editing || authoringBusy;
   applyNaturalEditButton.disabled = !editing || authoringBusy || !naturalEditInput.value.trim();
@@ -3230,6 +3315,8 @@ async function run() {
     });
     floorSelect?.addEventListener('change', () => selectFloor(floorSelect.value));
     generateDungeonButton.addEventListener('click', generateDungeonFromPrompt);
+    exportLayoutJsonButton?.addEventListener('click', exportLayoutJson);
+    exportFullJsonButton?.addEventListener('click', exportFullJson);
     naturalEditInput.addEventListener('input', updateUi);
     applyNaturalEditButton.addEventListener('click', applyNaturalEdit);
     renderPromptHistory();
@@ -3287,6 +3374,10 @@ async function run() {
         return true;
       },
       generateDungeonFromPrompt,
+      getLayoutExport: currentLayoutExport,
+      getFullDungeonExport: currentFullDungeonExport,
+      exportLayoutJson,
+      exportFullJson,
       applyNaturalEdit,
       evaluateStartGateForSpec: (spec) => evaluateStartGate(spec),
       startDungeon,
