@@ -537,6 +537,24 @@
     .muted { color: var(--text-muted); font-size: 0.74rem; line-height: 1.42; }
     .muted:empty { display: none; }
 
+    .export-actions {
+      margin-top: 12px;
+      padding-top: 11px;
+      border-top: 1px solid rgba(102, 117, 142, 0.38);
+    }
+    .export-actions .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+    .export-actions button {
+      min-width: 0;
+      width: 100%;
+      font-size: 0.72rem;
+    }
+    .export-note {
+      margin: 7px 0 0;
+    }
+
     .prompt-history { margin-top: 12px; }
     .section-caption {
       margin: 0 0 7px;
@@ -1986,6 +2004,14 @@
           </label>
           <button id="generateDungeon" class="primary-action wide-action" type="button" data-i18n="create.generate">Generate</button>
           <p id="generationStatus" class="muted" aria-live="polite"></p>
+          <div class="export-actions">
+            <p class="section-caption" data-i18n="export.title">Export JSON</p>
+            <div class="button-row">
+              <button id="exportLayoutJson" type="button" data-i18n="export.layout">Layout JSON</button>
+              <button id="exportFullJson" type="button" data-i18n="export.full">Full JSON</button>
+            </div>
+            <p class="muted export-note" data-i18n="export.note">Layout = generic pattern · Full = complete DungeonRunSpec</p>
+          </div>
           <div class="prompt-history">
             <p class="section-caption" data-i18n="create.history">Prompt history · this session</p>
             <div id="generationHistory" class="prompt-history-list">
