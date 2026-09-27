@@ -7,6 +7,7 @@ import {
   GENERATOR_STRATEGY_V1_CLASSIC_ID,
   GENERATOR_STRATEGY_V2_RECOMMENDED_ID,
   GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID,
+  GENERATOR_STRATEGY_BSP_LAB_ID,
 } from '../packages/generator/src/strategy-catalog.js';
 
 const chromePath =
@@ -213,6 +214,20 @@ try {
     () => window.__DAI_EDITOR_SLICE__.getState(),
   );
 
+  const selectedBsp = await page.evaluate(
+    (id) => window.__DAI_EDITOR_SLICE__.setGeneratorStrategy(id),
+    GENERATOR_STRATEGY_BSP_LAB_ID,
+  );
+  if (!selectedBsp) {
+    throw new Error('Could not select Algorithm Lab BSP.');
+  }
+  await page.evaluate(
+    () => window.__DAI_EDITOR_SLICE__.generateDungeonFromPrompt(),
+  );
+  const bsp = await page.evaluate(
+    () => window.__DAI_EDITOR_SLICE__.getState(),
+  );
+
   await page.screenshot({
     path: path.join(outputDir, 'generator-strategy-selector.png'),
     fullPage: true,
@@ -221,10 +236,11 @@ try {
   const classicLayout = layoutSignature(classic);
   const recommendedLayout = layoutSignature(recommended);
   const delaunayLayout = layoutSignature(delaunay);
+  const bspLayout = layoutSignature(bsp);
 
   const checks = {
     strategySelectorVisible: initial.selectorVisible === true,
-    registryListsClassicRecommendedAndDelaunay:
+    registryListsAllAcceptedStrategies:
       initial.strategies.some(
         (entry) => entry.id === GENERATOR_STRATEGY_V1_CLASSIC_ID,
       ) &&
@@ -233,11 +249,15 @@ try {
       ) &&
       initial.strategies.some(
         (entry) => entry.id === GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID,
+      ) &&
+      initial.strategies.some(
+        (entry) => entry.id === GENERATOR_STRATEGY_BSP_LAB_ID,
       ),
-    selectorListsClassicRecommendedAndDelaunay:
+    selectorListsAllAcceptedStrategies:
       initial.optionValues.includes(GENERATOR_STRATEGY_V1_CLASSIC_ID) &&
       initial.optionValues.includes(GENERATOR_STRATEGY_V2_RECOMMENDED_ID) &&
-      initial.optionValues.includes(GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID),
+      initial.optionValues.includes(GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID) &&
+      initial.optionValues.includes(GENERATOR_STRATEGY_BSP_LAB_ID),
     recommendedSelectedByDefault:
       initial.selectedValue === GENERATOR_STRATEGY_V2_RECOMMENDED_ID &&
       initial.state.generatorStrategyId ===
@@ -255,19 +275,29 @@ try {
       delaunay.lastGeneration?.generatorStrategyId ===
         GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID &&
       delaunay.lastGeneration?.algorithmVersion === '1',
+    bspSelectionUsesAlgorithmLabStrategy:
+      bsp.lastGeneration?.generatorVersion === null &&
+      bsp.lastGeneration?.generatorStrategyId ===
+        GENERATOR_STRATEGY_BSP_LAB_ID &&
+      bsp.lastGeneration?.algorithmVersion === '1',
     samePromptKeepsSameSeedAcrossStrategies:
       classic.lastGeneration?.seed === recommended.lastGeneration?.seed &&
-      recommended.lastGeneration?.seed === delaunay.lastGeneration?.seed,
+      recommended.lastGeneration?.seed === delaunay.lastGeneration?.seed &&
+      delaunay.lastGeneration?.seed === bsp.lastGeneration?.seed,
     strategyLayoutsAreDistinct:
-      classicLayout !== recommendedLayout &&
-      recommendedLayout !== delaunayLayout &&
-      classicLayout !== delaunayLayout,
+      new Set([
+        classicLayout,
+        recommendedLayout,
+        delaunayLayout,
+        bspLayout,
+      ]).size === 4,
     allOutputsRemainStartEligible:
       classic.startAllowed === true &&
       recommended.startAllowed === true &&
-      delaunay.startAllowed === true,
-    designIntentRequestedThreeTimes:
-      designIntentRequests.length === 3 &&
+      delaunay.startAllowed === true &&
+      bsp.startAllowed === true,
+    designIntentRequestedFourTimes:
+      designIntentRequests.length === 4 &&
       designIntentRequests.every((entry) => entry.promptMatches),
     browserErrorsAbsent:
       consoleErrors.length === 0 &&
@@ -325,6 +355,18 @@ try {
       roomCount: delaunay.rooms.length,
       corridorCount: delaunay.corridors.length,
       layoutSignature: delaunayLayout,
+    },
+    bsp: {
+      generatorVersion:
+        bsp.lastGeneration?.generatorVersion ?? null,
+      generatorStrategyId:
+        bsp.lastGeneration?.generatorStrategyId ?? null,
+      algorithmVersion:
+        bsp.lastGeneration?.algorithmVersion ?? null,
+      seed: bsp.lastGeneration?.seed ?? null,
+      roomCount: bsp.rooms.length,
+      corridorCount: bsp.corridors.length,
+      layoutSignature: bspLayout,
     },
     consoleErrors,
     pageErrors,
