@@ -12,6 +12,31 @@ const steps = [
     args: ['run', 'test:generator'],
   },
   {
+    label: 'BSP renderer routeability matrix',
+    command: 'npm',
+    args: ['run', 'validate:dai-100-bsp-matrix'],
+  },
+  {
+    label: 'Production hosting build',
+    command: 'npm',
+    args: ['run', 'build:hosting'],
+  },
+  {
+    label: 'Owner UI regression smoke',
+    command: 'npm',
+    args: ['run', 'smoke:owner-ui-review'],
+  },
+  {
+    label: 'Generator strategy selector smoke',
+    command: 'npm',
+    args: ['run', 'smoke:dai-100-generator-strategy-selector'],
+  },
+  {
+    label: 'BSP Product / multi-floor / Mystery browser smoke',
+    command: 'npm',
+    args: ['run', 'smoke:dai-100-bsp'],
+  },
+  {
     label: 'Syntax validation',
     command: 'npm',
     args: ['run', 'validate:syntax'],
@@ -74,8 +99,8 @@ for (const [index, step] of steps.entries()) {
           passed: false,
           failedStep: step.label,
           falseChecks: [step.label],
-          phase: 'algorithm-lab-bsp-core',
-          registeredInProductSelector: false,
+          phase: 'algorithm-lab-bsp-product',
+          registeredInProductSelector: true,
           results,
         },
         null,
@@ -91,8 +116,8 @@ console.log(
     {
       passed: true,
       falseChecks: [],
-      phase: 'algorithm-lab-bsp-core',
-      registeredInProductSelector: false,
+      phase: 'algorithm-lab-bsp-product',
+      registeredInProductSelector: true,
       results,
     },
     null,
