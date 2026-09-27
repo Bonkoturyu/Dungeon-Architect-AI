@@ -402,9 +402,17 @@ Application固有AdapterをNative側へ持ち込む必要はない。
 
 ---
 
-## 15. Acceptance gate
+## 15. Acceptance
 
-Productへ登録する前に:
+専用gate:
+
+```bash
+npm run validate:dai-100-bsp
+```
+
+最終Product acceptanceは2026-09-27 JST、commit `9046a3a676e7988d74bc04196654e00091d0bb3c` でPASS。
+
+確認済み:
 
 - same Seed deterministic
 - different Seed variation
@@ -418,13 +426,21 @@ Productへ登録する前に:
 - invalid parameter fail-closed
 - Adapterがvalid DungeonSpec
 - DesignIntent content semantics維持
+- directional corridor side hints deterministic
+- 150/150 renderer routeability PASS
+- 30 unique spatial layouts
+- production build PASS
+- Owner UI / 5言語 PASS
+- V1 / V2 / Delaunay / BSP selector PASS
+- BSP 3-floor Test / Mystery PASS
+- syntax / git checks PASS
 
-を確認する。
+Performance evidence:
 
-専用gate:
+- original renderer matrix: `5,454,108 ms`
+- final full-gate matrix: `229,665 ms`
+- `crossing-fallback`: 86/150
+- strict: 64/150
+- repeated full-run worst observed case: `15,107 ms`
 
-```bash
-npm run validate:dai-100-bsp
-```
-
-Core/Adapter acceptance後にProduct selectorへ登録する。
+BSPは **functional + performance accepted**。残る10–15秒級のlong-tailと `crossing-fallback` 比率はnon-blockingなrenderer / visual-quality follow-upとして扱う。
