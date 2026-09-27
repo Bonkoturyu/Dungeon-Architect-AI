@@ -6,6 +6,21 @@ import { generateDungeonFromDesignIntentV1 } from '../versions/v1/design-intent-
 export const GENERATOR_STRATEGY_BSP_LAB_ID =
   'algorithm-lab.bsp';
 
+function preferredCorridorSides(fromRoom, toRoom) {
+  const dx = toRoom.x - fromRoom.x;
+  const dz = toRoom.z - fromRoom.z;
+
+  if (Math.abs(dx) >= Math.abs(dz)) {
+    return dx >= 0
+      ? { fromSide: 'east', toSide: 'west' }
+      : { fromSide: 'west', toSide: 'east' };
+  }
+
+  return dz >= 0
+    ? { fromSide: 'south', toSide: 'north' }
+    : { fromSide: 'north', toSide: 'south' };
+}
+
 function mapCoreToDungeonSpec(baseSpec, coreResult) {
   const rooms = coreResult.rooms.map((room) => ({
     id: room.id,
@@ -15,16 +30,26 @@ function mapCoreToDungeonSpec(baseSpec, coreResult) {
     depth: room.depth,
   }));
   const corridors = coreResult.finalEdges.map(
-    (edge, index) => ({
-      id: `corridor-${String(index + 1).padStart(3, '0')}`,
-      fromRoomId: rooms[edge.a].id,
-      toRoomId: rooms[edge.b].id,
-      width: 3,
-      kind:
-        edge.kind === 'bsp-extra'
-          ? 'alternate'
-          : 'backbone',
-    }),
+    (edge, index) => {
+      const fromRoom = rooms[edge.a];
+      const toRoom = rooms[edge.b];
+      const sides = preferredCorridorSides(
+        fromRoom,
+        toRoom,
+      );
+
+      return {
+        id: `corridor-${String(index + 1).padStart(3, '0')}`,
+        fromRoomId: fromRoom.id,
+        toRoomId: toRoom.id,
+        width: 3,
+        kind:
+          edge.kind === 'bsp-extra'
+            ? 'alternate'
+            : 'backbone',
+        ...sides,
+      };
+    },
   );
 
   return {
