@@ -238,6 +238,44 @@ Renderer evidence recorded 133 strict routes and 17 cases using the existing `cr
 
 The previous Windows `DEP0190` warning in the Delaunay acceptance runner was also removed by switching its npm subprocess execution to the same `npm_execpath` / Node spawning model used by the other DAI-100 validators.
 
+### Second Algorithm Lab Core — BSP
+
+Implementation has started under `packages/generator-algorithms/bsp/` after Delaunay Product acceptance.
+
+The reusable BSP Core is independent from application/runtime layers and produces a BSP-native IR:
+
+```text
+Root bounds
+→ Binary partition tree
+→ Leaf regions
+→ One Room per leaf
+→ Sibling-subtree tree links
+→ Bounded optional extra links
+```
+
+Current properties:
+
+- explicit deterministic Seed;
+- Room count = leaf count;
+- BSP tree edge count = `N - 1`;
+- Room placement remains inside its partition leaf;
+- Room overlap, duplicate-edge, and connectivity invariants fail closed;
+- `routeChoice` is adapted to bounded `extraConnectionRatio`;
+- no DOM / Three.js / Editor / Play / provider dependency in the Core;
+- application-specific DungeonSpec mapping remains in `packages/generator/src/strategies/bsp-lab.js`;
+- V1 frozen DesignIntent content/profile mapping is reused only in the Adapter to keep gameplay-content semantics stable for algorithm comparison.
+
+Detailed paired documentation:
+
+- `docs/generator-algorithms/BSP.md`
+- `docs/generator-algorithms/BSP.html`
+
+BSP is **not registered in the Product selector yet**. First acceptance gate:
+
+`npm run validate:dai-100-bsp`
+
+This gate covers BSP Core tests, Generator/Adapter tests, syntax validation, and git diff/whitespace checks. Product registration and browser routeability are deferred until this gate passes.
+
 ## Priority D — Motion / feedback
 
 Improve perceived quality without creating a second gameplay engine:
