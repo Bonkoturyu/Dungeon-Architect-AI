@@ -231,7 +231,7 @@ export function createOpenAIEditCommandRequest(
     text: {
       format: {
         type: "json_schema",
-        name: "edit_command_v2_single_safe_command",
+        name: "edit_command_v3_single_safe_command",
         strict: true,
         schema: editCommandSchema(context),
       },
