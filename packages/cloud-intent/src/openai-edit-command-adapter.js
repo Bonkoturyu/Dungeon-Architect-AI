@@ -9,6 +9,12 @@ export const NATURAL_EDIT_COMMAND_TYPES = Object.freeze([
   "resize-room",
   "add-entity",
   "remove-entity",
+  "add-room",
+  "remove-room",
+  "add-corridor",
+  "remove-corridor",
+  "reconnect-corridor",
+  "set-corridor-doors",
 ]);
 
 export const NATURAL_EDIT_ENTITY_TYPES = Object.freeze([
@@ -21,18 +27,28 @@ export const NATURAL_EDIT_ENTITY_TYPES = Object.freeze([
 const ROOM_COORDINATE_LIMIT = 256;
 const ROOM_SIZE_MIN = 4;
 const ROOM_SIZE_MAX = 32;
+const NATURAL_EDIT_CORRIDOR_SIDES = Object.freeze([
+  "north",
+  "east",
+  "south",
+  "west",
+]);
 
 const INSTRUCTIONS = [
   "Translate one natural-language dungeon authoring edit into exactly one supported command.",
-  "Supported commands are move-entity, move-room, resize-room, add-entity, and remove-entity.",
+  "Supported commands are move-entity, move-room, resize-room, add-entity, remove-entity, add-room, remove-room, add-corridor, remove-corridor, reconnect-corridor, and set-corridor-doors.",
   "Return every schema field. Fields unused by the selected command must be null.",
-  "Use only exact existing entityId and roomId values from context; never invent existing IDs.",
+  "Use only exact existing entityId, roomId, corridorId, fromRoomId, and toRoomId values from context; never invent existing IDs.",
   "For add-entity set entityId to null; the server deterministically creates the new entity ID.",
+  "For add-room set roomId to null; provide bounded absolute x/z/width/depth and the server deterministically creates the new Room ID.",
+  "For add-corridor set corridorId to null; choose existing fromRoomId/toRoomId values and optional cardinal endpoint sides, and the server deterministically creates the new Corridor ID.",
   "add-entity supports only enemy, treasure, trap, or recovery.",
   "For move-room use absolute x/z coordinates derived from the current room geometry.",
-  "For resize-room use absolute width/depth values between 4 and 32.",
-  "Resolve semantic references such as treasure, enemy, start room, goal room, leftmost room, or largest room from the bounded context.",
-  "Do not generate code, explanations, extra fields, multiple commands, room creation/removal, corridor edits, or event edits.",
+  "For resize-room and add-room use absolute width/depth values between 4 and 32.",
+  "For corridor endpoint sides use north, east, south, west, or null for automatic routing.",
+  "Do not remove a Room containing Start or Goal. Do not connect a Corridor from a Room to itself.",
+  "Resolve semantic references such as treasure, enemy, start room, goal room, leftmost room, largest room, or a corridor between named rooms from the bounded context.",
+  "Do not generate code, explanations, extra fields, multiple commands, event edits, corridor width changes, or new Start/Goal entities.",
   "Return only the structured object required by the response schema.",
 ].join(" ");
 
@@ -79,6 +95,17 @@ function normalizeContext(spec) {
     type: String(entity.type ?? ""),
     roomId: String(entity.roomId ?? ""),
   }));
+  const corridors = (Array.isArray(spec.corridors) ? spec.corridors : []).map(
+    (corridor) => ({
+      id: String(corridor.id ?? ""),
+      fromRoomId: String(corridor.fromRoomId ?? ""),
+      toRoomId: String(corridor.toRoomId ?? ""),
+      width: finiteOrNull(corridor.width),
+      kind: corridor.kind == null ? null : String(corridor.kind),
+      fromSide: corridor.fromSide == null ? null : String(corridor.fromSide),
+      toSide: corridor.toSide == null ? null : String(corridor.toSide),
+    }),
+  );
 
   if (rooms.length === 0 || rooms.some((room) => !room.id)) {
     throw new TypeError("natural-edit context contains an invalid room ID");
@@ -89,8 +116,19 @@ function normalizeContext(spec) {
   ) {
     throw new TypeError("natural-edit context contains an invalid entity");
   }
+  if (
+    corridors.some(
+      (corridor) =>
+        !corridor.id ||
+        !corridor.fromRoomId ||
+        !corridor.toRoomId ||
+        !Number.isFinite(corridor.width),
+    )
+  ) {
+    throw new TypeError("natural-edit context contains an invalid corridor");
+  }
 
-  return { rooms, entities };
+  return { rooms, entities, corridors };
 }
 
 function nullableEnum(values) {
@@ -132,6 +170,13 @@ function editCommandSchema(context) {
         maximum: ROOM_SIZE_MAX,
       },
       entityType: nullableEnum(NATURAL_EDIT_ENTITY_TYPES),
+      corridorId: nullableEnum(
+        context.corridors.map((corridor) => corridor.id),
+      ),
+      fromRoomId: nullableEnum(context.rooms.map((room) => room.id)),
+      toRoomId: nullableEnum(context.rooms.map((room) => room.id)),
+      fromSide: nullableEnum(NATURAL_EDIT_CORRIDOR_SIDES),
+      toSide: nullableEnum(NATURAL_EDIT_CORRIDOR_SIDES),
     },
     required: [
       "type",
@@ -142,6 +187,11 @@ function editCommandSchema(context) {
       "width",
       "depth",
       "entityType",
+      "corridorId",
+      "fromRoomId",
+      "toRoomId",
+      "fromSide",
+      "toSide",
     ],
   };
 }
@@ -220,7 +270,7 @@ function sanitizedUsage(usage) {
 
 function exactKeys(command) {
   return Object.keys(command).sort().join(",") ===
-    "depth,entityId,entityType,roomId,type,width,x,z";
+    "corridorId,depth,entityId,entityType,fromRoomId,fromSide,roomId,toRoomId,toSide,type,width,x,z";
 }
 
 function allNull(command, fields) {
@@ -237,6 +287,47 @@ function roomById(spec, id) {
 
 function entityById(spec, id) {
   return spec.entities.find((entity) => entity.id === id) ?? null;
+}
+
+function corridorById(spec, id) {
+  return (spec.corridors ?? []).find((corridor) => corridor.id === id) ?? null;
+}
+
+function normalizeCorridorSide(value) {
+  if (value == null) return null;
+  return NATURAL_EDIT_CORRIDOR_SIDES.includes(value) ? value : undefined;
+}
+
+function sameCorridorEndpoints(corridor, fromRoomId, toRoomId) {
+  return (
+    (corridor.fromRoomId === fromRoomId && corridor.toRoomId === toRoomId) ||
+    (corridor.fromRoomId === toRoomId && corridor.toRoomId === fromRoomId)
+  );
+}
+
+function roomInteriorsOverlap(a, b) {
+  return (
+    Math.abs(a.x - b.x) < (a.width + b.width) / 2 &&
+    Math.abs(a.z - b.z) < (a.depth + b.depth) / 2
+  );
+}
+
+function nextRoomId(spec) {
+  for (let index = 1; index <= 999; index += 1) {
+    const id = `room-ai-${String(index).padStart(3, "0")}`;
+    if (!spec.rooms.some((room) => room.id === id)) return id;
+  }
+  return null;
+}
+
+function nextCorridorId(spec) {
+  for (let index = 1; index <= 999; index += 1) {
+    const id = `corridor-ai-${String(index).padStart(3, "0")}`;
+    if (!(spec.corridors ?? []).some((corridor) => corridor.id === id)) {
+      return id;
+    }
+  }
+  return null;
 }
 
 function nextEntityId(spec, type) {
@@ -266,6 +357,9 @@ export function validateNaturalEditCommand(command, spec) {
 
   const roomIds = new Set(spec.rooms.map((room) => room.id));
   const entityIds = new Set(spec.entities.map((entity) => entity.id));
+  const corridorIds = new Set(
+    (spec.corridors ?? []).map((corridor) => corridor.id),
+  );
 
   if (command.roomId != null && !roomIds.has(command.roomId)) {
     return fail("ROOM_NOT_FOUND", `Unknown room: ${String(command.roomId)}`);
@@ -276,13 +370,27 @@ export function validateNaturalEditCommand(command, spec) {
       `Unknown entity: ${String(command.entityId)}`,
     );
   }
+  if (command.corridorId != null && !corridorIds.has(command.corridorId)) {
+    return fail(
+      "CORRIDOR_NOT_FOUND",
+      `Unknown corridor: ${String(command.corridorId)}`,
+    );
+  }
+  for (const field of ["fromRoomId", "toRoomId"]) {
+    if (command[field] != null && !roomIds.has(command[field])) {
+      return fail("ROOM_NOT_FOUND", `Unknown room: ${String(command[field])}`);
+    }
+  }
 
   switch (command.type) {
     case "move-entity": {
       if (
         typeof command.entityId !== "string" ||
         typeof command.roomId !== "string" ||
-        !allNull(command, ["x", "z", "width", "depth", "entityType"])
+        !allNull(command, [
+          "x", "z", "width", "depth", "entityType",
+          "corridorId", "fromRoomId", "toRoomId", "fromSide", "toSide",
+        ])
       ) {
         return fail(
           "EDIT_COMMAND_FIELDS_INVALID",
@@ -331,7 +439,10 @@ export function validateNaturalEditCommand(command, spec) {
           -ROOM_COORDINATE_LIMIT,
           ROOM_COORDINATE_LIMIT,
         ) ||
-        !allNull(command, ["entityId", "width", "depth", "entityType"])
+        !allNull(command, [
+          "entityId", "width", "depth", "entityType",
+          "corridorId", "fromRoomId", "toRoomId", "fromSide", "toSide",
+        ])
       ) {
         return fail(
           "EDIT_COMMAND_FIELDS_INVALID",
@@ -361,7 +472,10 @@ export function validateNaturalEditCommand(command, spec) {
         typeof command.roomId !== "string" ||
         !finiteWithin(command.width, ROOM_SIZE_MIN, ROOM_SIZE_MAX) ||
         !finiteWithin(command.depth, ROOM_SIZE_MIN, ROOM_SIZE_MAX) ||
-        !allNull(command, ["entityId", "x", "z", "entityType"])
+        !allNull(command, [
+          "entityId", "x", "z", "entityType",
+          "corridorId", "fromRoomId", "toRoomId", "fromSide", "toSide",
+        ])
       ) {
         return fail(
           "EDIT_COMMAND_FIELDS_INVALID",
@@ -396,6 +510,11 @@ export function validateNaturalEditCommand(command, spec) {
           "width",
           "depth",
           "entityType",
+          "corridorId",
+          "fromRoomId",
+          "toRoomId",
+          "fromSide",
+          "toSide",
         ])
       ) {
         return fail(
@@ -424,7 +543,10 @@ export function validateNaturalEditCommand(command, spec) {
         command.entityId !== null ||
         typeof command.roomId !== "string" ||
         !NATURAL_EDIT_ENTITY_TYPES.includes(command.entityType) ||
-        !allNull(command, ["x", "z", "width", "depth"])
+        !allNull(command, [
+          "x", "z", "width", "depth",
+          "corridorId", "fromRoomId", "toRoomId", "fromSide", "toSide",
+        ])
       ) {
         return fail(
           "EDIT_COMMAND_FIELDS_INVALID",
@@ -447,6 +569,236 @@ export function validateNaturalEditCommand(command, spec) {
             type: command.entityType,
             roomId: command.roomId,
           },
+        },
+      };
+    }
+
+    case "add-room": {
+      if (
+        command.roomId !== null ||
+        command.entityId !== null ||
+        !finiteWithin(command.x, -ROOM_COORDINATE_LIMIT, ROOM_COORDINATE_LIMIT) ||
+        !finiteWithin(command.z, -ROOM_COORDINATE_LIMIT, ROOM_COORDINATE_LIMIT) ||
+        !finiteWithin(command.width, ROOM_SIZE_MIN, ROOM_SIZE_MAX) ||
+        !finiteWithin(command.depth, ROOM_SIZE_MIN, ROOM_SIZE_MAX) ||
+        !allNull(command, [
+          "entityType", "corridorId", "fromRoomId", "toRoomId",
+          "fromSide", "toSide",
+        ])
+      ) {
+        return fail(
+          "EDIT_COMMAND_FIELDS_INVALID",
+          "add-room requires bounded x/z/width/depth; roomId must be null.",
+        );
+      }
+      const room = {
+        id: nextRoomId(spec),
+        x: command.x,
+        z: command.z,
+        width: command.width,
+        depth: command.depth,
+      };
+      if (!room.id) {
+        return fail("ROOM_ID_EXHAUSTED", "Could not allocate a safe Room ID.");
+      }
+      if (spec.rooms.some((existing) => roomInteriorsOverlap(room, existing))) {
+        return fail("ROOM_OVERLAP", "Natural edit add-room would overlap an existing Room.");
+      }
+      return { ok: true, command: { type: "add-room", room } };
+    }
+
+    case "remove-room": {
+      if (
+        typeof command.roomId !== "string" ||
+        !allNull(command, [
+          "entityId", "x", "z", "width", "depth", "entityType",
+          "corridorId", "fromRoomId", "toRoomId", "fromSide", "toSide",
+        ])
+      ) {
+        return fail(
+          "EDIT_COMMAND_FIELDS_INVALID",
+          "remove-room requires only roomId.",
+        );
+      }
+      const protectedEntity = spec.entities.find(
+        (entity) =>
+          entity.roomId === command.roomId &&
+          ["start", "goal"].includes(entity.type),
+      );
+      if (protectedEntity) {
+        return fail(
+          "PROTECTED_ROOM",
+          "Start/Goal Rooms cannot be removed by natural edit.",
+        );
+      }
+      return {
+        ok: true,
+        command: { type: "remove-room", roomId: command.roomId },
+      };
+    }
+
+    case "add-corridor": {
+      const fromSide = normalizeCorridorSide(command.fromSide);
+      const toSide = normalizeCorridorSide(command.toSide);
+      if (
+        command.corridorId !== null ||
+        command.roomId !== null ||
+        command.entityId !== null ||
+        typeof command.fromRoomId !== "string" ||
+        typeof command.toRoomId !== "string" ||
+        command.fromRoomId === command.toRoomId ||
+        fromSide === undefined ||
+        toSide === undefined ||
+        !allNull(command, ["x", "z", "width", "depth", "entityType"])
+      ) {
+        return fail(
+          "EDIT_COMMAND_FIELDS_INVALID",
+          "add-corridor requires existing distinct fromRoomId/toRoomId and optional cardinal sides.",
+        );
+      }
+      if (
+        (spec.corridors ?? []).some((corridor) =>
+          sameCorridorEndpoints(corridor, command.fromRoomId, command.toRoomId))
+      ) {
+        return fail(
+          "CORRIDOR_DUPLICATE_ENDPOINTS",
+          "A Corridor already connects those Rooms.",
+        );
+      }
+      const id = nextCorridorId(spec);
+      if (!id) {
+        return fail(
+          "CORRIDOR_ID_EXHAUSTED",
+          "Could not allocate a safe Corridor ID.",
+        );
+      }
+      const corridor = {
+        id,
+        fromRoomId: command.fromRoomId,
+        toRoomId: command.toRoomId,
+        width: 3,
+        kind: "ai",
+      };
+      if (fromSide != null) corridor.fromSide = fromSide;
+      if (toSide != null) corridor.toSide = toSide;
+      return {
+        ok: true,
+        command: { type: "add-corridor", corridor },
+      };
+    }
+
+    case "remove-corridor": {
+      if (
+        typeof command.corridorId !== "string" ||
+        !allNull(command, [
+          "entityId", "roomId", "x", "z", "width", "depth", "entityType",
+          "fromRoomId", "toRoomId", "fromSide", "toSide",
+        ])
+      ) {
+        return fail(
+          "EDIT_COMMAND_FIELDS_INVALID",
+          "remove-corridor requires only corridorId.",
+        );
+      }
+      return {
+        ok: true,
+        command: {
+          type: "remove-corridor",
+          corridorId: command.corridorId,
+        },
+      };
+    }
+
+    case "reconnect-corridor": {
+      const corridor = corridorById(spec, command.corridorId);
+      const fromSide = normalizeCorridorSide(command.fromSide);
+      const toSide = normalizeCorridorSide(command.toSide);
+      if (
+        typeof command.corridorId !== "string" ||
+        command.roomId !== null ||
+        command.entityId !== null ||
+        typeof command.fromRoomId !== "string" ||
+        typeof command.toRoomId !== "string" ||
+        command.fromRoomId === command.toRoomId ||
+        fromSide === undefined ||
+        toSide === undefined ||
+        !allNull(command, ["x", "z", "width", "depth", "entityType"])
+      ) {
+        return fail(
+          "EDIT_COMMAND_FIELDS_INVALID",
+          "reconnect-corridor requires corridorId, distinct existing endpoints, and optional cardinal sides.",
+        );
+      }
+      if (
+        (spec.corridors ?? []).some(
+          (entry) =>
+            entry.id !== command.corridorId &&
+            sameCorridorEndpoints(entry, command.fromRoomId, command.toRoomId),
+        )
+      ) {
+        return fail(
+          "CORRIDOR_DUPLICATE_ENDPOINTS",
+          "Another Corridor already connects those Rooms.",
+        );
+      }
+      const same =
+        corridor.fromRoomId === command.fromRoomId &&
+        corridor.toRoomId === command.toRoomId &&
+        (corridor.fromSide ?? null) === fromSide &&
+        (corridor.toSide ?? null) === toSide;
+      if (same) {
+        return fail(
+          "EDIT_COMMAND_NO_OP",
+          "Corridor already uses those endpoints and door sides.",
+        );
+      }
+      return {
+        ok: true,
+        command: {
+          type: "reconnect-corridor",
+          corridorId: command.corridorId,
+          fromRoomId: command.fromRoomId,
+          toRoomId: command.toRoomId,
+          fromSide,
+          toSide,
+        },
+      };
+    }
+
+    case "set-corridor-doors": {
+      const corridor = corridorById(spec, command.corridorId);
+      const fromSide = normalizeCorridorSide(command.fromSide);
+      const toSide = normalizeCorridorSide(command.toSide);
+      if (
+        typeof command.corridorId !== "string" ||
+        fromSide === undefined ||
+        toSide === undefined ||
+        !allNull(command, [
+          "entityId", "roomId", "x", "z", "width", "depth", "entityType",
+          "fromRoomId", "toRoomId",
+        ])
+      ) {
+        return fail(
+          "EDIT_COMMAND_FIELDS_INVALID",
+          "set-corridor-doors requires corridorId and optional cardinal endpoint sides.",
+        );
+      }
+      if (
+        (corridor.fromSide ?? null) === fromSide &&
+        (corridor.toSide ?? null) === toSide
+      ) {
+        return fail(
+          "EDIT_COMMAND_NO_OP",
+          "Corridor already uses those door sides.",
+        );
+      }
+      return {
+        ok: true,
+        command: {
+          type: "set-corridor-doors",
+          corridorId: command.corridorId,
+          fromSide,
+          toSide,
         },
       };
     }
