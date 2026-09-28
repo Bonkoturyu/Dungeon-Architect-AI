@@ -168,6 +168,17 @@ const context = {
     { id: 'treasure-1', type: 'treasure', roomId: 'room-start' },
     { id: 'goal-1', type: 'goal', roomId: 'room-goal' },
   ],
+  corridors: [
+    {
+      id: 'corridor-1',
+      fromRoomId: 'room-start',
+      toRoomId: 'room-goal',
+      width: 3,
+      kind: 'manual',
+      fromSide: 'east',
+      toSide: 'west',
+    },
+  ],
 };
 
 const intentRequest = createOpenAIIntentRequest('Create a fair exploratory dungeon.');
@@ -175,6 +186,10 @@ const editRequest = createOpenAIEditCommandRequest(prompt, context);
 const parsedEditInput = JSON.parse(editRequest.input);
 const roomContextKeys = [...new Set(parsedEditInput.context.rooms.flatMap((room) => Object.keys(room)))].sort();
 const entityContextKeys = [...new Set(parsedEditInput.context.entities.flatMap((entity) => Object.keys(entity)))].sort();
+const corridorContextKeys = [...new Set(
+  parsedEditInput.context.corridors.flatMap((corridor) => Object.keys(corridor)),
+)].sort();
+const naturalEditContextKeys = Object.keys(parsedEditInput.context).sort();
 
 const secret = 'test-secret-do-not-leak';
 const functionRequest = new Request('https://example.pages.dev/api/natural-edit', {
@@ -241,8 +256,11 @@ const checks = {
   naturalEditStoreFalse: editRequest.store === false,
   naturalEditInputShapeBounded:
     Object.keys(parsedEditInput).sort().join(',') === 'context,request' &&
+    naturalEditContextKeys.join(',') === 'corridors,entities,rooms' &&
     roomContextKeys.join(',') === 'depth,id,width,x,z' &&
-    entityContextKeys.join(',') === 'id,roomId,type',
+    entityContextKeys.join(',') === 'id,roomId,type' &&
+    corridorContextKeys.join(',') ===
+      'fromRoomId,fromSide,id,kind,toRoomId,toSide,width',
   functionResponseDoesNotEchoPrompt: !functionResponseText.includes(prompt),
   functionResponseDoesNotEchoSecret: !functionResponseText.includes(secret),
   functionResponseNoStore: functionResponse.headers.get('cache-control') === 'no-store',
@@ -267,7 +285,15 @@ const checks = {
     editorSource.includes('entities: authoringSpec().entities.map((entity) => ({') &&
     editorSource.includes('id: entity.id') &&
     editorSource.includes('type: entity.type') &&
-    editorSource.includes('roomId: entity.roomId'),
+    editorSource.includes('roomId: entity.roomId') &&
+    editorSource.includes('corridors: authoringSpec().corridors.map((corridor) => ({') &&
+    editorSource.includes('id: corridor.id') &&
+    editorSource.includes('fromRoomId: corridor.fromRoomId') &&
+    editorSource.includes('toRoomId: corridor.toRoomId') &&
+    editorSource.includes('width: corridor.width') &&
+    editorSource.includes('kind: corridor.kind ?? null') &&
+    editorSource.includes('fromSide: corridor.fromSide ?? null') &&
+    editorSource.includes('toSide: corridor.toSide ?? null'),
 };
 
 const passed = Object.values(checks).every(Boolean);
@@ -285,8 +311,10 @@ const evidence = {
   persistenceFindings,
   outboundNaturalEditContext: {
     topLevelKeys: Object.keys(parsedEditInput).sort(),
+    contextKeys: naturalEditContextKeys,
     roomKeys: roomContextKeys,
     entityKeys: entityContextKeys,
+    corridorKeys: corridorContextKeys,
   },
   privacyBoundary: {
     designIntentStore: intentRequest.store,
