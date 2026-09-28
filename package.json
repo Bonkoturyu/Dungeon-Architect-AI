@@ -105,7 +105,9 @@
     "validate:dai-100-atmosphere": "node scripts/run-dai-100-atmosphere-validation.mjs",
     "smoke:dai-100-ai-edit-v2": "node scripts/run-dai-100-ai-edit-v2-smoke.mjs",
     "smoke:dai-100-ai-edit-structural": "node scripts/run-dai-100-ai-edit-structural-smoke.mjs",
-    "validate:dai-100-ai-edit-structural": "node scripts/run-dai-100-ai-edit-structural-validation.mjs"
+    "validate:dai-100-ai-edit-structural": "node scripts/run-dai-100-ai-edit-structural-validation.mjs",
+    "smoke:dai-100-reactive-audio": "node scripts/run-dai-100-reactive-audio-smoke.mjs",
+    "validate:dai-100-reactive-audio": "node scripts/run-dai-100-reactive-audio-validation.mjs"
   },
   "devDependencies": {
     "@babylonjs/core": "9.18.0",
