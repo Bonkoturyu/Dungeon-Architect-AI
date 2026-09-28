@@ -1,4 +1,5 @@
 export const AUDIO_PRESENTATION_VERSION = "2.0";
+export const AUDIO_REACTIVE_INTENSITY_VERSION = "1";
 
 export const AUDIO_MODES = Object.freeze([
   "edit",
@@ -151,7 +152,91 @@ const MODE_PROGRAMS = Object.freeze({
 
 const MODE_SEQUENCE_STEPS = 72;
 const MODE_CROSSFADE_SECONDS = 0.45;
+const REACTIVE_INTENSITY_RAMP_SECONDS = 0.28;
 const MASTER_GAIN = 0.72;
+
+function clamp01(value, fallback = 0.5) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.max(0, Math.min(1, number));
+}
+
+function normalizedCount(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number) || number <= 0) return 0;
+  return Math.floor(number);
+}
+
+export function deriveReactiveAudioIntensity({
+  mode = "edit",
+  designIntent = null,
+  enemyCount = 0,
+  armedTrapCount = 0,
+  hpRatio = 1,
+} = {}) {
+  if (!isSupportedMode(mode)) {
+    throw new RangeError(`Unsupported audio mode: ${mode}`);
+  }
+
+  const tension = clamp01(designIntent?.tension, 0.5);
+  const combatDensity = clamp01(designIntent?.combatDensity, 0.5);
+  const trapDensity = clamp01(designIntent?.trapDensity, 0.5);
+  const targetDifficulty = clamp01(designIntent?.targetDifficulty, 0.5);
+  const pressure = clamp01(
+    tension * 0.35 +
+    combatDensity * 0.25 +
+    trapDensity * 0.2 +
+    targetDifficulty * 0.2,
+  );
+
+  const enemies = normalizedCount(enemyCount);
+  const traps = normalizedCount(armedTrapCount);
+  const healthStress = 1 - clamp01(hpRatio, 1);
+
+  let reason = mode;
+  let intensity;
+
+  if (mode === "edit") {
+    intensity = 0.12 + pressure * 0.12;
+    reason = "edit";
+  } else if (mode === "result-cleared") {
+    intensity = 0.22 + pressure * 0.08;
+    reason = "result-cleared";
+  } else if (mode === "result-failed") {
+    intensity = 0.38 + pressure * 0.12;
+    reason = "result-failed";
+  } else {
+    const encounterBoost =
+      Math.min(0.42, enemies * 0.34) +
+      Math.min(0.28, traps * 0.22);
+    const stressBoost = healthStress * 0.14;
+    intensity = clamp01(
+      0.28 + pressure * 0.28 + encounterBoost + stressBoost,
+    );
+    reason = enemies > 0
+      ? "encounter"
+      : traps > 0
+        ? "danger"
+        : healthStress >= 0.45
+          ? "low-health"
+          : "exploration";
+  }
+
+  intensity = clamp01(intensity);
+  return Object.freeze({
+    version: AUDIO_REACTIVE_INTENSITY_VERSION,
+    mode,
+    reason,
+    pressure,
+    intensity,
+    enemyCount: enemies,
+    armedTrapCount: traps,
+    hpRatio: clamp01(hpRatio, 1),
+    bgmMultiplier: 0.82 + intensity * 0.36,
+    seMultiplier: 0.94 + intensity * 0.12,
+    rampSeconds: REACTIVE_INTENSITY_RAMP_SECONDS,
+  });
+}
 
 function isSupportedMode(mode) {
   return AUDIO_MODES.includes(mode);
@@ -209,6 +294,8 @@ export function createProgrammaticAudio({
   let masterGain = null;
   let bgmGain = null;
   let seGain = null;
+  let reactiveBgmGain = null;
+  let reactiveSeGain = null;
   let muted = false;
   let unlocked = false;
   let desiredMode = "edit";
@@ -219,6 +306,7 @@ export function createProgrammaticAudio({
   let bgmVolume = normalizedLevel(initialBgmVolume, "initialBgmVolume");
   let seVolume = normalizedLevel(initialSeVolume, "initialSeVolume");
   let motifScheduledSeconds = 0;
+  let reactiveIntensity = deriveReactiveAudioIntensity({ mode: "edit" });
 
   const available = typeof AudioContextCtor === "function";
 
@@ -229,13 +317,25 @@ export function createProgrammaticAudio({
     masterGain = context.createGain();
     bgmGain = context.createGain();
     seGain = context.createGain();
+    reactiveBgmGain = context.createGain();
+    reactiveSeGain = context.createGain();
 
     masterGain.gain.setValueAtTime(muted ? 0 : MASTER_GAIN, context.currentTime);
     bgmGain.gain.setValueAtTime(bgmVolume, context.currentTime);
     seGain.gain.setValueAtTime(seVolume, context.currentTime);
+    reactiveBgmGain.gain.setValueAtTime(
+      reactiveIntensity.bgmMultiplier,
+      context.currentTime,
+    );
+    reactiveSeGain.gain.setValueAtTime(
+      reactiveIntensity.seMultiplier,
+      context.currentTime,
+    );
 
-    bgmGain.connect(masterGain);
-    seGain.connect(masterGain);
+    bgmGain.connect(reactiveBgmGain);
+    seGain.connect(reactiveSeGain);
+    reactiveBgmGain.connect(masterGain);
+    reactiveSeGain.connect(masterGain);
     masterGain.connect(context.destination);
     return context;
   }
@@ -325,6 +425,65 @@ export function createProgrammaticAudio({
     return desiredMode;
   }
 
+  function setReactiveIntensity(profile) {
+    if (
+      !profile ||
+      typeof profile !== "object" ||
+      profile.version !== AUDIO_REACTIVE_INTENSITY_VERSION ||
+      !isSupportedMode(profile.mode)
+    ) {
+      throw new TypeError("reactive intensity profile is invalid");
+    }
+
+    for (const field of [
+      "pressure",
+      "intensity",
+      "hpRatio",
+      "bgmMultiplier",
+      "seMultiplier",
+      "rampSeconds",
+    ]) {
+      if (!Number.isFinite(profile[field])) {
+        throw new TypeError(`reactive intensity ${field} must be finite`);
+      }
+    }
+
+    reactiveIntensity = Object.freeze({
+      version: AUDIO_REACTIVE_INTENSITY_VERSION,
+      mode: profile.mode,
+      reason: String(profile.reason ?? "unknown"),
+      pressure: clamp01(profile.pressure),
+      intensity: clamp01(profile.intensity),
+      enemyCount: normalizedCount(profile.enemyCount),
+      armedTrapCount: normalizedCount(profile.armedTrapCount),
+      hpRatio: clamp01(profile.hpRatio, 1),
+      bgmMultiplier: Math.max(0.82, Math.min(1.18, profile.bgmMultiplier)),
+      seMultiplier: Math.max(0.94, Math.min(1.06, profile.seMultiplier)),
+      rampSeconds: Math.max(
+        0,
+        Math.min(1, profile.rampSeconds),
+      ),
+    });
+
+    if (context && reactiveBgmGain && reactiveSeGain) {
+      const now = context.currentTime;
+      const end = now + reactiveIntensity.rampSeconds;
+      for (const [param, value] of [
+        [reactiveBgmGain.gain, reactiveIntensity.bgmMultiplier],
+        [reactiveSeGain.gain, reactiveIntensity.seMultiplier],
+      ]) {
+        param.cancelScheduledValues(now);
+        param.setValueAtTime(
+          Number.isFinite(param.value) ? param.value : value,
+          now,
+        );
+        param.linearRampToValueAtTime(value, end);
+      }
+    }
+
+    return reactiveIntensity;
+  }
+
   function setMuted(value) {
     muted = Boolean(value);
     if (context && masterGain) {
@@ -408,6 +567,16 @@ export function createProgrammaticAudio({
       activeBgmVoices: modeVoices.length,
       bgmVolume,
       seVolume,
+      reactiveIntensityVersion: AUDIO_REACTIVE_INTENSITY_VERSION,
+      reactiveIntensity: reactiveIntensity.intensity,
+      reactiveReason: reactiveIntensity.reason,
+      reactivePressure: reactiveIntensity.pressure,
+      reactiveEnemyCount: reactiveIntensity.enemyCount,
+      reactiveArmedTrapCount: reactiveIntensity.armedTrapCount,
+      reactiveHpRatio: reactiveIntensity.hpRatio,
+      reactiveBgmMultiplier: reactiveIntensity.bgmMultiplier,
+      reactiveSeMultiplier: reactiveIntensity.seMultiplier,
+      reactiveRampSeconds: reactiveIntensity.rampSeconds,
       crossfadeSeconds: MODE_CROSSFADE_SECONDS,
       motifScheduledSeconds,
       lastCue: cueHistory.at(-1)?.cue ?? null,
@@ -427,12 +596,15 @@ export function createProgrammaticAudio({
     masterGain = null;
     bgmGain = null;
     seGain = null;
+    reactiveBgmGain = null;
+    reactiveSeGain = null;
     unlocked = false;
   }
 
   return Object.freeze({
     unlock,
     setMode,
+    setReactiveIntensity,
     setMuted,
     toggleMuted,
     setBgmVolume,
