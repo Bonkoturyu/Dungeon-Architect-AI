@@ -296,6 +296,15 @@ try {
       ),
     ),
   ].sort();
+  const corridorContextKeys = [
+    ...new Set(
+      requests.flatMap((entry) =>
+        (entry.context?.corridors ?? []).flatMap((corridor) =>
+          Object.keys(corridor),
+        ),
+      ),
+    ),
+  ].sort();
 
   const checks = {
     initialFixtureExpected:
@@ -313,11 +322,13 @@ try {
     boundedContextShape:
       roomContextKeys.join(',') === 'depth,id,width,x,z' &&
       entityContextKeys.join(',') === 'id,roomId,type' &&
+      corridorContextKeys.join(',') ===
+        'fromRoomId,fromSide,id,kind,toRoomId,toSide,width' &&
       requests.every(
         (entry) =>
           Array.isArray(entry.context?.rooms) &&
           Array.isArray(entry.context?.entities) &&
-          !Object.hasOwn(entry.context ?? {}, 'corridors') &&
+          Array.isArray(entry.context?.corridors) &&
           !Object.hasOwn(entry.context ?? {}, 'events'),
       ),
 
@@ -376,6 +387,7 @@ try {
     contextKeys: {
       rooms: roomContextKeys,
       entities: entityContextKeys,
+      corridors: corridorContextKeys,
     },
     observedCommandTypes: [
       movedRoom.lastNaturalEditCommand?.type ?? null,
