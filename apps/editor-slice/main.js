@@ -2271,6 +2271,15 @@ function naturalEditContext() {
       type: entity.type,
       roomId: entity.roomId,
     })),
+    corridors: authoringSpec().corridors.map((corridor) => ({
+      id: corridor.id,
+      fromRoomId: corridor.fromRoomId,
+      toRoomId: corridor.toRoomId,
+      width: corridor.width,
+      kind: corridor.kind ?? null,
+      fromSide: corridor.fromSide ?? null,
+      toSide: corridor.toSide ?? null,
+    })),
   };
 }
 
@@ -2335,8 +2344,37 @@ async function applyNaturalEdit() {
       setInspectorTab('entities');
     } else if (command.type === 'remove-entity') {
       if (selectedEntityId === command.entityId) selectedEntityId = null;
+      selectedRoomId = null;
       selectedCorridorId = null;
       setInspectorTab('entities');
+    } else if (command.type === 'add-room') {
+      selectedRoomId = command.room?.id ?? null;
+      selectedEntityId = null;
+      selectedCorridorId = null;
+      setInspectorTab('rooms');
+    } else if (command.type === 'remove-room') {
+      if (selectedRoomId === command.roomId) selectedRoomId = null;
+      selectedEntityId = null;
+      selectedCorridorId = null;
+      setInspectorTab('rooms');
+    } else if (command.type === 'add-corridor') {
+      selectedCorridorId = command.corridor?.id ?? null;
+      selectedRoomId = null;
+      selectedEntityId = null;
+      setInspectorTab('corridors');
+    } else if (
+      command.type === 'reconnect-corridor' ||
+      command.type === 'set-corridor-doors'
+    ) {
+      selectedCorridorId = command.corridorId;
+      selectedRoomId = null;
+      selectedEntityId = null;
+      setInspectorTab('corridors');
+    } else if (command.type === 'remove-corridor') {
+      if (selectedCorridorId === command.corridorId) selectedCorridorId = null;
+      selectedRoomId = null;
+      selectedEntityId = null;
+      setInspectorTab('corridors');
     }
     renderActiveSpec();
     naturalEditInput.value = '';
