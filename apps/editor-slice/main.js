@@ -44,7 +44,10 @@ import {
   startDungeonRun,
   syncDungeonRunFloor,
 } from '../../packages/run-core/src/dungeon-run.js';
-import { createProgrammaticAudio } from '../../packages/audio-presentation/src/programmatic-audio.js';
+import {
+  createProgrammaticAudio,
+  deriveReactiveAudioIntensity,
+} from '../../packages/audio-presentation/src/programmatic-audio.js';
 import {
   createDungeonLayoutExchange,
   createFullDungeonExport,
@@ -201,6 +204,27 @@ function syncAudioMode() {
   audioPresentation.setMode(audioModeForUi());
 }
 
+function syncReactiveAudioIntensity() {
+  const { enemies, interactables } = roomContents();
+  const armedTrapCount = interactables.filter(
+    (entry) =>
+      entry.entity.type === 'trap' &&
+      entry.state.status === 'armed',
+  ).length;
+  const maxHp = playSession?.playerState?.maxHp ?? 1;
+  const hp = playSession?.playerState?.hp ?? maxHp;
+  const hpRatio = maxHp > 0 ? hp / maxHp : 1;
+
+  const profile = deriveReactiveAudioIntensity({
+    mode: audioModeForUi(),
+    designIntent: lastDesignIntent,
+    enemyCount: enemies.length,
+    armedTrapCount,
+    hpRatio,
+  });
+  return audioPresentation.setReactiveIntensity(profile);
+}
+
 function renderAudioToggle() {
   const audio = audioPresentation.getState();
   if (audioToggle) {
@@ -242,6 +266,7 @@ function emitAudioCue(cue) {
 async function unlockAudioFromGesture() {
   const unlocked = await audioPresentation.unlock();
   syncAudioMode();
+  syncReactiveAudioIntensity();
   renderAudioToggle();
 
   if (unlocked) {
@@ -3497,6 +3522,7 @@ async function run() {
       setAtmosphereForTest: (intent, presentationMode = mode) =>
         adapter.applyAtmosphere(intent, { mode: presentationMode }),
       getAudioPresentation: () => audioPresentation.getState(),
+      syncReactiveAudioForTest: () => syncReactiveAudioIntensity(),
       unlockAudioForTest: async () => {
         const unlocked = await audioPresentation.unlock();
         syncAudioMode();
