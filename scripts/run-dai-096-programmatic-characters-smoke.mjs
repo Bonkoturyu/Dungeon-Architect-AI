@@ -187,6 +187,8 @@ try {
 
   const startState = await state(page);
   const startPresentation = await presentation(page);
+  await page.waitForTimeout(220);
+  const startPresentationLater = await presentation(page);
   const snapshot = startState.play.snapshot;
 
   const enemyRooms = [...new Set(snapshot.entities
@@ -205,6 +207,8 @@ try {
 
   const enemyState = await state(page);
   const enemyPresentation = await presentation(page);
+  await page.waitForTimeout(180);
+  const enemyPresentationLater = await presentation(page);
   const activeEnemyIds = enemyState.play.snapshot.entities
     .filter((entity) => entity.type === "enemy" && entity.roomId === enemyRoomId)
     .map((entity) => entity.id);
@@ -214,10 +218,12 @@ try {
   await page.screenshot({ path: path.join(outputDir, "player-enemy-before-clear.png"), fullPage: true });
 
   await page.evaluate((enemyId) => window.__DAI_EDITOR_SLICE__.clearEnemy(enemyId), renderedEnemy.specId);
+  const defeatImmediate = await presentation(page);
   await page.waitForFunction((enemyId) =>
     !window.__DAI_EDITOR_SLICE__.getCharacterPresentation().enemies
       .some((entry) => entry.specId === enemyId),
   renderedEnemy.specId, { timeout: 10_000 });
+  await page.waitForTimeout(420);
 
   const afterEnemyClear = await presentation(page);
 
@@ -254,6 +260,10 @@ try {
   const equippedPresentation = await presentation(page);
   await page.screenshot({ path: path.join(outputDir, "player-after-loot.png"), fullPage: true });
 
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.waitForTimeout(120);
+  const reducedMotionPresentation = await presentation(page);
+
   const playerParts = equippedPresentation.player?.partNames ?? [];
   const weaponTier = equippedPresentation.player?.equipment?.weaponTier ?? 0;
   const armorTier = equippedPresentation.player?.equipment?.armorTier ?? 0;
@@ -263,6 +273,15 @@ try {
       startPresentation.player?.roomId === startState.play.currentRoomId &&
       startPresentation.player.partNames.includes("head") &&
       startPresentation.player.partNames.includes("torso"),
+    playerIdleMotionChangesOverTime:
+      startPresentation.motion?.version === "1" &&
+      startPresentation.motion?.reducedMotion === false &&
+      startPresentationLater.player?.motion &&
+      startPresentation.player?.motion &&
+      (
+        startPresentationLater.player.motion.offsetY !== startPresentation.player.motion.offsetY ||
+        startPresentationLater.player.motion.rotationY !== startPresentation.player.motion.rotationY
+      ),
     playerTracksCurrentRoom:
       enemyPresentation.player?.roomId === enemyRoomId &&
       enemyPresentation.player?.roomId === enemyState.play.currentRoomId,
@@ -272,8 +291,25 @@ try {
       renderedEnemy.partNames.includes("torso") &&
       renderedEnemy.partNames.includes("left-horn") &&
       renderedEnemy.partNames.length >= 11,
+    enemyEncounterMotionChangesOverTime: (() => {
+      const first = enemyPresentation.enemies.find((entry) => entry.specId === renderedEnemy.specId);
+      const later = enemyPresentationLater.enemies.find((entry) => entry.specId === renderedEnemy.specId);
+      return Boolean(
+        first?.motion &&
+        later?.motion &&
+        (
+          first.motion.offsetY !== later.motion.offsetY ||
+          first.motion.rotationY !== later.motion.rotationY ||
+          first.motion.encounterPulse !== later.motion.encounterPulse
+        )
+      );
+    })(),
+    defeatPresentationStartsImmediately:
+      defeatImmediate.motion?.transientDefeatCount >= 1 &&
+      !defeatImmediate.enemies.some((entry) => entry.specId === renderedEnemy.specId),
     defeatedEnemyDisappears:
-      !afterEnemyClear.enemies.some((entry) => entry.specId === renderedEnemy.specId),
+      !afterEnemyClear.enemies.some((entry) => entry.specId === renderedEnemy.specId) &&
+      afterEnemyClear.motion?.transientDefeatCount === 0,
     lootUpdatesPlayerPresentation:
       equippedState.play?.gameplayCounters?.lootCollected >= 1 &&
       ((weaponTier > 0 && playerParts.includes("weapon-blade")) ||
@@ -281,6 +317,13 @@ try {
     playerPresentationMatchesEquipment:
       weaponTier === (equippedState.play?.playerState?.equipment?.weapon?.tier ?? 0) &&
       armorTier === (equippedState.play?.playerState?.equipment?.armor?.tier ?? 0),
+    reducedMotionStopsAnimationLoop:
+      reducedMotionPresentation.motion?.reducedMotion === true &&
+      reducedMotionPresentation.motion?.frameActive === false &&
+      reducedMotionPresentation.player?.motion?.offsetY === 0 &&
+      reducedMotionPresentation.player?.motion?.rotationY === 0 &&
+      reducedMotionPresentation.player?.motion?.scaleXz === 1 &&
+      reducedMotionPresentation.player?.motion?.scaleY === 1,
     browserErrorsAbsent:
       consoleErrors.length === 0 &&
       pageErrors.length === 0 &&
@@ -300,9 +343,14 @@ try {
     checks,
     falseChecks,
     startPresentation,
+    startPresentationLater,
     enemyRoomId,
     renderedEnemy,
+    enemyPresentation,
+    enemyPresentationLater,
+    defeatImmediate,
     afterEnemyClear,
+    reducedMotionPresentation,
     equippedPlayerState: equippedState.play?.playerState ?? null,
     equippedPresentation,
     consoleErrors,
