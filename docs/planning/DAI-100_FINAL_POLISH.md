@@ -576,14 +576,31 @@ This Result transition / camera-focus slice is therefore **accepted**.
 
 ### H — DesignIntent-driven atmosphere
 
-Map bounded DesignIntent values into presentation-only scene atmosphere:
+Implementation candidate is now present.
 
-- lighting intensity/temperature-like palette choices;
-- fog/depth;
-- readability/contrast;
-- danger/event emphasis.
+A pure `packages/renderer-three/src/atmosphere.js` profile maps bounded DesignIntent values into presentation-only scene parameters:
 
-The mapping must remain renderer/presentation-only and must not imply mechanics that are not implemented.
+- tension / difficulty / deception / trap density contribute to bounded visual pressure;
+- exploration / fairness / telegraph strength contribute to bounded clarity/readability;
+- background and fog palette shift subtly with the resulting profile;
+- HemisphereLight sky/ground colors and intensity vary within fixed safe bounds;
+- DirectionalLight color/intensity varies within fixed safe bounds;
+- current-Room emissive readability responds to fairness/telegraph strength;
+- semantic Entity colors remain unchanged;
+- Edit mode attenuates the atmosphere to 40% so authoring stays highly readable;
+- Play uses the full bounded profile;
+- Result uses a 75% continuity profile;
+- missing DesignIntent preserves the legacy no-fog renderer presentation.
+
+This is renderer-only. DungeonSpec, Play Core, collision/routing, Entity semantics, and visibility rules are unchanged.
+
+Unit/browser acceptance is provided through:
+
+`npm run validate:dai-100-atmosphere`
+
+The dedicated browser smoke compares tense vs exploration/readability profiles on the same authored state, verifies actual Three.js background/fog/light values, ensures the marker palette remains unchanged, checks that atmosphere application cannot mutate Rooms/Corridors/Entities, verifies normal Edit→Play→Edit wiring, enforces readability bounds, and checks browser/network errors.
+
+This DesignIntent Atmosphere slice is **pending owner-local acceptance**.
 
 ### I — AI Edit structural commands
 
