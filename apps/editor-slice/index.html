@@ -412,6 +412,37 @@
     .viewport-shell.is-mode-transition .room-events {
       animation: dai-hud-settle 320ms ease-out both;
     }
+    .viewport-shell.is-event-focus #renderCanvas {
+      transform-origin: 50% 50%;
+      animation: dai-event-focus 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .viewport-shell.is-floor-transition #renderCanvas {
+      transform-origin: 50% 50%;
+      animation: dai-floor-settle 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .viewport-shell.is-floor-transition .play-bottom-hud,
+    .viewport-shell.is-floor-transition .viewport-label {
+      animation: dai-hud-settle 360ms ease-out both;
+    }
+    .viewport-shell.is-result-transition #renderCanvas {
+      transform-origin: 50% 50%;
+      animation: dai-result-camera-settle 680ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .viewport-shell.is-result-transition::after {
+      content: "";
+      position: absolute;
+      z-index: 4;
+      inset: 0;
+      background: rgba(9, 14, 22, 0);
+      pointer-events: none;
+      animation: dai-result-veil 680ms ease-out both;
+    }
+    .result-banner.is-result-reveal {
+      animation: dai-result-banner-reveal 560ms 100ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .result-metrics.is-result-reveal {
+      animation: dai-result-metrics-reveal 620ms 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
 
     @keyframes dai-generation-cover-reveal {
       from { opacity: 0.2; filter: brightness(0.72) saturate(0.7); }
@@ -431,6 +462,35 @@
       from { opacity: 0; }
       to { opacity: 1; }
     }
+    @keyframes dai-event-focus {
+      0% { filter: brightness(0.86) contrast(1.04); transform: scale(1); }
+      48% { filter: brightness(1.06) contrast(1.08); transform: scale(1.012); }
+      100% { filter: none; transform: none; }
+    }
+    @keyframes dai-floor-settle {
+      0% { opacity: 0.74; filter: brightness(0.84); transform: translateY(5px) scale(1.016); }
+      58% { opacity: 1; filter: brightness(1.04); transform: translateY(-1px) scale(0.998); }
+      100% { opacity: 1; filter: none; transform: none; }
+    }
+    @keyframes dai-result-camera-settle {
+      0% { filter: brightness(0.78) saturate(0.82); transform: scale(1.018); }
+      52% { filter: brightness(0.94) saturate(0.9); transform: scale(1.006); }
+      100% { filter: none; transform: none; }
+    }
+    @keyframes dai-result-veil {
+      0% { background: rgba(9, 14, 22, 0); }
+      36% { background: rgba(9, 14, 22, 0.32); }
+      100% { background: rgba(9, 14, 22, 0); }
+    }
+    @keyframes dai-result-banner-reveal {
+      0% { opacity: 0; transform: translateY(-7px) scale(0.97); }
+      62% { opacity: 1; transform: translateY(1px) scale(1.006); }
+      100% { opacity: 1; transform: none; }
+    }
+    @keyframes dai-result-metrics-reveal {
+      from { opacity: 0; transform: translateY(7px); }
+      to { opacity: 1; transform: none; }
+    }
     @media (prefers-reduced-motion: reduce) {
       .viewport-shell.is-generation-reveal .preview-cover,
       .viewport-shell.is-generation-reveal .preview-cover-card,
@@ -438,6 +498,14 @@
       .viewport-shell.is-mode-transition .viewport-label,
       .viewport-shell.is-mode-transition .play-bottom-hud,
       .viewport-shell.is-mode-transition .room-events,
+      .viewport-shell.is-event-focus #renderCanvas,
+      .viewport-shell.is-floor-transition #renderCanvas,
+      .viewport-shell.is-floor-transition .play-bottom-hud,
+      .viewport-shell.is-floor-transition .viewport-label,
+      .viewport-shell.is-result-transition #renderCanvas,
+      .viewport-shell.is-result-transition::after,
+      .result-banner.is-result-reveal,
+      .result-metrics.is-result-reveal,
       .action-feedback,
       .room-events.is-event-intro,
       .room-events.is-event-intro .room-event.is-blocking {
