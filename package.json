@@ -94,7 +94,9 @@
     "smoke:dai-100-json-export": "node scripts/run-dai-100-json-export-smoke.mjs",
     "validate:dai-100-json-export": "node scripts/run-dai-100-json-export-validation.mjs",
     "smoke:dai-100-event-feedback": "node scripts/run-dai-100-event-feedback-smoke.mjs",
-    "validate:dai-100-event-feedback": "node scripts/run-dai-100-event-feedback-validation.mjs"
+    "validate:dai-100-event-feedback": "node scripts/run-dai-100-event-feedback-validation.mjs",
+    "validate:dai-090-round1": "node scripts/run-dai-090-unexpected-prompts.mjs --phase=round1",
+    "validate:dai-090-final": "node scripts/run-dai-090-unexpected-prompts.mjs --phase=final"
   },
   "devDependencies": {
     "@babylonjs/core": "9.18.0",
