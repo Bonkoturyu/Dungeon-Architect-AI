@@ -503,7 +503,24 @@ Implementation candidate is now present:
 
 The implementation is presentation-only: Play Core combat/session state is still applied synchronously and is never delayed for animation.
 
-This Character Motion slice is **pending owner-local acceptance**.
+Owner-local acceptance passed on 2026-09-28 JST at `f5dff5369dad2652350c131a9a5ac3bb920f8566`.
+
+The 7-step `npm run validate:dai-100-character-motion` gate passed end-to-end:
+
+- Renderer / character-motion unit tests: 36/36 PASS;
+- Programmatic character visible-Chrome smoke: PASS;
+- Browser performance regression smoke: PASS;
+- Owner UI regression smoke: PASS;
+- production hosting build: PASS;
+- syntax validation: PASS;
+- git diff / whitespace check: PASS;
+- final result: `passed: true`, `falseChecks: []`.
+
+Accepted browser invariants include Player idle motion over time, Enemy encounter motion over time, immediate defeat presentation, defeat cleanup, equipment presentation continuity, reduced-motion loop shutdown/identity pose, and zero browser/page/request/HTTP errors.
+
+Performance remained within the existing browser budget with p95 frame cadence approximately `31.6 ms` and all interaction/performance gates green.
+
+This Character Motion slice is therefore **accepted**.
 
 Requirements retained:
 
