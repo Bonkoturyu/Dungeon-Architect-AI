@@ -13,7 +13,20 @@ Base:
 - public runtime-source SHA-256:
   `dcdb3518c3a3ca77a3d646a34f5027c65103e82e9ded1929626ad68590596fb6`
 
-DAI-090 20/20 and the DAI-091 pre-public exposure audit are retained as release gates to rerun after the new runtime stabilizes.
+DAI-090 is now run in two phases. Round 1 is an early regression probe before the remaining DAI-100 implementation work; the final 20/20 run remains a release gate after the runtime stabilizes.
+
+DAI-090 Round 1 passed on 2026-09-28 JST against the hosted Cloudflare production `/api/design-intent` path:
+
+- 20/20 cases returned HTTP 200;
+- 20/20 remained schema-valid and bounded;
+- Cloud provider selected 20/20;
+- fallback selected 0/20;
+- semantic constraints: 58/59 passed (98.3051%);
+- local API key was not required;
+- no secret/full-prompt evidence leak;
+- overall gate: PASS with `falseChecks: []`.
+
+The single semantic miss is retained as a Round 1 diagnostic to inspect before final DAI-090 rerun. DAI-091 pre-public exposure audit remains a release gate.
 
 ## Why this exists
 
