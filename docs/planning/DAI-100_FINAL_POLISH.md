@@ -2,7 +2,7 @@
 
 ## Status
 
-**ACTIVE — JSON export and the first Motion / feedback slice are accepted; Priority D follow-up remains.**
+**ACTIVE — JSON export and the first two Motion / feedback slices are accepted; optional Priority D follow-up remains.**
 
 DAI-099 remains the accepted rollback candidate. DAI-100 is a new replacement-candidate track for presentation and judge-experience improvements. It must not silently mutate the frozen DAI-099 identity.
 
@@ -393,7 +393,31 @@ Second presentation-only slice implemented:
 - `prefers-reduced-motion` disables the new animations;
 - dedicated gate: `npm run validate:dai-100-event-feedback`.
 
-This second slice is **pending owner-local acceptance**.
+Owner-local acceptance passed on 2026-09-28 JST at `1d9b5a2dabe22a86cec6f64545726bd62c198de1` through `npm run validate:dai-100-event-feedback`.
+
+The 7-step gate passed end-to-end:
+
+- production hosting build: PASS;
+- Event feedback visible-Chrome smoke: PASS;
+- Room Event gameplay regression smoke: PASS;
+- Motion / feedback regression smoke: PASS;
+- Owner UI regression smoke: PASS;
+- syntax validation: 200 files PASS;
+- git diff / whitespace check: PASS;
+- final result: `passed: true`, `falseChecks: []`.
+
+Accepted presentation invariants include:
+
+- Room-event intro emphasis without shifting the panel away from the viewport center;
+- blocking Combat/Trap resolution feedback;
+- Treasure feedback;
+- Floor-advance feedback across a two-floor run;
+- final Result feedback;
+- two-floor run completion;
+- no browser console/page/request/HTTP errors;
+- existing Room Event gameplay semantics unchanged.
+
+This second presentation-only Motion / feedback slice is therefore **accepted**.
 
 Remaining targets:
 
