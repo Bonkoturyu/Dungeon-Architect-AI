@@ -63,6 +63,12 @@ test("OpenAI request is stateless structured output and contains no tools", () =
   assert.equal(request.text.format.schema.additionalProperties, false);
   assert.equal(request.reasoning.effort, "low");
   assert.equal("tools" in request, false);
+  assert.match(request.instructions, /0\.5 for genuinely neutral\/moderate/);
+  assert.match(request.instructions, /greedPunishment = how strongly pursuing optional or tempting rewards increases risk, cost, or danger/);
+  assert.match(request.instructions, /rewardDensity = frequency and availability of meaningful rewards or tempting reward opportunities/);
+  assert.match(request.instructions, /deception = use of misleading cues, bait, false safety, or deliberately obscured risk/);
+  assert.match(request.instructions, /strong positive signal for greedPunishment/);
+  assert.match(request.instructions, /Raise deception only when the wording also implies bait, misleading cues, false safety, hidden risk, or deliberate trickery/);
   assert.match(request.instructions, /targetDuration means expected single-play completion time in seconds/);
   assert.match(request.instructions, /5 minutes is about 300 seconds/);
   assert.match(request.instructions, /short or brief dungeon requests as 240 to 420 seconds/);
