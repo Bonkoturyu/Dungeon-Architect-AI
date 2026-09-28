@@ -357,12 +357,16 @@ test("remove-room accepts ordinary Rooms and rejects Start/Goal Rooms", () => {
 test("add-corridor allocates a deterministic server-side ID and sides", () => {
   const spec = {
     ...SPEC,
+    rooms: [
+      ...SPEC.rooms,
+      { id: "room-side", x: 0, z: 12, width: 8, depth: 8 },
+    ],
     corridors: [
       ...SPEC.corridors,
       {
         id: "corridor-ai-001",
         fromRoomId: "room-start",
-        toRoomId: "room-goal",
+        toRoomId: "room-side",
         width: 3,
         kind: "ai",
       },
@@ -381,16 +385,7 @@ test("add-corridor allocates a deterministic server-side ID and sides", () => {
         toSide: "west",
       }),
     ),
-    {
-      ...spec,
-      corridors: [spec.corridors[0], spec.corridors[1], {
-        id: "corridor-ai-001",
-        fromRoomId: "room-start",
-        toRoomId: "room-side-missing",
-        width: 3,
-        kind: "ai",
-      }],
-    },
+    spec,
   );
   assert.equal(result.ok, true);
   assert.deepEqual(result.command, {
