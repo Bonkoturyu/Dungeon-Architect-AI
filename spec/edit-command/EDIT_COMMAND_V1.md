@@ -95,35 +95,55 @@ Natural-language authoring does not bypass `EditCommand`.
 
 The original DAI-053 MVP translated one natural-language request into exactly one existing `move-entity` command.
 
-DAI-100 AI Edit V2 keeps the **single-command** boundary but expands the safe translation set to:
+DAI-100 AI Edit V2 expanded that same **single-command** boundary to Room/Entity movement, resize, add, and remove operations.
+
+DAI-100 AI Edit V3 keeps the single-command boundary and exposes the remaining existing manual structural Room/Corridor operations:
 
 - `move-entity`;
 - `move-room`;
 - `resize-room`;
 - `add-entity`;
-- `remove-entity`.
+- `remove-entity`;
+- `add-room`;
+- `remove-room`;
+- `add-corridor`;
+- `remove-corridor`;
+- `reconnect-corridor`;
+- `set-corridor-doors`.
 
 The provider receives only bounded authoring context:
 
-- rooms: `id`, `x`, `z`, `width`, `depth`;
-- entities: `id`, `type`, `roomId`.
+- Rooms: `id`, `x`, `z`, `width`, `depth`;
+- Entities: `id`, `type`, `roomId`;
+- Corridors: `id`, `fromRoomId`, `toRoomId`, `width`, `kind`, `fromSide`, `toSide`.
 
-The structured provider output is a fixed command envelope. Existing IDs must come from the exact context enums. For `add-entity`, the model does **not** invent an ID: it returns a supported entity type plus an existing room ID, and the server deterministically allocates an `*-ai-NNN` ID before returning the ordinary core `add-entity` EditCommand.
+Events, renderer geometry, Play/Run state, files, persistence data, and credentials are excluded.
+
+The provider output is a fixed strict command envelope. Existing IDs must come from exact context enums. The provider never invents new IDs:
+
+- `add-entity` is materialized as `<type>-ai-NNN`;
+- `add-room` is materialized as `room-ai-NNN`;
+- `add-corridor` is materialized as `corridor-ai-NNN`.
 
 The natural-language translator:
 
 - cannot emit arbitrary code;
 - cannot mutate DungeonSpec directly;
-- cannot invent existing entity or room IDs;
-- cannot remove Start/Goal;
+- cannot invent existing Room/Entity/Corridor IDs;
+- cannot remove Start/Goal or a Room containing Start/Goal;
 - cannot create Start/Goal;
 - cannot emit more than one command;
-- bounds room coordinates and dimensions;
-- rejects no-op movement/resizing;
-- keeps room/corridor creation, corridor edits, event edits, and batch transactions unsupported;
+- bounds Room coordinates and dimensions;
+- rejects overlapping new Rooms;
+- rejects Corridor self-loops and duplicate endpoint pairs;
+- constrains door sides to cardinal values or automatic routing;
+- rejects no-op movement/resizing/reconnection/door-side changes;
+- keeps Event edits, corridor-width edits, doorway-offset edits, and batch transactions unsupported;
 - remains behind the backend/provider boundary so browser code never receives the provider secret.
 
-The browser applies the translated command through the same editor command/preflight path as manual authoring. Successful AI edits therefore remain undoable/redoable and structural room edits must also pass the normal renderer/route preflight before mutation.
+The browser applies the translated command through the same `applyCommand()` structural preflight and `EditSession` path as manual authoring. Successful AI edits therefore use the same renderer routeability checks, DungeonSpec validation, inverse commands, Undo, and Redo.
+
+See `NATURAL_EDIT_V2.md` for the accepted five-command historical contract and `NATURAL_EDIT_V3.md` for the active structural contract.
 
 ## Invariants
 
