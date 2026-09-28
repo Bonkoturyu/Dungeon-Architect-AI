@@ -164,7 +164,7 @@ Major evidence and task-specific gates are recorded under `docs/testing/` and `s
 - no accounts, analytics, ads, telemetry, database or persistent project storage are part of the current MVP;
 - browser authoring/play state is in-memory;
 - generation sends the generation request text to the same-origin `/api/design-intent` endpoint;
-- natural-language edit sends request text plus bounded room/entity identifiers to `/api/natural-edit`;
+- natural-language edit sends request text plus bounded Room geometry, Entity identifiers, and Corridor authoring topology to `/api/natural-edit`; Events, runtime state, renderer data, files, and credentials remain excluded;
 - `OPENAI_API_KEY` remains server-side;
 - OpenAI requests explicitly use `store: false`;
 - `store: false` is **not** claimed to be Zero Data Retention.
