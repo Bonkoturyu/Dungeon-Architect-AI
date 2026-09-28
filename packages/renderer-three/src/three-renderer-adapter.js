@@ -16,6 +16,10 @@ import {
   characterIdlePose,
   characterMotionPhase,
 } from './character-motion.js';
+import {
+  ATMOSPHERE_VERSION,
+  createAtmosphereProfile,
+} from './atmosphere.js';
 
 const DEFAULT_CLEAR_COLOR = 0x202834;
 const DEFAULT_SELECTION_COLOR = 0x66ccff;
@@ -52,7 +56,8 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
   renderer.setPixelRatio(1);
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(clearColor);
+  const legacyClearColor = new THREE.Color(clearColor).getHex();
+  scene.background = new THREE.Color(legacyClearColor);
 
   const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
   const controls = new OrbitControls(camera, canvas);
@@ -241,9 +246,99 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
   let characterMotionLastDraw = 0;
   let characterMotionRenderedFrames = 0;
   let transientDefeats = [];
+  let lastAtmosphereProfile = {
+    ...createAtmosphereProfile(null, { mode: 'edit' }),
+    backgroundColor: legacyClearColor,
+  };
 
   function assertAlive() {
     if (disposed) throw new Error('Three renderer adapter has been disposed.');
+  }
+
+  function cloneAtmosphereProfile(profile) {
+    return {
+      ...profile,
+      fog: { ...profile.fog },
+      ambient: { ...profile.ambient },
+      sun: { ...profile.sun },
+    };
+  }
+
+  function applyAtmosphere(
+    designIntent,
+    { mode = 'edit', drawScene = true } = {},
+  ) {
+    assertAlive();
+    const generated = createAtmosphereProfile(designIntent, { mode });
+    const profile = generated.enabled
+      ? generated
+      : {
+          ...generated,
+          backgroundColor: legacyClearColor,
+        };
+
+    scene.background.setHex(profile.backgroundColor);
+
+    if (profile.fog.enabled) {
+      scene.fog = new THREE.Fog(
+        profile.fog.color,
+        profile.fog.near,
+        profile.fog.far,
+      );
+    } else {
+      scene.fog = null;
+    }
+
+    ambient.color.setHex(profile.ambient.skyColor);
+    ambient.groundColor.setHex(profile.ambient.groundColor);
+    ambient.intensity = profile.ambient.intensity;
+
+    sun.color.setHex(profile.sun.color);
+    sun.intensity = profile.sun.intensity;
+
+    materials.roomCurrent.emissiveIntensity =
+      profile.roomCurrentEmissiveIntensity;
+
+    lastAtmosphereProfile = cloneAtmosphereProfile(profile);
+    if (drawScene) draw();
+    return cloneAtmosphereProfile(lastAtmosphereProfile);
+  }
+
+  function getAtmospherePresentationSummary() {
+    assertAlive();
+    return {
+      version: ATMOSPHERE_VERSION,
+      ...cloneAtmosphereProfile(lastAtmosphereProfile),
+      actual: {
+        backgroundColor: scene.background?.getHex?.() ?? null,
+        fog: scene.fog
+          ? {
+              color: scene.fog.color.getHex(),
+              near: scene.fog.near,
+              far: scene.fog.far,
+            }
+          : null,
+        ambient: {
+          skyColor: ambient.color.getHex(),
+          groundColor: ambient.groundColor.getHex(),
+          intensity: ambient.intensity,
+        },
+        sun: {
+          color: sun.color.getHex(),
+          intensity: sun.intensity,
+        },
+        roomCurrentEmissiveIntensity:
+          materials.roomCurrent.emissiveIntensity,
+        markerColors: {
+          start: materials.start.color.getHex(),
+          goal: materials.goal.color.getHex(),
+          enemy: materials.enemy.color.getHex(),
+          treasure: materials.treasure.color.getHex(),
+          trap: materials.trap.color.getHex(),
+          recovery: materials.recovery.color.getHex(),
+        },
+      },
+    };
   }
 
   function prefersReducedMotion() {
@@ -848,9 +943,15 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
       entityStates = null,
       showPlayer = false,
       playerState = null,
+      designIntent = null,
+      presentationMode = 'edit',
     } = {},
   ) {
     assertAlive();
+    applyAtmosphere(designIntent, {
+      mode: presentationMode,
+      drawScene: false,
+    });
     const previousPlan = lastPlan;
     const fullPlan = createDungeonScenePlan(spec);
     const plan = visibility ? projectDungeonScenePlan(fullPlan, visibility) : fullPlan;
@@ -1351,6 +1452,8 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     getScreenPositionForWorldPoint,
     getScreenPositionForRoomWall,
     getCharacterPresentationSummary,
+    applyAtmosphere,
+    getAtmospherePresentationSummary,
     dispose,
     get selectedSpecId() {
       return selectedSpecId;
