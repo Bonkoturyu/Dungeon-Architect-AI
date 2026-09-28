@@ -37,8 +37,16 @@ A provider-instruction hardening candidate is now implemented:
 - recurring/prominent reward opportunities are mapped to `rewardDensity`;
 - `deception` remains separately tied to bait/misdirection/false-safety/hidden-risk wording;
 - the strict schema, duration semantics, stateless `store:false` request, and MVP instant-death boundary are unchanged;
-- local gate: `npm run validate:dai-100-intent-semantics`;
-- hosted semantic verification remains required after deployment.
+- local gate: `npm run validate:dai-100-intent-semantics`.
+
+Owner-local semantic-hardening gate passed on 2026-09-28 JST:
+
+- Cloud Intent / routing / Natural Edit tests: 32/32 PASS;
+- syntax validation: PASS;
+- git diff / whitespace check: PASS;
+- final result: `passed: true`, `falseChecks: []`.
+
+The semantic-hardening code is therefore **locally accepted**, while hosted semantic verification remains required after deployment.
 
 DAI-091 pre-public exposure audit remains a release gate.
 
@@ -532,13 +540,21 @@ Requirements retained:
 
 ### G — Result transition + camera/event focus polish
 
-Complete continuity between Play and Result:
+Implementation candidate is now present:
 
-- Goal/run-clear transition;
-- brief dim/reveal where appropriate;
-- Result metrics reveal;
-- bounded camera settle/focus for encounter, floor transition, or final Result only;
-- Room selection must continue to avoid involuntary recentering.
+- blocking Enemy/armed-Trap Room entry triggers a bounded event-focus presentation;
+- event focus centers the logical camera on the current Room without changing Play Core;
+- Floor advance recenters on the new Floor start Room and uses a dedicated settle transition;
+- final clear/fail recenters on the final Room and uses a viewport dim/reveal transition;
+- Result banner and metrics reveal in short staged presentation timing;
+- Room selection in Edit remains unchanged and does not recenter;
+- `prefers-reduced-motion: reduce` disables all newly added CSS animations;
+- no gameplay/result state waits for an animation;
+- dedicated browser gate: `npm run validate:dai-100-result-focus`.
+
+The dedicated smoke exercises a real 2-Floor run and verifies event focus, Floor transition, Result transition, camera target alignment, Result banner/metrics reveal, settled final content, reduced-motion behavior, and browser/network error absence.
+
+This Result transition / camera-focus slice is **pending owner-local acceptance**.
 
 ### H — DesignIntent-driven atmosphere
 
