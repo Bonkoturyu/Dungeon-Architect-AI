@@ -554,7 +554,25 @@ Implementation candidate is now present:
 
 The dedicated smoke exercises a real 2-Floor run and verifies event focus, Floor transition, Result transition, camera target alignment, Result banner/metrics reveal, settled final content, reduced-motion behavior, and browser/network error absence.
 
-This Result transition / camera-focus slice is **pending owner-local acceptance**.
+Owner-local acceptance passed on 2026-09-28 JST at `8e16db88b32c5b9b05f39c6b98095c122ff4ba18`.
+
+The 8-step `npm run validate:dai-100-result-focus` gate passed end-to-end:
+
+- production hosting build: PASS;
+- Result / camera-focus visible-Chrome smoke: PASS;
+- Event feedback regression smoke: PASS;
+- Character Motion regression smoke: PASS;
+- Motion / feedback regression smoke: PASS;
+- Owner UI regression smoke: PASS;
+- syntax validation: PASS;
+- git diff / whitespace check: PASS;
+- final result: `passed: true`, `falseChecks: []`.
+
+Accepted browser invariants include event-focus class activation and current-Room camera targeting, Floor-transition focus on the new start Room, final Result focus on the final Room, staged Result banner/metrics reveal, settled Result content remaining visible, two-Floor clear completion, reduced-motion disabling all new animations, and zero browser/page/request/HTTP errors.
+
+The Owner UI 3D-entity probe was hardened without weakening the invariant: Start remains preferred, but any currently visible pickable entity can satisfy the generic 3D-picking check before Start-specific same-Room protection is tested separately.
+
+This Result transition / camera-focus slice is therefore **accepted**.
 
 ### H — DesignIntent-driven atmosphere
 
