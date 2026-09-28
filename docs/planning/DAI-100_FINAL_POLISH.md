@@ -2,7 +2,7 @@
 
 ## Status
 
-**ACTIVE — JSON export and the first two Motion / feedback slices are accepted; optional Priority D follow-up remains.**
+**ACTIVE — accepted core remains stable; expanded DAI-100 implementation scope is now active before final release/freeze.**
 
 DAI-099 remains the accepted rollback candidate. DAI-100 is a new replacement-candidate track for presentation and judge-experience improvements. It must not silently mutate the frozen DAI-099 identity.
 
@@ -37,7 +37,17 @@ Specification:
 
 `spec/audio/PROGRAMMATIC_AUDIO_V2.md`
 
-This phase is **not accepted yet** until the owner-local validation and listening/visual review pass.
+Automated owner-local validation passed on 2026-09-28 JST at `3f38a360971f16d630cdae6975c8e78298b9e6a1` through `npm run validate:dai-100-audio`:
+
+- Audio presentation unit tests: 8/8 PASS;
+- DAI-097/100 browser audio smoke: PASS;
+- Owner UI regression: PASS;
+- production hosting build: PASS;
+- legal / provenance audit: PASS;
+- git diff / whitespace check: PASS;
+- final result: `passed: true`, `falseChecks: []`.
+
+Audio V2 remains **pending only the owner listening review** before final acceptance.
 
 Current DAI-097 audio is intentionally minimal:
 
@@ -424,6 +434,163 @@ Remaining targets:
 - Player/Enemy idle or encounter motion if performance remains acceptable;
 - Result transition continuity beyond the accepted feedback pill;
 - any further camera/focus polish that can be added without changing gameplay semantics.
+
+## Expanded DAI-100 implementation scope — 2026-09-28
+
+The remaining schedule will be used for implementation rather than entering release freeze early.
+
+Everything below is now an intended DAI-100 deliverable unless a concrete regression, performance problem, or schedule constraint forces a later scope cut.
+
+### E — DAI-090 early unexpected-prompt pass
+
+Run the frozen 20-case DAI-090 corpus now as **Round 1**.
+
+Purpose:
+
+- find provider/schema weaknesses while there is still time to fix them;
+- cover injection, arbitrary-code requests, secret-exfiltration requests, contradictory instructions, multilingual input, noisy Unicode, raw-JSON injection, and terse input;
+- require 20/20 valid bounded DesignIntent results;
+- repeat the exact same corpus as **Final** after runtime changes stop.
+
+Artifacts and runner:
+
+- `spec/design-intent/fixtures/dai-090-unexpected-prompts-v1.json`;
+- `scripts/run-dai-090-unexpected-prompts.mjs`;
+- `scripts/run-dai-090-validation.ps1`;
+- `docs/testing/DAI-090_UNEXPECTED_PROMPTS.md`.
+
+### F — Programmatic character motion
+
+Add presentation-only motion to the existing project-authored low-poly Player/Enemy models:
+
+- Player idle breathing / subtle sway;
+- Enemy idle / threat motion;
+- encounter reaction;
+- combat-resolution / defeat presentation;
+- optional reward reaction where it remains visually clear.
+
+Requirements:
+
+- no Play Core timing or combat semantic changes;
+- no external creative assets;
+- animation stops/disposes cleanly;
+- `prefers-reduced-motion` or equivalent reduced-motion path;
+- dedicated browser/performance acceptance.
+
+### G — Result transition + camera/event focus polish
+
+Complete continuity between Play and Result:
+
+- Goal/run-clear transition;
+- brief dim/reveal where appropriate;
+- Result metrics reveal;
+- bounded camera settle/focus for encounter, floor transition, or final Result only;
+- Room selection must continue to avoid involuntary recentering.
+
+### H — DesignIntent-driven atmosphere
+
+Map bounded DesignIntent values into presentation-only scene atmosphere:
+
+- lighting intensity/temperature-like palette choices;
+- fog/depth;
+- readability/contrast;
+- danger/event emphasis.
+
+The mapping must remain renderer/presentation-only and must not imply mechanics that are not implemented.
+
+### I — AI Edit structural commands
+
+Expand natural-language editing through existing validated editor boundaries to cover the remaining manual structural operations:
+
+- add Room;
+- remove Room;
+- add Corridor;
+- remove Corridor;
+- reconnect Corridor;
+- set Corridor endpoint/door sides.
+
+Requirements remain fail-closed, one bounded command/request unless a separately reviewed transaction contract is introduced, deterministic ID allocation, structural/reachability preflight, and Undo/Redo compatibility.
+
+### J — Reactive Audio V2 intensity
+
+Keep the accepted Programmatic Audio V2 architecture and add bounded presentation intensity:
+
+- normal exploration;
+- encounter/danger emphasis;
+- return to exploration after resolution;
+- Floor/Result continuity.
+
+No new external audio assets.
+
+### K — JSON Import / round-trip
+
+Add import for the generic exchange format and full authored format:
+
+- `DungeonLayoutExchange v1` import;
+- `DungeonRunSpec v1` / full Dungeon JSON import;
+- strict validation and fail-closed errors;
+- imported state opens in the existing editor;
+- import → edit → export round-trip evidence;
+- no arbitrary code/data execution.
+
+### L — Complete Algorithm Lab set
+
+In addition to accepted **Delaunay + MST + Loops** and **BSP**, implement all remaining planned Algorithm Lab strategies:
+
+1. Rooms + Mazes;
+2. Random Walk;
+3. Cellular Automata;
+4. Maze Carving;
+5. Gameplay Graph / Grammar;
+6. Wave Function Collapse (WFC).
+
+Each strategy should follow the already accepted loose-coupled architecture:
+
+```text
+Reusable Algorithm Core
+→ algorithm-native plain-data IR
+→ Dungeon Architect AI Adapter
+→ valid DungeonSpec
+→ Product Strategy catalog / selector
+```
+
+Each Algorithm Lab implementation requires:
+
+- deterministic explicit Seed;
+- algorithm version/provenance;
+- no DOM / Three.js / Editor / Play / network dependency in Core;
+- Core invariants/tests;
+- DungeonSpec Adapter tests;
+- paired Markdown + HTML documentation;
+- Product selector registration;
+- renderer routeability/validity matrix appropriate to that algorithm;
+- multi-floor Test + Mystery browser smoke;
+- syntax and git-diff gate.
+
+Version 2 remains the Recommended/default Product strategy.
+
+### M — Final DAI-090 / release phase
+
+After all implementation stops:
+
+1. rerun the exact DAI-090 20-case corpus as **Final**;
+2. live-provider/public semantic verification;
+3. legal/privacy/pre-public audits;
+4. refreshed public E2E;
+5. refreshed <3-minute demo video;
+6. replacement freeze/rollback point;
+7. final submission checks.
+
+### Explicitly excluded from this expansion
+
+Engine-specific export adapters are not part of this DAI-100 submission scope:
+
+- Unity-specific exporter/importer;
+- Godot-specific exporter/importer;
+- Tiled-specific exporter/importer;
+- other engine-specific integration packages.
+
+The generic JSON contracts remain the interoperability boundary for this submission.
 
 ## Explicit non-goals for the first DAI-100 pass
 
