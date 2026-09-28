@@ -104,13 +104,11 @@ Target:
 - event-sensitive intensity changes without mutating Play Core;
 - keep Web Audio / project-authored synthesis so no new music-license burden is introduced.
 
-## Priority B — AI Edit V2
+## Priority B — AI Edit foundation
 
-### Implemented candidate
+### Accepted V2 foundation
 
-The first DAI-100 AI Edit V2 pass is now implemented with the existing single-command safety boundary.
-
-Supported natural-language commands:
+The first DAI-100 AI Edit V2 pass preserves the single-command safety boundary and supports:
 
 - `move-entity`;
 - `move-room`;
@@ -118,53 +116,19 @@ Supported natural-language commands:
 - `add-entity`;
 - `remove-entity`.
 
-The provider receives bounded room geometry (`id/x/z/width/depth`) plus entity `id/type/roomId`. Existing IDs are schema-enumerated. New entity IDs are allocated server-side as deterministic `*-ai-NNN` IDs, so the provider never invents them.
-
-Structural room edits are routed through the same editor preflight used by manual authoring, and successful AI edits remain Undo/Redo compatible.
+V2 receives bounded Room geometry (`id/x/z/width/depth`) plus Entity `id/type/roomId`. Existing IDs are schema-enumerated. Added Entity IDs are allocated server-side as deterministic `*-ai-NNN` IDs.
 
 Specification:
 
 `spec/edit-command/NATURAL_EDIT_V2.md`
 
-Deterministic visible-Chrome coverage exercises all five browser application paths. One-command validation:
+Owner-local V2 acceptance passed on 2026-09-26 JST through `npm run validate:dai-100-ai-edit`: Cloud Intent, Editor Core, hosting Function, five-command visible-Chrome smoke, production build, DAI-074 privacy audit, syntax, and git-diff checks all passed.
 
-`npm run validate:dai-100-ai-edit`
+Live-provider/public semantic verification remains a replacement-candidate release gate.
 
-Owner-local acceptance passed on 2026-09-26 JST: Cloud-intent 32/32, Editor Core 30/30, Hosting 14/14, visible-Chrome five-command smoke PASS, production build PASS, DAI-074 secret/privacy re-audit PASS, syntax PASS, and git diff check PASS. Live-provider/public semantic verification remains a replacement-candidate deployment gate.
+### Active V3 structural expansion
 
-The manual Editor already supports more than the AI path:
-
-- move-room
-- resize-room
-- add/remove room
-- add/remove/reconnect corridor
-- set corridor door sides
-- move/add/remove entity
-
-The current cloud AI adapter is still hard-coded to exactly one `move-entity` command.
-
-DAI-100 should expand natural-language authoring only through existing validated `EditCommand` boundaries.
-
-First safe target set:
-
-1. `move-entity`
-2. `move-room`
-3. `resize-room`
-4. `add-entity`
-5. `remove-entity`
-
-Corridor and room creation/removal remain a second gate because they have larger reachability and ID-generation implications.
-
-Requirements:
-
-- one command per request initially;
-- strict schema;
-- no arbitrary code;
-- no invented existing IDs;
-- bounded context only;
-- independent validation before `EditSession.apply()`;
-- Undo/Redo preserved;
-- unsupported requests fail closed.
+The accepted V2 boundary is now being expanded in Priority I through a separately versioned V3 contract. V3 keeps exactly one command per request and reuses the existing manual `EditCommand` / `applyCommand()` / `EditSession` safety path rather than adding an AI-only editing engine.
 
 ## Priority C — Scene variation / visual identity
 
@@ -619,16 +583,64 @@ This DesignIntent Atmosphere slice is therefore **accepted**.
 
 ### I — AI Edit structural commands
 
-Expand natural-language editing through existing validated editor boundaries to cover the remaining manual structural operations:
+Implementation candidate is now present under **Natural Edit V3**.
 
-- add Room;
-- remove Room;
-- add Corridor;
-- remove Corridor;
-- reconnect Corridor;
-- set Corridor endpoint/door sides.
+The single-command provider set is expanded from five to eleven commands:
 
-Requirements remain fail-closed, one bounded command/request unless a separately reviewed transaction contract is introduced, deterministic ID allocation, structural/reachability preflight, and Undo/Redo compatibility.
+- `move-entity`;
+- `move-room`;
+- `resize-room`;
+- `add-entity`;
+- `remove-entity`;
+- `add-room`;
+- `remove-room`;
+- `add-corridor`;
+- `remove-corridor`;
+- `reconnect-corridor`;
+- `set-corridor-doors`.
+
+Structural safety:
+
+- provider output remains one strict structured command;
+- existing Room/Entity/Corridor IDs are exact context enums;
+- new Room IDs are server-allocated as `room-ai-NNN`;
+- new Corridor IDs are server-allocated as `corridor-ai-NNN`;
+- new Entity IDs remain server-allocated as `<type>-ai-NNN`;
+- Room coordinates are bounded to ±256 and dimensions to 4–32;
+- overlapping new Rooms are rejected before browser application;
+- Start/Goal Rooms cannot be removed;
+- Corridor self-loops and duplicate endpoint pairs are rejected;
+- door sides are cardinal or automatic only;
+- no-op structural changes are rejected;
+- the browser still runs the existing `createDungeonScenePlan()` structural preflight before `EditSession.apply()`;
+- DungeonSpec validation remains authoritative for Start→Goal reachability;
+- Undo/Redo uses the existing inverse-command stack.
+
+Bounded provider context now contains:
+
+- Rooms: `id/x/z/width/depth`;
+- Entities: `id/type/roomId`;
+- Corridors: `id/fromRoomId/toRoomId/width/kind/fromSide/toSide`.
+
+Events, Play/Run state, renderer objects/route meshes, files, persistence data, and credentials remain excluded.
+
+Specifications:
+
+- `spec/edit-command/NATURAL_EDIT_V2.md` — accepted historical five-command contract;
+- `spec/edit-command/NATURAL_EDIT_V3.md` — active structural contract;
+- `spec/edit-command/EDIT_COMMAND_V1.md` — authoritative editor command shapes.
+
+Browser acceptance adds a six-command structural flow with Undo/Redo at every stage:
+
+`add Room → add Corridor → set door sides → reconnect Corridor → remove Corridor → remove Room`.
+
+Integrated owner-local gate:
+
+`npm run validate:dai-100-ai-edit-structural`
+
+The gate includes Cloud Intent tests, Editor Core tests, hosting Function tests, prior V2 browser regression, new structural visible-Chrome smoke, production build, DAI-074 privacy re-audit, Owner UI regression, syntax, and git-diff checks.
+
+This AI Edit V3 structural slice is **pending owner-local acceptance**.
 
 ### J — Reactive Audio V2 intensity
 
