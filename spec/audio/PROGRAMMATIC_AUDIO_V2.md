@@ -118,3 +118,87 @@ The first DAI-100 audio-polish gate requires:
 10. owner UI regression remains green;
 11. production hosting build remains green;
 12. legal/provenance audit remains green.
+
+## Reactive intensity extension
+
+DAI-100 adds a presentation-only reactive intensity layer without changing the externally visible Audio V2 mode vocabulary.
+
+The Web Audio graph now separates user-authored mixer levels from runtime presentation intensity:
+
+```text
+BGM voices → user BGM gain → reactive BGM gain → master
+SE cues    → user SE gain  → reactive SE gain  → master
+```
+
+The BGM/SE sliders continue to represent only the user mix. Reactive intensity never rewrites those values.
+
+### Inputs
+
+Reactive intensity is derived from:
+
+- current audio mode;
+- bounded DesignIntent pressure axes:
+  - `tension`;
+  - `combatDensity`;
+  - `trapDensity`;
+  - `targetDifficulty`;
+- active Enemy count in the current Room;
+- armed Trap count in the current Room;
+- current Player HP ratio.
+
+The derivation is deterministic and presentation-only.
+
+### Presentation states
+
+- Edit uses a low bounded intensity.
+- Play without blocking danger uses an exploration intensity derived from DesignIntent.
+- Active Enemy presence raises the profile to `encounter`.
+- Armed Trap presence without an Enemy raises the profile to `danger`.
+- Low HP adds a bounded stress component without changing gameplay.
+- Resolving the Room danger automatically returns the profile toward exploration.
+- Result clear/fail use bounded result-specific intensity while keeping their existing BGM modes.
+- Floor advance keeps the Play motif continuous; the existing `floor-advance` cue marks the transition while the new Floor starts from its current-room intensity.
+
+### Gain bounds
+
+Reactive presentation gains are deliberately narrow:
+
+- BGM multiplier: `0.82..1.18`;
+- SE multiplier: `0.94..1.06`;
+- transition ramp: `0.28 s`.
+
+This avoids sudden loudness changes and keeps the user mixer authoritative.
+
+### Runtime boundary
+
+Reactive intensity does not mutate:
+
+- DungeonSpec;
+- Play Core state;
+- Run Core state;
+- Player HP or rewards;
+- BGM/SE user slider values;
+- audio asset provenance.
+
+No external audio assets, Audio elements, samples, or network audio requests are introduced.
+
+### Acceptance
+
+Dedicated gate:
+
+`npm run validate:dai-100-reactive-audio`
+
+The gate covers:
+
+1. Audio V2 + reactive-intensity unit tests;
+2. the existing DAI-097/100 audio regression smoke;
+3. reactive visible-Chrome exploration → encounter → resolution → Result → Edit flow;
+4. browser performance regression;
+5. Owner UI regression;
+6. production hosting build;
+7. legal/provenance audit;
+8. syntax validation;
+9. git diff/whitespace check.
+
+Automated acceptance remains separate from the required owner listening review.
+
