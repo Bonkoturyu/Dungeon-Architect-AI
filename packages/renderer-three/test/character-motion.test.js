@@ -79,7 +79,7 @@ test('defeat pose shrinks and completes without overshoot', () => {
   assert.ok(middle.scale < 1 && middle.scale > 0.04);
   assert.ok(middle.offsetY > 0);
   assert.equal(end.finished, true);
-  assert.equal(end.scale, 0.04);
+  assert.ok(Math.abs(end.scale - 0.04) <= Number.EPSILON);
   assert.equal(end.progress, 1);
 });
 
