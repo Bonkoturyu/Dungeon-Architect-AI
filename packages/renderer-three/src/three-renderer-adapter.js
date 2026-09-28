@@ -10,6 +10,12 @@ import {
   createEnemyCharacterDefinition,
   createPlayerCharacterDefinition,
 } from './programmatic-characters.js';
+import {
+  CHARACTER_MOTION_VERSION,
+  characterDefeatPose,
+  characterIdlePose,
+  characterMotionPhase,
+} from './character-motion.js';
 
 const DEFAULT_CLEAR_COLOR = 0x202834;
 const DEFAULT_SELECTION_COLOR = 0x66ccff;
@@ -69,6 +75,10 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
   const root = new THREE.Group();
   root.name = 'DungeonSpecRoot';
   scene.add(root);
+
+  const characterEffectsRoot = new THREE.Group();
+  characterEffectsRoot.name = 'CharacterMotionEffects';
+  scene.add(characterEffectsRoot);
 
   const materials = {
     room: new THREE.MeshStandardMaterial({ color: 0xb8c5d8, roughness: 0.88, metalness: 0 }),
@@ -225,9 +235,233 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
   let roomDraftEntityIds = [];
   let roomDraftHelper = null;
   let runtimePlayerGroup = null;
+  const enemyEncounterSeen = new Set();
+  const reducedMotionQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)') ?? null;
+  let characterMotionFrame = null;
+  let characterMotionLastDraw = 0;
+  let characterMotionRenderedFrames = 0;
+  let transientDefeats = [];
 
   function assertAlive() {
     if (disposed) throw new Error('Three renderer adapter has been disposed.');
+  }
+
+  function prefersReducedMotion() {
+    return reducedMotionQuery?.matches === true;
+  }
+
+  function motionIdentityForGroup(group) {
+    const base = group.userData.motionBase;
+    if (!base) return;
+    group.position.y = base.positionY;
+    group.rotation.y = base.rotationY;
+    group.rotation.z = base.rotationZ;
+    group.scale.set(base.scaleX, base.scaleY, base.scaleZ);
+    for (const child of group.children) {
+      const rotation = child.userData?.motionBaseRotation;
+      if (!rotation) continue;
+      child.rotation.set(rotation.x, rotation.y, rotation.z);
+    }
+    group.userData.motionPose = {
+      offsetY: 0,
+      rotationY: 0,
+      scaleXz: 1,
+      scaleY: 1,
+      encounterProgress: 1,
+      encounterPulse: 0,
+    };
+  }
+
+  function applyCharacterMotionPose(group, now) {
+    if (!group?.userData?.motionEnabled) return false;
+    const base = group.userData.motionBase;
+    if (!base) return false;
+
+    const pose = characterIdlePose(
+      group.userData.motionKind,
+      now - group.userData.motionStartedAt,
+      {
+        phase: group.userData.motionPhase,
+        reducedMotion: prefersReducedMotion(),
+        encounterIntro: group.userData.motionEncounterIntro === true,
+      },
+    );
+
+    group.position.y = base.positionY + pose.offsetY;
+    group.rotation.y = base.rotationY + pose.rotationY;
+    group.rotation.z = base.rotationZ;
+    group.scale.set(
+      base.scaleX * pose.scaleXz,
+      base.scaleY * pose.scaleY,
+      base.scaleZ * pose.scaleXz,
+    );
+
+    for (const child of group.children) {
+      const rotation = child.userData?.motionBaseRotation;
+      if (!rotation) continue;
+      child.rotation.set(rotation.x, rotation.y, rotation.z);
+      if (child.userData.part === 'left-arm') {
+        child.rotation.z += pose.leftArmDeltaZ;
+      } else if (child.userData.part === 'right-arm') {
+        child.rotation.z += pose.rightArmDeltaZ;
+      } else if (child.userData.part === 'head') {
+        child.rotation.z += pose.headDeltaZ;
+      }
+    }
+
+    group.userData.motionPose = {
+      offsetY: pose.offsetY,
+      rotationY: pose.rotationY,
+      scaleXz: pose.scaleXz,
+      scaleY: pose.scaleY,
+      encounterProgress: pose.encounterProgress,
+      encounterPulse: pose.encounterPulse,
+    };
+    return true;
+  }
+
+  function clearTransientDefeats() {
+    for (const entry of transientDefeats) {
+      characterEffectsRoot.remove(entry.object);
+      disposeObjectTree(entry.object);
+    }
+    transientDefeats = [];
+  }
+
+  function captureDefeatedEnemyEffects(nextMap, entityStates) {
+    if (prefersReducedMotion()) return;
+    const now = performance.now();
+
+    for (const [specId, object] of runtimeBySpecId) {
+      if (object.userData?.presentationKind !== 'enemy-character') continue;
+      if (nextMap.has(specId)) continue;
+      if (entityStates?.[specId]?.status !== 'defeated') continue;
+
+      root.remove(object);
+      motionIdentityForGroup(object);
+      characterEffectsRoot.add(object);
+      transientDefeats.push({
+        object,
+        startedAt: now,
+        baseY: object.position.y,
+        baseRotationZ: object.rotation.z,
+        baseScale: {
+          x: object.scale.x,
+          y: object.scale.y,
+          z: object.scale.z,
+        },
+      });
+    }
+  }
+
+  function updateTransientDefeats(now) {
+    if (transientDefeats.length === 0) return false;
+    const survivors = [];
+
+    for (const entry of transientDefeats) {
+      const pose = characterDefeatPose(now - entry.startedAt, {
+        reducedMotion: prefersReducedMotion(),
+      });
+
+      if (pose.finished) {
+        characterEffectsRoot.remove(entry.object);
+        disposeObjectTree(entry.object);
+        continue;
+      }
+
+      entry.object.position.y = entry.baseY + pose.offsetY;
+      entry.object.rotation.z = entry.baseRotationZ + pose.rotationZ;
+      entry.object.scale.set(
+        entry.baseScale.x * pose.scale,
+        entry.baseScale.y * pose.scale,
+        entry.baseScale.z * pose.scale,
+      );
+      survivors.push(entry);
+    }
+
+    transientDefeats = survivors;
+    return survivors.length > 0;
+  }
+
+  function characterMotionTargets() {
+    const targets = [];
+    if (runtimePlayerGroup?.userData?.motionEnabled) targets.push(runtimePlayerGroup);
+    for (const object of runtimeBySpecId.values()) {
+      if (
+        object.userData?.presentationKind === 'enemy-character' &&
+        object.userData?.motionEnabled
+      ) {
+        targets.push(object);
+      }
+    }
+    return targets;
+  }
+
+  function stopCharacterMotionLoop() {
+    if (characterMotionFrame != null) {
+      cancelAnimationFrame(characterMotionFrame);
+      characterMotionFrame = null;
+    }
+  }
+
+  function characterMotionTick(now) {
+    characterMotionFrame = null;
+    if (disposed) return;
+
+    const targets = characterMotionTargets();
+    if (prefersReducedMotion()) {
+      for (const group of targets) motionIdentityForGroup(group);
+      clearTransientDefeats();
+      draw();
+      return;
+    }
+
+    const active = targets.length > 0 || transientDefeats.length > 0;
+    if (!active) return;
+
+    if (now - characterMotionLastDraw >= 1000 / 30) {
+      for (const group of targets) applyCharacterMotionPose(group, now);
+      updateTransientDefeats(now);
+      characterMotionLastDraw = now;
+      characterMotionRenderedFrames += 1;
+      renderer.render(scene, camera);
+    }
+
+    if (characterMotionTargets().length > 0 || transientDefeats.length > 0) {
+      characterMotionFrame = requestAnimationFrame(characterMotionTick);
+    }
+  }
+
+  function syncCharacterMotionLoop() {
+    const targets = characterMotionTargets();
+    if (prefersReducedMotion()) {
+      stopCharacterMotionLoop();
+      for (const group of targets) motionIdentityForGroup(group);
+      clearTransientDefeats();
+      return;
+    }
+
+    if (targets.length === 0 && transientDefeats.length === 0) {
+      stopCharacterMotionLoop();
+      return;
+    }
+
+    if (characterMotionFrame == null) {
+      characterMotionFrame = requestAnimationFrame(characterMotionTick);
+    }
+  }
+
+  function onReducedMotionChange() {
+    const targets = characterMotionTargets();
+    if (prefersReducedMotion()) {
+      stopCharacterMotionLoop();
+      for (const group of targets) motionIdentityForGroup(group);
+      clearTransientDefeats();
+      draw();
+    } else {
+      characterMotionLastDraw = 0;
+      syncCharacterMotionLoop();
+    }
   }
 
   function disposeObjectTree(object) {
@@ -319,6 +553,7 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
   }
 
   function clearRenderedSpec() {
+    stopCharacterMotionLoop();
     clearSelectionHelper();
     clearContextHelper();
     clearPathHelpers();
@@ -381,7 +616,14 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     targetRoot,
     targetMap,
     definition,
-    { specId = null, kind, roomId, runtimeOnly = false } = {},
+    {
+      specId = null,
+      kind,
+      roomId,
+      runtimeOnly = false,
+      motionEnabled = false,
+      encounterIntro = false,
+    } = {},
   ) {
     const group = new THREE.Group();
     group.name = runtimeOnly
@@ -393,8 +635,21 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     group.userData.partNames = definition.parts.map((entry) => entry.name);
     group.userData.equipment = definition.equipment ? { ...definition.equipment } : null;
     group.userData.level = definition.level ?? null;
+    group.userData.motionEnabled = motionEnabled === true;
+    group.userData.motionKind = kind === 'enemy' ? 'enemy' : 'player';
+    group.userData.motionEncounterIntro = encounterIntro === true;
+    group.userData.motionStartedAt = performance.now();
+    group.userData.motionPhase = characterMotionPhase(specId ?? `${kind}:${roomId}`);
     if (!runtimeOnly && specId) group.userData.specId = specId;
     group.position.set(definition.position.x, definition.position.y, definition.position.z);
+    group.userData.motionBase = {
+      positionY: group.position.y,
+      rotationY: group.rotation.y,
+      rotationZ: group.rotation.z,
+      scaleX: group.scale.x,
+      scaleY: group.scale.y,
+      scaleZ: group.scale.z,
+    };
 
     for (const partDefinition of definition.parts) {
       const geometry = characterGeometry(partDefinition);
@@ -423,6 +678,11 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
           partDefinition.rotation.z ?? 0,
         );
       }
+      mesh.userData.motionBaseRotation = {
+        x: mesh.rotation.x,
+        y: mesh.rotation.y,
+        z: mesh.rotation.z,
+      };
       group.add(mesh);
     }
 
@@ -431,14 +691,26 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     return group;
   }
 
-  function addMarker(targetRoot, targetMap, marker, entityStates = null) {
+  function addMarker(
+    targetRoot,
+    targetMap,
+    marker,
+    entityStates = null,
+    { motionEnabled = false } = {},
+  ) {
     if (!shouldRenderMarkerForRuntime(marker, entityStates)) return;
     if (marker.type === 'enemy') {
       const definition = createEnemyCharacterDefinition(marker);
+      const encounterIntro =
+        motionEnabled === true &&
+        !enemyEncounterSeen.has(marker.specId);
+      if (motionEnabled) enemyEncounterSeen.add(marker.specId);
       addCharacterDefinition(targetRoot, targetMap, definition, {
         specId: marker.specId,
         kind: 'enemy',
         roomId: marker.roomId,
+        motionEnabled,
+        encounterIntro,
       });
       return;
     }
@@ -499,7 +771,12 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
         const material = corridor.visibilityState === 'explored' ? materials.corridorExplored : materials.corridor;
         addBoxGroup(stagingRoot, stagingMap, corridor, material);
       }
-      for (const marker of plan.markers) addMarker(stagingRoot, stagingMap, marker, entityStates);
+      const motionEnabled = Boolean(plan.visibility);
+      for (const marker of plan.markers) {
+        addMarker(stagingRoot, stagingMap, marker, entityStates, {
+          motionEnabled,
+        });
+      }
 
       let playerGroup = null;
       if (showPlayer && plan.visibility?.currentRoomId) {
@@ -519,6 +796,7 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
             kind: 'player',
             roomId: plan.visibility.currentRoomId,
             runtimeOnly: true,
+            motionEnabled: true,
           });
         }
       }
@@ -596,6 +874,7 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
       previousPlan.sourceSpecId !== plan.sourceSpecId ||
       visibilityChanged;
 
+    captureDefeatedEnemyEffects(stagingMap, entityStates);
     clearRenderedSpec();
     for (const child of [...stagingRoot.children]) {
       stagingRoot.remove(child);
@@ -606,7 +885,13 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
 
     if (shouldFitCamera) fitCamera(plan.bounds, { playMode: Boolean(visibility) });
     lastPlan = plan;
+
+    const motionNow = performance.now();
+    for (const group of characterMotionTargets()) {
+      applyCharacterMotionPose(group, motionNow);
+    }
     draw();
+    syncCharacterMotionLoop();
 
     return {
       sourceSpecId: plan.sourceSpecId,
@@ -995,11 +1280,21 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
         specId,
         roomId: object.userData.roomId ?? null,
         partNames: [...(object.userData.partNames ?? [])],
+        motion: object.userData.motionPose
+          ? { ...object.userData.motionPose }
+          : null,
       });
     }
     enemies.sort((a, b) => a.specId.localeCompare(b.specId));
 
     return {
+      motion: {
+        version: CHARACTER_MOTION_VERSION,
+        reducedMotion: prefersReducedMotion(),
+        frameActive: characterMotionFrame != null,
+        renderedFrames: characterMotionRenderedFrames,
+        transientDefeatCount: transientDefeats.length,
+      },
       player: runtimePlayerGroup
         ? {
             roomId: runtimePlayerGroup.userData.roomId ?? null,
@@ -1008,6 +1303,9 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
               ? { ...runtimePlayerGroup.userData.equipment }
               : null,
             level: runtimePlayerGroup.userData.level ?? null,
+            motion: runtimePlayerGroup.userData.motionPose
+              ? { ...runtimePlayerGroup.userData.motionPose }
+              : null,
           }
         : null,
       enemies,
@@ -1016,7 +1314,10 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
 
   function dispose() {
     if (disposed) return;
+    stopCharacterMotionLoop();
     clearRenderedSpec();
+    clearTransientDefeats();
+    reducedMotionQuery?.removeEventListener?.('change', onReducedMotionChange);
     canvas.removeEventListener('contextmenu', preventContextMenu);
     controls.dispose();
     for (const material of Object.values(materials)) material.dispose();
@@ -1027,6 +1328,7 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
   const preventContextMenu = (event) => event.preventDefault();
   canvas.addEventListener('contextmenu', preventContextMenu);
   controls.addEventListener('change', draw);
+  reducedMotionQuery?.addEventListener?.('change', onReducedMotionChange);
 
   return {
     render,
