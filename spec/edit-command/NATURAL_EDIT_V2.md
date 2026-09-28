@@ -2,7 +2,7 @@
 
 ## Status
 
-DAI-100 implementation candidate. Acceptance pending owner-local validation and later live/public provider verification.
+Locally accepted DAI-100 five-command phase. This document is retained as the V2 historical contract; the active structural expansion is specified in `NATURAL_EDIT_V3.md`. Live/public provider verification is still required for the final replacement candidate.
 
 ## Goal
 
@@ -18,7 +18,7 @@ The V2 provider still returns **exactly one** structured command per request.
 - `add-entity`
 - `remove-entity`
 
-Room/corridor creation/removal, corridor reconnection/door-side edits, event edits, batch transactions, and arbitrary code remain unsupported.
+In the V2 contract, Room/Corridor creation/removal, Corridor reconnection/door-side edits, Event edits, batch transactions, and arbitrary code were unsupported. Structural Room/Corridor operations are introduced only in the separately versioned V3 contract.
 
 ## Bounded provider context
 
