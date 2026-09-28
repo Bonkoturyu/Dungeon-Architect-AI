@@ -797,35 +797,58 @@ try {
   // cannot intercept a marker click on seed-varying V2 layouts.
   await page.evaluate(() => window.__DAI_EDITOR_SLICE__.selectRoom(null));
 
-  const startPoint = await page.evaluate((id) => {
+  const entityPickProbe = await page.evaluate((preferredId) => {
     const api = window.__DAI_EDITOR_SLICE__;
-    const center = api.getScreenPositionForSpecId(id);
+    const state = api.getState();
     const canvas = document.querySelector('#renderCanvas');
     const rect = canvas?.getBoundingClientRect();
-    if (!center || !canvas || !rect) return null;
+    if (!canvas || !rect) return null;
 
-    for (let radius = 0; radius <= 28; radius += 4) {
-      for (let dx = -radius; dx <= radius; dx += 4) {
-        for (let dy = -radius; dy <= radius; dy += 4) {
-          if (Math.max(Math.abs(dx), Math.abs(dy)) !== radius) continue;
-          const x = center.x + dx;
-          const y = center.y + dy;
-          if (
-            x < rect.left + 2 || x > rect.right - 2 ||
-            y < rect.top + 2 || y > rect.bottom - 2
-          ) continue;
-          if (document.elementFromPoint(x, y) !== canvas) continue;
-          const probe = api.probePointerAt(x, y);
-          if (probe?.hit?.specId === id) return { x, y };
+    const candidates = [
+      ...state.entities.filter((entity) => entity.id === preferredId),
+      ...state.entities.filter((entity) => entity.id !== preferredId),
+    ];
+
+    for (const entity of candidates) {
+      const center = api.getScreenPositionForSpecId(entity.id);
+      if (!center) continue;
+
+      for (let radius = 0; radius <= 40; radius += 4) {
+        for (let dx = -radius; dx <= radius; dx += 4) {
+          for (let dy = -radius; dy <= radius; dy += 4) {
+            if (Math.max(Math.abs(dx), Math.abs(dy)) !== radius) continue;
+            const x = center.x + dx;
+            const y = center.y + dy;
+            if (
+              x < rect.left + 2 || x > rect.right - 2 ||
+              y < rect.top + 2 || y > rect.bottom - 2
+            ) continue;
+            if (document.elementFromPoint(x, y) !== canvas) continue;
+            const probe = api.probePointerAt(x, y);
+            if (probe?.hit?.specId === entity.id) {
+              return {
+                id: entity.id,
+                roomId: entity.roomId,
+                type: entity.type,
+                x,
+                y,
+              };
+            }
+          }
         }
       }
     }
+
     return null;
   }, startEntityId);
-  if (!startPoint) throw new Error('Start marker has no visible pickable screen point.');
-  await page.mouse.click(startPoint.x, startPoint.y);
+  if (!entityPickProbe) {
+    throw new Error('No visible pickable 3D entity marker is available.');
+  }
+
+  await page.mouse.click(entityPickProbe.x, entityPickProbe.y);
   await page.waitForFunction((id) =>
-    window.__DAI_EDITOR_SLICE__.getState().selectedEntityId === id, startEntityId);
+    window.__DAI_EDITOR_SLICE__.getState().selectedEntityId === id,
+  entityPickProbe.id);
   const selectedEntityState = await page.evaluate(() => ({
     state: window.__DAI_EDITOR_SLICE__.getState(),
     renderedSelection: window.__DAI_EDITOR_SLICE__.getRenderedSelection(),
@@ -836,6 +859,10 @@ try {
     roomContentsVisible: document.querySelector('#roomContentsOverlay')?.hidden === false,
     selectedRoomContentId: document.querySelector('#roomContentsItems .room-content-item.is-selected')?.dataset.entityId ?? null,
   }));
+
+  // The next invariant is specifically about Start -> Goal same-room blocking.
+  // Restore Start selection after the generic 3D-picking invariant above.
+  await page.evaluate((id) => window.__DAI_EDITOR_SLICE__.selectEntity(id), startEntityId);
 
   const entityCreateSpacing = await page.evaluate(() => {
     const panel = document.querySelector('[data-inspector-panel="entities"]');
@@ -1231,17 +1258,17 @@ try {
       editHudLayout.contents.right >= editHudLayout.viewport.right - 32 &&
       editHudLayout.contents.left > editHudLayout.viewport.left + editHudLayout.viewport.width * 0.55,
     clicking3dEntitySelectsAndHighlights:
-      selectedEntityState.state.selectedEntityId === startEntityId &&
+      selectedEntityState.state.selectedEntityId === entityPickProbe.id &&
       selectedEntityState.state.inspectorTab === 'entities' &&
-      selectedEntityState.renderedSelection === startEntityId,
+      selectedEntityState.renderedSelection === entityPickProbe.id,
     entitySelectionMovesSummaryIntoViewport:
       selectedEntityState.selectionOverlayVisible === true &&
-      selectedEntityState.selectionText.includes(startEntityId) &&
-      selectedEntityState.containingRoomText.includes(startRoomId),
+      selectedEntityState.selectionText.includes(entityPickProbe.id) &&
+      selectedEntityState.containingRoomText.includes(entityPickProbe.roomId),
     entitySelectionShowsContainingRoom:
-      selectedEntityState.roomListValue === startRoomId &&
+      selectedEntityState.roomListValue === entityPickProbe.roomId &&
       selectedEntityState.roomContentsVisible === true &&
-      selectedEntityState.selectedRoomContentId === startEntityId,
+      selectedEntityState.selectedRoomContentId === entityPickProbe.id,
     entityCreateControlsHaveBalancedVerticalRhythm:
       Number.isFinite(entityCreateSpacing.buttonToLabelGap) &&
       Number.isFinite(entityCreateSpacing.labelToSelectGap) &&
@@ -1350,6 +1377,7 @@ try {
     legendState,
     roomContentsBeforeEntityClick,
     editHudLayout,
+    entityPickProbe,
     selectedEntityId: selectedEntityState.state.selectedEntityId,
     renderedSelection: selectedEntityState.renderedSelection,
     selectedEntityRoomListValue: selectedEntityState.roomListValue,
