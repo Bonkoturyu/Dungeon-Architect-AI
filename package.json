@@ -98,7 +98,9 @@
     "validate:dai-090-round1": "node scripts/run-dai-090-unexpected-prompts.mjs --phase=round1",
     "validate:dai-090-final": "node scripts/run-dai-090-unexpected-prompts.mjs --phase=final",
     "validate:dai-100-intent-semantics": "node scripts/run-dai-100-intent-semantics-validation.mjs",
-    "validate:dai-100-character-motion": "node scripts/run-dai-100-character-motion-validation.mjs"
+    "validate:dai-100-character-motion": "node scripts/run-dai-100-character-motion-validation.mjs",
+    "smoke:dai-100-result-focus": "node scripts/run-dai-100-result-focus-smoke.mjs",
+    "validate:dai-100-result-focus": "node scripts/run-dai-100-result-focus-validation.mjs"
   },
   "devDependencies": {
     "@babylonjs/core": "9.18.0",
