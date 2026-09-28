@@ -3,7 +3,9 @@ import assert from "node:assert/strict";
 import {
   AUDIO_CUES,
   AUDIO_MODES,
+  AUDIO_REACTIVE_INTENSITY_VERSION,
   createProgrammaticAudio,
+  deriveReactiveAudioIntensity,
 } from "../src/programmatic-audio.js";
 
 class FakeAudioParam {
@@ -131,6 +133,16 @@ test("audio presentation stays inert until unlock then starts desired BGM", asyn
     activeBgmVoices: 0,
     bgmVolume: 0.58,
     seVolume: 0.78,
+    reactiveIntensityVersion: "1",
+    reactiveIntensity: 0.18,
+    reactiveReason: "edit",
+    reactivePressure: 0.5,
+    reactiveEnemyCount: 0,
+    reactiveArmedTrapCount: 0,
+    reactiveHpRatio: 1,
+    reactiveBgmMultiplier: 0.8848,
+    reactiveSeMultiplier: 0.9616,
+    reactiveRampSeconds: 0.28,
     crossfadeSeconds: 0.45,
     motifScheduledSeconds: 0,
     lastCue: null,
@@ -223,6 +235,163 @@ test("mode changes schedule long-form motifs and retire previous voices", async 
   assert.equal(play.activeMode, "play");
   assert.equal(play.crossfadeSeconds, 0.45);
   assert.ok(play.motifScheduledSeconds > 120);
+});
+
+test("reactive intensity derives bounded exploration and danger profiles", () => {
+  assert.equal(AUDIO_REACTIVE_INTENSITY_VERSION, "1");
+
+  const calm = deriveReactiveAudioIntensity({
+    mode: "play",
+    designIntent: {
+      tension: 0.2,
+      combatDensity: 0.2,
+      trapDensity: 0.2,
+      targetDifficulty: 0.2,
+    },
+    hpRatio: 1,
+  });
+  const encounter = deriveReactiveAudioIntensity({
+    mode: "play",
+    designIntent: {
+      tension: 0.9,
+      combatDensity: 0.9,
+      trapDensity: 0.8,
+      targetDifficulty: 0.85,
+    },
+    enemyCount: 1,
+    armedTrapCount: 1,
+    hpRatio: 0.45,
+  });
+
+  assert.equal(calm.reason, "exploration");
+  assert.equal(encounter.reason, "encounter");
+  assert.ok(encounter.intensity > calm.intensity);
+  assert.ok(encounter.bgmMultiplier > calm.bgmMultiplier);
+  assert.ok(encounter.seMultiplier > calm.seMultiplier);
+  assert.ok(encounter.bgmMultiplier <= 1.18);
+  assert.ok(encounter.seMultiplier <= 1.06);
+  assert.equal(encounter.rampSeconds, 0.28);
+});
+
+test("reactive intensity returns toward exploration after room danger resolves", () => {
+  const intent = {
+    tension: 0.7,
+    combatDensity: 0.75,
+    trapDensity: 0.6,
+    targetDifficulty: 0.65,
+  };
+  const danger = deriveReactiveAudioIntensity({
+    mode: "play",
+    designIntent: intent,
+    enemyCount: 1,
+    armedTrapCount: 1,
+    hpRatio: 0.8,
+  });
+  const exploration = deriveReactiveAudioIntensity({
+    mode: "play",
+    designIntent: intent,
+    enemyCount: 0,
+    armedTrapCount: 0,
+    hpRatio: 0.8,
+  });
+
+  assert.equal(danger.reason, "encounter");
+  assert.equal(exploration.reason, "exploration");
+  assert.ok(danger.intensity > exploration.intensity);
+});
+
+test("reactive intensity layer does not rewrite user BGM or SE mix values", async () => {
+  const audio = createProgrammaticAudio({
+    AudioContextCtor: FakeAudioContext,
+    initialBgmVolume: 0.34,
+    initialSeVolume: 0.86,
+  });
+
+  const danger = deriveReactiveAudioIntensity({
+    mode: "play",
+    designIntent: {
+      tension: 0.9,
+      combatDensity: 0.9,
+      trapDensity: 0.8,
+      targetDifficulty: 0.8,
+    },
+    enemyCount: 1,
+    armedTrapCount: 1,
+    hpRatio: 0.5,
+  });
+
+  const beforeUnlock = audio.setReactiveIntensity(danger);
+  assert.equal(beforeUnlock.reason, "encounter");
+  assert.equal(audio.getState().bgmVolume, 0.34);
+  assert.equal(audio.getState().seVolume, 0.86);
+  assert.equal(audio.getState().reactiveReason, "encounter");
+
+  await audio.unlock();
+  const active = audio.getState();
+  assert.equal(active.bgmVolume, 0.34);
+  assert.equal(active.seVolume, 0.86);
+  assert.equal(active.reactiveIntensity, danger.intensity);
+  assert.equal(active.reactiveBgmMultiplier, danger.bgmMultiplier);
+  assert.equal(active.reactiveSeMultiplier, danger.seMultiplier);
+
+  const exploration = deriveReactiveAudioIntensity({
+    mode: "play",
+    designIntent: {
+      tension: 0.9,
+      combatDensity: 0.9,
+      trapDensity: 0.8,
+      targetDifficulty: 0.8,
+    },
+    hpRatio: 1,
+  });
+  audio.setReactiveIntensity(exploration);
+  assert.equal(audio.getState().reactiveReason, "exploration");
+  assert.ok(
+    audio.getState().reactiveIntensity <
+    active.reactiveIntensity,
+  );
+  assert.equal(audio.getState().bgmVolume, 0.34);
+  assert.equal(audio.getState().seVolume, 0.86);
+});
+
+test("reactive result and edit profiles remain bounded and mode-specific", () => {
+  const edit = deriveReactiveAudioIntensity({ mode: "edit" });
+  const cleared = deriveReactiveAudioIntensity({ mode: "result-cleared" });
+  const failed = deriveReactiveAudioIntensity({ mode: "result-failed" });
+
+  assert.equal(edit.reason, "edit");
+  assert.equal(cleared.reason, "result-cleared");
+  assert.equal(failed.reason, "result-failed");
+  assert.ok(edit.intensity < failed.intensity);
+  for (const profile of [edit, cleared, failed]) {
+    assert.ok(profile.intensity >= 0 && profile.intensity <= 1);
+    assert.ok(profile.bgmMultiplier >= 0.82 && profile.bgmMultiplier <= 1.18);
+    assert.ok(profile.seMultiplier >= 0.94 && profile.seMultiplier <= 1.06);
+  }
+});
+
+test("invalid reactive intensity input fails closed", () => {
+  const audio = createProgrammaticAudio({ AudioContextCtor: FakeAudioContext });
+  assert.throws(
+    () => audio.setReactiveIntensity(null),
+    /reactive intensity profile is invalid/,
+  );
+  assert.throws(
+    () => audio.setReactiveIntensity({
+      version: "1",
+      mode: "play",
+      reason: "bad",
+      pressure: Number.NaN,
+      intensity: 0.5,
+      enemyCount: 0,
+      armedTrapCount: 0,
+      hpRatio: 1,
+      bgmMultiplier: 1,
+      seMultiplier: 1,
+      rampSeconds: 0.28,
+    }),
+    /must be finite/,
+  );
 });
 
 test("cues before unlock are recorded as unscheduled and invalid names fail closed", () => {
