@@ -664,14 +664,55 @@ This AI Edit V3 structural slice is therefore **accepted**.
 
 ### J — Reactive Audio V2 intensity
 
-Keep the accepted Programmatic Audio V2 architecture and add bounded presentation intensity:
+Implementation candidate is now present on top of the existing Programmatic Audio V2 architecture.
 
-- normal exploration;
-- encounter/danger emphasis;
-- return to exploration after resolution;
-- Floor/Result continuity.
+The Web Audio graph now separates user mixer values from reactive presentation gain:
 
-No new external audio assets.
+```text
+BGM voices → user BGM gain → reactive BGM gain → master
+SE cues    → user SE gain  → reactive SE gain  → master
+```
+
+Reactive intensity is derived deterministically from:
+
+- current Edit / Play / Result audio mode;
+- DesignIntent `tension`, `combatDensity`, `trapDensity`, and `targetDifficulty`;
+- active Enemy count in the current Room;
+- armed Trap count in the current Room;
+- current Player HP ratio.
+
+Presentation behavior:
+
+- Edit stays low-intensity;
+- ordinary Play uses a DesignIntent-derived exploration level;
+- Enemy presence raises the profile to encounter intensity;
+- armed Trap presence raises danger intensity;
+- low HP adds bounded stress;
+- resolving Room danger ramps back toward exploration;
+- Floor advance keeps the Play motif continuous and relies on the existing `floor-advance` cue while the new Floor adopts its current-room intensity;
+- Result clear/fail keep their existing BGM modes with bounded result intensity.
+
+The reactive layer never rewrites the user's BGM/SE slider values.
+
+Bounds:
+
+- BGM multiplier: `0.82..1.18`;
+- SE multiplier: `0.94..1.06`;
+- intensity ramp: `0.28 s`.
+
+No DungeonSpec / Play Core / Run Core semantics are changed and no new external audio assets are introduced.
+
+Specification:
+
+`spec/audio/PROGRAMMATIC_AUDIO_V2.md`
+
+Dedicated acceptance:
+
+`npm run validate:dai-100-reactive-audio`
+
+The 9-step gate includes Audio unit tests, the existing DAI-097/100 audio regression smoke, a dedicated exploration→encounter→resolution→Result→Edit browser smoke, browser performance, Owner UI, production build, legal/provenance, syntax, and git diff checks.
+
+This Reactive Audio V2 intensity slice is **pending owner-local automated acceptance**. The broader Audio V2 track also still requires the separate owner listening review before final acceptance.
 
 ### K — JSON Import / round-trip
 
