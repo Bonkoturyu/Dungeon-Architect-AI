@@ -640,7 +640,27 @@ Integrated owner-local gate:
 
 The gate includes Cloud Intent tests, Editor Core tests, hosting Function tests, prior V2 browser regression, new structural visible-Chrome smoke, production build, DAI-074 privacy re-audit, Owner UI regression, syntax, and git-diff checks.
 
-This AI Edit V3 structural slice is **pending owner-local acceptance**.
+Owner-local acceptance passed on 2026-09-28 JST at `34169906c79babd487575444d158bd0c588857bb`.
+
+The 10-step `npm run validate:dai-100-ai-edit-structural` gate passed end-to-end:
+
+- Cloud Intent structural contract tests: 38/38 PASS;
+- Editor Core structural command tests: 30/30 PASS;
+- Hosting Function tests: 14/14 PASS;
+- prior AI Edit V2 five-command browser regression: PASS;
+- AI Edit V3 structural visible-Chrome smoke: PASS;
+- production hosting build: PASS;
+- DAI-074 secret/privacy re-audit: PASS;
+- Owner UI regression smoke: PASS;
+- syntax validation: PASS;
+- git diff / whitespace check: PASS;
+- final result: `passed: true`, `falseChecks: []`.
+
+The structural browser smoke verified the full six-command sequence with Undo/Redo at every stage, preserved START eligibility, ended with zero Critical validation errors, and restored the original structural counts.
+
+The privacy re-audit accepted the new bounded Corridor context (`id/fromRoomId/toRoomId/width/kind/fromSide/toSide`) while preserving `store:false`, no persistent browser storage, prompt/secret non-echo, server-side secret isolation, and `Cache-Control:no-store`.
+
+This AI Edit V3 structural slice is therefore **accepted**.
 
 ### J — Reactive Audio V2 intensity
 
