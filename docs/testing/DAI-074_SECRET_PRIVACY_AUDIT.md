@@ -33,9 +33,10 @@ The audit must verify:
 
 - cloud DesignIntent requests set `store: false`;
 - natural-edit requests set `store: false`;
-- natural-edit provider input contains only the request text plus normalized room/entity context;
-- normalized room context contains only `id`;
-- normalized entity context contains only `id`, `type`, and `roomId`;
+- natural-edit provider input contains only the request text plus normalized Room/Entity/Corridor authoring context;
+- normalized Room context contains only `id`, `x`, `z`, `width`, and `depth`;
+- normalized Entity context contains only `id`, `type`, and `roomId`;
+- normalized Corridor context contains only `id`, `fromRoomId`, `toRoomId`, `width`, `kind`, `fromSide`, and `toSide`;
 - the Pages Function response does not echo the full request text or server secret;
 - the Pages Function returns `Cache-Control: no-store`;
 - the Pages Function source has no console logging;
@@ -134,3 +135,20 @@ Expected evidence:
 - this audit does not claim Zero Data Retention;
 - public hosted deployment configuration is rechecked again in DAI-081;
 - later analytics, accounts, storage, provider, or outbound-data changes reopen this audit.
+
+
+## DAI-100 AI Edit V3 re-audit scope
+
+DAI-100 AI Edit V3 adds bounded Corridor authoring topology to the natural-edit provider context so the single-command translator can identify, add, remove, reconnect, and set cardinal doorway sides on Corridors.
+
+The re-audit requires the outbound context to contain exactly:
+
+- Rooms: `id/x/z/width/depth`;
+- Entities: `id/type/roomId`;
+- Corridors: `id/fromRoomId/toRoomId/width/kind/fromSide/toSide`.
+
+Events, Play/Run state, renderer objects and route meshes, browser persistence, files, account identifiers, and credentials remain excluded.
+
+The existing `store:false`, server-side secret, prompt/secret non-echo, `Cache-Control:no-store`, no-console-logging, dist secret scan, and browser-persistence checks remain unchanged.
+
+This change is not accepted until the DAI-100 structural AI Edit gate reruns `validate:secret-privacy` successfully.
