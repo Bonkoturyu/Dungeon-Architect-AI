@@ -26,7 +26,21 @@ DAI-090 Round 1 passed on 2026-09-28 JST against the hosted Cloudflare productio
 - no secret/full-prompt evidence leak;
 - overall gate: PASS with `falseChecks: []`.
 
-The single semantic miss is retained as a Round 1 diagnostic to inspect before final DAI-090 rerun. DAI-091 pre-public exposure audit remains a release gate.
+The single Round 1 semantic miss was `greed-punishment / deception >= 0.45` with one observed value of `0.30`. A follow-up five-call hosted probe then returned a stable neutral `0.5 / 0.5 / 0.5` for `greedPunishment / rewardDensity / deception`, revealing a broader semantic-calibration weakness rather than a one-off malformed result.
+
+A provider-instruction hardening candidate is now implemented:
+
+- all 13 normalized DesignIntent axes have explicit semantic definitions;
+- `0.5` is reserved for genuinely neutral/moderate intent;
+- clear directional wording should move relevant axes meaningfully away from neutral;
+- greed/reward consequences are explicitly mapped to `greedPunishment`;
+- recurring/prominent reward opportunities are mapped to `rewardDensity`;
+- `deception` remains separately tied to bait/misdirection/false-safety/hidden-risk wording;
+- the strict schema, duration semantics, stateless `store:false` request, and MVP instant-death boundary are unchanged;
+- local gate: `npm run validate:dai-100-intent-semantics`;
+- hosted semantic verification remains required after deployment.
+
+DAI-091 pre-public exposure audit remains a release gate.
 
 ## Why this exists
 
@@ -474,20 +488,29 @@ Artifacts and runner:
 
 ### F — Programmatic character motion
 
-Add presentation-only motion to the existing project-authored low-poly Player/Enemy models:
+Implementation candidate is now present:
 
 - Player idle breathing / subtle sway;
 - Enemy idle / threat motion;
-- encounter reaction;
-- combat-resolution / defeat presentation;
-- optional reward reaction where it remains visually clear.
+- first-encounter threat pulse;
+- combat-resolution defeat shrink/lift effect using a renderer-only transient group;
+- 30 fps render cap while character motion is active;
+- Edit-mode Enemy presentation remains static;
+- `prefers-reduced-motion: reduce` stops the animation loop and restores identity poses;
+- pure `character-motion.js` math is independently unit-tested;
+- existing DAI-096 visible-Chrome smoke now checks motion over time, encounter motion, defeat cleanup, equipment presentation, and reduced-motion behavior;
+- dedicated gate: `npm run validate:dai-100-character-motion`.
 
-Requirements:
+The implementation is presentation-only: Play Core combat/session state is still applied synchronously and is never delayed for animation.
+
+This Character Motion slice is **pending owner-local acceptance**.
+
+Requirements retained:
 
 - no Play Core timing or combat semantic changes;
 - no external creative assets;
 - animation stops/disposes cleanly;
-- `prefers-reduced-motion` or equivalent reduced-motion path;
+- `prefers-reduced-motion` path;
 - dedicated browser/performance acceptance.
 
 ### G — Result transition + camera/event focus polish
