@@ -1579,6 +1579,8 @@ function renderActiveSpec() {
     entityStates: mode === 'edit' ? null : playSession?.gameplayState?.entityStates ?? null,
     showPlayer: mode !== 'edit' && Boolean(playSession),
     playerState: mode === 'edit' ? null : playSession?.playerState ?? null,
+    designIntent: lastDesignIntent,
+    presentationMode: mode,
   });
   ensureRoomOptions();
   ensureEntityOptions();
@@ -3453,6 +3455,9 @@ async function run() {
       getCameraState: () => adapter.getCameraState(),
       getRenderedSelection: () => adapter.selectedSpecId,
       getCharacterPresentation: () => adapter.getCharacterPresentationSummary(),
+      getAtmospherePresentation: () => adapter.getAtmospherePresentationSummary(),
+      setAtmosphereForTest: (intent, presentationMode = mode) =>
+        adapter.applyAtmosphere(intent, { mode: presentationMode }),
       getAudioPresentation: () => audioPresentation.getState(),
       unlockAudioForTest: async () => {
         const unlocked = await audioPresentation.unlock();
