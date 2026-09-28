@@ -600,7 +600,22 @@ Unit/browser acceptance is provided through:
 
 The dedicated browser smoke compares tense vs exploration/readability profiles on the same authored state, verifies actual Three.js background/fog/light values, ensures the marker palette remains unchanged, checks that atmosphere application cannot mutate Rooms/Corridors/Entities, verifies normal Edit→Play→Edit wiring, enforces readability bounds, and checks browser/network errors.
 
-This DesignIntent Atmosphere slice is **pending owner-local acceptance**.
+Owner-local acceptance passed on 2026-09-28 JST at `a1f0d02155fbcdb12576f643f9f3513318951d53`.
+
+The 7-step `npm run validate:dai-100-atmosphere` gate passed end-to-end:
+
+- Renderer / atmosphere unit tests: 42/42 PASS;
+- production hosting build: PASS;
+- Atmosphere visible-Chrome smoke: PASS;
+- browser performance regression smoke: PASS;
+- Owner UI regression smoke: PASS;
+- syntax validation: PASS;
+- git diff / whitespace check: PASS;
+- final result: `passed: true`, `falseChecks: []`.
+
+Accepted browser invariants include legacy no-DesignIntent rendering, DesignIntent-enabled atmosphere, stronger Fog for tense profiles, brighter ambient lighting for readability-oriented profiles, Edit attenuation, actual Three.js profile matching, unchanged semantic marker palette, no Dungeon state mutation, normal Edit→Play→Edit wiring, bounded readability, and zero browser/page/request/HTTP errors.
+
+This DesignIntent Atmosphere slice is therefore **accepted**.
 
 ### I — AI Edit structural commands
 
