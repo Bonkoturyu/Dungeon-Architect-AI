@@ -727,16 +727,39 @@ function showActionFeedback(message, kind = 'result') {
 }
 
 let viewportTransitionTimer = null;
+let resultRevealTimer = null;
+
+function triggerResultReveal() {
+  if (!resultStatus || !resultMetrics) return false;
+  if (resultRevealTimer) clearTimeout(resultRevealTimer);
+  resultStatus.classList.remove('is-result-reveal');
+  resultMetrics.classList.remove('is-result-reveal');
+  void resultStatus.offsetWidth;
+  resultStatus.classList.add('is-result-reveal');
+  resultMetrics.classList.add('is-result-reveal');
+  resultRevealTimer = setTimeout(() => {
+    resultStatus.classList.remove('is-result-reveal');
+    resultMetrics.classList.remove('is-result-reveal');
+    resultRevealTimer = null;
+  }, 980);
+  return true;
+}
 
 function triggerViewportTransition(kind) {
   if (!viewportShell) return false;
-  const className =
-    kind === 'generation'
-      ? 'is-generation-reveal'
-      : 'is-mode-transition';
+  const className = {
+    generation: 'is-generation-reveal',
+    mode: 'is-mode-transition',
+    event: 'is-event-focus',
+    floor: 'is-floor-transition',
+    result: 'is-result-transition',
+  }[kind] ?? 'is-mode-transition';
   viewportShell.classList.remove(
     'is-generation-reveal',
     'is-mode-transition',
+    'is-event-focus',
+    'is-floor-transition',
+    'is-result-transition',
   );
   if (viewportTransitionTimer) {
     clearTimeout(viewportTransitionTimer);
@@ -747,7 +770,13 @@ function triggerViewportTransition(kind) {
   void viewportShell.offsetWidth;
   viewportShell.classList.add(className);
 
-  const timeoutMs = kind === 'generation' ? 620 : 480;
+  const timeoutMs = {
+    generation: 620,
+    mode: 480,
+    event: 520,
+    floor: 640,
+    result: 820,
+  }[kind] ?? 480;
   viewportTransitionTimer = setTimeout(() => {
     viewportShell.classList.remove(className);
     viewportTransitionTimer = null;
@@ -2420,6 +2449,9 @@ function finalizePlayIfNeeded() {
     syncAudioMode();
     emitAudioCue(lastPlayResult.status === 'cleared' ? 'run-clear' : 'run-fail');
     renderActiveSpec();
+    adapter.focusSpecId(playSession.currentRoomId, { preserveDistance: true });
+    triggerViewportTransition('result');
+    triggerResultReveal();
     showActionFeedback(
       lastPlayResult.status === 'cleared' ? t('result.cleared') : t('result.ended'),
       'result',
@@ -2453,6 +2485,8 @@ function finalizePlayIfNeeded() {
     syncAudioMode();
     emitAudioCue('floor-advance');
     renderActiveSpec();
+    adapter.focusSpecId(playSession.currentRoomId, { preserveDistance: true });
+    triggerViewportTransition('floor');
     showActionFeedback(`✓ ${t('run.floor')} ${currentFloorIndex}`, 'floor');
     return true;
   }
@@ -2474,6 +2508,9 @@ function finalizePlayIfNeeded() {
   syncAudioMode();
   emitAudioCue(lastDungeonRunResult.status === 'cleared' ? 'run-clear' : 'run-fail');
   renderActiveSpec();
+  adapter.focusSpecId(playSession.currentRoomId, { preserveDistance: true });
+  triggerViewportTransition('result');
+  triggerResultReveal();
   showActionFeedback(
     lastDungeonRunResult.status === 'cleared' ? t('result.cleared') : t('result.ended'),
     'result',
@@ -2508,7 +2545,9 @@ function beginDungeonRun(runSpec, source) {
   selectedCorridorId = null;
   resultStatus.textContent = '';
   resultStatus.hidden = true;
+  resultStatus.classList.remove('is-result-reveal');
   if (resultMetrics) {
+    resultMetrics.classList.remove('is-result-reveal');
     resultMetrics.replaceChildren();
     resultMetrics.hidden = true;
   }
@@ -2600,12 +2639,33 @@ function movePlayToRoom(roomId, corridorId = null) {
     setEditStatus('Resolve room event before leaving');
     return false;
   }
+
+  const beforeFloorIndex = dungeonRunSession?.currentFloorIndex ?? currentFloorIndex;
   const moved = movePlaySession(playSession, roomId, {
     at: nextPlayActionAt(),
     corridorId,
   });
   if (moved?.ok) emitAudioCue('move');
-  return applyPlayRuntimeResult(moved, 'Move blocked');
+
+  const applied = applyPlayRuntimeResult(moved, 'Move blocked');
+  if (!applied || mode !== 'play' || !playSession) return applied;
+
+  const afterFloorIndex = dungeonRunSession?.currentFloorIndex ?? currentFloorIndex;
+  if (afterFloorIndex !== beforeFloorIndex) return applied;
+
+  const { enemies, interactables } = roomContents();
+  const hasBlockingEvent =
+    enemies.length > 0 ||
+    interactables.some(
+      (entry) => entry.entity.type === 'trap' && entry.state.status === 'armed',
+    );
+
+  if (hasBlockingEvent) {
+    adapter.focusSpecId(playSession.currentRoomId, { preserveDistance: true });
+    triggerViewportTransition('event');
+  }
+
+  return applied;
 }
 
 function returnToEdit() {
@@ -2662,7 +2722,9 @@ function returnToEdit() {
   if (goldCount) goldCount.textContent = '0';
   resultStatus.textContent = '';
   resultStatus.hidden = true;
+  resultStatus.classList.remove('is-result-reveal');
   if (resultMetrics) {
+    resultMetrics.classList.remove('is-result-reveal');
     resultMetrics.replaceChildren();
     resultMetrics.hidden = true;
   }
@@ -3400,6 +3462,8 @@ async function run() {
       },
       showViewportNoticeForTest: (message, options) => showViewportNotice(message, options),
       showActionFeedbackForTest: (message, kind) => showActionFeedback(message, kind),
+      triggerViewportTransitionForTest: (kind) => triggerViewportTransition(kind),
+      triggerResultRevealForTest: () => triggerResultReveal(),
       getCurrentRoomPlan: () => {
         const roomId = playSession?.currentRoomId ?? selectedRoomId;
         const group = adapter.plan?.roomGroups.find((room) => room.specId === roomId) ?? null;
