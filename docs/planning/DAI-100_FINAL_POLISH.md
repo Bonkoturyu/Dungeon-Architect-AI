@@ -836,7 +836,7 @@ In addition to accepted **Delaunay + MST + Loops** and **BSP**, implement all re
 3. Cellular Automata — **accepted**;
 4. Maze Carving — **accepted**;
 5. Gameplay Graph / Grammar — **accepted**;
-6. Wave Function Collapse (WFC).
+6. Wave Function Collapse (WFC) — **implementation candidate present; owner-local acceptance pending**.
 
 #### Rooms + Mazes candidate
 
@@ -1185,6 +1185,62 @@ The 9-step `npm run validate:dai-100-gameplay-grammar` gate passed end-to-end:
 The Product browser smoke verified the corrected `Algorithm Lab — Gameplay Graph / Grammar` selector label, unique Floor IDs/Seeds/layouts, Start eligibility on every Floor, preserved Gameplay Grammar provenance through Test and Mystery return, and zero browser/page/request/HTTP errors.
 
 Gameplay Graph / Grammar is therefore **accepted**.
+
+
+#### Wave Function Collapse (WFC) candidate
+
+The sixth and final remaining Algorithm Lab strategy is now implemented under:
+
+- reusable Core: `packages/generator-algorithms/wfc/`;
+- Product Adapter: `packages/generator/src/strategies/wfc-lab.js`;
+- Strategy ID: `algorithm-lab.wfc`;
+- paired docs: `docs/algorithms/WFC.md` + `WFC.html`.
+
+Algorithm shape:
+
+- derive an exact-N compact serpentine Room lattice;
+- rotate/reflect the lattice deterministically from Seed while preserving cardinal adjacency;
+- reserve every consecutive Room pair as a mandatory Start→Goal backbone socket;
+- model each Room cell as a four-bit North/East/South/West socket tile;
+- initialize each cell with every tile mask compatible with active neighbors and mandatory backbone sockets;
+- propagate hard socket compatibility;
+- repeatedly choose a minimum-domain cell, collapse it through deterministic weighted choice, and propagate again;
+- use DesignIntent `routeChoice` only to weight optional local sockets;
+- routeChoice 0 produces only the mandatory backbone;
+- routeChoice 1 opens every optional active-cell cardinal adjacency;
+- mandatory backbone edges map to `backbone`, optional collapsed edges to `alternate`;
+- every Product Corridor receives exact cardinal endpoint-side hints.
+
+This follows the research conclusion that WFC is a local constraint solver rather than a standalone global progression solver:
+
+```text
+global guaranteed backbone
+→ local WFC socket collapse
+→ validated Room graph
+```
+
+The reusable Core exposes local tile masks, socket names, tile classes, collapse count, propagation revisions, contradiction count, tile histogram, and entropy trace as plain JSON-compatible data. It has no DOM / Three.js / Editor / Play / network dependency.
+
+Product registration is present and the shared Generator selector smoke now covers ten strategies. **Version 2 remains Recommended/default**.
+
+Acceptance coverage:
+
+- reusable WFC Core unit suite;
+- Generator Adapter regressions;
+- 150-case Seed × RoomCount × routeChoice renderer/WFC matrix;
+- explicit contradiction-count check;
+- routeChoice 0 / 1 boundary checks;
+- production build;
+- Owner UI regression;
+- ten-strategy selector smoke;
+- 3-Floor Test + Mystery visible-Chrome smoke;
+- syntax + git diff checks.
+
+Integrated gate:
+
+`npm run validate:dai-100-wfc`
+
+WFC is **pending owner-local acceptance**.
 
 Each strategy should follow the already accepted loose-coupled architecture:
 
