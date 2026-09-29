@@ -834,7 +834,7 @@ In addition to accepted **Delaunay + MST + Loops** and **BSP**, implement all re
 1. Rooms + Mazes — **accepted**;
 2. Random Walk — **accepted**;
 3. Cellular Automata — **accepted**;
-4. Maze Carving — **implementation candidate present; owner-local acceptance pending**;
+4. Maze Carving — **accepted**;
 5. Gameplay Graph / Grammar;
 6. Wave Function Collapse (WFC).
 
@@ -1084,7 +1084,30 @@ Integrated gate:
 
 `npm run validate:dai-100-maze-carving`
 
-Maze Carving is **pending owner-local acceptance**.
+Owner-local acceptance passed on 2026-09-29 JST at `4c16946d09d945e94f3ecd9c54e8de333639373b`.
+
+The 9-step `npm run validate:dai-100-maze-carving` gate passed end-to-end:
+
+- reusable Maze Carving Core tests: 10/10 PASS;
+- Generator / Maze Carving adapter suite: 54/54 PASS;
+- 150-case renderer routeability matrix: 150/150 PASS;
+- routing mode: **strict 150/150**;
+- unique spatial layouts: 30;
+- total extra edges: 480;
+- remaining wall candidates across the matrix: 930;
+- carved tree walls across the matrix: 1,680;
+- matrix duration: 3,947 ms;
+- production hosting build: PASS;
+- Owner UI regression smoke: PASS;
+- eight-strategy Product selector smoke: PASS;
+- 3-Floor Test + Mystery browser smoke: PASS;
+- syntax validation: 249 files PASS;
+- git diff / whitespace check: PASS;
+- final result: `passed: true`, `falseChecks: []`.
+
+The Product browser smoke verified unique Floor IDs/Seeds/layouts, Start eligibility on every Floor, preserved Maze Carving provenance through Test and Mystery return, and zero browser/page/request/HTTP errors.
+
+Maze Carving is therefore **accepted**.
 
 Each strategy should follow the already accepted loose-coupled architecture:
 
