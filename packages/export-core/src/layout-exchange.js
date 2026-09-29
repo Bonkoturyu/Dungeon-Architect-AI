@@ -321,8 +321,10 @@ function validateLayoutExchangeShape(value) {
 
   if (
     !isRecord(value.coordinateSystem) ||
-    JSON.stringify(value.coordinateSystem) !==
-      JSON.stringify(DUNGEON_LAYOUT_COORDINATE_SYSTEM)
+    !exactKeys(value.coordinateSystem, Object.keys(DUNGEON_LAYOUT_COORDINATE_SYSTEM)) ||
+    Object.entries(DUNGEON_LAYOUT_COORDINATE_SYSTEM).some(
+      ([key, expected]) => value.coordinateSystem[key] !== expected,
+    )
   ) {
     errors.push(
       importError(
@@ -822,6 +824,100 @@ export function importFullDungeonExport(input) {
       dungeons: null,
       provenance: null,
       errors: parsed.errors,
+    };
+  }
+
+  const envelopeErrors = [];
+  if (
+    !isRecord(parsed.value) ||
+    !exactKeys(parsed.value, ['schemaVersion', 'id', 'floors'])
+  ) {
+    envelopeErrors.push(
+      importError(
+        'FULL_IMPORT_TOP_LEVEL_FIELDS_INVALID',
+        '    return {
+      ok: false,
+      format: 'full',
+      dungeons: null,
+      provenance: null,
+      errors: validation.errors,
+    };
+  }
+
+  return {
+    ok: true,
+    format: 'full',
+    dungeons: parsed.value.floors.map((floor) => clone(floor.dungeon)),
+    provenance: null,
+    errors: [],
+  };
+}
+
+export function importDungeonJson(input) {
+  const parsed = parseJsonImportValue(input);
+  if (!parsed.ok) {
+    return {
+      ok: false,
+      format: null,
+      dungeons: null,
+      provenance: null,
+      errors: parsed.errors,
+    };
+  }
+
+  if (
+    parsed.value?.schema === DUNGEON_LAYOUT_EXCHANGE_SCHEMA ||
+    Object.prototype.hasOwnProperty.call(parsed.value ?? {}, 'coordinateSystem')
+  ) {
+    return importDungeonLayoutExchange(parsed.value);
+  }
+
+  if (
+    parsed.value?.schemaVersion === '1.0' &&
+    Array.isArray(parsed.value?.floors)
+  ) {
+    return importFullDungeonExport(parsed.value);
+  }
+
+  return {
+    ok: false,
+    format: null,
+    dungeons: null,
+    provenance: null,
+    errors: [
+      importError(
+        'IMPORT_FORMAT_UNSUPPORTED',
+        '$',
+        'Expected DungeonLayoutExchange v1 or DungeonRunSpec v1 JSON.',
+      ),
+    ],
+  };
+}
+,
+        'DungeonRunSpec v1 top-level fields are invalid.',
+      ),
+    );
+  }
+  if (Array.isArray(parsed.value?.floors)) {
+    parsed.value.floors.forEach((floor, index) => {
+      if (!isRecord(floor) || !exactKeys(floor, ['id', 'dungeon'])) {
+        envelopeErrors.push(
+          importError(
+            'FULL_IMPORT_FLOOR_FIELDS_INVALID',
+            `floors[${index}]`,
+            'DungeonRunSpec v1 Floor fields are invalid.',
+          ),
+        );
+      }
+    });
+  }
+  if (envelopeErrors.length > 0) {
+    return {
+      ok: false,
+      format: 'full',
+      dungeons: null,
+      provenance: null,
+      errors: envelopeErrors,
     };
   }
 
