@@ -39,6 +39,7 @@ import {
   GENERATOR_STRATEGY_CELLULAR_AUTOMATA_LAB_ID,
   GENERATOR_STRATEGY_MAZE_CARVING_LAB_ID,
   GENERATOR_STRATEGY_GAMEPLAY_GRAMMAR_LAB_ID,
+  GENERATOR_STRATEGY_WFC_LAB_ID,
   RECOMMENDED_GENERATOR_STRATEGY_ID,
   createBuiltinGeneratorStrategyRegistry,
   deriveGeneratorSeedFromPrompt,
@@ -598,6 +599,9 @@ function generatorStrategyLabel(metadata) {
   }
   if (metadata.id === GENERATOR_STRATEGY_GAMEPLAY_GRAMMAR_LAB_ID) {
     return t('create.generatorGameplayGrammar');
+  }
+  if (metadata.id === GENERATOR_STRATEGY_WFC_LAB_ID) {
+    return t('create.generatorWfc');
   }
   return metadata.displayName;
 }
