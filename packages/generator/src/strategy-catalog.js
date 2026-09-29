@@ -33,6 +33,10 @@ import {
   GENERATOR_STRATEGY_MAZE_CARVING_LAB_ID,
   generatorStrategyMazeCarvingLab,
 } from './strategies/maze-carving-lab.js';
+import {
+  GENERATOR_STRATEGY_GAMEPLAY_GRAMMAR_LAB_ID,
+  generatorStrategyGameplayGrammarLab,
+} from './strategies/gameplay-grammar-lab.js';
 import { seedFromPromptV1 } from './versions/v1/design-intent-generator.js';
 
 export {
@@ -44,6 +48,7 @@ export {
   GENERATOR_STRATEGY_RANDOM_WALK_LAB_ID,
   GENERATOR_STRATEGY_CELLULAR_AUTOMATA_LAB_ID,
   GENERATOR_STRATEGY_MAZE_CARVING_LAB_ID,
+  GENERATOR_STRATEGY_GAMEPLAY_GRAMMAR_LAB_ID,
 };
 
 export const RECOMMENDED_GENERATOR_STRATEGY_ID =
@@ -63,5 +68,6 @@ export function createBuiltinGeneratorStrategyRegistry() {
     generatorStrategyRandomWalkLab,
     generatorStrategyCellularAutomataLab,
     generatorStrategyMazeCarvingLab,
+    generatorStrategyGameplayGrammarLab,
   ]);
 }
