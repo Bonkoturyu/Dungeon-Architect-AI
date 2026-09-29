@@ -17,6 +17,10 @@ import {
   GENERATOR_STRATEGY_BSP_LAB_ID,
   generatorStrategyBspLab,
 } from './strategies/bsp-lab.js';
+import {
+  GENERATOR_STRATEGY_ROOMS_MAZES_LAB_ID,
+  generatorStrategyRoomsMazesLab,
+} from './strategies/rooms-mazes-lab.js';
 import { seedFromPromptV1 } from './versions/v1/design-intent-generator.js';
 
 export {
@@ -24,6 +28,7 @@ export {
   GENERATOR_STRATEGY_V2_RECOMMENDED_ID,
   GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID,
   GENERATOR_STRATEGY_BSP_LAB_ID,
+  GENERATOR_STRATEGY_ROOMS_MAZES_LAB_ID,
 };
 
 export const RECOMMENDED_GENERATOR_STRATEGY_ID =
@@ -39,5 +44,6 @@ export function createBuiltinGeneratorStrategyRegistry() {
     generatorStrategyV2Recommended,
     generatorStrategyDelaunayMstLab,
     generatorStrategyBspLab,
+    generatorStrategyRoomsMazesLab,
   ]);
 }
