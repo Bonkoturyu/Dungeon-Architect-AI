@@ -831,12 +831,52 @@ This JSON Import / round-trip slice is therefore **accepted**.
 
 In addition to accepted **Delaunay + MST + Loops** and **BSP**, implement all remaining planned Algorithm Lab strategies:
 
-1. Rooms + Mazes;
+1. Rooms + Mazes — **implementation candidate present; owner-local acceptance pending**;
 2. Random Walk;
 3. Cellular Automata;
 4. Maze Carving;
 5. Gameplay Graph / Grammar;
 6. Wave Function Collapse (WFC).
+
+#### Rooms + Mazes candidate
+
+The first remaining strategy is now implemented under:
+
+- reusable Core: `packages/generator-algorithms/rooms-mazes/`;
+- Product Adapter: `packages/generator/src/strategies/rooms-mazes-lab.js`;
+- Strategy ID: `algorithm-lab.rooms-mazes`;
+- paired docs: `docs/algorithms/ROOMS_MAZES.md` + `ROOMS_MAZES.html`.
+
+Algorithm shape:
+
+- choose a connected seeded subset of coarse grid cells;
+- carve a perfect maze spanning tree over cardinal adjacency;
+- map the tree-diameter endpoints to first/last Room IDs so baseline Start/Goal placement receives a long maze path;
+- create non-overlapping Rooms at cell centers;
+- add a bounded deterministic subset of unused local grid adjacencies according to DesignIntent `routeChoice`;
+- tree edges become `backbone`, loop edges become `alternate`;
+- every Corridor is cardinally adjacent and receives exact endpoint-side hints.
+
+The Core remains plain JSON-compatible and has no DOM / Three.js / Editor / Play / network dependency.
+
+Product registration is already present, while **Version 2 remains Recommended/default**.
+
+Acceptance coverage:
+
+- reusable Core unit suite;
+- Generator Adapter regressions;
+- 150-case Seed × RoomCount × routeChoice renderer matrix;
+- production build;
+- Owner UI regression;
+- expanded 5-strategy selector smoke;
+- 3-Floor Test + Mystery visible-Chrome smoke;
+- syntax + git diff checks.
+
+Integrated gate:
+
+`npm run validate:dai-100-rooms-mazes`
+
+Rooms + Mazes is **pending owner-local acceptance**.
 
 Each strategy should follow the already accepted loose-coupled architecture:
 
