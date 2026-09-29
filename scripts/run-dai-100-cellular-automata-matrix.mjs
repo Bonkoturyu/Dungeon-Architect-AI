@@ -72,7 +72,7 @@ for (const seed of seeds) {
           {
             seed,
             id:
-              'random-walk-matrix-' +
+              'cellular-automata-matrix-' +
               seed + '-' +
               roomCount + '-' +
               String(routeChoice).replace('.', '_'),
