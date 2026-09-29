@@ -92,3 +92,10 @@ It randomizes and smooths an interior occupancy grid, keeps the largest cardinal
 `maze-carving/` contains the reusable randomized-Kruskal maze Core used by `algorithm-lab.maze-carving`.
 
 The Core builds a compact exact-N lattice, treats all cardinal adjacencies as walls, carves an N−1 perfect-maze tree through seeded disjoint-set union, and optionally restores unused walls as loops. It has no DungeonSpec, DOM, Three.js, Editor, Play, or network dependency.
+
+
+## Gameplay Graph / Grammar
+
+`gameplay-grammar/` contains the reusable semantic grammar Core used by `algorithm-lab.gameplay-grammar`.
+
+The Core expands a mission spine plus semantic dead-end/bypass productions, exposes the derivation trace, and embeds the resulting graph on unique cardinal cells. It has no DungeonSpec, DOM, Three.js, Editor, Play, or network dependency.
