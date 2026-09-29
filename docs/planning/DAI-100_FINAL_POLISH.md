@@ -735,14 +735,81 @@ The broader Audio V2 track still requires the separate **owner listening review*
 
 ### K — JSON Import / round-trip
 
-Add import for the generic exchange format and full authored format:
+Implementation candidate is now present.
 
-- `DungeonLayoutExchange v1` import;
-- `DungeonRunSpec v1` / full Dungeon JSON import;
-- strict validation and fail-closed errors;
-- imported state opens in the existing editor;
-- import → edit → export round-trip evidence;
-- no arbitrary code/data execution.
+Supported input contracts:
+
+- `DungeonLayoutExchange v1`;
+- Full Dungeon JSON using the existing `DungeonRunSpec v1` envelope.
+
+Import architecture:
+
+```text
+Local JSON file / JSON text
+→ JSON.parse
+→ format detection
+→ strict Layout envelope or DungeonRunSpec validation
+→ DungeonSpec validation
+→ renderer routeability preflight
+→ fresh EditSession Floor set
+→ existing Editor
+```
+
+Layout import reconstructs only information actually represented by the generic contract:
+
+- Rooms;
+- Corridors;
+- one Start Entity;
+- one Goal Entity;
+- no Enemy / Treasure / Trap / Recovery / Event reconstruction.
+
+Full import preserves complete DungeonSpec data for every Floor.
+
+Fail-closed behavior:
+
+- malformed JSON is rejected;
+- unsupported format/version is rejected;
+- unknown Layout envelope fields are rejected;
+- invalid Start/Goal role counts are rejected;
+- invalid DungeonSpec / DungeonRunSpec is rejected;
+- renderer-unrouteable imported layouts are rejected;
+- browser files over 2 MiB are rejected;
+- Editor state is replaced only after all Floors pass;
+- failed imports leave the current authored state unchanged.
+
+Security:
+
+- no `eval`;
+- no Function constructor;
+- no script/module execution from imported JSON;
+- imported text remains data only.
+
+Editor behavior after successful import:
+
+- returns to Edit mode;
+- imported Floors open in the existing renderer/editor;
+- Play/Run/Result state is cleared;
+- selection and structural drafts are cleared;
+- Undo/Redo history starts fresh;
+- normal editing can continue immediately;
+- a single Import JSON UI auto-detects Layout vs Full.
+
+Round-trip guarantees:
+
+- Layout exporter output can be imported and re-exported byte-stably with the same ID/provenance;
+- Full exporter output can be imported and re-exported byte-stably with the same run ID.
+
+Specification:
+
+`spec/export/JSON_IMPORT_V1.md`
+
+Dedicated acceptance:
+
+`npm run validate:dai-100-json-import`
+
+The 8-step gate includes Export/Import Core tests, existing JSON Export regression, dedicated JSON Import visible-Chrome round-trip smoke, Owner UI regression, browser performance, production build, syntax, and git diff checks.
+
+This JSON Import / round-trip slice is **pending owner-local acceptance**.
 
 ### L — Complete Algorithm Lab set
 
