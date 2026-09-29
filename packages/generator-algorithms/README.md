@@ -85,3 +85,10 @@ The Core discovers coarse-grid cells through a seeded cardinal walker, keeps fir
 `cellular-automata/` contains the reusable seeded cave-mask Core used by `algorithm-lab.cellular-automata`.
 
 It randomizes and smooths an interior occupancy grid, keeps the largest cardinal component, deterministically repairs connected capacity when required, selects a connected Room subset, and adds bounded local loops. It has no DungeonSpec, DOM, Three.js, Editor, Play, or network dependency.
+
+
+## Maze Carving
+
+`maze-carving/` contains the reusable randomized-Kruskal maze Core used by `algorithm-lab.maze-carving`.
+
+The Core builds a compact exact-N lattice, treats all cardinal adjacencies as walls, carves an N−1 perfect-maze tree through seeded disjoint-set union, and optionally restores unused walls as loops. It has no DungeonSpec, DOM, Three.js, Editor, Play, or network dependency.
