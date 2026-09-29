@@ -270,7 +270,7 @@ function validateLayoutExchangeShape(value) {
 
   if (
     !isRecord(value.source) ||
-    !nonEmptyString(value.source.application) ||
+    value.source.application !== 'Dungeon Architect AI' ||
     value.source.dungeonSpecVersion !== '1.0'
   ) {
     errors.push(
