@@ -84,10 +84,9 @@ function buildCompactCells(roomCount) {
   for (let z = 0; z < height; z += 1) {
     const remaining = roomCount - cells.length;
     const rowCount = Math.min(width, remaining);
-    const offset = (width - rowCount) / 2;
     for (let x = 0; x < rowCount; x += 1) {
       cells.push({
-        x: x + offset,
+        x,
         z,
       });
     }
