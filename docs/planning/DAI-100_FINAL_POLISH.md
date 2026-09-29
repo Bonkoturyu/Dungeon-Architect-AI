@@ -809,7 +809,23 @@ Dedicated acceptance:
 
 The 8-step gate includes Export/Import Core tests, existing JSON Export regression, dedicated JSON Import visible-Chrome round-trip smoke, Owner UI regression, browser performance, production build, syntax, and git diff checks.
 
-This JSON Import / round-trip slice is **pending owner-local acceptance**.
+Owner-local acceptance passed on 2026-09-29 JST at `90309b3fc869207cce5f7b01eadb4e8a2035887b`.
+
+The 8-step `npm run validate:dai-100-json-import` gate passed end-to-end:
+
+- Export / Import Core round-trip tests: 10/10 PASS;
+- existing JSON Export regression smoke: PASS;
+- JSON Import / round-trip visible-Chrome smoke: PASS;
+- Owner UI regression smoke: PASS;
+- browser performance regression smoke: PASS;
+- production hosting build: PASS;
+- syntax validation: PASS;
+- git diff / whitespace check: PASS;
+- final result: `passed: true`, `falseChecks: []`.
+
+Accepted browser invariants include Import UI presence, Full import restoring deliberately mutated authored state, fresh Undo/Redo/runtime state after import, normal editing after import, Layout import preserving generic geometry while reconstructing only Start/Goal semantics, byte-stable Layout round-trip, fail-closed invalid import with authored state unchanged, and no execution of script-like JSON text.
+
+This JSON Import / round-trip slice is therefore **accepted**.
 
 ### L — Complete Algorithm Lab set
 
