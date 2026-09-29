@@ -25,6 +25,10 @@ import {
   GENERATOR_STRATEGY_RANDOM_WALK_LAB_ID,
   generatorStrategyRandomWalkLab,
 } from './strategies/random-walk-lab.js';
+import {
+  GENERATOR_STRATEGY_CELLULAR_AUTOMATA_LAB_ID,
+  generatorStrategyCellularAutomataLab,
+} from './strategies/cellular-automata-lab.js';
 import { seedFromPromptV1 } from './versions/v1/design-intent-generator.js';
 
 export {
@@ -34,6 +38,7 @@ export {
   GENERATOR_STRATEGY_BSP_LAB_ID,
   GENERATOR_STRATEGY_ROOMS_MAZES_LAB_ID,
   GENERATOR_STRATEGY_RANDOM_WALK_LAB_ID,
+  GENERATOR_STRATEGY_CELLULAR_AUTOMATA_LAB_ID,
 };
 
 export const RECOMMENDED_GENERATOR_STRATEGY_ID =
@@ -51,5 +56,6 @@ export function createBuiltinGeneratorStrategyRegistry() {
     generatorStrategyBspLab,
     generatorStrategyRoomsMazesLab,
     generatorStrategyRandomWalkLab,
+    generatorStrategyCellularAutomataLab,
   ]);
 }
