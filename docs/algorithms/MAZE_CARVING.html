@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Algorithm Lab — Maze Carving</title>
+<style>
+body{font:16px/1.6 system-ui,sans-serif;max-width:920px;margin:40px auto;padding:0 20px;color:#172033}
+code{background:#f2f4f7;padding:.12em .35em;border-radius:4px}
+pre{background:#f2f4f7;padding:14px;overflow:auto}
+h1,h2{line-height:1.25}
+</style>
+</head>
+<body>
+<h1>Algorithm Lab — Maze Carving</h1>
+<p><strong>Status:</strong> DAI-100 implementation candidate.</p>
+<p>Strategy ID: <code>algorithm-lab.maze-carving</code></p>
+
+<h2>Architecture</h2>
+<pre>Exact compact lattice from Room count
+→ all cardinal candidate walls
+→ Seeded randomized Kruskal
+→ perfect-maze spanning tree
+→ optional restored walls as loops
+→ validated DungeonSpec</pre>
+
+<h2>Algorithm</h2>
+<ol>
+<li>Build exactly N active cells on a compact integer lattice.</li>
+<li>Enumerate every cardinal adjacency as a candidate wall.</li>
+<li>Shuffle walls deterministically from the Seed.</li>
+<li>Remove a wall when it joins two disjoint components.</li>
+<li>Stop after N−1 carved walls.</li>
+<li>Find the tree diameter and map its endpoints to first/last Room IDs.</li>
+<li>Use remaining walls as deterministic route-choice loop candidates.</li>
+</ol>
+
+<h2>Why this is distinct</h2>
+<p>Rooms + Mazes randomizes the connected footprint before carving. Maze Carving keeps the footprint fixed for a given Room count and randomizes only wall-removal order. That makes topology variation directly attributable to the carving algorithm.</p>
+
+<h2>Inputs</h2>
+<ul>
+<li><code>seed</code></li>
+<li><code>roomCount</code> 3–64</li>
+<li><code>extraConnectionRatio</code> 0–1</li>
+<li><code>roomSizeMin</code> / <code>roomSizeMax</code></li>
+<li><code>cellSpacing</code></li>
+</ul>
+
+<h2>Invariants</h2>
+<ul>
+<li>exactly N Rooms;</li>
+<li>exactly N−1 perfect-maze tree edges;</li>
+<li>connected graph;</li>
+<li>no self/duplicate edges;</li>
+<li>all Product Corridors are cardinal lattice edges;</li>
+<li>Seed-deterministic carving;</li>
+<li>plain JSON-compatible Core output.</li>
+</ul>
+
+<h2>Product adapter</h2>
+<p>The accepted Generator V1 path supplies DesignIntent-derived content semantics. Maze Carving replaces only spatial Rooms/Corridors. Tree edges become <code>backbone</code>; restored wall edges become <code>alternate</code>.</p>
+
+<h2>Acceptance commands</h2>
+<ul>
+<li><code>npm run test:generator-maze-carving</code></li>
+<li><code>npm run validate:dai-100-maze-carving-matrix</code></li>
+<li><code>npm run smoke:dai-100-maze-carving</code></li>
+<li><code>npm run validate:dai-100-maze-carving</code></li>
+</ul>
+
+<p>Version 2 remains the Recommended/default generator.</p>
+</body>
+</html>
