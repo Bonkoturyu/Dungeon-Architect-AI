@@ -102,8 +102,16 @@ function buildSerpentineCells(roomCount, seed) {
   for (let z = 0; z < height; z += 1) {
     const remaining = roomCount - raw.length;
     const rowCount = Math.min(width, remaining);
-    const xs = Array.from({ length: rowCount }, (_, x) => x);
-    if (z % 2 === 1) xs.reverse();
+    const xs =
+      z % 2 === 0
+        ? Array.from(
+            { length: rowCount },
+            (_, x) => x,
+          )
+        : Array.from(
+            { length: rowCount },
+            (_, offset) => width - 1 - offset,
+          );
     for (const x of xs) raw.push({ x, z });
   }
 
