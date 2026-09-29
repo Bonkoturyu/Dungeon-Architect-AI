@@ -833,7 +833,7 @@ In addition to accepted **Delaunay + MST + Loops** and **BSP**, implement all re
 
 1. Rooms + Mazes — **accepted**;
 2. Random Walk — **accepted**;
-3. Cellular Automata — **implementation candidate present; owner-local acceptance pending**;
+3. Cellular Automata — **accepted**;
 4. Maze Carving;
 5. Gameplay Graph / Grammar;
 6. Wave Function Collapse (WFC).
@@ -1014,7 +1014,30 @@ Integrated gate:
 
 `npm run validate:dai-100-cellular-automata`
 
-Cellular Automata is **pending owner-local acceptance**.
+Owner-local acceptance passed on 2026-09-29 JST at `a48ab425d8d9786e9ccc83f87c148d2db84e1a96`.
+
+The 9-step `npm run validate:dai-100-cellular-automata` gate passed end-to-end:
+
+- reusable Cellular Automata Core tests: 10/10 PASS;
+- Generator / Cellular Automata adapter suite: 49/49 PASS;
+- 150-case renderer routeability matrix: 150/150 PASS;
+- routing mode: **strict 150/150**;
+- unique spatial layouts: 30;
+- total extra edges: 249;
+- deterministic connectivity-repair carves exercised by the matrix: 285;
+- total smoothed-open cells: 2,510;
+- matrix duration: 3,964 ms;
+- production hosting build: PASS;
+- Owner UI regression smoke: PASS;
+- seven-strategy Product selector smoke: PASS;
+- 3-Floor Test + Mystery browser smoke: PASS;
+- syntax validation: 241 files PASS;
+- git diff / whitespace check: PASS;
+- final result: `passed: true`, `falseChecks: []`.
+
+The Product browser smoke verified unique Floor IDs/Seeds/layouts, Start eligibility on every Floor, preserved Cellular Automata provenance through Test and Mystery return, and zero browser/page/request/HTTP errors.
+
+Cellular Automata is therefore **accepted**.
 
 Each strategy should follow the already accepted loose-coupled architecture:
 
