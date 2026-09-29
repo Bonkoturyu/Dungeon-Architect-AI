@@ -834,7 +834,7 @@ In addition to accepted **Delaunay + MST + Loops** and **BSP**, implement all re
 1. Rooms + Mazes — **accepted**;
 2. Random Walk — **accepted**;
 3. Cellular Automata — **accepted**;
-4. Maze Carving;
+4. Maze Carving — **implementation candidate present; owner-local acceptance pending**;
 5. Gameplay Graph / Grammar;
 6. Wave Function Collapse (WFC).
 
@@ -1038,6 +1038,53 @@ The 9-step `npm run validate:dai-100-cellular-automata` gate passed end-to-end:
 The Product browser smoke verified unique Floor IDs/Seeds/layouts, Start eligibility on every Floor, preserved Cellular Automata provenance through Test and Mystery return, and zero browser/page/request/HTTP errors.
 
 Cellular Automata is therefore **accepted**.
+
+
+#### Maze Carving candidate
+
+The fourth remaining strategy is now implemented under:
+
+- reusable Core: `packages/generator-algorithms/maze-carving/`;
+- Product Adapter: `packages/generator/src/strategies/maze-carving-lab.js`;
+- Strategy ID: `algorithm-lab.maze-carving`;
+- paired docs: `docs/algorithms/MAZE_CARVING.md` + `MAZE_CARVING.html`.
+
+Algorithm shape:
+
+- derive a compact exact-N integer lattice from requested Room count;
+- keep this footprint independent of Seed so topology variation can be isolated;
+- enumerate every cardinal adjacency as a candidate wall;
+- Seed-shuffle the walls;
+- carve a perfect maze with randomized Kruskal / disjoint-set union;
+- stop after exactly `N - 1` walls are removed;
+- map carved-tree diameter endpoints to first/last Room IDs for baseline Start/Goal distance;
+- use walls not consumed by the perfect maze as loop candidates;
+- DesignIntent `routeChoice` selects a deterministic restored-wall subset;
+- carved tree edges map to `backbone`, restored walls to `alternate`;
+- every Corridor receives exact cardinal endpoint-side hints.
+
+This differs from Rooms + Mazes because Rooms + Mazes randomizes the connected cell footprint before DFS carving, while Maze Carving fixes the compact footprint and uses the Seed only for wall-removal order/topology.
+
+The Core remains plain JSON-compatible and has no DOM / Three.js / Editor / Play / network dependency.
+
+Product registration is present, while **Version 2 remains Recommended/default**.
+
+Acceptance coverage:
+
+- reusable Core unit suite;
+- Generator Adapter regressions;
+- 150-case Seed × RoomCount × routeChoice renderer matrix;
+- production build;
+- Owner UI regression;
+- expanded eight-strategy selector smoke;
+- 3-Floor Test + Mystery visible-Chrome smoke;
+- syntax + git diff checks.
+
+Integrated gate:
+
+`npm run validate:dai-100-maze-carving`
+
+Maze Carving is **pending owner-local acceptance**.
 
 Each strategy should follow the already accepted loose-coupled architecture:
 
