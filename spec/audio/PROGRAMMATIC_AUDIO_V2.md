@@ -201,4 +201,3 @@ The gate covers:
 9. git diff/whitespace check.
 
 Automated acceptance remains separate from the required owner listening review.
-
