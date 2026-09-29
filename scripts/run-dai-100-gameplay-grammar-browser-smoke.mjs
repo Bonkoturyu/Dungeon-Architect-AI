@@ -342,7 +342,7 @@ try {
       selectorBeforeGenerate.value ===
         GENERATOR_STRATEGY_GAMEPLAY_GRAMMAR_LAB_ID &&
       selectorBeforeGenerate.text.includes(
-        'Gameplay Grammar',
+        'Gameplay Graph / Grammar',
       ) &&
       selectorBeforeGenerate.family ===
         'algorithm-lab',
