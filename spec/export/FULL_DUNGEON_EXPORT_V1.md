@@ -52,3 +52,18 @@ If the authored floors and export ID are unchanged, serialized output is stable.
 - archival/reproduction of an authored generated dungeon.
 
 For engine-agnostic room-pattern reuse, prefer `DungeonLayoutExchange v1`.
+
+
+## Import / round-trip
+
+Dungeon Architect AI can import Full JSON through the same `DungeonRunSpec v1` and `DungeonSpec v1` validators used by runtime code.
+
+The importer preserves complete Floor Dungeon data, then runs renderer-routeability preflight before replacing Editor state.
+
+For valid files produced by this exporter:
+
+`Full export → import → Full export`
+
+is byte-stable when the same run export ID is used.
+
+See `JSON_IMPORT_V1.md`.
