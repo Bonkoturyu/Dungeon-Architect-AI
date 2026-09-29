@@ -414,6 +414,7 @@ export function generateMazeCarvingCore({
     diagnostics: {
       roomCount,
       candidateWallCount: candidateWalls.length,
+      treeEdgeCount: remapped.treeEdges.length,
       carvedWallCount: remapped.treeEdges.length,
       remainingWallCount: candidateWalls.length - remapped.treeEdges.length,
       treeDiameterLength: remapped.treeDiameterLength,
