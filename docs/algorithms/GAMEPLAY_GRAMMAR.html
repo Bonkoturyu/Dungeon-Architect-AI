@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Algorithm Lab — Gameplay Graph / Grammar</title>
+<style>
+body{font:16px/1.6 system-ui,sans-serif;max-width:920px;margin:40px auto;padding:0 20px;color:#172033}
+code{background:#f2f4f7;padding:.12em .35em;border-radius:4px}
+pre{background:#f2f4f7;padding:14px;overflow:auto}
+h1,h2{line-height:1.25}
+</style>
+</head>
+<body>
+<h1>Algorithm Lab — Gameplay Graph / Grammar</h1>
+<p><strong>Status:</strong> DAI-100 implementation candidate.</p>
+<p>Strategy ID: <code>algorithm-lab.gameplay-grammar</code></p>
+
+<h2>Architecture</h2>
+<pre>DesignIntent-derived semantic weights
+→ MISSION grammar
+→ critical spine
+→ semantic Room roles
+→ dead-end / bypass productions
+→ cardinal embedding
+→ semantic Entity placement
+→ validated DungeonSpec</pre>
+
+<h2>Semantic roles</h2>
+<ul>
+<li>start / goal</li>
+<li>challenge</li>
+<li>hazard</li>
+<li>reward</li>
+<li>recovery</li>
+<li>traversal</li>
+<li>climax</li>
+</ul>
+
+<h2>Grammar productions</h2>
+<ul>
+<li><code>MISSION→SPINE</code></li>
+<li><code>CHOICE→BYPASS(2)</code></li>
+<li><code>CHOICE→DEAD_END(1)</code></li>
+<li><code>CHOICE→DEAD_END(2)</code></li>
+</ul>
+
+<h2>Topology invariant</h2>
+<p>Each two-node bypass rejoins the next spine Room and creates exactly one cycle. Thus <code>cycleRank === bypassBranchCount</code>.</p>
+
+<h2>Product integration</h2>
+<p>The adapter keeps accepted V1 content counts and Entity IDs but remaps Entity room placement to grammar roles. Existing entity-referenced Events therefore remain valid while the dungeon gains semantic progression.</p>
+
+<h2>Acceptance commands</h2>
+<ul>
+<li><code>npm run test:generator-gameplay-grammar</code></li>
+<li><code>npm run validate:dai-100-gameplay-grammar-matrix</code></li>
+<li><code>npm run smoke:dai-100-gameplay-grammar</code></li>
+<li><code>npm run validate:dai-100-gameplay-grammar</code></li>
+</ul>
+
+<p>Version 2 remains the Recommended/default generator.</p>
+</body>
+</html>
