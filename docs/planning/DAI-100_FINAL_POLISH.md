@@ -832,7 +832,7 @@ This JSON Import / round-trip slice is therefore **accepted**.
 In addition to accepted **Delaunay + MST + Loops** and **BSP**, implement all remaining planned Algorithm Lab strategies:
 
 1. Rooms + Mazes — **accepted**;
-2. Random Walk — **implementation candidate present; owner-local acceptance pending**;
+2. Random Walk — **accepted**;
 3. Cellular Automata;
 4. Maze Carving;
 5. Gameplay Graph / Grammar;
@@ -942,7 +942,30 @@ Integrated gate:
 
 `npm run validate:dai-100-random-walk`
 
-Random Walk is **pending owner-local acceptance**.
+Owner-local acceptance passed on 2026-09-29 JST at `f3d58bdf7faeb8445a4ea847d8f9aa4618f9b5cc`.
+
+The 9-step `npm run validate:dai-100-random-walk` gate passed end-to-end:
+
+- reusable Random Walk Core tests: 10/10 PASS;
+- Generator / Random Walk adapter suite: 44/44 PASS;
+- 150-case renderer routeability matrix: 150/150 PASS;
+- routing mode: **strict 150/150**;
+- unique spatial layouts: 30;
+- total extra edges: 66;
+- total revisits: 285;
+- frontier escape count across the acceptance matrix: 0;
+- matrix duration: 2,429 ms;
+- production hosting build: PASS;
+- Owner UI regression smoke: PASS;
+- six-strategy Product selector smoke: PASS;
+- 3-Floor Test + Mystery browser smoke: PASS;
+- syntax validation: 233 files PASS;
+- git diff / whitespace check: PASS;
+- final result: `passed: true`, `falseChecks: []`.
+
+The Product browser smoke verified unique Floor IDs/Seeds/layouts, Start eligibility on every Floor, preserved Random Walk provenance through Test and Mystery return, and zero browser/page/request/HTTP errors.
+
+Random Walk is therefore **accepted**.
 
 Each strategy should follow the already accepted loose-coupled architecture:
 
