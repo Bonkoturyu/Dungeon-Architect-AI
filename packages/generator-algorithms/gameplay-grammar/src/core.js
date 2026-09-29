@@ -21,6 +21,15 @@ function randomInt(prng,min,max){
   return min+Math.floor(prng()*(max-min+1));
 }
 
+function shuffle(values,prng){
+  const copy=values.slice();
+  for(let index=copy.length-1;index>0;index-=1){
+    const other=Math.floor(prng()*(index+1));
+    [copy[index],copy[other]]=[copy[other],copy[index]];
+  }
+  return copy;
+}
+
 function clamp(value,min,max){
   return Math.max(min,Math.min(max,value));
 }
@@ -85,7 +94,7 @@ function buildSpine(spineCount,rolePrng,weights){
       id:'node-'+String(index+1).padStart(3,'0'),
       source:'spine',
       role,
-      cellX:index*2,
+      cellX:index,
       cellZ:0,
       spineIndex:index,
     });
@@ -133,27 +142,35 @@ function buildGrammar({
   const edges=[...spine.edges];
   const derivation=[{rule:'MISSION→SPINE',produced:spineCount}];
 
-  const maxBypass=Math.min(spineCount-1,Math.floor(branchCount/3));
-  const bypassCount=Math.round(routeChoice*maxBypass);
+  const maxBypass=Math.min(spineCount-1,Math.floor(branchCount/2));
+  const bypassTarget=Math.round(routeChoice*maxBypass);
   let remaining=branchCount;
-  const usedSegments=new Set();
   let branchOrdinal=0;
+  const occupied=new Set(
+    spine.nodes.map((node)=>node.cellX+','+node.cellZ),
+  );
 
-  for(let bypass=0;bypass<bypassCount;bypass+=1){
-    const candidateSegments=Array.from({length:spineCount-1},(_,index)=>index)
-      .filter((index)=>!usedSegments.has(index));
-    if(candidateSegments.length===0||remaining<3) break;
-    const segment=candidateSegments[Math.floor(branchPrng()*candidateSegments.length)];
-    usedSegments.add(segment);
-    const lane=(bypass%2===0?1:-1)*(1+Math.floor(bypass/Math.max(1,spineCount-1)));
-    const roles=branchTemplateRoles(3,rolePrng,weights,deceptionWeight);
+  const bypassSlots=shuffle(
+    Array.from({length:spineCount-1},(_,segment)=>
+      [1,-1].map((lane)=>({segment,lane})),
+    ).flat(),
+    branchPrng,
+  );
+  let bypassCount=0;
+
+  for(const slot of bypassSlots){
+    if(bypassCount>=bypassTarget||remaining<2) break;
+    const leftKey=slot.segment+','+slot.lane;
+    const rightKey=(slot.segment+1)+','+slot.lane;
+    if(occupied.has(leftKey)||occupied.has(rightKey)) continue;
+
+    const roles=branchTemplateRoles(2,rolePrng,weights,deceptionWeight);
     const startIndex=nodes.length;
     const cells=[
-      {cellX:segment*2,cellZ:lane},
-      {cellX:segment*2+1,cellZ:lane},
-      {cellX:segment*2+2,cellZ:lane},
+      {cellX:slot.segment,cellZ:slot.lane},
+      {cellX:slot.segment+1,cellZ:slot.lane},
     ];
-    for(let i=0;i<3;i+=1){
+    for(let i=0;i<2;i+=1){
       nodes.push({
         id:'node-'+String(nodes.length+1).padStart(3,'0'),
         source:'bypass',
@@ -161,44 +178,70 @@ function buildGrammar({
         branchOrdinal,
         cellX:cells[i].cellX,
         cellZ:cells[i].cellZ,
-        anchorSpineIndex:segment,
+        anchorSpineIndex:slot.segment,
       });
+      occupied.add(cells[i].cellX+','+cells[i].cellZ);
     }
-    edges.push({a:segment,b:startIndex,kind:'grammar-branch',semantic:'detour-entry'});
+    edges.push({a:slot.segment,b:startIndex,kind:'grammar-branch',semantic:'detour-entry'});
     edges.push({a:startIndex,b:startIndex+1,kind:'grammar-branch',semantic:'detour'});
-    edges.push({a:startIndex+1,b:startIndex+2,kind:'grammar-branch',semantic:'detour'});
-    edges.push({a:startIndex+2,b:segment+1,kind:'grammar-bypass',semantic:'rejoin'});
-    derivation.push({rule:'CHOICE→BYPASS(3)',anchor:segment,produced:3});
+    edges.push({a:startIndex+1,b:slot.segment+1,kind:'grammar-bypass',semantic:'rejoin'});
+    derivation.push({rule:'CHOICE→BYPASS(2)',anchor:slot.segment,produced:2});
+    bypassCount+=1;
     branchOrdinal+=1;
-    remaining-=3;
+    remaining-=2;
   }
 
-  let deadAnchorCursor=1;
+  const deadSlots=shuffle(
+    Array.from({length:spineCount},(_,anchor)=>
+      [1,-1].map((sign)=>({anchor,sign})),
+    ).flat(),
+    branchPrng,
+  );
+  let deadSlotCursor=0;
+  let deadEndBranchCount=0;
+
   while(remaining>0){
     const length=Math.min(2,remaining);
-    const anchor=spineCount<=2?0:1+(deadAnchorCursor%(spineCount-2));
-    const sign=branchOrdinal%2===0?1:-1;
-    const laneBase=sign*(2+Math.floor(branchOrdinal/Math.max(1,spineCount-2))*2);
+    let slot=null;
+
+    while(deadSlotCursor<deadSlots.length){
+      const candidate=deadSlots[deadSlotCursor];
+      deadSlotCursor+=1;
+      const firstKey=candidate.anchor+','+candidate.sign;
+      const secondKey=candidate.anchor+','+(candidate.sign*2);
+      if(occupied.has(firstKey)) continue;
+      if(length===2&&occupied.has(secondKey)) continue;
+      slot=candidate;
+      break;
+    }
+
+    if(!slot){
+      throw new Error('Gameplay Grammar branch slots exhausted');
+    }
+
     const roles=branchTemplateRoles(length,rolePrng,weights,deceptionWeight);
     const startIndex=nodes.length;
     for(let i=0;i<length;i+=1){
+      const cellX=slot.anchor;
+      const cellZ=slot.sign*(i+1);
       nodes.push({
         id:'node-'+String(nodes.length+1).padStart(3,'0'),
         source:'dead-end',
         role:roles[i],
         branchOrdinal,
-        cellX:anchor*2,
-        cellZ:laneBase+sign*i,
-        anchorSpineIndex:anchor,
+        cellX,
+        cellZ,
+        anchorSpineIndex:slot.anchor,
       });
+      occupied.add(cellX+','+cellZ);
     }
-    edges.push({a:anchor,b:startIndex,kind:'grammar-branch',semantic:'detour-entry'});
+    edges.push({a:slot.anchor,b:startIndex,kind:'grammar-branch',semantic:'detour-entry'});
     for(let i=1;i<length;i+=1){
       edges.push({a:startIndex+i-1,b:startIndex+i,kind:'grammar-branch',semantic:'detour'});
     }
-    derivation.push({rule:'CHOICE→DEAD_END('+length+')',anchor,produced:length});
+    derivation.push({rule:'CHOICE→DEAD_END('+length+')',anchor:slot.anchor,produced:length});
     branchOrdinal+=1;
-    deadAnchorCursor+=1;
+    deadEndBranchCount+=1;
     remaining-=length;
   }
 
@@ -208,7 +251,7 @@ function buildGrammar({
       spineCount,
       branchNodeCount:branchCount,
       bypassBranchCount:bypassCount,
-      deadEndBranchCount:branchOrdinal-bypassCount,
+      deadEndBranchCount,
     },
   };
 }
