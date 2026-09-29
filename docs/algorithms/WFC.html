@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Algorithm Lab — Wave Function Collapse (WFC)</title>
+<style>
+body{font:16px/1.6 system-ui,sans-serif;max-width:920px;margin:40px auto;padding:0 20px;color:#172033}
+code{background:#f2f4f7;padding:.12em .35em;border-radius:4px}
+pre{background:#f2f4f7;padding:14px;overflow:auto}
+h1,h2{line-height:1.25}
+</style>
+</head>
+<body>
+<h1>Algorithm Lab — Wave Function Collapse (WFC)</h1>
+<p><strong>Status:</strong> DAI-100 implementation candidate.</p>
+<p>Strategy ID: <code>algorithm-lab.wfc</code></p>
+
+<h2>Architecture</h2>
+<pre>Guaranteed Start→Goal backbone
+→ local N/E/S/W socket domains
+→ minimum-entropy collapse
+→ adjacency propagation
+→ collapsed Room graph
+→ validated DungeonSpec</pre>
+
+<h2>Why hybrid</h2>
+<p>WFC is a local constraint solver. Dungeon Architect AI keeps global connectivity as a hard backbone constraint and lets WFC decide compatible local module openings around that backbone.</p>
+
+<h2>Tile representation</h2>
+<p>Each Room cell collapses to a four-bit North/East/South/West socket mask. Masks correspond to local module classes such as dead ends, straights, turns, T-junctions, and crosses.</p>
+
+<h2>Collapse process</h2>
+<ol>
+<li>Build exact-N serpentine Room cells.</li>
+<li>Mark mandatory backbone sockets.</li>
+<li>Filter each cell domain to legal local masks.</li>
+<li>Propagate socket compatibility.</li>
+<li>Select the unresolved minimum-entropy cell.</li>
+<li>Choose one weighted tile deterministically from the Seed.</li>
+<li>Propagate again.</li>
+<li>Repeat until all cells are collapsed.</li>
+</ol>
+
+<h2>DesignIntent</h2>
+<p><code>routeChoice</code> controls the probability of optional sockets while mandatory backbone sockets remain fixed. Zero produces only the guaranteed backbone; one opens every optional active-cell adjacency.</p>
+
+<h2>Invariants</h2>
+<ul>
+<li>exactly N Rooms;</li>
+<li>exactly N−1 mandatory backbone edges;</li>
+<li>Start→Goal connectivity;</li>
+<li>socket equality on shared boundaries;</li>
+<li>no self/duplicate edges;</li>
+<li>cardinal Product Corridors only;</li>
+<li>deterministic Seed behavior;</li>
+<li>plain JSON-compatible Core output.</li>
+</ul>
+
+<h2>Diagnostics</h2>
+<ul>
+<li>collapse count;</li>
+<li>propagation revisions;</li>
+<li>contradiction count;</li>
+<li>tile histogram;</li>
+<li>entropy trace;</li>
+<li>optional adjacency and cycle metrics.</li>
+</ul>
+
+<h2>Acceptance commands</h2>
+<ul>
+<li><code>npm run test:generator-wfc</code></li>
+<li><code>npm run validate:dai-100-wfc-matrix</code></li>
+<li><code>npm run smoke:dai-100-wfc</code></li>
+<li><code>npm run validate:dai-100-wfc</code></li>
+</ul>
+
+<p>Version 2 remains the Recommended/default generator.</p>
+</body>
+</html>
