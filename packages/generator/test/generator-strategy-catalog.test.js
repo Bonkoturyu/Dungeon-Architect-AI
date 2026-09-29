@@ -15,6 +15,7 @@ import {
   GENERATOR_STRATEGY_ROOMS_MAZES_LAB_ID,
   GENERATOR_STRATEGY_RANDOM_WALK_LAB_ID,
   GENERATOR_STRATEGY_CELLULAR_AUTOMATA_LAB_ID,
+  GENERATOR_STRATEGY_MAZE_CARVING_LAB_ID,
   RECOMMENDED_GENERATOR_STRATEGY_ID,
   createBuiltinGeneratorStrategyRegistry,
 } from '../src/strategy-catalog.js';
@@ -41,6 +42,7 @@ test('built-in strategy catalog exposes versioned strategies plus accepted Algor
       GENERATOR_STRATEGY_ROOMS_MAZES_LAB_ID,
       GENERATOR_STRATEGY_RANDOM_WALK_LAB_ID,
       GENERATOR_STRATEGY_CELLULAR_AUTOMATA_LAB_ID,
+      GENERATOR_STRATEGY_MAZE_CARVING_LAB_ID,
     ],
   );
   assert.equal(
