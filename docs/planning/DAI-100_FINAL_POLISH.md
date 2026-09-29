@@ -833,7 +833,7 @@ In addition to accepted **Delaunay + MST + Loops** and **BSP**, implement all re
 
 1. Rooms + Mazes — **accepted**;
 2. Random Walk — **accepted**;
-3. Cellular Automata;
+3. Cellular Automata — **implementation candidate present; owner-local acceptance pending**;
 4. Maze Carving;
 5. Gameplay Graph / Grammar;
 6. Wave Function Collapse (WFC).
@@ -966,6 +966,55 @@ The 9-step `npm run validate:dai-100-random-walk` gate passed end-to-end:
 The Product browser smoke verified unique Floor IDs/Seeds/layouts, Start eligibility on every Floor, preserved Random Walk provenance through Test and Mystery return, and zero browser/page/request/HTTP errors.
 
 Random Walk is therefore **accepted**.
+
+
+#### Cellular Automata candidate
+
+The third remaining strategy is now implemented under:
+
+- reusable Core: `packages/generator-algorithms/cellular-automata/`;
+- Product Adapter: `packages/generator/src/strategies/cellular-automata-lab.js`;
+- Strategy ID: `algorithm-lab.cellular-automata`;
+- paired docs: `docs/algorithms/CELLULAR_AUTOMATA.md` + `CELLULAR_AUTOMATA.html`.
+
+Algorithm shape:
+
+- seed a bounded coarse-grid cave mask from `initialWallProbability`;
+- run bounded eight-neighbor cellular smoothing;
+- compute cardinally connected open-cell components;
+- keep the largest connected component;
+- if capacity is insufficient, deterministically carve adjacent wall cells rather than relying on regenerate-until-lucky behavior;
+- choose exactly the requested Room count through seeded connected frontier growth;
+- keep first-selection parent edges as an `N - 1` guaranteed spanning tree;
+- map tree-diameter endpoints to first/last Room IDs for baseline Start/Goal distance;
+- convert selected cells into non-overlapping Rooms;
+- collect unused cardinal selected-cell adjacencies as loop candidates;
+- DesignIntent `routeChoice` selects a deterministic loop subset;
+- tree edges map to `backbone`, loops to `alternate`;
+- every Corridor receives exact cardinal endpoint-side hints.
+
+This differs from Random Walk because CA generates and smooths a full occupancy field first, then extracts/repairs a connected region before building the Room graph.
+
+The Core remains plain JSON-compatible and has no DOM / Three.js / Editor / Play / network dependency.
+
+Product registration is present, while **Version 2 remains Recommended/default**.
+
+Acceptance coverage:
+
+- reusable Core unit suite;
+- Generator Adapter regressions;
+- 150-case Seed × RoomCount × routeChoice renderer matrix;
+- production build;
+- Owner UI regression;
+- expanded seven-strategy selector smoke;
+- 3-Floor Test + Mystery visible-Chrome smoke;
+- syntax + git diff checks.
+
+Integrated gate:
+
+`npm run validate:dai-100-cellular-automata`
+
+Cellular Automata is **pending owner-local acceptance**.
 
 Each strategy should follow the already accepted loose-coupled architecture:
 
