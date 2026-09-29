@@ -12,6 +12,7 @@ import {
   GENERATOR_STRATEGY_RANDOM_WALK_LAB_ID,
   GENERATOR_STRATEGY_CELLULAR_AUTOMATA_LAB_ID,
   GENERATOR_STRATEGY_MAZE_CARVING_LAB_ID,
+  GENERATOR_STRATEGY_GAMEPLAY_GRAMMAR_LAB_ID,
 } from '../packages/generator/src/strategy-catalog.js';
 
 const chromePath =
@@ -288,6 +289,20 @@ try {
     () => window.__DAI_EDITOR_SLICE__.getState(),
   );
 
+  const selectedGameplayGrammar = await page.evaluate(
+    (id) => window.__DAI_EDITOR_SLICE__.setGeneratorStrategy(id),
+    GENERATOR_STRATEGY_GAMEPLAY_GRAMMAR_LAB_ID,
+  );
+  if (!selectedGameplayGrammar) {
+    throw new Error('Could not select Algorithm Lab Gameplay Graph / Grammar.');
+  }
+  await page.evaluate(
+    () => window.__DAI_EDITOR_SLICE__.generateDungeonFromPrompt(),
+  );
+  const gameplayGrammar = await page.evaluate(
+    () => window.__DAI_EDITOR_SLICE__.getState(),
+  );
+
   await page.screenshot({
     path: path.join(outputDir, 'generator-strategy-selector.png'),
     fullPage: true,
@@ -301,6 +316,7 @@ try {
   const randomWalkLayout = layoutSignature(randomWalk);
   const cellularAutomataLayout = layoutSignature(cellularAutomata);
   const mazeCarvingLayout = layoutSignature(mazeCarving);
+  const gameplayGrammarLayout = layoutSignature(gameplayGrammar);
 
   const checks = {
     strategySelectorVisible: initial.selectorVisible === true,
@@ -328,6 +344,9 @@ try {
       ) &&
       initial.strategies.some(
         (entry) => entry.id === GENERATOR_STRATEGY_MAZE_CARVING_LAB_ID,
+      ) &&
+      initial.strategies.some(
+        (entry) => entry.id === GENERATOR_STRATEGY_GAMEPLAY_GRAMMAR_LAB_ID,
       ),
     selectorListsAllAcceptedStrategies:
       initial.optionValues.includes(GENERATOR_STRATEGY_V1_CLASSIC_ID) &&
@@ -337,7 +356,8 @@ try {
       initial.optionValues.includes(GENERATOR_STRATEGY_ROOMS_MAZES_LAB_ID) &&
       initial.optionValues.includes(GENERATOR_STRATEGY_RANDOM_WALK_LAB_ID) &&
       initial.optionValues.includes(GENERATOR_STRATEGY_CELLULAR_AUTOMATA_LAB_ID) &&
-      initial.optionValues.includes(GENERATOR_STRATEGY_MAZE_CARVING_LAB_ID),
+      initial.optionValues.includes(GENERATOR_STRATEGY_MAZE_CARVING_LAB_ID) &&
+      initial.optionValues.includes(GENERATOR_STRATEGY_GAMEPLAY_GRAMMAR_LAB_ID),
     recommendedSelectedByDefault:
       initial.selectedValue === GENERATOR_STRATEGY_V2_RECOMMENDED_ID &&
       initial.state.generatorStrategyId ===
@@ -380,6 +400,11 @@ try {
       mazeCarving.lastGeneration?.generatorStrategyId ===
         GENERATOR_STRATEGY_MAZE_CARVING_LAB_ID &&
       mazeCarving.lastGeneration?.algorithmVersion === '1',
+    gameplayGrammarSelectionUsesAlgorithmLabStrategy:
+      gameplayGrammar.lastGeneration?.generatorVersion === null &&
+      gameplayGrammar.lastGeneration?.generatorStrategyId ===
+        GENERATOR_STRATEGY_GAMEPLAY_GRAMMAR_LAB_ID &&
+      gameplayGrammar.lastGeneration?.algorithmVersion === '1',
     samePromptKeepsSameSeedAcrossStrategies:
       classic.lastGeneration?.seed === recommended.lastGeneration?.seed &&
       recommended.lastGeneration?.seed === delaunay.lastGeneration?.seed &&
@@ -387,7 +412,8 @@ try {
       bsp.lastGeneration?.seed === roomsMazes.lastGeneration?.seed &&
       roomsMazes.lastGeneration?.seed === randomWalk.lastGeneration?.seed &&
       randomWalk.lastGeneration?.seed === cellularAutomata.lastGeneration?.seed &&
-      cellularAutomata.lastGeneration?.seed === mazeCarving.lastGeneration?.seed,
+      cellularAutomata.lastGeneration?.seed === mazeCarving.lastGeneration?.seed &&
+      mazeCarving.lastGeneration?.seed === gameplayGrammar.lastGeneration?.seed,
     strategyLayoutsAreDistinct:
       new Set([
         classicLayout,
@@ -398,7 +424,8 @@ try {
         randomWalkLayout,
         cellularAutomataLayout,
         mazeCarvingLayout,
-      ]).size === 8,
+        gameplayGrammarLayout,
+      ]).size === 9,
     allOutputsRemainStartEligible:
       classic.startAllowed === true &&
       recommended.startAllowed === true &&
@@ -407,9 +434,10 @@ try {
       roomsMazes.startAllowed === true &&
       randomWalk.startAllowed === true &&
       cellularAutomata.startAllowed === true &&
-      mazeCarving.startAllowed === true,
-    designIntentRequestedEightTimes:
-      designIntentRequests.length === 8 &&
+      mazeCarving.startAllowed === true &&
+      gameplayGrammar.startAllowed === true,
+    designIntentRequestedNineTimes:
+      designIntentRequests.length === 9 &&
       designIntentRequests.every((entry) => entry.promptMatches),
     browserErrorsAbsent:
       consoleErrors.length === 0 &&
@@ -527,6 +555,18 @@ try {
       roomCount: mazeCarving.rooms.length,
       corridorCount: mazeCarving.corridors.length,
       layoutSignature: mazeCarvingLayout,
+    },
+    gameplayGrammar: {
+      generatorVersion:
+        gameplayGrammar.lastGeneration?.generatorVersion ?? null,
+      generatorStrategyId:
+        gameplayGrammar.lastGeneration?.generatorStrategyId ?? null,
+      algorithmVersion:
+        gameplayGrammar.lastGeneration?.algorithmVersion ?? null,
+      seed: gameplayGrammar.lastGeneration?.seed ?? null,
+      roomCount: gameplayGrammar.rooms.length,
+      corridorCount: gameplayGrammar.corridors.length,
+      layoutSignature: gameplayGrammarLayout,
     },
     consoleErrors,
     pageErrors,
