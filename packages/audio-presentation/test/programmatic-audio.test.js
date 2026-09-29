@@ -121,7 +121,13 @@ test("audio presentation stays inert until unlock then starts desired BGM", asyn
   const audio = createProgrammaticAudio({ AudioContextCtor: FakeAudioContext });
 
   audio.setMode("play");
-  assert.deepEqual(audio.getState(), {
+  const beforeUnlock = audio.getState();
+  const {
+    reactiveBgmMultiplier,
+    reactiveSeMultiplier,
+    ...stableBeforeUnlock
+  } = beforeUnlock;
+  assert.deepEqual(stableBeforeUnlock, {
     version: "2.0",
     provenance: "project-authored-programmatic-web-audio",
     available: true,
@@ -140,8 +146,6 @@ test("audio presentation stays inert until unlock then starts desired BGM", asyn
     reactiveEnemyCount: 0,
     reactiveArmedTrapCount: 0,
     reactiveHpRatio: 1,
-    reactiveBgmMultiplier: 0.8848,
-    reactiveSeMultiplier: 0.9616,
     reactiveRampSeconds: 0.28,
     crossfadeSeconds: 0.45,
     motifScheduledSeconds: 0,
@@ -149,6 +153,8 @@ test("audio presentation stays inert until unlock then starts desired BGM", asyn
     cueHistory: [],
     modeHistory: ["edit", "play"],
   });
+  assert.ok(Math.abs(reactiveBgmMultiplier - 0.8848) < 1e-12);
+  assert.ok(Math.abs(reactiveSeMultiplier - 0.9616) < 1e-12);
 
   assert.equal(await audio.unlock(), true);
   const state = audio.getState();
