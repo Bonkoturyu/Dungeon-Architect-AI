@@ -78,3 +78,10 @@ DungeonSpec
 `random-walk/` contains the reusable seeded Random Walk Core used by `algorithm-lab.random-walk`.
 
 The Core discovers coarse-grid cells through a seeded cardinal walker, keeps first-discovery edges as a guaranteed spanning tree, and restores a bounded subset of unused local adjacencies as loops. It has no DungeonSpec, DOM, Three.js, Editor, Play, or network dependency.
+
+
+## Cellular Automata
+
+`cellular-automata/` contains the reusable seeded cave-mask Core used by `algorithm-lab.cellular-automata`.
+
+It randomizes and smooths an interior occupancy grid, keeps the largest cardinal component, deterministically repairs connected capacity when required, selects a connected Room subset, and adds bounded local loops. It has no DungeonSpec, DOM, Three.js, Editor, Play, or network dependency.
