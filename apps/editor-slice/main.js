@@ -428,7 +428,134 @@ function applyImportedDungeonJson(input, { filename = null } = {}) {
       provenance: imported.provenance ?? null,
       errors: [{
         code: 'IMPORT_RENDER_ROUTE_INVALID',
-        path: '
+        path: '$',
+        message: 'Imported dungeon cannot be routed by the renderer.',
+      }],
+    };
+    setGenerationStatus(
+      t('import.failed', { code: 'IMPORT_RENDER_ROUTE_INVALID' }),
+    );
+    showViewportNotice(
+      t('import.failed', { code: 'IMPORT_RENDER_ROUTE_INVALID' }),
+      { timeoutMs: 5200 },
+    );
+    return failed;
+  }
+
+  setAuthoringFloors(imported.dungeons, 0);
+  mode = 'edit';
+  playSession = null;
+  playSource = null;
+  dungeonRunSession = null;
+  lastDungeonRunResult = null;
+  lastPlayResult = null;
+  mysteryGeneration = null;
+  playActionClock = 0;
+  selectedRoomId = null;
+  selectedEntityId = null;
+  selectedCorridorId = null;
+  pathCheckResult = null;
+  lastNaturalEditCommand = null;
+  corridorDraft = null;
+  roomDrag = null;
+  authoringPreviewConcealed = false;
+  lastDesignIntent = null;
+
+  const provenance = imported.provenance ?? null;
+  lastGeneration = provenance
+    ? {
+        generatorStrategyId: provenance.generatorStrategyId ?? null,
+        generatorVersion: provenance.generatorVersion ?? null,
+        algorithmVersion: provenance.algorithmVersion ?? null,
+        selectedProvider: 'import',
+        floorCount: imported.dungeons.length,
+        importedFormat: imported.format,
+      }
+    : {
+        generatorStrategyId: null,
+        generatorVersion: null,
+        algorithmVersion: null,
+        selectedProvider: 'import',
+        floorCount: imported.dungeons.length,
+        importedFormat: imported.format,
+      };
+
+  if (floorCountInput) {
+    floorCountInput.value = String(imported.dungeons.length);
+  }
+  if (resultStatus) {
+    resultStatus.textContent = '';
+    resultStatus.hidden = true;
+    resultStatus.classList.remove('is-result-reveal');
+  }
+  if (resultMetrics) {
+    resultMetrics.replaceChildren();
+    resultMetrics.hidden = true;
+    resultMetrics.classList.remove('is-result-reveal');
+  }
+
+  setWorkflowTab('edit');
+  setInspectorTab('rooms');
+  renderPathStatus();
+  renderActiveSpec();
+  triggerViewportTransition('generation');
+  setGenerationStatus(
+    t('import.loaded', {
+      format: imported.format === 'layout' ? 'Layout' : 'Full',
+      count: imported.dungeons.length,
+      name: filename ?? 'JSON',
+    }),
+  );
+
+  return {
+    ok: true,
+    format: imported.format,
+    floorCount: imported.dungeons.length,
+    filename,
+    errors: [],
+  };
+}
+
+async function importJsonFile(file) {
+  if (!file) {
+    return {
+      ok: false,
+      format: null,
+      errors: [{ code: 'IMPORT_FILE_REQUIRED' }],
+    };
+  }
+
+  if (file.size > 2 * 1024 * 1024) {
+    const result = {
+      ok: false,
+      format: null,
+      errors: [{ code: 'IMPORT_FILE_TOO_LARGE' }],
+    };
+    setGenerationStatus(
+      t('import.failed', { code: 'IMPORT_FILE_TOO_LARGE' }),
+    );
+    return result;
+  }
+
+  let text;
+  try {
+    text = await file.text();
+  } catch {
+    const result = {
+      ok: false,
+      format: null,
+      errors: [{ code: 'IMPORT_FILE_READ_FAILED' }],
+    };
+    setGenerationStatus(
+      t('import.failed', { code: 'IMPORT_FILE_READ_FAILED' }),
+    );
+    return result;
+  }
+
+  return applyImportedDungeonJson(text, { filename: file.name });
+}
+
+function requestedFloorCount() {
   const parsed = Number.parseInt(floorCountInput?.value ?? '1', 10);
   if (!Number.isInteger(parsed)) return 1;
   return Math.max(1, Math.min(10, parsed));
