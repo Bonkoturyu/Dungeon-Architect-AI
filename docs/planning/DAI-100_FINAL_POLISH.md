@@ -835,7 +835,7 @@ In addition to accepted **Delaunay + MST + Loops** and **BSP**, implement all re
 2. Random Walk — **accepted**;
 3. Cellular Automata — **accepted**;
 4. Maze Carving — **accepted**;
-5. Gameplay Graph / Grammar;
+5. Gameplay Graph / Grammar — **implementation candidate present; owner-local acceptance pending**;
 6. Wave Function Collapse (WFC).
 
 #### Rooms + Mazes candidate
@@ -1108,6 +1108,61 @@ The 9-step `npm run validate:dai-100-maze-carving` gate passed end-to-end:
 The Product browser smoke verified unique Floor IDs/Seeds/layouts, Start eligibility on every Floor, preserved Maze Carving provenance through Test and Mystery return, and zero browser/page/request/HTTP errors.
 
 Maze Carving is therefore **accepted**.
+
+
+#### Gameplay Graph / Grammar candidate
+
+The fifth remaining strategy is implemented under:
+
+- reusable Core: `packages/generator-algorithms/gameplay-grammar/`;
+- Product Adapter: `packages/generator/src/strategies/gameplay-grammar-lab.js`;
+- Strategy ID: `algorithm-lab.gameplay-grammar`;
+- paired docs: `docs/algorithms/GAMEPLAY_GRAMMAR.md` + `GAMEPLAY_GRAMMAR.html`.
+
+Algorithm shape:
+
+- generate a semantic critical spine from Start to Goal;
+- use DesignIntent-derived semantic weights for `challenge`, `hazard`, `reward`, `recovery`, and `traversal`;
+- reserve a `climax` role before Goal;
+- expand deterministic grammar productions into bypass and dead-end branches;
+- use `routeChoice` to control rejoining bypass generation;
+- use `exploration` to control branch-node budget;
+- use `deception` to bias branch templates such as reward → hazard;
+- embed all grammar nodes on cardinal logical cells;
+- remap V1 baseline Enemy / Treasure / Trap / Recovery entities onto semantic Room roles while preserving exact counts, IDs, and Event references;
+- map bypass rejoin edges to `alternate` and other grammar edges to `backbone`;
+- emit exact cardinal endpoint-side hints for every Corridor.
+
+This strategy is semantics-first rather than geometry-first:
+
+```text
+DesignIntent
+→ Gameplay Grammar
+→ semantic gameplay graph
+→ cardinal Room embedding
+→ DungeonSpec
+```
+
+The reusable Core remains plain-data / JSON-compatible and has no DOM / Three.js / Editor / Play / network dependency.
+
+Product registration is already present and the shared Generator selector smoke has been expanded to nine strategies. **Version 2 remains Recommended/default**.
+
+Acceptance coverage:
+
+- reusable Gameplay Grammar Core tests;
+- Generator Adapter regressions;
+- renderer routeability matrix;
+- production build;
+- Owner UI regression;
+- nine-strategy selector smoke;
+- 3-Floor Test + Mystery visible-Chrome smoke;
+- syntax + git diff checks.
+
+Integrated gate:
+
+`npm run validate:dai-100-gameplay-grammar`
+
+Gameplay Graph / Grammar is **pending owner-local acceptance**.
 
 Each strategy should follow the already accepted loose-coupled architecture:
 
