@@ -1316,6 +1316,8 @@ function updateUi() {
   const exportBlocked = !editing || authoringBusy || !runValidation.ok;
   if (exportLayoutJsonButton) exportLayoutJsonButton.disabled = exportBlocked;
   if (exportFullJsonButton) exportFullJsonButton.disabled = exportBlocked;
+  if (importJsonButton) importJsonButton.disabled = !editing || authoringBusy;
+  if (importJsonInput) importJsonInput.disabled = !editing || authoringBusy;
   generateDungeonButton.disabled = !editing || authoringBusy || !generationPrompt.value.trim();
   naturalEditInput.disabled = !editing || authoringBusy;
   applyNaturalEditButton.disabled = !editing || authoringBusy || !naturalEditInput.value.trim();
