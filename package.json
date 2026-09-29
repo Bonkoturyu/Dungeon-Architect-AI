@@ -50,7 +50,7 @@
     "validate:hosting": "npm run build:hosting && npm run smoke:hosting",
     "validate:legal-registers": "node scripts/run-dai-073-legal-audit.mjs",
     "validate:syntax": "node scripts/run-syntax-check.mjs",
-    "test": "npm run test:core && npm run test:generator-strategy-core && npm run test:generator-delaunay-mst && npm run test:generator-bsp && npm run test:generator && npm run test:intent && npm run test:cloud-intent && npm run test:editor && npm run test:play && npm run test:run && npm run test:export-core && npm run test:simulation && npm run test:onboarding && npm run test:hosting && npm run test:benchmark-fixture && npm run test:renderer-three && npm run test:audio",
+    "test": "npm run test:core && npm run test:generator-strategy-core && npm run test:generator-delaunay-mst && npm run test:generator-bsp && npm run test:generator-rooms-mazes && npm run test:generator && npm run test:intent && npm run test:cloud-intent && npm run test:editor && npm run test:play && npm run test:run && npm run test:export-core && npm run test:simulation && npm run test:onboarding && npm run test:hosting && npm run test:benchmark-fixture && npm run test:renderer-three && npm run test:audio",
     "validate:secret-privacy": "node scripts/run-dai-074-secret-privacy-audit.mjs",
     "smoke:mobile-scope": "node scripts/run-dai-075-mobile-scope-smoke.mjs",
     "validate:public-docs": "node scripts/run-dai-080-public-docs-audit.mjs",
@@ -109,7 +109,11 @@
     "smoke:dai-100-reactive-audio": "node scripts/run-dai-100-reactive-audio-smoke.mjs",
     "validate:dai-100-reactive-audio": "node scripts/run-dai-100-reactive-audio-validation.mjs",
     "smoke:dai-100-json-import": "node scripts/run-dai-100-json-import-smoke.mjs",
-    "validate:dai-100-json-import": "node scripts/run-dai-100-json-import-validation.mjs"
+    "validate:dai-100-json-import": "node scripts/run-dai-100-json-import-validation.mjs",
+    "test:generator-rooms-mazes": "node --test packages/generator-algorithms/rooms-mazes/test/*.test.js",
+    "validate:dai-100-rooms-mazes-matrix": "node scripts/run-dai-100-rooms-mazes-matrix.mjs",
+    "smoke:dai-100-rooms-mazes": "node scripts/run-dai-100-rooms-mazes-browser-smoke.mjs",
+    "validate:dai-100-rooms-mazes": "node scripts/run-dai-100-rooms-mazes-validation.mjs"
   },
   "devDependencies": {
     "@babylonjs/core": "9.18.0",
