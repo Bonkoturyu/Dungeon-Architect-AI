@@ -153,3 +153,23 @@ It is independent from:
 - Algorithm Version.
 
 A future coordinate/elevation/module representation requires a new exchange schema version rather than silently changing v1 semantics.
+
+
+## Import / round-trip
+
+Dungeon Architect AI can import this exact v1 contract back into the existing Editor.
+
+Because this format intentionally omits Dungeon Architect AI-specific content, import reconstructs:
+
+- Room geometry;
+- Corridor topology;
+- Start role;
+- Goal role.
+
+Enemy / Treasure / Trap / Recovery / Event content is not reconstructed.
+
+The importer performs strict v1 field validation, authoritative DungeonSpec validation after reconstruction, and renderer-routeability preflight before replacing Editor state.
+
+For files produced by this exporter, Layout export → import → Layout export is deterministic and byte-stable when the same export ID and source provenance are reused.
+
+See `JSON_IMPORT_V1.md`.
