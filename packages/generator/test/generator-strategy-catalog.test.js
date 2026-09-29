@@ -12,6 +12,7 @@ import {
   GENERATOR_STRATEGY_V2_RECOMMENDED_ID,
   GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID,
   GENERATOR_STRATEGY_BSP_LAB_ID,
+  GENERATOR_STRATEGY_ROOMS_MAZES_LAB_ID,
   RECOMMENDED_GENERATOR_STRATEGY_ID,
   createBuiltinGeneratorStrategyRegistry,
 } from '../src/strategy-catalog.js';
@@ -35,6 +36,7 @@ test('built-in strategy catalog exposes versioned strategies plus accepted Algor
       GENERATOR_STRATEGY_V2_RECOMMENDED_ID,
       GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID,
       GENERATOR_STRATEGY_BSP_LAB_ID,
+      GENERATOR_STRATEGY_ROOMS_MAZES_LAB_ID,
     ],
   );
   assert.equal(
