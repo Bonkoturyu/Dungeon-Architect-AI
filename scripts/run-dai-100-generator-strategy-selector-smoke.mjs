@@ -13,6 +13,7 @@ import {
   GENERATOR_STRATEGY_CELLULAR_AUTOMATA_LAB_ID,
   GENERATOR_STRATEGY_MAZE_CARVING_LAB_ID,
   GENERATOR_STRATEGY_GAMEPLAY_GRAMMAR_LAB_ID,
+  GENERATOR_STRATEGY_WFC_LAB_ID,
 } from '../packages/generator/src/strategy-catalog.js';
 
 const chromePath =
@@ -303,6 +304,20 @@ try {
     () => window.__DAI_EDITOR_SLICE__.getState(),
   );
 
+  const selectedWfc = await page.evaluate(
+    (id) => window.__DAI_EDITOR_SLICE__.setGeneratorStrategy(id),
+    GENERATOR_STRATEGY_WFC_LAB_ID,
+  );
+  if (!selectedWfc) {
+    throw new Error('Could not select Algorithm Lab WFC.');
+  }
+  await page.evaluate(
+    () => window.__DAI_EDITOR_SLICE__.generateDungeonFromPrompt(),
+  );
+  const wfc = await page.evaluate(
+    () => window.__DAI_EDITOR_SLICE__.getState(),
+  );
+
   await page.screenshot({
     path: path.join(outputDir, 'generator-strategy-selector.png'),
     fullPage: true,
@@ -317,6 +332,7 @@ try {
   const cellularAutomataLayout = layoutSignature(cellularAutomata);
   const mazeCarvingLayout = layoutSignature(mazeCarving);
   const gameplayGrammarLayout = layoutSignature(gameplayGrammar);
+  const wfcLayout = layoutSignature(wfc);
 
   const checks = {
     strategySelectorVisible: initial.selectorVisible === true,
@@ -347,6 +363,9 @@ try {
       ) &&
       initial.strategies.some(
         (entry) => entry.id === GENERATOR_STRATEGY_GAMEPLAY_GRAMMAR_LAB_ID,
+      ) &&
+      initial.strategies.some(
+        (entry) => entry.id === GENERATOR_STRATEGY_WFC_LAB_ID,
       ),
     selectorListsAllAcceptedStrategies:
       initial.optionValues.includes(GENERATOR_STRATEGY_V1_CLASSIC_ID) &&
@@ -357,7 +376,8 @@ try {
       initial.optionValues.includes(GENERATOR_STRATEGY_RANDOM_WALK_LAB_ID) &&
       initial.optionValues.includes(GENERATOR_STRATEGY_CELLULAR_AUTOMATA_LAB_ID) &&
       initial.optionValues.includes(GENERATOR_STRATEGY_MAZE_CARVING_LAB_ID) &&
-      initial.optionValues.includes(GENERATOR_STRATEGY_GAMEPLAY_GRAMMAR_LAB_ID),
+      initial.optionValues.includes(GENERATOR_STRATEGY_GAMEPLAY_GRAMMAR_LAB_ID) &&
+      initial.optionValues.includes(GENERATOR_STRATEGY_WFC_LAB_ID),
     recommendedSelectedByDefault:
       initial.selectedValue === GENERATOR_STRATEGY_V2_RECOMMENDED_ID &&
       initial.state.generatorStrategyId ===
@@ -405,6 +425,11 @@ try {
       gameplayGrammar.lastGeneration?.generatorStrategyId ===
         GENERATOR_STRATEGY_GAMEPLAY_GRAMMAR_LAB_ID &&
       gameplayGrammar.lastGeneration?.algorithmVersion === '1',
+    wfcSelectionUsesAlgorithmLabStrategy:
+      wfc.lastGeneration?.generatorVersion === null &&
+      wfc.lastGeneration?.generatorStrategyId ===
+        GENERATOR_STRATEGY_WFC_LAB_ID &&
+      wfc.lastGeneration?.algorithmVersion === '1',
     samePromptKeepsSameSeedAcrossStrategies:
       classic.lastGeneration?.seed === recommended.lastGeneration?.seed &&
       recommended.lastGeneration?.seed === delaunay.lastGeneration?.seed &&
@@ -413,7 +438,8 @@ try {
       roomsMazes.lastGeneration?.seed === randomWalk.lastGeneration?.seed &&
       randomWalk.lastGeneration?.seed === cellularAutomata.lastGeneration?.seed &&
       cellularAutomata.lastGeneration?.seed === mazeCarving.lastGeneration?.seed &&
-      mazeCarving.lastGeneration?.seed === gameplayGrammar.lastGeneration?.seed,
+      mazeCarving.lastGeneration?.seed === gameplayGrammar.lastGeneration?.seed &&
+      gameplayGrammar.lastGeneration?.seed === wfc.lastGeneration?.seed,
     strategyLayoutsAreDistinct:
       new Set([
         classicLayout,
@@ -425,7 +451,8 @@ try {
         cellularAutomataLayout,
         mazeCarvingLayout,
         gameplayGrammarLayout,
-      ]).size === 9,
+        wfcLayout,
+      ]).size === 10,
     allOutputsRemainStartEligible:
       classic.startAllowed === true &&
       recommended.startAllowed === true &&
@@ -435,9 +462,10 @@ try {
       randomWalk.startAllowed === true &&
       cellularAutomata.startAllowed === true &&
       mazeCarving.startAllowed === true &&
-      gameplayGrammar.startAllowed === true,
-    designIntentRequestedNineTimes:
-      designIntentRequests.length === 9 &&
+      gameplayGrammar.startAllowed === true &&
+      wfc.startAllowed === true,
+    designIntentRequestedTenTimes:
+      designIntentRequests.length === 10 &&
       designIntentRequests.every((entry) => entry.promptMatches),
     browserErrorsAbsent:
       consoleErrors.length === 0 &&
@@ -567,6 +595,18 @@ try {
       roomCount: gameplayGrammar.rooms.length,
       corridorCount: gameplayGrammar.corridors.length,
       layoutSignature: gameplayGrammarLayout,
+    },
+    wfc: {
+      generatorVersion:
+        wfc.lastGeneration?.generatorVersion ?? null,
+      generatorStrategyId:
+        wfc.lastGeneration?.generatorStrategyId ?? null,
+      algorithmVersion:
+        wfc.lastGeneration?.algorithmVersion ?? null,
+      seed: wfc.lastGeneration?.seed ?? null,
+      roomCount: wfc.rooms.length,
+      corridorCount: wfc.corridors.length,
+      layoutSignature: wfcLayout,
     },
     consoleErrors,
     pageErrors,
