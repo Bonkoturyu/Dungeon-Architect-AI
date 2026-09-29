@@ -71,3 +71,10 @@ DungeonSpec
 設計資料:
 
 `docs/generator-algorithms/CORE_ARCHITECTURE.md`
+
+
+## Random Walk
+
+`random-walk/` contains the reusable seeded Random Walk Core used by `algorithm-lab.random-walk`.
+
+The Core discovers coarse-grid cells through a seeded cardinal walker, keeps first-discovery edges as a guaranteed spanning tree, and restores a bounded subset of unused local adjacencies as loops. It has no DungeonSpec, DOM, Three.js, Editor, Play, or network dependency.
