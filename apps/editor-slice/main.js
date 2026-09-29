@@ -1163,6 +1163,7 @@ function updateUi() {
   document.body.dataset.mode = mode;
   document.body.dataset.workflowTab = workflowTab;
   syncAudioMode();
+  syncReactiveAudioIntensity();
   renderAudioToggle();
   if (inspectorShell) inspectorShell.dataset.inspectorTab = inspectorTab;
   if (hint) hint.hidden = true;
