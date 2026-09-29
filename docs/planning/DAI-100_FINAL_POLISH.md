@@ -835,7 +835,7 @@ In addition to accepted **Delaunay + MST + Loops** and **BSP**, implement all re
 2. Random Walk — **accepted**;
 3. Cellular Automata — **accepted**;
 4. Maze Carving — **accepted**;
-5. Gameplay Graph / Grammar — **implementation candidate present; owner-local acceptance pending**;
+5. Gameplay Graph / Grammar — **accepted**;
 6. Wave Function Collapse (WFC).
 
 #### Rooms + Mazes candidate
@@ -1162,7 +1162,29 @@ Integrated gate:
 
 `npm run validate:dai-100-gameplay-grammar`
 
-Gameplay Graph / Grammar is **pending owner-local acceptance**.
+Owner-local acceptance passed on 2026-09-29 JST at `f906e8a5866500f3726533edb857b31423884848`.
+
+The 9-step `npm run validate:dai-100-gameplay-grammar` gate passed end-to-end:
+
+- reusable Gameplay Grammar Core tests: 10/10 PASS;
+- Generator / Gameplay Grammar adapter suite: 61/61 PASS;
+- 150-case renderer routeability matrix: 150/150 PASS;
+- routing mode: **strict 150/150**;
+- unique spatial layouts: 90;
+- bypass branches exercised: 162;
+- derivation steps exercised: 600;
+- matrix duration: 2,809 ms;
+- production hosting build: PASS;
+- Owner UI regression smoke: PASS;
+- nine-strategy Product selector smoke: PASS;
+- 3-Floor Test + Mystery browser smoke: PASS;
+- syntax validation: 257 files PASS;
+- git diff / whitespace check: PASS;
+- final result: `passed: true`, `falseChecks: []`.
+
+The Product browser smoke verified the corrected `Algorithm Lab — Gameplay Graph / Grammar` selector label, unique Floor IDs/Seeds/layouts, Start eligibility on every Floor, preserved Gameplay Grammar provenance through Test and Mystery return, and zero browser/page/request/HTTP errors.
+
+Gameplay Graph / Grammar is therefore **accepted**.
 
 Each strategy should follow the already accepted loose-coupled architecture:
 
