@@ -712,7 +712,26 @@ Dedicated acceptance:
 
 The 9-step gate includes Audio unit tests, the existing DAI-097/100 audio regression smoke, a dedicated exploration→encounter→resolution→Result→Edit browser smoke, browser performance, Owner UI, production build, legal/provenance, syntax, and git diff checks.
 
-This Reactive Audio V2 intensity slice is **pending owner-local automated acceptance**. The broader Audio V2 track also still requires the separate owner listening review before final acceptance.
+Owner-local automated acceptance passed on 2026-09-29 JST at `ec291ebb5791364b80131109bbf033c0317c1b99`.
+
+The 9-step `npm run validate:dai-100-reactive-audio` gate passed after the final Markdown EOF-whitespace cleanup:
+
+- Audio presentation / reactive-intensity unit tests: 13/13 PASS;
+- existing DAI-097/100 audio regression smoke: PASS;
+- Reactive Audio visible-Chrome smoke: PASS;
+- browser performance regression smoke: PASS;
+- Owner UI regression smoke: PASS;
+- production hosting build: PASS;
+- legal / provenance audit: PASS;
+- syntax validation: PASS;
+- git diff / whitespace check: PASS (no output);
+- final result: automated acceptance complete.
+
+Accepted browser invariants include Edit low intensity, Play exploration intensity, Enemy Room encounter boost, event-resolution return to exploration, optional Treasure not re-entering danger, user BGM/SE mix values remaining unchanged, bounded reactive gain multipliers, Result continuity, Edit restoration, no external audio assets, and zero browser/page/request/HTTP errors.
+
+This Reactive Audio V2 intensity slice is therefore **automatically accepted**.
+
+The broader Audio V2 track still requires the separate **owner listening review** before final acceptance.
 
 ### K — JSON Import / round-trip
 
