@@ -35,6 +35,7 @@ import {
   GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID,
   GENERATOR_STRATEGY_BSP_LAB_ID,
   GENERATOR_STRATEGY_ROOMS_MAZES_LAB_ID,
+  GENERATOR_STRATEGY_RANDOM_WALK_LAB_ID,
   RECOMMENDED_GENERATOR_STRATEGY_ID,
   createBuiltinGeneratorStrategyRegistry,
   deriveGeneratorSeedFromPrompt,
@@ -582,6 +583,9 @@ function generatorStrategyLabel(metadata) {
   }
   if (metadata.id === GENERATOR_STRATEGY_ROOMS_MAZES_LAB_ID) {
     return t('create.generatorRoomsMazes');
+  }
+  if (metadata.id === GENERATOR_STRATEGY_RANDOM_WALK_LAB_ID) {
+    return t('create.generatorRandomWalk');
   }
   return metadata.displayName;
 }
