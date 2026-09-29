@@ -832,7 +832,7 @@ This JSON Import / round-trip slice is therefore **accepted**.
 In addition to accepted **Delaunay + MST + Loops** and **BSP**, implement all remaining planned Algorithm Lab strategies:
 
 1. Rooms + Mazes — **accepted**;
-2. Random Walk;
+2. Random Walk — **implementation candidate present; owner-local acceptance pending**;
 3. Cellular Automata;
 4. Maze Carving;
 5. Gameplay Graph / Grammar;
@@ -897,6 +897,52 @@ The 9-step `npm run validate:dai-100-rooms-mazes` gate passed end-to-end:
 The Product browser smoke also verified unique Floor IDs/Seeds/layouts, Start eligibility on every Floor, preserved Rooms+Mazes provenance through Test and Mystery return, and zero browser/page/request/HTTP errors.
 
 Rooms + Mazes is therefore **accepted**.
+
+
+#### Random Walk candidate
+
+The second remaining strategy is now implemented under:
+
+- reusable Core: `packages/generator-algorithms/random-walk/`;
+- Product Adapter: `packages/generator/src/strategies/random-walk-lab.js`;
+- Strategy ID: `algorithm-lab.random-walk`;
+- paired docs: `docs/algorithms/RANDOM_WALK.md` + `RANDOM_WALK.html`.
+
+Algorithm shape:
+
+- a seeded cardinal walker discovers coarse-grid cells over time;
+- first discovery of each new cell creates one parent edge, producing an `N - 1` guaranteed connected discovery tree;
+- bounded directional persistence creates longer organic runs;
+- excessive revisiting triggers deterministic recovery to a discovered frontier cell rather than allowing pathological non-termination;
+- the discovery-tree diameter endpoints are remapped to first/last Room IDs for baseline Start/Goal distance;
+- visited cells become non-overlapping Rooms;
+- unused cardinal adjacencies among visited cells become loop candidates;
+- DesignIntent `routeChoice` selects a deterministic loop subset;
+- discovery edges map to `backbone`, loops to `alternate`;
+- every Corridor receives exact cardinal endpoint-side hints.
+
+This differs from Rooms + Mazes because the walker trajectory determines the spatial footprint and discovery tree directly; there is no separate selected-cell-region → maze-carving phase.
+
+The Core remains plain JSON-compatible and has no DOM / Three.js / Editor / Play / network dependency.
+
+Product registration is present, while **Version 2 remains Recommended/default**.
+
+Acceptance coverage:
+
+- reusable Core unit suite;
+- Generator Adapter regressions;
+- 150-case Seed × RoomCount × routeChoice renderer matrix;
+- production build;
+- Owner UI regression;
+- expanded six-strategy selector smoke;
+- 3-Floor Test + Mystery visible-Chrome smoke;
+- syntax + git diff checks.
+
+Integrated gate:
+
+`npm run validate:dai-100-random-walk`
+
+Random Walk is **pending owner-local acceptance**.
 
 Each strategy should follow the already accepted loose-coupled architecture:
 
