@@ -350,7 +350,9 @@ export function generateGameplayGrammarCore({
     derivation:grammar.derivation,
     diagnostics:{
       ...grammar.diagnostics,
+      treeEdgeCount:rooms.length-1,
       edgeCount:grammar.edges.length,
+      bypassEdgeCount:grammar.diagnostics.bypassBranchCount,
       cycleRank:grammar.edges.length-rooms.length+1,
       derivationStepCount:grammar.derivation.length,
       roleCounts,
