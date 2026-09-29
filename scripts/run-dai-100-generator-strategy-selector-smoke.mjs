@@ -9,6 +9,7 @@ import {
   GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID,
   GENERATOR_STRATEGY_BSP_LAB_ID,
   GENERATOR_STRATEGY_ROOMS_MAZES_LAB_ID,
+  GENERATOR_STRATEGY_RANDOM_WALK_LAB_ID,
 } from '../packages/generator/src/strategy-catalog.js';
 
 const chromePath =
@@ -243,6 +244,20 @@ try {
     () => window.__DAI_EDITOR_SLICE__.getState(),
   );
 
+  const selectedRandomWalk = await page.evaluate(
+    (id) => window.__DAI_EDITOR_SLICE__.setGeneratorStrategy(id),
+    GENERATOR_STRATEGY_RANDOM_WALK_LAB_ID,
+  );
+  if (!selectedRandomWalk) {
+    throw new Error('Could not select Algorithm Lab Random Walk.');
+  }
+  await page.evaluate(
+    () => window.__DAI_EDITOR_SLICE__.generateDungeonFromPrompt(),
+  );
+  const randomWalk = await page.evaluate(
+    () => window.__DAI_EDITOR_SLICE__.getState(),
+  );
+
   await page.screenshot({
     path: path.join(outputDir, 'generator-strategy-selector.png'),
     fullPage: true,
@@ -253,6 +268,7 @@ try {
   const delaunayLayout = layoutSignature(delaunay);
   const bspLayout = layoutSignature(bsp);
   const roomsMazesLayout = layoutSignature(roomsMazes);
+  const randomWalkLayout = layoutSignature(randomWalk);
 
   const checks = {
     strategySelectorVisible: initial.selectorVisible === true,
@@ -271,13 +287,17 @@ try {
       ) &&
       initial.strategies.some(
         (entry) => entry.id === GENERATOR_STRATEGY_ROOMS_MAZES_LAB_ID,
+      ) &&
+      initial.strategies.some(
+        (entry) => entry.id === GENERATOR_STRATEGY_RANDOM_WALK_LAB_ID,
       ),
     selectorListsAllAcceptedStrategies:
       initial.optionValues.includes(GENERATOR_STRATEGY_V1_CLASSIC_ID) &&
       initial.optionValues.includes(GENERATOR_STRATEGY_V2_RECOMMENDED_ID) &&
       initial.optionValues.includes(GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID) &&
       initial.optionValues.includes(GENERATOR_STRATEGY_BSP_LAB_ID) &&
-      initial.optionValues.includes(GENERATOR_STRATEGY_ROOMS_MAZES_LAB_ID),
+      initial.optionValues.includes(GENERATOR_STRATEGY_ROOMS_MAZES_LAB_ID) &&
+      initial.optionValues.includes(GENERATOR_STRATEGY_RANDOM_WALK_LAB_ID),
     recommendedSelectedByDefault:
       initial.selectedValue === GENERATOR_STRATEGY_V2_RECOMMENDED_ID &&
       initial.state.generatorStrategyId ===
@@ -305,11 +325,17 @@ try {
       roomsMazes.lastGeneration?.generatorStrategyId ===
         GENERATOR_STRATEGY_ROOMS_MAZES_LAB_ID &&
       roomsMazes.lastGeneration?.algorithmVersion === '1',
+    randomWalkSelectionUsesAlgorithmLabStrategy:
+      randomWalk.lastGeneration?.generatorVersion === null &&
+      randomWalk.lastGeneration?.generatorStrategyId ===
+        GENERATOR_STRATEGY_RANDOM_WALK_LAB_ID &&
+      randomWalk.lastGeneration?.algorithmVersion === '1',
     samePromptKeepsSameSeedAcrossStrategies:
       classic.lastGeneration?.seed === recommended.lastGeneration?.seed &&
       recommended.lastGeneration?.seed === delaunay.lastGeneration?.seed &&
       delaunay.lastGeneration?.seed === bsp.lastGeneration?.seed &&
-      bsp.lastGeneration?.seed === roomsMazes.lastGeneration?.seed,
+      bsp.lastGeneration?.seed === roomsMazes.lastGeneration?.seed &&
+      roomsMazes.lastGeneration?.seed === randomWalk.lastGeneration?.seed,
     strategyLayoutsAreDistinct:
       new Set([
         classicLayout,
@@ -317,15 +343,17 @@ try {
         delaunayLayout,
         bspLayout,
         roomsMazesLayout,
-      ]).size === 5,
+        randomWalkLayout,
+      ]).size === 6,
     allOutputsRemainStartEligible:
       classic.startAllowed === true &&
       recommended.startAllowed === true &&
       delaunay.startAllowed === true &&
       bsp.startAllowed === true &&
-      roomsMazes.startAllowed === true,
-    designIntentRequestedFiveTimes:
-      designIntentRequests.length === 5 &&
+      roomsMazes.startAllowed === true &&
+      randomWalk.startAllowed === true,
+    designIntentRequestedSixTimes:
+      designIntentRequests.length === 6 &&
       designIntentRequests.every((entry) => entry.promptMatches),
     browserErrorsAbsent:
       consoleErrors.length === 0 &&
@@ -407,6 +435,18 @@ try {
       roomCount: roomsMazes.rooms.length,
       corridorCount: roomsMazes.corridors.length,
       layoutSignature: roomsMazesLayout,
+    },
+    randomWalk: {
+      generatorVersion:
+        randomWalk.lastGeneration?.generatorVersion ?? null,
+      generatorStrategyId:
+        randomWalk.lastGeneration?.generatorStrategyId ?? null,
+      algorithmVersion:
+        randomWalk.lastGeneration?.algorithmVersion ?? null,
+      seed: randomWalk.lastGeneration?.seed ?? null,
+      roomCount: randomWalk.rooms.length,
+      corridorCount: randomWalk.corridors.length,
+      layoutSignature: randomWalkLayout,
     },
     consoleErrors,
     pageErrors,
