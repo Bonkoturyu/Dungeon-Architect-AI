@@ -99,3 +99,10 @@ The Core builds a compact exact-N lattice, treats all cardinal adjacencies as wa
 `gameplay-grammar/` contains the reusable semantic grammar Core used by `algorithm-lab.gameplay-grammar`.
 
 The Core expands a mission spine plus semantic dead-end/bypass productions, exposes the derivation trace, and embeds the resulting graph on unique cardinal cells. It has no DungeonSpec, DOM, Three.js, Editor, Play, or network dependency.
+
+
+## Wave Function Collapse
+
+`wfc/` contains the reusable local socket-constraint solver used by `algorithm-lab.wfc`.
+
+The Core builds an exact-N cardinal lattice, fixes a guaranteed Start-to-Goal backbone as hard socket constraints, collapses N/E/S/W module masks through minimum-entropy selection and propagation, and exposes collapse / propagation / contradiction diagnostics. It has no DungeonSpec, DOM, Three.js, Editor, Play, or network dependency.
