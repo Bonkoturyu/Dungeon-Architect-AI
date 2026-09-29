@@ -8,6 +8,7 @@ import {
   GENERATOR_STRATEGY_V2_RECOMMENDED_ID,
   GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID,
   GENERATOR_STRATEGY_BSP_LAB_ID,
+  GENERATOR_STRATEGY_ROOMS_MAZES_LAB_ID,
 } from '../packages/generator/src/strategy-catalog.js';
 
 const chromePath =
@@ -228,6 +229,20 @@ try {
     () => window.__DAI_EDITOR_SLICE__.getState(),
   );
 
+  const selectedRoomsMazes = await page.evaluate(
+    (id) => window.__DAI_EDITOR_SLICE__.setGeneratorStrategy(id),
+    GENERATOR_STRATEGY_ROOMS_MAZES_LAB_ID,
+  );
+  if (!selectedRoomsMazes) {
+    throw new Error('Could not select Algorithm Lab Rooms + Mazes.');
+  }
+  await page.evaluate(
+    () => window.__DAI_EDITOR_SLICE__.generateDungeonFromPrompt(),
+  );
+  const roomsMazes = await page.evaluate(
+    () => window.__DAI_EDITOR_SLICE__.getState(),
+  );
+
   await page.screenshot({
     path: path.join(outputDir, 'generator-strategy-selector.png'),
     fullPage: true,
@@ -237,6 +252,7 @@ try {
   const recommendedLayout = layoutSignature(recommended);
   const delaunayLayout = layoutSignature(delaunay);
   const bspLayout = layoutSignature(bsp);
+  const roomsMazesLayout = layoutSignature(roomsMazes);
 
   const checks = {
     strategySelectorVisible: initial.selectorVisible === true,
@@ -252,12 +268,16 @@ try {
       ) &&
       initial.strategies.some(
         (entry) => entry.id === GENERATOR_STRATEGY_BSP_LAB_ID,
+      ) &&
+      initial.strategies.some(
+        (entry) => entry.id === GENERATOR_STRATEGY_ROOMS_MAZES_LAB_ID,
       ),
     selectorListsAllAcceptedStrategies:
       initial.optionValues.includes(GENERATOR_STRATEGY_V1_CLASSIC_ID) &&
       initial.optionValues.includes(GENERATOR_STRATEGY_V2_RECOMMENDED_ID) &&
       initial.optionValues.includes(GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID) &&
-      initial.optionValues.includes(GENERATOR_STRATEGY_BSP_LAB_ID),
+      initial.optionValues.includes(GENERATOR_STRATEGY_BSP_LAB_ID) &&
+      initial.optionValues.includes(GENERATOR_STRATEGY_ROOMS_MAZES_LAB_ID),
     recommendedSelectedByDefault:
       initial.selectedValue === GENERATOR_STRATEGY_V2_RECOMMENDED_ID &&
       initial.state.generatorStrategyId ===
@@ -280,24 +300,32 @@ try {
       bsp.lastGeneration?.generatorStrategyId ===
         GENERATOR_STRATEGY_BSP_LAB_ID &&
       bsp.lastGeneration?.algorithmVersion === '1',
+    roomsMazesSelectionUsesAlgorithmLabStrategy:
+      roomsMazes.lastGeneration?.generatorVersion === null &&
+      roomsMazes.lastGeneration?.generatorStrategyId ===
+        GENERATOR_STRATEGY_ROOMS_MAZES_LAB_ID &&
+      roomsMazes.lastGeneration?.algorithmVersion === '1',
     samePromptKeepsSameSeedAcrossStrategies:
       classic.lastGeneration?.seed === recommended.lastGeneration?.seed &&
       recommended.lastGeneration?.seed === delaunay.lastGeneration?.seed &&
-      delaunay.lastGeneration?.seed === bsp.lastGeneration?.seed,
+      delaunay.lastGeneration?.seed === bsp.lastGeneration?.seed &&
+      bsp.lastGeneration?.seed === roomsMazes.lastGeneration?.seed,
     strategyLayoutsAreDistinct:
       new Set([
         classicLayout,
         recommendedLayout,
         delaunayLayout,
         bspLayout,
-      ]).size === 4,
+        roomsMazesLayout,
+      ]).size === 5,
     allOutputsRemainStartEligible:
       classic.startAllowed === true &&
       recommended.startAllowed === true &&
       delaunay.startAllowed === true &&
-      bsp.startAllowed === true,
-    designIntentRequestedFourTimes:
-      designIntentRequests.length === 4 &&
+      bsp.startAllowed === true &&
+      roomsMazes.startAllowed === true,
+    designIntentRequestedFiveTimes:
+      designIntentRequests.length === 5 &&
       designIntentRequests.every((entry) => entry.promptMatches),
     browserErrorsAbsent:
       consoleErrors.length === 0 &&
@@ -367,6 +395,18 @@ try {
       roomCount: bsp.rooms.length,
       corridorCount: bsp.corridors.length,
       layoutSignature: bspLayout,
+    },
+    roomsMazes: {
+      generatorVersion:
+        roomsMazes.lastGeneration?.generatorVersion ?? null,
+      generatorStrategyId:
+        roomsMazes.lastGeneration?.generatorStrategyId ?? null,
+      algorithmVersion:
+        roomsMazes.lastGeneration?.algorithmVersion ?? null,
+      seed: roomsMazes.lastGeneration?.seed ?? null,
+      roomCount: roomsMazes.rooms.length,
+      corridorCount: roomsMazes.corridors.length,
+      layoutSignature: roomsMazesLayout,
     },
     consoleErrors,
     pageErrors,
