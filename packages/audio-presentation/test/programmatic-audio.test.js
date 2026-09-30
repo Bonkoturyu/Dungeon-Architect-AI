@@ -11,14 +11,19 @@ import {
 class FakeAudioParam {
   constructor() {
     this.value = 0;
+    this.events = [];
   }
-  setValueAtTime(value) {
+  setValueAtTime(value, at = 0) {
     this.value = value;
+    this.events.push({ type: "set", value, at });
   }
-  linearRampToValueAtTime(value) {
+  linearRampToValueAtTime(value, at = 0) {
     this.value = value;
+    this.events.push({ type: "ramp", value, at });
   }
-  cancelScheduledValues() {}
+  cancelScheduledValues(at = 0) {
+    this.events.push({ type: "cancel", at });
+  }
 }
 
 class FakeNode {
@@ -63,6 +68,7 @@ class FakeOscillatorNode extends FakeNode {
 
 class FakeAudioContext {
   constructor() {
+    FakeAudioContext.lastInstance = this;
     this.currentTime = 10;
     this.state = "suspended";
     this.destination = new FakeNode();
@@ -149,6 +155,10 @@ test("audio presentation stays inert until unlock then starts desired BGM", asyn
     reactiveRampSeconds: 0.28,
     crossfadeSeconds: 0.45,
     motifScheduledSeconds: 0,
+    bgmLooping: false,
+    bgmLoopScheduleAheadSeconds: 180,
+    bgmLoopSchedulerIntervalMs: 15000,
+    bgmLoopExtensionCount: 0,
     lastCue: null,
     cueHistory: [],
     modeHistory: ["edit", "play"],
@@ -241,6 +251,68 @@ test("mode changes schedule long-form motifs and retire previous voices", async 
   assert.equal(play.activeMode, "play");
   assert.equal(play.crossfadeSeconds, 0.45);
   assert.ok(play.motifScheduledSeconds > 120);
+});
+
+
+test("BGM loop scheduler extends automation beyond the initial motif window", async () => {
+  let schedulerCallback = null;
+  let schedulerIntervalMs = null;
+  let schedulerCleared = false;
+
+  const schedulerHandle = {
+    unref() {},
+  };
+
+  const audio = createProgrammaticAudio({
+    AudioContextCtor: FakeAudioContext,
+    setIntervalFn(callback, intervalMs) {
+      schedulerCallback = callback;
+      schedulerIntervalMs = intervalMs;
+      return schedulerHandle;
+    },
+    clearIntervalFn(handle) {
+      assert.equal(handle, schedulerHandle);
+      schedulerCleared = true;
+    },
+  });
+
+  await audio.unlock();
+  audio.setMode("play");
+
+  const context = FakeAudioContext.lastInstance;
+  const before = audio.getState();
+  const beforeEventCount = context.oscillators.reduce(
+    (sum, oscillator) =>
+      sum + oscillator.frequency.events.length,
+    0,
+  );
+
+  assert.equal(before.bgmLooping, true);
+  assert.equal(before.bgmLoopScheduleAheadSeconds, 180);
+  assert.equal(schedulerIntervalMs, 15000);
+  assert.ok(before.bgmLoopExtensionCount >= 1);
+  assert.equal(typeof schedulerCallback, "function");
+
+  context.currentTime += 200;
+  schedulerCallback();
+
+  const after = audio.getState();
+  const afterEventCount = context.oscillators.reduce(
+    (sum, oscillator) =>
+      sum + oscillator.frequency.events.length,
+    0,
+  );
+
+  assert.ok(
+    after.bgmLoopExtensionCount >
+      before.bgmLoopExtensionCount,
+  );
+  assert.ok(after.motifScheduledSeconds > 180);
+  assert.ok(afterEventCount > beforeEventCount);
+
+  audio.dispose();
+  assert.equal(schedulerCleared, true);
+  assert.equal(audio.getState().bgmLooping, false);
 });
 
 test("reactive intensity derives bounded exploration and danger profiles", () => {
