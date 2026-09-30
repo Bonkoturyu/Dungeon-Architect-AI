@@ -128,6 +128,12 @@ try {
   await page.click('#start');
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().mode === 'play', null, { timeout: 30_000 });
   await page.waitForFunction(() => {
+    const viewport = document.querySelector('.viewport-shell');
+    return viewport &&
+      !viewport.classList.contains('is-mode-transition');
+  }, null, { timeout: 5_000 });
+
+  await page.waitForFunction(() => {
     const canvas = document.querySelector('#renderCanvas');
     const rect = canvas.getBoundingClientRect();
     return Math.abs(canvas.width - rect.width) <= 1 &&
@@ -160,6 +166,7 @@ try {
       viewportHudBorder: viewportLabelStyle.borderStyle,
       viewportHudBackground: viewportLabelStyle.backgroundColor,
       playAsidePosition: asideStyle.position,
+      playAsideDisplay: asideStyle.display,
       exitPadWidth: exitPad?.width ?? 0,
       exitPadHeight: exitPad?.height ?? 0,
       exitButtonTexts: [...document.querySelectorAll('#playExitButtons .exit-button')]
@@ -272,9 +279,10 @@ try {
     playInstructionIsModeAware: playLayout.viewportHelp.includes('Auto-map'),
     playPanelCompact:
       playLayout.validationHidden === true &&
-      playLayout.playMetrics.includes('MOVE') &&
-      playLayout.playMetrics.includes('MAP') &&
-      playLayout.playAsidePosition === 'absolute',
+      ['LV', 'HP', 'EXP', 'G']
+        .every((label) => playLayout.playMetrics.includes(label)) &&
+      playLayout.playAsideDisplay === 'none' &&
+      playLayout.asideWidth === 0,
     playHudClearlyNonInteractive:
       playLayout.viewportHudBorder === 'none' &&
       playLayout.viewportHudBackground === 'rgba(0, 0, 0, 0)',
@@ -295,7 +303,10 @@ try {
           !/^[▲▶▼◀][12]$/.test(text),
       ),
     resultModeApplied: resultLayout.bodyMode === 'result',
-    resultVisible: resultLayout.resultText.includes('CLEARED') && resultLayout.playText.includes('MOVE'),
+    resultVisible:
+      resultLayout.resultText.includes('CLEARED') &&
+      ['LV', 'HP', 'EXP', 'G']
+        .every((label) => resultLayout.playText.includes(label)),
     authoringPanelsHiddenInResult: resultLayout.editorPanelsHidden === true,
     resultInstructionIsModeAware: resultLayout.viewportHelp.toLowerCase().includes('run complete'),
     returnToEditRestoresMode: returnedMode === 'edit',
