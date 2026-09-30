@@ -454,7 +454,11 @@ export function createProgrammaticAudio({
 
   function startModeVoices(mode) {
     if (!unlocked || !context || !isSupportedMode(mode)) return false;
-    if (activeMode === mode && modeVoices.length > 0) return true;
+    if (activeMode === mode && modeVoices.length > 0) {
+      ensureLoopScheduler();
+      maintainLoopSchedule();
+      return true;
+    }
 
     const previous = modeVoices;
     modeVoices = [];
