@@ -9,6 +9,29 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+$repoRootPath = (Resolve-Path ".").Path.TrimEnd('\', '/')
+
+function Get-RepoRelativePath {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$FullPath
+  )
+
+  $resolved = [System.IO.Path]::GetFullPath($FullPath)
+  $rootWithSeparator = $repoRootPath + [System.IO.Path]::DirectorySeparatorChar
+
+  if (
+    $resolved.StartsWith(
+      $rootWithSeparator,
+      [System.StringComparison]::OrdinalIgnoreCase
+    )
+  ) {
+    return $resolved.Substring($rootWithSeparator.Length)
+  }
+
+  throw "Path is outside repository root: $resolved"
+}
+
 if ([string]::IsNullOrWhiteSpace($Label)) {
   $Label = $NpmScript
 }
@@ -85,10 +108,7 @@ if (Test-Path "artifacts") {
 }
 
 foreach ($file in $evidenceFiles) {
-  $relative = [System.IO.Path]::GetRelativePath(
-    (Resolve-Path ".").Path,
-    $file.FullName
-  )
+  $relative = Get-RepoRelativePath -FullPath $file.FullName
   $destination = Join-Path $evidenceRoot $relative
   $destinationDir = Split-Path -Parent $destination
   New-Item -ItemType Directory -Force -Path $destinationDir | Out-Null
