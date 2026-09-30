@@ -772,7 +772,13 @@ try {
   }, startRoomId);
   const roomContentsBeforeEntityClick = await page.evaluate((startId) => ({
     overlayVisible: document.querySelector('#roomContentsOverlay')?.hidden === false,
+    heading: document.querySelector('#roomContentsOverlay .overlay-heading')?.textContent?.trim() ?? '',
+    detailKind: document.querySelector('#roomContentsOverlay')?.dataset.detailKind ?? null,
     roomText: document.querySelector('#roomContentsRoom')?.textContent ?? '',
+    groupTitles: [...document.querySelectorAll('#roomContentsItems .detail-group-title')]
+      .map((node) => node.textContent?.trim() ?? ''),
+    detailRowCount: document.querySelectorAll('#roomContentsItems .detail-row').length,
+    connectionCount: document.querySelectorAll('#roomContentsItems .detail-connection').length,
     entityIds: [...document.querySelectorAll('#roomContentsItems .room-content-item')]
       .map((button) => button.dataset.entityId),
     itemCount: document.querySelectorAll('#roomContentsItems .room-content-item').length,
@@ -1247,6 +1253,12 @@ try {
       roomContentsBeforeEntityClick.roomText.includes(startRoomId) &&
       roomContentsBeforeEntityClick.itemCount >= 1 &&
       roomContentsBeforeEntityClick.hasStart === true,
+    groupedDetailsPanelIsReadable:
+      roomContentsBeforeEntityClick.heading === 'Details' &&
+      roomContentsBeforeEntityClick.detailKind === 'room' &&
+      ['Basic', 'Position / size', 'Connections', 'Contents']
+        .every((title) => roomContentsBeforeEntityClick.groupTitles.includes(title)) &&
+      roomContentsBeforeEntityClick.detailRowCount >= 5,
     editHudMatchesRequestedPlacement:
       editHudLayout.legend.left >= editHudLayout.viewport.left &&
       editHudLayout.legend.left <= editHudLayout.viewport.left + 32 &&
