@@ -747,7 +747,9 @@ function selectFloor(index) {
 function resize() {
   if (!adapter) return;
   const rect = canvas.getBoundingClientRect();
-  adapter.resize(Math.max(1, Math.floor(rect.width)), Math.max(1, Math.floor(rect.height)));
+  const width = canvas.clientWidth || rect.width;
+  const height = canvas.clientHeight || rect.height;
+  adapter.resize(Math.max(1, Math.floor(width)), Math.max(1, Math.floor(height)));
 }
 
 function nextPlayActionAt() {
