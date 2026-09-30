@@ -1372,6 +1372,16 @@ DAI-090 Final passed on 2026-09-30 JST against the public Cloudflare production 
 
 The DAI-090 Final release gate is therefore **accepted**.
 
+The packaged DAI-090 Final evidence bundle was reviewed after the run:
+
+- validation run HEAD: `41fda6bdb892d60e58a64d69d06bfeeff675e0ac`;
+- bundle packaging HEAD: `cbe8bb936ddb76d59ff09f23cac74f2da28b1a9a`;
+- evidence JSON SHA-256: `cb34443afa8a0411d9690d9b59c32e014c005154b38c9945d350f893e96a3a7f`;
+- ZIP SHA-256: `0bb4724fcbbcd27a18f53c927dc593d45dc49f850c237b5069c9d9ff05d90751`;
+- packaged evidence contains all 20 cases and all 20 are HTTP 200 / Cloud / valid / resilience PASS;
+- the post-run packaging repair did not rerun or alter the provider evidence.
+
+
 After all implementation stops:
 
 1. rerun the exact DAI-090 20-case corpus as **Final**;
