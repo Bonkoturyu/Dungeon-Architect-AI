@@ -2091,6 +2091,46 @@ function sideIcon(side) {
   return ({ north: '▲', east: '▶', south: '▼', west: '◀' })[side] ?? '◇';
 }
 
+function exitLaneInfo(side, index, total) {
+  if (total <= 1) {
+    return { marker: '', labelKey: null };
+  }
+
+  const horizontalWall =
+    side === 'north' || side === 'south';
+  const markers = horizontalWall
+    ? ['←', '•', '→']
+    : ['↑', '•', '↓'];
+  const keys = horizontalWall
+    ? ['exit.laneLeft', 'exit.laneCenter', 'exit.laneRight']
+    : ['exit.laneUpper', 'exit.laneCenter', 'exit.laneLower'];
+
+  if (total === 2) {
+    return index === 0
+      ? { marker: markers[0], labelKey: keys[0] }
+      : { marker: markers[2], labelKey: keys[2] };
+  }
+
+  if (total === 3) {
+    return {
+      marker: markers[index] ?? String(index + 1),
+      labelKey: keys[index] ?? null,
+    };
+  }
+
+  return {
+    marker: String(index + 1),
+    labelKey: null,
+  };
+}
+
+function previewPlayExit(corridorId = null) {
+  if (mode !== 'play' || !adapter) return;
+  adapter.setHighlightedSpecIds(
+    corridorId ? [corridorId] : [],
+  );
+}
+
 function renderPlayExits() {
   if (!playExitBar || !playExitButtons || !playSession || mode !== 'play') {
     if (playExitBar) playExitBar.hidden = true;
@@ -2111,13 +2151,31 @@ function renderPlayExits() {
   );
 
   const exits = map.currentExits
-    .map((exit) => ({
-      ...exit,
-      side: openingByCorridor.get(exit.corridorId)?.side ?? null,
-    }))
+    .map((exit) => {
+      const opening =
+        openingByCorridor.get(exit.corridorId) ?? null;
+      return {
+        ...exit,
+        side: opening?.side ?? null,
+        openingOffset:
+          Number.isFinite(opening?.centerOffset)
+            ? opening.centerOffset
+            : 0,
+      };
+    })
     .sort((a, b) => {
-      const order = { north: 0, east: 1, south: 2, west: 3 };
-      return (order[a.side] ?? 9) - (order[b.side] ?? 9) || a.corridorId.localeCompare(b.corridorId);
+      const order = {
+        north: 0,
+        east: 1,
+        south: 2,
+        west: 3,
+      };
+      return (
+        (order[a.side] ?? 9) -
+          (order[b.side] ?? 9) ||
+        a.openingOffset - b.openingOffset ||
+        a.corridorId.localeCompare(b.corridorId)
+      );
     });
 
   const center = document.createElement('span');
@@ -2132,27 +2190,106 @@ function renderPlayExits() {
   }
 
   const slots = [];
-  for (const [side, sideExits] of grouped) {
+  for (const [side, unsortedSideExits] of grouped) {
+    const sideExits = [...unsortedSideExits].sort(
+      (left, right) =>
+        left.openingOffset - right.openingOffset ||
+        left.corridorId.localeCompare(
+          right.corridorId,
+        ),
+    );
+
     const slot = document.createElement('div');
     slot.className = `exit-slot side-${side}`;
+    slot.classList.toggle(
+      'has-multiple',
+      sideExits.length > 1,
+    );
 
     sideExits.forEach((exit, index) => {
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = `exit-button ${exit.explored ? 'is-known' : 'is-unknown'}`;
+      button.className =
+        `exit-button ${exit.explored ? 'is-known' : 'is-unknown'}`;
+      button.classList.toggle(
+        'is-multi',
+        sideExits.length > 1,
+      );
       button.dataset.corridorId = exit.corridorId;
       button.dataset.explored = String(exit.explored);
+
       const icon = sideIcon(exit.side);
-      button.textContent = sideExits.length > 1 ? `${icon}${index + 1}` : icon;
-      const directionKey = exit.side ?? 'unknown';
-      const direction = t(`direction.${directionKey}`);
-      button.setAttribute('aria-label', exit.explored
-        ? t('exit.return', { direction })
-        : t('exit.explore', { direction }));
+      const lane = exitLaneInfo(
+        side,
+        index,
+        sideExits.length,
+      );
+      button.textContent =
+        `${icon}${lane.marker}`;
+
+      const directionKey =
+        exit.side ?? 'unknown';
+      const direction = t(
+        `direction.${directionKey}`,
+      );
+      const laneLabel = lane.labelKey
+        ? t(lane.labelKey)
+        : '';
+      const describedDirection =
+        laneLabel
+          ? `${direction} · ${laneLabel}`
+          : direction;
+
+      button.setAttribute(
+        'aria-label',
+        exit.explored
+          ? t('exit.return', {
+              direction:
+                describedDirection,
+            })
+          : t('exit.explore', {
+              direction:
+                describedDirection,
+            }),
+      );
       button.title = exit.explored
-        ? t('exit.known', { direction })
-        : t('exit.explore', { direction });
-      button.addEventListener('click', () => movePlayToRoom(exit.targetRoomId, exit.corridorId));
+        ? t('exit.known', {
+            direction:
+              describedDirection,
+          })
+        : t('exit.explore', {
+            direction:
+              describedDirection,
+          });
+
+      button.addEventListener(
+        'pointerenter',
+        () =>
+          previewPlayExit(exit.corridorId),
+      );
+      button.addEventListener(
+        'pointerleave',
+        () => previewPlayExit(),
+      );
+      button.addEventListener(
+        'focus',
+        () =>
+          previewPlayExit(exit.corridorId),
+      );
+      button.addEventListener(
+        'blur',
+        () => previewPlayExit(),
+      );
+      button.addEventListener(
+        'click',
+        () => {
+          previewPlayExit();
+          movePlayToRoom(
+            exit.targetRoomId,
+            exit.corridorId,
+          );
+        },
+      );
       slot.append(button);
     });
     slots.push(slot);
