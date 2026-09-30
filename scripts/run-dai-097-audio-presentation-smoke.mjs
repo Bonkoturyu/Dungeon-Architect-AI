@@ -322,7 +322,11 @@ try {
     musicalProgramAndMixerAreActive:
       mixed.audio.version === "2.0" &&
       mixed.audio.activeBgmVoices >= 2 &&
-      mixed.audio.motifScheduledSeconds > 120 &&
+      mixed.audio.motifScheduledSeconds > 180 &&
+      mixed.audio.bgmLooping === true &&
+      mixed.audio.bgmLoopScheduleAheadSeconds === 180 &&
+      mixed.audio.bgmLoopSchedulerIntervalMs === 15000 &&
+      mixed.audio.bgmLoopExtensionCount >= 1 &&
       mixed.audio.crossfadeSeconds === 0.45 &&
       mixed.audio.bgmVolume === 0.34 &&
       mixed.audio.seVolume === 0.86 &&
