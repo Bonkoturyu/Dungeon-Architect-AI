@@ -79,12 +79,20 @@ Write-Host "============================================================"
 Write-Host ""
 
 $exitCode = 1
+Set-Content -Path $consoleLog -Value "" -Encoding UTF8
+
 try {
-  & npm.cmd run $NpmScript 2>&1 | Tee-Object -FilePath $consoleLog
+  & npm.cmd run $NpmScript 2>&1 | ForEach-Object {
+    $line = $_.ToString()
+    Write-Host $line
+    Add-Content -Path $consoleLog -Value $line -Encoding UTF8
+  }
   $exitCode = $LASTEXITCODE
 }
 catch {
-  $_ | Out-String | Add-Content -Path $consoleLog -Encoding UTF8
+  $errorText = $_ | Out-String
+  Write-Host $errorText
+  Add-Content -Path $consoleLog -Value $errorText -Encoding UTF8
   $exitCode = 1
 }
 
