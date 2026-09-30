@@ -134,7 +134,11 @@
     "validate:dai-100-wfc-matrix": "node scripts/run-dai-100-wfc-matrix.mjs",
     "smoke:dai-100-wfc": "node scripts/run-dai-100-wfc-browser-smoke.mjs",
     "validate:dai-100-wfc": "node scripts/run-dai-100-wfc-validation.mjs",
-    "validate:dai-100-final-local": "node scripts/run-dai-100-final-local-regression.mjs"
+    "validate:dai-100-final-local": "node scripts/run-dai-100-final-local-regression.mjs",
+    "run:logged": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-logged.ps1",
+    "validate:dai-100-final-local:bundle": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-logged.ps1 -NpmScript validate:dai-100-final-local -Label dai-100-final-local",
+    "validate:dai-090-final:bundle": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-logged.ps1 -NpmScript validate:dai-090-final -Label dai-090-final",
+    "validate:legal-registers:bundle": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-logged.ps1 -NpmScript validate:legal-registers -Label legal-registers"
   },
   "devDependencies": {
     "@babylonjs/core": "9.18.0",
