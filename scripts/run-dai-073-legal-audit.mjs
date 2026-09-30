@@ -40,16 +40,26 @@ function walk(relativeDir = '.') {
 
 function extractImports(source) {
   const imports = [];
-  const patterns = [
-    /\bfrom\s+['"]([^'"]+)['"]/g,
-    /\bimport\s*['"]([^'"]+)['"]/g,
-  ];
-  for (const pattern of patterns) {
-    let match;
-    while ((match = pattern.exec(source)) !== null) imports.push(match[1]);
+  const staticDeclaration =
+    /^[ \t]*(?:import|export)[ \t]+(?:(?:[A-Za-z0-9_$*{}, \t\r\n]+?)[ \t]+from[ \t]+)?['"]([^'"\r\n]+)['"][ \t]*;?/gm;
+
+  let match;
+  while ((match = staticDeclaration.exec(source)) !== null) {
+    imports.push(match[1]);
   }
   return imports;
 }
+
+const importParserFixture = [
+  "import three from 'three';",
+  "import { value } from './local.js';",
+  "export { other } from './other.js';",
+  "const message = \"after propagating from ' + index\";",
+  "const provider = 'import';",
+].join('\n');
+
+const importParserFixtureResult =
+  extractImports(importParserFixture);
 
 function resolveLocalImport(fromFile, specifier) {
   if (!specifier.startsWith('.')) return null;
@@ -128,6 +138,9 @@ const thirdPartyNotices = read('THIRD_PARTY_NOTICES.txt');
 const checks = {
   auditedLockfileUnchanged: sha256(path.join(repoRoot, 'package-lock.json')) === expectedLockSha256,
   dependencyVersionsExact,
+  importParserRejectsStringContent:
+    JSON.stringify(importParserFixtureResult) ===
+      JSON.stringify(['three', './local.js', './other.js']),
   productionRuntimeExternalImportsOnlyThree:
     JSON.stringify(productionImports.external) === JSON.stringify(['three']),
   noCreativeAssetFilesDetected: creativeCandidates.length === 0,
