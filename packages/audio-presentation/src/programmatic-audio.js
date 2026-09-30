@@ -152,6 +152,8 @@ const MODE_PROGRAMS = Object.freeze({
 
 const MODE_SEQUENCE_STEPS = 72;
 const MODE_CROSSFADE_SECONDS = 0.45;
+const BGM_LOOP_SCHEDULER_INTERVAL_MS = 15000;
+const BGM_LOOP_SCHEDULE_AHEAD_SECONDS = 180;
 const REACTIVE_INTENSITY_RAMP_SECONDS = 0.28;
 const MASTER_GAIN = 0.72;
 
@@ -258,19 +260,31 @@ function normalizedLevel(value, label) {
   return number;
 }
 
-function scheduleProgramVoice(oscillator, gain, definition, now) {
+function scheduleProgramVoice(
+  oscillator,
+  gain,
+  definition,
+  startAt,
+  { resetGain = false } = {},
+) {
   const sequence = definition.sequence;
   const stepSeconds = definition.stepSeconds;
-  let scheduledUntil = now;
+  let scheduledUntil = startAt;
 
-  gain.gain.setValueAtTime(0, now);
+  if (resetGain) {
+    gain.gain.setValueAtTime(0, startAt);
+  }
+
   for (let step = 0; step < MODE_SEQUENCE_STEPS; step += 1) {
     const value = sequence[step % sequence.length];
-    const at = now + step * stepSeconds;
+    const at = startAt + step * stepSeconds;
     scheduledUntil = at + stepSeconds;
 
     if (value == null) {
-      gain.gain.linearRampToValueAtTime(0, at + Math.min(0.08, stepSeconds / 4));
+      gain.gain.linearRampToValueAtTime(
+        0,
+        at + Math.min(0.08, stepSeconds / 4),
+      );
       continue;
     }
 
@@ -289,6 +303,8 @@ export function createProgrammaticAudio({
   clock = () => Date.now(),
   initialBgmVolume = 0.58,
   initialSeVolume = 0.78,
+  setIntervalFn = globalThis.setInterval ?? null,
+  clearIntervalFn = globalThis.clearInterval ?? null,
 } = {}) {
   let context = null;
   let masterGain = null;
@@ -306,6 +322,8 @@ export function createProgrammaticAudio({
   let bgmVolume = normalizedLevel(initialBgmVolume, "initialBgmVolume");
   let seVolume = normalizedLevel(initialSeVolume, "initialSeVolume");
   let motifScheduledSeconds = 0;
+  let bgmLoopSchedulerHandle = null;
+  let bgmLoopExtensionCount = 0;
   let reactiveIntensity = deriveReactiveAudioIntensity({ mode: "edit" });
 
   const available = typeof AudioContextCtor === "function";
@@ -366,7 +384,68 @@ export function createProgrammaticAudio({
     }
   }
 
+  function stopLoopScheduler() {
+    if (
+      bgmLoopSchedulerHandle != null &&
+      typeof clearIntervalFn === "function"
+    ) {
+      clearIntervalFn(bgmLoopSchedulerHandle);
+    }
+    bgmLoopSchedulerHandle = null;
+  }
+
+  function maintainLoopSchedule() {
+    if (!unlocked || !context || modeVoices.length === 0) return false;
+
+    const now = context.currentTime;
+    let extended = false;
+
+    for (const voice of modeVoices) {
+      if (voice.scheduledUntil < now) {
+        voice.scheduledUntil = now;
+      }
+
+      while (
+        voice.scheduledUntil - now <=
+        BGM_LOOP_SCHEDULE_AHEAD_SECONDS
+      ) {
+        voice.scheduledUntil = scheduleProgramVoice(
+          voice.oscillator,
+          voice.gain,
+          voice.definition,
+          voice.scheduledUntil,
+        );
+        bgmLoopExtensionCount += 1;
+        extended = true;
+      }
+    }
+
+    motifScheduledSeconds = Math.max(
+      0,
+      ...modeVoices.map(
+        (voice) => voice.scheduledUntil - now,
+      ),
+    );
+    return extended;
+  }
+
+  function ensureLoopScheduler() {
+    if (
+      bgmLoopSchedulerHandle != null ||
+      typeof setIntervalFn !== "function"
+    ) {
+      return;
+    }
+
+    bgmLoopSchedulerHandle = setIntervalFn(
+      maintainLoopSchedule,
+      BGM_LOOP_SCHEDULER_INTERVAL_MS,
+    );
+    bgmLoopSchedulerHandle?.unref?.();
+  }
+
   function stopModeVoices() {
+    stopLoopScheduler();
     retireVoices(modeVoices);
     modeVoices = [];
     activeMode = null;
@@ -391,16 +470,30 @@ export function createProgrammaticAudio({
       oscillator.frequency.setValueAtTime(firstFrequency, now);
       oscillator.connect(gain);
       gain.connect(bgmGain);
+      const voiceScheduledUntil = scheduleProgramVoice(
+        oscillator,
+        gain,
+        definition,
+        now,
+        { resetGain: true },
+      );
       scheduledUntil = Math.max(
         scheduledUntil,
-        scheduleProgramVoice(oscillator, gain, definition, now),
+        voiceScheduledUntil,
       );
       oscillator.start(now);
-      modeVoices.push({ oscillator, gain });
+      modeVoices.push({
+        oscillator,
+        gain,
+        definition,
+        scheduledUntil: voiceScheduledUntil,
+      });
     }
 
     activeMode = mode;
     motifScheduledSeconds = Math.max(0, scheduledUntil - now);
+    ensureLoopScheduler();
+    maintainLoopSchedule();
     return true;
   }
 
@@ -579,6 +672,14 @@ export function createProgrammaticAudio({
       reactiveRampSeconds: reactiveIntensity.rampSeconds,
       crossfadeSeconds: MODE_CROSSFADE_SECONDS,
       motifScheduledSeconds,
+      bgmLooping:
+        bgmLoopSchedulerHandle != null &&
+        modeVoices.length > 0,
+      bgmLoopScheduleAheadSeconds:
+        BGM_LOOP_SCHEDULE_AHEAD_SECONDS,
+      bgmLoopSchedulerIntervalMs:
+        BGM_LOOP_SCHEDULER_INTERVAL_MS,
+      bgmLoopExtensionCount,
       lastCue: cueHistory.at(-1)?.cue ?? null,
       cueHistory: cueHistory.map((entry) => ({ ...entry })),
       modeHistory: [...modeHistory],
