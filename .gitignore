@@ -80,3 +80,6 @@ artifacts/ui-ux-polish/
 artifacts/exploration-ux/
 artifacts/room-events/
 artifacts/owner-ui-review/
+
+# Local command log bundles
+artifacts/logs/
