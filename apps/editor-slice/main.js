@@ -1459,6 +1459,79 @@ function renderEditContextHud() {
           ],
         ),
       );
+
+      const roomEntities =
+        authoringSpec().entities.filter(
+          (entry) => entry.roomId === room.id,
+        );
+      const roomEntityList =
+        document.createElement('div');
+      roomEntityList.className =
+        'detail-entity-list';
+
+      roomEntityList.append(
+        ...roomEntities.map((entry) => {
+          const entryPresentation =
+            entityDisplay(entry);
+          const button =
+            document.createElement('button');
+          button.type = 'button';
+          button.className =
+            `room-content-item${entry.id === selectedEntityId ? ' is-selected' : ''}`;
+          button.dataset.entityId = entry.id;
+          button.dataset.kind = entry.type;
+
+          const marker =
+            document.createElement('span');
+          marker.className =
+            'entity-marker';
+          marker.textContent =
+            entryPresentation.icon;
+
+          const label =
+            document.createElement('span');
+          label.className =
+            'room-content-label';
+          label.textContent =
+            entryPresentation.label;
+
+          const id =
+            document.createElement('span');
+          id.className =
+            'room-content-id';
+          id.textContent = entry.id;
+
+          button.append(
+            marker,
+            label,
+            id,
+          );
+          button.addEventListener(
+            'click',
+            () => selectEntity(entry.id),
+          );
+          return button;
+        }),
+      );
+
+      groups.push(
+        createDetailGroup(
+          t('details.groupContents'),
+          roomEntities.length > 0
+            ? [roomEntityList]
+            : [
+                (() => {
+                  const empty =
+                    document.createElement('span');
+                  empty.className =
+                    'room-content-empty';
+                  empty.textContent =
+                    t('overlay.empty');
+                  return empty;
+                })(),
+              ],
+        ),
+      );
     }
   } else if (corridor) {
     roomContentsOverlay.dataset.detailKind =
