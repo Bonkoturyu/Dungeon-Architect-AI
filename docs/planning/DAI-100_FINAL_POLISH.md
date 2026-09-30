@@ -1351,6 +1351,27 @@ Those remain explicit release gates after the local regression is green.
 
 ### M — Final DAI-090 / release phase
 
+DAI-090 Final passed on 2026-09-30 JST against the public Cloudflare production `/api/design-intent` path:
+
+- exact corpus: 20/20 cases;
+- HTTP 200: 20/20;
+- valid and bounded DesignIntent: 20/20;
+- Cloud provider selected: 20/20;
+- fallback selected: 0/20;
+- semantic constraints: 59/59;
+- semantic constraint rate: 100%;
+- no public request failures;
+- no local API key required;
+- no secret or full-prompt leak in evidence;
+- token usage: 7,443 input / 4,476 output / 11,919 total;
+- estimated total cost: USD 0.0068598;
+- average latency: 3,316.801 ms;
+- p95 latency: 4,577.521 ms;
+- max latency: 5,817.238 ms;
+- final result: `passed: true`, `falseChecks: []`.
+
+The DAI-090 Final release gate is therefore **accepted**.
+
 After all implementation stops:
 
 1. rerun the exact DAI-090 20-case corpus as **Final**;
