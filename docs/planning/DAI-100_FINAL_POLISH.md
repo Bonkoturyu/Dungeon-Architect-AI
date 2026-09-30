@@ -836,7 +836,7 @@ In addition to accepted **Delaunay + MST + Loops** and **BSP**, implement all re
 3. Cellular Automata — **accepted**;
 4. Maze Carving — **accepted**;
 5. Gameplay Graph / Grammar — **accepted**;
-6. Wave Function Collapse (WFC) — **implementation candidate present; owner-local acceptance pending**.
+6. Wave Function Collapse (WFC) — **accepted**.
 
 #### Rooms + Mazes candidate
 
@@ -1240,7 +1240,43 @@ Integrated gate:
 
 `npm run validate:dai-100-wfc`
 
-WFC is **pending owner-local acceptance**.
+Owner-local acceptance passed on 2026-09-30 JST at `c708f522390861c32de3c2bc2f4bf78e9a510c94`.
+
+The 9-step `npm run validate:dai-100-wfc` gate passed end-to-end:
+
+- reusable WFC Core tests: 10/10 PASS;
+- Generator / WFC adapter suite: 66/66 PASS;
+- 150-case renderer/WFC matrix: 150/150 PASS;
+- routing mode: **strict 150/150**;
+- unique spatial layouts: 30;
+- total extra edges: 486;
+- total optional adjacency candidates: 930;
+- WFC collapses exercised: 930;
+- propagation revisions exercised: 930;
+- contradiction count across the acceptance matrix: 0;
+- matrix duration: 4,210 ms;
+- production hosting build: PASS;
+- Owner UI regression smoke: PASS;
+- ten-strategy Product selector smoke: PASS;
+- 3-Floor Test + Mystery browser smoke: PASS;
+- syntax validation: 265 files PASS;
+- git diff / whitespace check: PASS;
+- final result: `passed: true`, `falseChecks: []`.
+
+The Product browser smoke verified WFC selector/provenance, unique Floor IDs/Seeds/layouts, Start eligibility on every Floor, preserved WFC provenance through Test and Mystery return, and zero browser/page/request/HTTP errors.
+
+WFC is therefore **accepted**.
+
+All six expanded Algorithm Lab strategies are now accepted:
+
+- Rooms + Mazes;
+- Random Walk;
+- Cellular Automata;
+- Maze Carving;
+- Gameplay Graph / Grammar;
+- Wave Function Collapse (WFC).
+
+The Algorithm Lab implementation phase is complete.
 
 Each strategy should follow the already accepted loose-coupled architecture:
 
