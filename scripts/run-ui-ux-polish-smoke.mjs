@@ -112,6 +112,8 @@ try {
       emptySelectionChipsHidden: selected.hidden === true && entitySelected.hidden === true,
       canvasCssWidth: canvasRect.width,
       canvasCssHeight: canvasRect.height,
+      canvasClientWidth: canvas.clientWidth,
+      canvasClientHeight: canvas.clientHeight,
       canvasBackingWidth: canvas.width,
       canvasBackingHeight: canvas.height,
       horizontalOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -135,9 +137,8 @@ try {
 
   await page.waitForFunction(() => {
     const canvas = document.querySelector('#renderCanvas');
-    const rect = canvas.getBoundingClientRect();
-    return Math.abs(canvas.width - rect.width) <= 1 &&
-      Math.abs(canvas.height - rect.height) <= 1;
+    return Math.abs(canvas.width - canvas.clientWidth) <= 1 &&
+      Math.abs(canvas.height - canvas.clientHeight) <= 1;
   }, null, { timeout: 5_000 });
 
   const playLayout = await page.evaluate(() => {
@@ -175,6 +176,8 @@ try {
         .map((button) => button.textContent?.trim() ?? ''),
       canvasCssWidth: canvasRect.width,
       canvasCssHeight: canvasRect.height,
+      canvasClientWidth: canvas.clientWidth,
+      canvasClientHeight: canvas.clientHeight,
       canvasBackingWidth: canvas.width,
       canvasBackingHeight: canvas.height,
       horizontalOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -272,8 +275,8 @@ try {
       Math.abs(editLayout.canvasBackingHeight - editLayout.canvasCssHeight) <= 1,
     playModeApplied: playLayout.bodyMode === 'play',
     playCanvasMatchesExpandedLayout:
-      Math.abs(playLayout.canvasBackingWidth - playLayout.canvasCssWidth) <= 1 &&
-      Math.abs(playLayout.canvasBackingHeight - playLayout.canvasCssHeight) <= 1,
+      Math.abs(playLayout.canvasBackingWidth - playLayout.canvasClientWidth) <= 1 &&
+      Math.abs(playLayout.canvasBackingHeight - playLayout.canvasClientHeight) <= 1,
     authoringPanelsHiddenInPlay: playLayout.hiddenEditorPanels >= 3,
     playViewportExpands: playLayout.viewportWidth > editLayout.viewportWidth,
     playInstructionIsModeAware: playLayout.viewportHelp.includes('Auto-map'),
