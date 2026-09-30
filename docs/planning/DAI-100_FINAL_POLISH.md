@@ -1303,6 +1303,52 @@ Each Algorithm Lab implementation requires:
 
 Version 2 remains the Recommended/default Product strategy.
 
+### N — Final local regression gate
+
+All planned DAI-100 implementation work is now complete enough to enter the release-gate phase.
+
+A consolidated local gate is available:
+
+`npm run validate:dai-100-final-local`
+
+It runs the non-public, non-subjective replacement-candidate regression surface once without nesting every historical DAI-100 acceptance runner:
+
+1. full Node regression suite;
+2. multi-floor simulation regression;
+3. production hosting build;
+4. browser performance;
+5. Owner UI;
+6. Room Event gameplay;
+7. multi-floor browser flow;
+8. programmatic characters;
+9. Programmatic Audio V2 technical smoke;
+10. motion feedback;
+11. event feedback;
+12. Result / camera focus;
+13. DesignIntent atmosphere;
+14. AI Edit V3 structural browser regression;
+15. Reactive Audio V2 browser regression;
+16. JSON Export;
+17. JSON Import / round-trip;
+18. ten-strategy Generator selector;
+19. legal / provenance audit;
+20. secret / privacy audit;
+21. public-doc truthfulness audit;
+22. submission metadata audit;
+23. syntax validation;
+24. git diff / whitespace check.
+
+This gate intentionally excludes:
+
+- owner audio listening review;
+- public deployment smoke;
+- live-provider semantic verification;
+- DAI-090 Final;
+- final video capture/review;
+- freeze/rollback creation.
+
+Those remain explicit release gates after the local regression is green.
+
 ### M — Final DAI-090 / release phase
 
 After all implementation stops:
