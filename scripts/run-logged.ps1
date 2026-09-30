@@ -81,11 +81,17 @@ Write-Host ""
 $exitCode = 1
 Set-Content -Path $consoleLog -Value "" -Encoding UTF8
 
+# Windows PowerShell can promote native-process stderr records to terminating
+# errors when ErrorActionPreference is Stop. npm/Vite legitimately writes
+# warnings to stderr even when the process exits 0, so keep stderr in the
+# combined log and use the native exit code as the run result.
+$previousErrorActionPreference = $ErrorActionPreference
 try {
+  $ErrorActionPreference = "Continue"
   & npm.cmd run $NpmScript 2>&1 | ForEach-Object {
     $line = $_.ToString()
     Write-Host $line
-    Add-Content -Path $consoleLog -Value $line -Encoding UTF8
+    Add-Content -Path $consoleLog -Value $line -Encoding UTF8 -ErrorAction Stop
   }
   $exitCode = $LASTEXITCODE
 }
@@ -94,6 +100,9 @@ catch {
   Write-Host $errorText
   Add-Content -Path $consoleLog -Value $errorText -Encoding UTF8
   $exitCode = 1
+}
+finally {
+  $ErrorActionPreference = $previousErrorActionPreference
 }
 
 $finishedAt = Get-Date
