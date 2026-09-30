@@ -1418,8 +1418,8 @@
     }
     #playExitButtons {
       display: grid;
-      grid-template-columns: repeat(3, 46px);
-      grid-template-rows: repeat(3, 46px);
+      grid-template-columns: 60px 76px 60px;
+      grid-template-rows: 60px 76px 60px;
       align-items: center;
       justify-items: center;
     }
@@ -1432,11 +1432,24 @@
       border-radius: 50%;
       box-shadow: 0 0 0 4px rgba(139, 220, 255, 0.1);
     }
-    .exit-slot { display: flex; align-items: center; justify-content: center; gap: 4px; }
+    .exit-slot {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
     .exit-slot.side-north { grid-column: 2; grid-row: 1; }
     .exit-slot.side-east { grid-column: 3; grid-row: 2; }
     .exit-slot.side-south { grid-column: 2; grid-row: 3; }
     .exit-slot.side-west { grid-column: 1; grid-row: 2; }
+    .exit-slot.side-east.has-multiple,
+    .exit-slot.side-west.has-multiple {
+      flex-direction: column;
+    }
+    .exit-slot.side-north.has-multiple,
+    .exit-slot.side-south.has-multiple {
+      flex-direction: row;
+    }
     .exit-slot.side-unknown { grid-column: 2; grid-row: 2; transform: translateY(23px); }
     .exit-button {
       width: 42px;
@@ -1446,6 +1459,24 @@
       font-size: 1.18rem;
       line-height: 1;
       box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+    }
+    .exit-button.is-multi {
+      width: 36px;
+      min-width: 36px;
+      height: 32px;
+      min-height: 32px;
+      border-radius: 11px;
+      font-size: 0.90rem;
+      letter-spacing: -0.08em;
+    }
+    .exit-button:focus-visible,
+    .exit-button:hover {
+      outline: none;
+      transform: translateY(-1px);
+      border-color: rgba(170, 193, 255, 0.98);
+      box-shadow:
+        0 0 0 3px rgba(145, 167, 255, 0.15),
+        0 6px 18px rgba(0,0,0,0.24);
     }
     .exit-button.is-unknown {
       border-color: rgba(153, 177, 255, 0.92);
