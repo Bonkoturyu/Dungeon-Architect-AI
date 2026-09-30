@@ -46,7 +46,11 @@ Ascending consonant motif.
 
 Descending low motif with rests.
 
-The current implementation schedules more than two minutes of deterministic motif automation when a mode begins. This avoids JavaScript interval timers and keeps the AudioContext graph simple.
+The runtime keeps a rolling deterministic Web Audio schedule rather than stopping after one precomputed window.
+
+When a mode begins, each voice receives an initial long-form automation chunk. A lightweight scheduler then maintains at least 180 seconds of future automation by appending additional 72-step chunks. The scheduler runs every 15 seconds, does not restart the active motif, and is cleared when voices are retired or the audio presentation is disposed.
+
+This preserves sample-free project-authored audio while making the BGM genuinely continuous for arbitrarily long Edit/Play sessions.
 
 ## Crossfade
 
@@ -109,8 +113,9 @@ The first DAI-100 audio-polish gate requires:
 1. audio unit tests pass;
 2. V2 reports separate BGM/SE mix levels;
 3. invalid mix values fail closed;
-4. BGM modes schedule long-form motifs;
-5. mode changes retain the accepted mode vocabulary and crossfade;
+4. BGM modes maintain a continuous rolling schedule beyond the initial motif window;
+5. the loop scheduler extends future oscillator automation and is cleared on disposal;
+6. mode changes retain the accepted mode vocabulary and crossfade;
 6. mute/unmute remains functional;
 7. browser mixer sliders update runtime state;
 8. gameplay cues remain wired;
