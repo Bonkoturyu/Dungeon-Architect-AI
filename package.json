@@ -133,7 +133,8 @@
     "test:generator-wfc": "node --test packages/generator-algorithms/wfc/test/*.test.js",
     "validate:dai-100-wfc-matrix": "node scripts/run-dai-100-wfc-matrix.mjs",
     "smoke:dai-100-wfc": "node scripts/run-dai-100-wfc-browser-smoke.mjs",
-    "validate:dai-100-wfc": "node scripts/run-dai-100-wfc-validation.mjs"
+    "validate:dai-100-wfc": "node scripts/run-dai-100-wfc-validation.mjs",
+    "validate:dai-100-final-local": "node scripts/run-dai-100-final-local-regression.mjs"
   },
   "devDependencies": {
     "@babylonjs/core": "9.18.0",
