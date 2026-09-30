@@ -162,6 +162,10 @@ try {
       playAsidePosition: asideStyle.position,
       exitPadWidth: exitPad?.width ?? 0,
       exitPadHeight: exitPad?.height ?? 0,
+      exitButtonTexts: [...document.querySelectorAll('#playExitButtons .exit-button')]
+        .map((button) => button.textContent?.trim() ?? ''),
+      multiExitButtonTexts: [...document.querySelectorAll('#playExitButtons .exit-button.is-multi')]
+        .map((button) => button.textContent?.trim() ?? ''),
       canvasCssWidth: canvasRect.width,
       canvasCssHeight: canvasRect.height,
       canvasBackingWidth: canvas.width,
@@ -277,10 +281,19 @@ try {
     exitInstructionMinimal:
       playLayout.exitPrompt === 'CHOOSE EXIT',
     spatialExitPadPresent:
-      playLayout.exitPadWidth >= 130 &&
-      playLayout.exitPadWidth <= 150 &&
-      playLayout.exitPadHeight >= 130 &&
-      playLayout.exitPadHeight <= 150,
+      playLayout.exitPadWidth >= 185 &&
+      playLayout.exitPadWidth <= 205 &&
+      playLayout.exitPadHeight >= 185 &&
+      playLayout.exitPadHeight <= 205,
+    multipleExitLabelsAreSpatialNotOrdinal:
+      playLayout.exitButtonTexts.every(
+        (text) => !/^[▲▶▼◀][12]$/.test(text),
+      ) &&
+      playLayout.multiExitButtonTexts.every(
+        (text) =>
+          /[↑↓←→•]/.test(text) ||
+          !/^[▲▶▼◀][12]$/.test(text),
+      ),
     resultModeApplied: resultLayout.bodyMode === 'result',
     resultVisible: resultLayout.resultText.includes('CLEARED') && resultLayout.playText.includes('MOVE'),
     authoringPanelsHiddenInResult: resultLayout.editorPanelsHidden === true,
