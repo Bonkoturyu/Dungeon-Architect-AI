@@ -142,7 +142,7 @@
     "bundle:existing-log": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package-existing-log-run.ps1",
     "validate:dai-100-owner-polish": "node scripts/run-dai-100-owner-polish-validation.mjs",
     "validate:dai-100-owner-polish:bundle": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-logged.ps1 -NpmScript validate:dai-100-owner-polish -Label dai-100-owner-polish",
-    "start:local": "node node_modules/vite/bin/vite.js --host 127.0.0.1 --port 4173"
+    "start:local": "node scripts/start-local.mjs"
   },
   "devDependencies": {
     "@babylonjs/core": "9.18.0",
