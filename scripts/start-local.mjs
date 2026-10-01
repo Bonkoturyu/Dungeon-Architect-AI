@@ -7,6 +7,7 @@ const host = '127.0.0.1';
 const port = 4173;
 const url = `http://${host}:${port}/apps/editor-slice/index.html`;
 const serverEntry = path.resolve('node_modules/vite/bin/vite.js');
+const serverConfig = path.resolve('scripts/start-local.config.mjs');
 
 function firstExistingPath(candidates) {
   for (const candidate of candidates) {
@@ -57,8 +58,8 @@ function stopProcessTree(child) {
   child.kill('SIGTERM');
 }
 
-if (!fs.existsSync(serverEntry)) {
-  throw new Error('Local dependencies are missing. Run npm install first.');
+if (!fs.existsSync(serverEntry) || !fs.existsSync(serverConfig)) {
+  throw new Error('Local preview files are missing. Run npm install and git pull first.');
 }
 
 const browserPath = findBrowser();
@@ -75,6 +76,8 @@ const server = spawn(process.execPath, [
   '--port',
   String(port),
   '--strictPort',
+  '--config',
+  serverConfig,
 ], {
   cwd: process.cwd(),
   stdio: 'inherit',
