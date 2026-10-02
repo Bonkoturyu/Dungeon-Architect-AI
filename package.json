@@ -150,7 +150,8 @@
     "profile:core": "node scripts/profile-special-room-core.mjs",
     "smoke:room-content": "node scripts/run-room-content-ui-smoke.mjs",
     "validate:trap-avoidance": "node scripts/validate-trap-avoidance.mjs",
-    "smoke:trap-avoidance": "node scripts/run-trap-avoidance-smoke.mjs"
+    "smoke:trap-avoidance": "node scripts/run-trap-avoidance-smoke.mjs",
+    "smoke:generation-settings": "node scripts/run-generation-settings-smoke.mjs"
   },
   "devDependencies": {
     "@babylonjs/core": "9.18.0",

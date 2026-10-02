@@ -90,7 +90,7 @@ try {
  assert.equal(await page.locator('select[name="endpoint-goal-floor-1"]').inputValue(),'shop');assert.equal(await page.locator('select[name="endpoint-goal-floor-2"]').inputValue(),'monster-house');
  await page.selectOption('select[name="endpoint-goal-floor-2"]','trap-house');
  const scopedCount=page.locator('[data-plan-id="endpoint-goal-trap-house-2"] input[type="number"]').nth(1);await scopedCount.fill('2');
- await page.selectOption('select[name="difficulty"]','normal');assert.equal(await scopedCount.inputValue(),'2');
+ await page.selectOption('select[name="presence-monster-house"]','random');assert.equal(await scopedCount.inputValue(),'2');
  await page.screenshot({path:path.join(output,'per-floor-endpoint-review.png')});
  await page.locator('dialog').getByRole('button',{name:'Generate this plan',exact:true}).click();assert.equal(await page.evaluate(()=>window.__pendingGeneration),true);
  const scoped=await page.evaluate(()=>window.__DAI_EDITOR_SLICE__.getFullDungeonExport());

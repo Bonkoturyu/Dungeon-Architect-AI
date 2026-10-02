@@ -38,9 +38,9 @@ try {
   await page.selectOption('select[name="endpoint-start"]','normal'); await page.selectOption('select[name="endpoint-goal"]','normal');
   const monsterCount=page.getByRole('group',{name:'Monster house',exact:true}).locator('input[type="number"]').nth(1);
   await monsterCount.fill('2');
-  await page.locator('select[name="difficulty"]').selectOption('easy');
+  await page.locator('select[name="endpoint-start"]').selectOption('random');
   assert.equal(await monsterCount.inputValue(),'2');
-  await page.locator('select[name="difficulty"]').selectOption('normal');
+  await page.locator('select[name="endpoint-start"]').selectOption('normal');
   assert.equal(await monsterCount.inputValue(),'2');
   await monsterCount.fill('101');
   await page.locator('dialog').getByRole('button',{name:'Generate this plan',exact:true}).click();
@@ -52,7 +52,7 @@ try {
   await page.locator('dialog').getByRole('button',{name:'Generate this plan',exact:true}).click();
   assert.match(await page.locator('dialog [role="alert"]').textContent(),/exceeds limit 250/); checks.push('advanced-cap-combines-enemies-and-traps');
   await page.locator('#specialRoomEntityLimit').fill('100');
-  await monsterCount.fill('3'); checks.push('manual-edits-survive-difficulty-change');
+  await monsterCount.fill('3'); checks.push('manual-edits-survive-presence-change');
   await page.screenshot({path:path.join(output,'confirmation.png'),fullPage:true});
   await page.locator('dialog').getByRole('button',{name:'Generate this plan',exact:true}).click();
   assert.equal(await page.evaluate(()=>window.__pendingGeneration),true); checks.push('repeat-confirm-generates-v3');
