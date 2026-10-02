@@ -1,3 +1,4 @@
+import { ROOM_PLAN_MESSAGES } from './room-plan-messages.js';
 export const DEFAULT_LANGUAGE = 'en';
 
 export const LANGUAGE_OPTIONS = Object.freeze([
@@ -10,6 +11,7 @@ export const LANGUAGE_OPTIONS = Object.freeze([
 
 export const MESSAGE_CATALOGS = Object.freeze({
   en: Object.freeze({
+    ...ROOM_PLAN_MESSAGES['en'],
     'app.tagline': 'Describe · Build · Explore',
     'language.label': 'Language',
     'mode.edit': 'Edit mode',
@@ -256,6 +258,7 @@ export const MESSAGE_CATALOGS = Object.freeze({
     'onboarding.close': 'Close guide',
   }),
   ja: Object.freeze({
+    ...ROOM_PLAN_MESSAGES['ja'],
     'app.tagline': '説明 · 構築 · 探索',
     'language.label': '言語',
     'mode.edit': '編集モード',
@@ -502,6 +505,7 @@ export const MESSAGE_CATALOGS = Object.freeze({
     'onboarding.close': 'ガイドを閉じる',
   }),
   'zh-Hans': Object.freeze({
+    ...ROOM_PLAN_MESSAGES['zh-Hans'],
     'app.tagline': '描述 · 构建 · 探索',
     'language.label': '语言',
     'mode.edit': '编辑模式',
@@ -748,6 +752,7 @@ export const MESSAGE_CATALOGS = Object.freeze({
     'onboarding.close': '关闭指南',
   }),
   'zh-Hant': Object.freeze({
+    ...ROOM_PLAN_MESSAGES['zh-Hant'],
     'app.tagline': '描述 · 建構 · 探索',
     'language.label': '語言',
     'mode.edit': '編輯模式',
@@ -989,6 +994,7 @@ export const MESSAGE_CATALOGS = Object.freeze({
     'onboarding.close': '關閉指南',
   }),
   ko: Object.freeze({
+    ...ROOM_PLAN_MESSAGES['ko'],
     'app.tagline': '설명 · 구축 · 탐험',
     'language.label': '언어',
     'mode.edit': '편집 모드',

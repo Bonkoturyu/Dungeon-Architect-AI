@@ -11,6 +11,8 @@ import {
 } from '../../play-core/src/interaction-runtime.js';
 import {
   createPlayResult,
+  completePlayGoal,
+  getGoalCompletionState,
   failPlaySession,
   movePlaySession,
   startPlaySession,
@@ -18,6 +20,7 @@ import {
 
 export const SIMULATION_ACTION_TYPES = Object.freeze([
   'move',
+  'complete-goal',
   'encounter-enemy',
   'combat-enemy',
   'defeat-enemy',
@@ -77,7 +80,7 @@ function interactableObservation(session) {
     .sort((a, b) => a.id.localeCompare(b.id));
 }
 
-function availableActions(adjacentRoomIds, enemies, interactables) {
+function availableActions(adjacentRoomIds, enemies, interactables, session) {
   const actions = [];
   for (const roomId of adjacentRoomIds) actions.push({ type: 'move', roomId });
 
@@ -106,6 +109,8 @@ function availableActions(adjacentRoomIds, enemies, interactables) {
     }
   }
 
+  const goal = getGoalCompletionState(session);
+  if (goal.available && !goal.blocked) actions.push({ type: 'complete-goal' });
   actions.push({ type: 'stop' });
   return actions;
 }
@@ -125,6 +130,7 @@ export function createSimulationObservation(session, { step = 0 } = {}) {
     playStatus: session.status,
     currentRoomId: session.currentRoomId,
     goalRoomId: session.goalRoomId,
+    ...(session.snapshot.rooms.find(({ id }) => id === session.currentRoomId)?.kind ? { currentRoomKind: session.snapshot.rooms.find(({ id }) => id === session.currentRoomId).kind } : {}),
     adjacentRoomIds,
     visitedRoomIds: [...session.visitedRoomIds],
     moves: session.moves,
@@ -132,7 +138,7 @@ export function createSimulationObservation(session, { step = 0 } = {}) {
     enemies,
     interactables,
     counters: clone(session.gameplayState?.counters ?? {}),
-    availableActions: availableActions(adjacentRoomIds, enemies, interactables),
+    availableActions: availableActions(adjacentRoomIds, enemies, interactables, session),
   };
 }
 
@@ -155,6 +161,7 @@ export function applySimulationAction(session, action, { at = 0 } = {}) {
   }
 
   switch (action.type) {
+    case 'complete-goal': return completePlayGoal(session, { at });
     case 'move': {
       const invalid = requireActionId(action, 'roomId');
       if (invalid) return invalid;

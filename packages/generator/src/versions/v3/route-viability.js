@@ -1,4 +1,4 @@
-import { startPlaySession, movePlaySession, DEFAULT_PLAYER_MAX_HP } from '../../../../play-core/src/play-session.js';
+import { startPlaySession, movePlaySession, completePlayGoal, DEFAULT_PLAYER_MAX_HP } from '../../../../play-core/src/play-session.js';
 import { getEnemyState, listRoomEnemies, resolveEnemyCombat, DEFAULT_ENEMY_DAMAGE } from '../../../../play-core/src/enemy-runtime.js';
 import { listRoomInteractables, openTreasure, avoidTrap, useRecovery, DEFAULT_RECOVERY_HEALING } from '../../../../play-core/src/interaction-runtime.js';
 import { listRoomShops, purchaseShopOffer } from '../../../../play-core/src/shop-runtime.js';
@@ -36,7 +36,7 @@ function routeTo(session, target, adjacency, weighted = true) {
     settled.add(current.roomId);
     if (current.roomId === target) return current.path;
     for (const next of adjacency.get(current.roomId)) {
-      if (settled.has(next) || (next === session.goalRoomId && target !== next)) continue;
+      if (settled.has(next) || (next === session.goalRoomId && target !== next && !['shop', 'monster-house', 'trap-house'].includes(session.snapshot.rooms.find(({ id }) => id === next)?.kind))) continue;
       frontier.push({ roomId: next, cost: current.cost + roomCosts.get(next), path: [...current.path, next] });
     }
   }
@@ -145,6 +145,7 @@ function attemptWitness(spec, policy, adjacency, initialPlayerState) {
     }
   }
   if (session.status === 'playing') visit(session.goalRoomId, policy !== 'shortest');
+  if (session.status === 'playing' && session.currentRoomId === session.goalRoomId) perform('complete-goal', session.goalRoomId, () => completePlayGoal(session));
   return { policy, survives: session.status === 'cleared', status: session.status, pathRoomIds,
     hp: session.playerState.hp, minimumHp, playerState: session.playerState, actions,
     failedRoomId: session.status === 'failed' ? session.currentRoomId : null };
@@ -223,7 +224,7 @@ export function guardGeneratedRouteV3(spec, { roomPlans = [], difficultyProfile,
   // 候補は部屋数×自動家数まで。明示した部屋、shop/TrapHouse、Start/Goalには触れない。
   const budgetRoomIds = new Set(candidate.entities.filter(({ id }) => id.startsWith('v3:shop-budget:')).map(({ roomId }) => roomId));
   const autoHouses = roomPlans.map((plan, index) => ({ ...plan, id: plan.id ?? `room-plan-${index + 1}` }))
-    .filter(({ kind, roomId }) => kind === 'monster-house' && roomId === null);
+    .filter(({ kind, roomId, targetRole }) => kind === 'monster-house' && roomId === null && !targetRole);
   for (const plan of autoHouses) {
     const houseRoomId = candidate.entities.find(({ id }) => id === `v3:${plan.id}:enemy-1`)?.roomId;
     if (!houseRoomId) continue;
@@ -266,7 +267,8 @@ export function replayRouteWitnessV3(session, witness) {
         throw new Error('ROUTE_WITNESS_EXIT_BLOCKED');
       }
       result = movePlaySession(current, id);
-    } else if (type === 'combat') result = resolveEnemyCombat(current, id);
+    } else if (type === 'complete-goal') result = completePlayGoal(current);
+    else if (type === 'combat') result = resolveEnemyCombat(current, id);
     else if (type === 'open-treasure') result = openTreasure(current, id);
     else if (type === 'avoid-trap') result = avoidTrap(current, id);
     else if (type === 'use-recovery') result = useRecovery(current, id);

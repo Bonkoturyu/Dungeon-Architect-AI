@@ -2341,6 +2341,11 @@
             <span data-i18n="create.floors">Floors (1–10)</span>
             <input id="floorCount" type="number" min="1" max="10" step="1" value="1" inputmode="numeric" aria-label="Dungeon floor count">
           </label>
+          <label class="generation-auto-field" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <input id="generationAuto" type="checkbox" style="width:auto;" aria-describedby="generationAutoHint">
+            <span data-i18n="create.auto">Auto: skip room review</span>
+          </label>
+          <p id="generationAutoHint" class="muted" data-i18n="create.autoHint">Keep explicit prompt settings; choose omitted values automatically.</p>
           <button id="generateDungeon" class="primary-action wide-action" type="button" data-i18n="create.generate">Generate</button>
           <p id="generationStatus" class="muted" aria-live="polite"></p>
           <div class="export-actions">

@@ -73,6 +73,7 @@ function normalizeProvenance(provenance) {
     'generatorStrategyId',
     'generatorVersion',
     'algorithmVersion',
+    'contentLayerVersion',
   ]) {
     const value = provenance[key];
     if (typeof value === 'string' && value.trim() !== '') {
@@ -287,6 +288,7 @@ function validateLayoutExchangeShape(value) {
       'generatorStrategyId',
       'generatorVersion',
       'algorithmVersion',
+      'contentLayerVersion',
     ]);
     for (const key of Object.keys(value.source)) {
       if (!allowedSourceKeys.has(key)) {
@@ -303,6 +305,7 @@ function validateLayoutExchangeShape(value) {
       'generatorStrategyId',
       'generatorVersion',
       'algorithmVersion',
+      'contentLayerVersion',
     ]) {
       if (
         value.source[key] !== undefined &&

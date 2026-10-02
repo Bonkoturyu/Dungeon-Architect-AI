@@ -29,11 +29,13 @@ try {
   const original=await page.evaluate(()=>JSON.stringify(window.__DAI_EDITOR_SLICE__.getState().rooms));
   await page.evaluate(()=>{window.__pendingGeneration=window.__DAI_EDITOR_SLICE__.generateDungeonFromPrompt();});
   await page.locator('dialog.special-room-review').waitFor();
+  await page.selectOption('select[name="endpoint-start"]','normal'); await page.selectOption('select[name="endpoint-goal"]','normal');
   assert.equal(await page.evaluate(()=>JSON.stringify(window.__DAI_EDITOR_SLICE__.getState().rooms)),original); checks.push('no-authoring-mutation-before-confirm');
   await page.locator('dialog').getByRole('button',{name:'Cancel',exact:true}).click();
   assert.equal(await page.evaluate(()=>window.__pendingGeneration),false); checks.push('cancel-leaves-dungeon');
   await page.evaluate(()=>{window.__pendingGeneration=window.__DAI_EDITOR_SLICE__.generateDungeonFromPrompt();});
   await page.locator('dialog').waitFor();
+  await page.selectOption('select[name="endpoint-start"]','normal'); await page.selectOption('select[name="endpoint-goal"]','normal');
   const monsterCount=page.getByRole('group',{name:'Monster house',exact:true}).locator('input[type="number"]').nth(1);
   await monsterCount.fill('2');
   await page.locator('select[name="difficulty"]').selectOption('easy');
@@ -94,6 +96,7 @@ try {
   const generateWithReview=async()=>{
     await page.evaluate(()=>{window.__pendingGeneration=window.__DAI_EDITOR_SLICE__.generateDungeonFromPrompt();});
     await page.locator('dialog.special-room-review').waitFor();
+  await page.selectOption('select[name="endpoint-start"]','normal'); await page.selectOption('select[name="endpoint-goal"]','normal');
     for(const kind of ['monster-house','trap-house','shop'])assert.equal(await page.locator(`select[name="presence-${kind}"]`).inputValue(),'random');
     await page.locator('dialog').getByRole('button',{name:'Generate this plan',exact:true}).click();
     assert.equal(await page.evaluate(()=>window.__pendingGeneration),true);
@@ -111,6 +114,7 @@ try {
   activeRequests=['monster-house','trap-house','shop'].map(kind=>({kind,presence:'exclude',roomCount:null,entityCount:null,floorNumber:null,roomId:null,offers:[]}));
   await page.evaluate(()=>{window.__pendingGeneration=window.__DAI_EDITOR_SLICE__.generateDungeonFromPrompt();});
   await page.locator('dialog').waitFor();
+  await page.selectOption('select[name="endpoint-start"]','normal'); await page.selectOption('select[name="endpoint-goal"]','normal');
   for(const kind of ['monster-house','trap-house','shop'])assert.equal(await page.locator(`select[name="presence-${kind}"]`).inputValue(),'exclude');
   await page.locator('dialog').getByRole('button',{name:'Generate this plan',exact:true}).click();assert.equal(await page.evaluate(()=>window.__pendingGeneration),true);
   const excluded=await page.evaluate(()=>window.__DAI_EDITOR_SLICE__.getFullDungeonExport());
@@ -119,7 +123,8 @@ try {
   await page.locator('button[data-workflow-tab="create"]').click();
   await page.fill('#floorCount','3');
   await page.evaluate(()=>{window.__pendingGeneration=window.__DAI_EDITOR_SLICE__.generateDungeonFromPrompt();});
-  await page.locator('dialog').waitFor();await page.locator('dialog').getByRole('button',{name:'Generate this plan',exact:true}).click();
+  await page.locator('dialog').waitFor();
+  await page.selectOption('select[name="endpoint-start"]','normal'); await page.selectOption('select[name="endpoint-goal"]','normal');await page.locator('dialog').getByRole('button',{name:'Generate this plan',exact:true}).click();
   assert.equal(await page.evaluate(()=>window.__pendingGeneration),true);
   await page.evaluate(()=>window.__DAI_EDITOR_SLICE__.startDungeon());
   let transitions=0;

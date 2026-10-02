@@ -7,6 +7,7 @@ function hash(text) { let value = 0x811c9dc5; for (const char of String(text)) {
 export function requestedPresencePolicies(requests) {
   const policies = Object.fromEntries(SPECIAL_ROOM_KINDS.map((kind) => [kind, 'random']));
   for (const request of requests) {
+    if (request.targetRole) continue;
     const policy = request.presence ?? 'include';
     if (!ROOM_PRESENCE_POLICIES.includes(policy)) throw new TypeError('Invalid room presence policy');
     if (policies[request.kind] !== 'random' && policies[request.kind] !== policy) throw new RangeError(`Conflicting presence requests for ${request.kind}`);

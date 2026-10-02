@@ -7,9 +7,10 @@ function safeAdd(left, right) {
 function roomPaths(spec, startRoomId) {
   const adjacency = new Map(spec.rooms.map(({ id }) => [id, []]));
   const goalRoomId = spec.entities.find(({ type }) => type === 'goal').roomId;
+  const goalIsSpecial = ['shop', 'monster-house', 'trap-house'].includes(spec.rooms.find(({ id }) => id === goalRoomId)?.kind);
   for (const { fromRoomId, toRoomId } of spec.corridors) {
     // Goal通過でPlaySessionが終了するため、shop到達前の経路には含めない。
-    if (fromRoomId === goalRoomId || toRoomId === goalRoomId) continue;
+    if (!goalIsSpecial && (fromRoomId === goalRoomId || toRoomId === goalRoomId)) continue;
     adjacency.get(fromRoomId).push(toRoomId);
     adjacency.get(toRoomId).push(fromRoomId);
   }
@@ -17,6 +18,7 @@ function roomPaths(spec, startRoomId) {
   const queue = [startRoomId];
   for (let index = 0; index < queue.length; index += 1) {
     const roomId = queue[index];
+    if (roomId === goalRoomId && !goalIsSpecial) continue;
     for (const next of adjacency.get(roomId)) {
       if (paths.has(next)) continue;
       paths.set(next, [...paths.get(roomId), next]);
@@ -47,7 +49,8 @@ export function provisionGeneratedShopGoldV3(spec) {
     const maxPrice = shop.offers.reduce((max, { price }) => Math.max(max, price), 0);
     requiredG = safeAdd(requiredG, maxPrice);
     const pathRoomIds = paths.get(shop.roomId);
-    const sourceRoomId = pathRoomIds.slice(0, -1).findLast((roomId) => normalRoomIds.has(roomId));
+    const sourceRoomId = pathRoomIds.slice(0, -1).findLast((roomId) => normalRoomIds.has(roomId))
+      ?? (spec.rooms.find(({ id }) => id === start.roomId)?.kind ? start.roomId : null);
     if (!sourceRoomId) throw new RangeError(`Shop has no normal pre-shop budget room: ${shop.id}`);
     if (maxPrice > 0) {
       plannedTreasures.push({
