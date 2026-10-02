@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Dungeon Generation Strategy Guide</title>
+  <link rel="stylesheet" href="./guide.css">
+</head>
+<body>
+<main>
+  <header class="hero">
+    <div class="kicker">Dungeon Architect AI</div>
+    <h1>Dungeon Generation Strategy Guide</h1>
+    <p class="lead">
+      Version 1 / Version 2 / Algorithm Lab を同じ共通契約で切り替え、
+      生成Coreを独立ライブラリとして再利用できるようにするための入口資料。
+    </p>
+    <nav>
+      <a href="./README.html">Overview</a>
+      <a href="./ALGORITHM_GUIDE.html">Algorithm Guide</a>
+      <a href="./CORE_ARCHITECTURE.html">Core Architecture</a>
+      <a href="./README.md">Markdown</a>
+    </nav>
+  </header>
+
+  <section>
+    <h2>3つの生成モード</h2>
+    <div class="grid">
+      <article class="card">
+        <span class="badge">Frozen</span>
+        <h3>Version 1 — Classic</h3>
+        <p>主経路を先に保証し、少数のalternate routeを追加。固定serpentine gridで配置する安定・再現性重視の方式。</p>
+      </article>
+      <article class="card">
+        <span class="badge good">Current Recommended</span>
+        <h3>Version 2 — Recommended</h3>
+        <p>V1のgraph/gameplay semanticsを維持しながら、Seedでcolumns・spacing・回転/反転・Roomサイズを変化。</p>
+      </article>
+      <article class="card">
+        <span class="badge">Expandable</span>
+        <h3>Algorithm Lab</h3>
+        <p>BSP、Delaunay+MST、Rooms+Mazes、Random Walk、Cellular Automata、Gameplay Graph、WFCなどを個別選択。</p>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <h2>共通処理モデル</h2>
+    <div class="diagram">
+      <div class="flow">
+        <div class="node">Prompt</div><div class="arrow">→</div>
+        <div class="node">DesignIntent</div><div class="arrow">→</div>
+        <div class="node">GeneratorStrategy</div><div class="arrow">→</div>
+        <div class="node">DungeonSpec</div><div class="arrow">→</div>
+        <div class="node">Validation</div><div class="arrow">→</div>
+        <div class="node">Renderer / Play / Simulator</div>
+      </div>
+    </div>
+    <p>
+      アルゴリズムを変更しても、下流は同じ <code>DungeonSpec</code> を受け取る。
+      RendererやPlay Coreは、BSPかDelaunayかを知る必要がない。
+    </p>
+  </section>
+
+  <section>
+    <h2>Strategy Core</h2>
+    <div class="two-col">
+      <div class="card">
+        <h3>独立ライブラリ境界</h3>
+        <pre>packages/generator-strategy-core/
+        ↑
+algorithm core / adapter
+        ↓
+strategy-catalog
+        ↓
+application</pre>
+      </div>
+      <div class="card">
+        <h3>依存させないもの</h3>
+        <p>DOM、Three.js、Editor state、Play runtime、OpenAI API、Cloudflare、Vite。</p>
+        <p class="small">入出力はJSON互換DTO。将来のWASM / DLL / .so / dylib wrapperを想定。</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>実装状況</h2>
+    <table>
+      <thead><tr><th>Strategy</th><th>Status</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td>Version 1 Classic</td><td>Implemented / Frozen</td><td>Regression / reproduction</td></tr>
+        <tr><td>Version 2 Recommended</td><td>Implemented / Accepted candidate</td><td>Current recommended</td></tr>
+        <tr><td><a href="./DELAUNAY_MST.html">Delaunay + MST + Loops</a></td><td>Product accepted</td><td>First independent Algorithm Lab Core</td></tr>
+        <tr><td><a href="./BSP.html">BSP</a></td><td>Product accepted / performance accepted</td><td>Second independent Algorithm Lab Core</td></tr>
+        <tr><td>Rooms + Mazes</td><td>Planned</td><td>Exploration-heavy layout</td></tr>
+        <tr><td>Gameplay Graph</td><td>Planned</td><td>DesignIntent-first topology</td></tr>
+        <tr><td>Random Walk / CA / Maze / WFC</td><td>Planned</td><td>Specialized generation</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>資料の使い分け</h2>
+    <div class="grid">
+      <article class="card">
+        <h3>Algorithm Guide</h3>
+        <p>各方式の「何をするか」「どんなDungeonになるか」「強み・弱み」「簡単な図解」を確認。</p>
+        <p><a href="./ALGORITHM_GUIDE.html">HTML版を開く</a></p>
+      </article>
+      <article class="card">
+        <h3>Core Architecture</h3>
+        <p>Strategy contract、Adapter、DTO、provenance、DLL/WASM化を見据えた責務分離を確認。</p>
+        <p><a href="./CORE_ARCHITECTURE.html">HTML版を開く</a></p>
+      </article>
+    </div>
+  </section>
+
+  <div class="callout good">
+    Version番号は再現性のため固定する。Recommendedは製品上のaliasとして、将来より良いVersionへ付け替える。
+  </div>
+</main>
+</body>
+</html>

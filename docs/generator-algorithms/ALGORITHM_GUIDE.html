@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Dungeon Generation Algorithm Guide</title>
+  <link rel="stylesheet" href="./guide.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Dungeon Architect AI</div>
+  <h1>Dungeon Generation Algorithm Guide</h1>
+  <p class="lead">
+    「何をしているアルゴリズムか」「どんなDungeonになりやすいか」「このプロジェクトでどう使うか」を、
+    簡単な図解と実装視点の両方で整理した資料。
+  </p>
+  <nav>
+    <a href="./README.html">Overview</a>
+    <a href="./CORE_ARCHITECTURE.html">Core Architecture</a>
+    <a href="./ALGORITHM_GUIDE.md">Markdown</a>
+  </nav>
+</header>
+
+<section id="v1">
+  <h2>Version 1 — Classic</h2>
+  <div class="callout"><strong>一言:</strong> StartからGoalまでの主経路を先に保証し、少数のshortcutを足す方式。</div>
+  <div class="two-col">
+    <div class="card">
+      <h3>Topology</h3>
+      <pre>Start ─ 02 ─ 03 ─ 04 ─ 05 ─ Goal
+          ╲________╱
+          alternate route</pre>
+    </div>
+    <div class="card">
+      <h3>Spatial layout</h3>
+      <pre>01 02 03 04
+08 07 06 05
+09 10 11 12</pre>
+    </div>
+  </div>
+  <p>Sequential backboneを作り、routeChoiceに応じて2～4 Room先へのalternate edgeを追加。その後、固定4-column serpentine gridへ配置する。</p>
+  <div class="grid">
+    <div class="card"><h3>強み</h3><p>再現性、到達性、デバッグ性、回帰比較。</p></div>
+    <div class="card"><h3>弱み</h3><p>同じroomCountでは空間配置が似る。branch/dead-endの表現が弱い。</p></div>
+    <div class="card"><h3>役割</h3><p>Frozen baseline。比較・再現用に残す。</p></div>
+  </div>
+</section>
+
+<section id="v2">
+  <h2>Version 2 — Recommended</h2>
+  <div class="callout good"><strong>一言:</strong> V1の安全なgraph semanticsを残し、Seedで空間配置とRoomサイズを変える。</div>
+  <div class="two-col">
+    <div class="card">
+      <h3>Seed A</h3>
+      <pre>      01
+      │
+      02
+      │
+04 ─ 03
+│
+05</pre>
+    </div>
+    <div class="card">
+      <h3>Seed B</h3>
+      <pre>05 ─ 04 ─ 03
+          │
+          02
+          │
+          01</pre>
+    </div>
+  </div>
+  <p>Seedによりcolumns、spacing、rotation/mirror、first-row direction、Room width/depthを変える。Gameplay topology、Entity count、Entity placement ruleはV1系を維持。</p>
+  <div class="grid">
+    <div class="card"><h3>強み</h3><p>V1の安全性を保ちながら視覚variationを増やせる。</p></div>
+    <div class="card"><h3>弱み</h3><p>TopologyそのものはV1系。Algorithm固有の探索構造までは変えない。</p></div>
+    <div class="card"><h3>役割</h3><p>Current Recommended。将来Recommended aliasは別Versionへ付け替え可能。</p></div>
+  </div>
+</section>
+
+<section id="bsp">
+  <h2>BSP — Binary Space Partitioning</h2>
+  <div class="callout"><strong>一言:</strong> 大きな土地を何度も二分し、その区画にRoomを置く。</div>
+  <div class="diagram"><pre>+-----------------------+
+|           |           |
+|   [A]     |    [C]    |
+|-----------+-----+-----|
+|    [D]    | [E] | [F] |
++-----------+-----+-----+</pre></div>
+  <p>全体boundsを縦/横に再帰分割し、leafにRoomを置き、sibling subtree間をCorridorで接続する。</p>
+  <div class="grid">
+    <div class="card"><h3>できやすい形</h3><p>整然とした区画、施設・地下建築物らしいRoom配置。</p></div>
+    <div class="card"><h3>強み</h3><p>overlap回避、空間利用、deterministic化が容易。</p></div>
+    <div class="card"><h3>弱み</h3><p>四角い区画感が出やすく、gameplay意味付けは別途必要。</p></div>
+  </div>
+  <p class="small">DesignIntent対応例: exploration↑ → leaf/optional link↑、routeChoice↑ → extra connection↑。</p>
+</section>
+
+<section id="delaunay">
+  <h2>Scatter + Delaunay + MST + Loops</h2>
+  <div class="callout good"><strong>一言:</strong> Roomを自然に散らし、近いRoom同士の候補から最低限の接続と必要なloopを作る。</div>
+  <div class="two-col">
+    <div class="card"><h3>Scatter / candidate</h3><pre>      A
+     / \
+    B---C
+     \ / \
+      D---E
+     /
+    F</pre></div>
+    <div class="card"><h3>MST + loop</h3><pre>      A
+     /|
+    B-C
+      |
+      D---E
+      |
+      F</pre></div>
+  </div>
+  <p>Room centerをscatterし、overlapをseparationした後、Delaunay edgeからMSTを作り全体接続を保証。未採用edgeの一部をloop/shortcutとして戻す。</p>
+  <div class="grid">
+    <div class="card"><h3>できやすい形</h3><p>organic、irregular、shortcutとloopのある探索型。</p></div>
+    <div class="card"><h3>強み</h3><p>Seed差が大きい。MSTで接続性を確保しやすい。routeChoiceと相性が良い。</p></div>
+    <div class="card"><h3>位置づけ</h3><p>Algorithm Labで最初に実装する有力候補。</p></div>
+  </div>
+</section>
+
+<section id="rooms-mazes">
+  <h2>Rooms + Mazes</h2>
+  <div class="callout"><strong>一言:</strong> Roomを置いた残りの空間をMazeで埋め、最後に全部つなぐ。</div>
+  <div class="diagram"><pre>+----------------------+
+| [Room]  ─┐ ┌─┐      |
+|          │ │ └──┐   |
+| ┌───┐    │ └─┐  │   |
+| │   └────┘   │[Room]|
+| └────────────┘      |
++----------------------+</pre></div>
+  <p>non-overlapping Room配置 → maze carving → region connector → extra connector → dead-end pruningという流れ。</p>
+  <div class="grid">
+    <div class="card"><h3>できやすい形</h3><p>Roomと複雑なCorridorの混合。classic roguelike感。</p></div>
+    <div class="card"><h3>強み</h3><p>探索密度が高く、loop量やdead-end量を調整可能。</p></div>
+    <div class="card"><h3>注意</h3><p>tile-gridからDungeonSpecへRegion/Connector Adapterが必要。</p></div>
+  </div>
+</section>
+
+<section id="random-walk">
+  <h2>Random Walk / Drunkard's Walk</h2>
+  <div class="callout"><strong>一言:</strong> ランダムに歩いた跡を床にしていく。</div>
+  <div class="diagram"><pre>Start
+  ↓
+  ↓ → → ↓
+        ← ↓
+        ← ← →</pre></div>
+  <p>wall grid上をwalkerがSeed PRNGで移動し、通過セルをfloorへ変える。</p>
+  <div class="grid">
+    <div class="card"><h3>できやすい形</h3><p>organic、irregular、cave-like。</p></div>
+    <div class="card"><h3>強み</h3><p>簡単、variation大、連結領域を作りやすい。</p></div>
+    <div class="card"><h3>弱み</h3><p>高水準のbranch数、Start/Goal距離、reward structure制御が弱い。</p></div>
+  </div>
+</section>
+
+<section id="ca">
+  <h2>Cellular Automata</h2>
+  <div class="callout"><strong>一言:</strong> ノイズを近傍ルールで何度もならし、自然な洞窟を作る。</div>
+  <div class="two-col">
+    <div class="card"><h3>Initial noise</h3><pre>##.#..#
+.#..###
+###....
+..##.#.</pre></div>
+    <div class="card"><h3>Smoothed</h3><pre>####...
+###....
+##.....
+...###.</pre></div>
+  </div>
+  <p>initial wall ratio、近傍wall threshold、iteration数で形状を調整。最後にconnected component解析とrepairが必要。</p>
+  <div class="grid">
+    <div class="card"><h3>強み</h3><p>洞窟らしいvisual identity。密度・滑らかさを調整しやすい。</p></div>
+    <div class="card"><h3>弱み</h3><p>disconnected caveが出る。global gameplay controlが弱い。</p></div>
+    <div class="card"><h3>統合</h3><p>Cell IR → Region Graph → DungeonSpec Adapter。</p></div>
+  </div>
+</section>
+
+<section id="maze">
+  <h2>Maze Carving</h2>
+  <div class="callout"><strong>一言:</strong> grid全体を通路として接続する迷路生成系。</div>
+  <div class="diagram"><pre>+---+---+---+
+| S |       |
++   +---+   +
+|       |   |
++---+   +   +
+|       | G |
++---+---+---+</pre></div>
+  <p>Recursive Backtracking、Prim、Kruskal、Ellerなどで生成の癖が変わる。</p>
+  <table>
+    <thead><tr><th>Subtype</th><th>傾向</th></tr></thead>
+    <tbody>
+      <tr><td>Recursive Backtracking</td><td>長いcorridor、depth-first的</td></tr>
+      <tr><td>Prim</td><td>branchが増えやすい</td></tr>
+      <tr><td>Kruskal</td><td>region統合、spanning treeとして理解しやすい</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="gameplay-graph">
+  <h2>Gameplay Graph / Graph Grammar</h2>
+  <div class="callout good"><strong>一言:</strong> 地形より先に「どんな体験をどんな順番でさせるか」を作る。</div>
+  <div class="diagram"><pre>Start
+  │
+  ▼
+Combat
+  │
+  ├──────► Risky Reward
+  │          │
+  │◄─────────┘
+  ▼
+Puzzle / Gate
+  │
+  ▼
+Boss
+  │
+  ▼
+Goal</pre></div>
+  <p>DesignIntentを高水準ruleへ変換し、semantic nodeとedgeを生成してからRoom Graph / spatial layoutへ埋め込む。</p>
+  <div class="grid">
+    <div class="card"><h3>強み</h3><p>Prompt / DesignIntentとの親和性が非常に高い。意味のあるbranchやpacingを設計可能。</p></div>
+    <div class="card"><h3>弱み</h3><p>rule設計とgraph→geometry embeddingが複雑。</p></div>
+    <div class="card"><h3>位置づけ</h3><p>将来のRecommended候補として最重要。</p></div>
+  </div>
+</section>
+
+<section id="wfc">
+  <h2>Wave Function Collapse — WFC</h2>
+  <div class="callout"><strong>一言:</strong> 隣り合ってよい部品のルールを守りながら候補を少しずつ確定する。</div>
+  <div class="two-col">
+    <div class="card"><h3>Before</h3><pre>[ABC][ABC][ABC]
+[ABC][ A ][ABC]
+[ABC][ABC][ABC]</pre></div>
+    <div class="card"><h3>Propagated</h3><pre>[AB ][ B ][BC ]
+[AB ][ A ][BC ]
+[AB ][ B ][BC ]</pre></div>
+  </div>
+  <p>entropyの低いcellをcollapseし、adjacency ruleを周囲へpropagate。contradiction時はretry/backtrack。</p>
+  <div class="grid">
+    <div class="card"><h3>強み</h3><p>local ruleの一貫性、sample/style反映、module組み立て。</p></div>
+    <div class="card"><h3>弱み</h3><p>global Start→Goalやgameplay progressionは単独では扱いづらい。</p></div>
+    <div class="card"><h3>統合</h3><p>Global Graphの後段でRoom内部や3D module生成に使うのが自然。</p></div>
+  </div>
+</section>
+
+<section id="hybrid">
+  <h2>Hybrid + Simulation Selection</h2>
+  <div class="callout good"><strong>一言:</strong> 複数候補を生成してSimulatorで評価し、DesignIntentに最も近い候補を選ぶ。</div>
+  <div class="diagram"><pre>             ┌─ Candidate A ─ Sim ─ 0.71
+DesignIntent ├─ Candidate B ─ Sim ─ 0.88  ← select
+             ├─ Candidate C ─ Sim ─ 0.62
+             └─ Candidate D ─ Sim ─ 0.79</pre></div>
+  <p>Start→Goal距離、branch、dead-end、cycle、damage、reward、clear rate、target durationなどでscoreを構成する。</p>
+  <div class="grid">
+    <div class="card"><h3>強み</h3><p>品質を生成ruleだけに頼らず、既存Simulatorを活用できる。</p></div>
+    <div class="card"><h3>弱み</h3><p>生成コスト増、score設計、deterministic candidate selectionが必要。</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>比較表</h2>
+  <table>
+    <thead><tr><th>方式</th><th>空間variation</th><th>Topology制御</th><th>DesignIntent</th><th>接続性</th><th>主用途</th></tr></thead>
+    <tbody>
+      <tr><td>V1 Classic</td><td>低</td><td>中</td><td>中</td><td>非常に強い</td><td>baseline</td></tr>
+      <tr><td>V2 Recommended</td><td>中～高</td><td>中</td><td>中</td><td>非常に強い</td><td>current candidate</td></tr>
+      <tr><td>BSP</td><td>中</td><td>中</td><td>中</td><td>接続方法次第</td><td>room layout</td></tr>
+      <tr><td>Delaunay + MST</td><td>高</td><td>中～高</td><td>高</td><td>強い</td><td>organic room graph</td></tr>
+      <tr><td>Rooms + Mazes</td><td>高</td><td>中</td><td>中</td><td>強くできる</td><td>exploration</td></tr>
+      <tr><td>Random Walk</td><td>高</td><td>低</td><td>低</td><td>比較的強い</td><td>cave</td></tr>
+      <tr><td>Cellular Automata</td><td>高</td><td>低</td><td>低～中</td><td>repair必要</td><td>cave</td></tr>
+      <tr><td>Maze</td><td>中～高</td><td>中</td><td>中</td><td>強い</td><td>corridor exploration</td></tr>
+      <tr><td>Gameplay Graph</td><td>高</td><td>非常に高い</td><td>非常に高い</td><td>設計次第で強い</td><td>semantic topology</td></tr>
+      <tr><td>WFC</td><td>local高</td><td>global低</td><td>中～高</td><td>global別途</td><td>local module</td></tr>
+      <tr><td>Hybrid + Simulation</td><td>基盤次第</td><td>高</td><td>非常に高い</td><td>高</td><td>best-of-N</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Algorithm Lab 実装優先順位</h2>
+  <ol>
+    <li>Delaunay + MST + Loops</li>
+    <li>BSP</li>
+    <li>Rooms + Mazes</li>
+    <li>Gameplay Graph</li>
+    <li>Maze Carving</li>
+    <li>Random Walk</li>
+    <li>Cellular Automata</li>
+    <li>WFC</li>
+    <li>Hybrid + Simulation Selection</li>
+  </ol>
+  <div class="callout">
+    原典・参考URLは既存の <code>docs/research/DUNGEON_GENERATION_ALGORITHMS.md</code> に集約する。
+  </div>
+</section>
+</main>
+</body>
+</html>

@@ -37,10 +37,11 @@ When the user presses **Apply AI edit**, the browser sends same-origin `POST /ap
 
 1. the edit request;
 2. bounded authoring context:
-   - room IDs only;
-   - entity ID, type, and room ID only.
+   - room ID plus authoring geometry only: `x`, `z`, `width`, and `depth`;
+   - entity ID, type, and room ID only;
+   - corridor ID, endpoint Room IDs, width, kind, and optional cardinal endpoint sides only.
 
-The browser does not send renderer objects, full runtime state, credentials, account data, or arbitrary files.
+The browser does not send renderer objects, Events, Play/Run state, credentials, account data, arbitrary files, or corridor mesh/routing geometry. Room geometry is included so the natural-edit translator can express bounded Room movement/resizing/creation. Corridor topology is included only so AI Edit V3 can identify, create, remove, reconnect, or set cardinal door sides on existing authoring Corridors.
 
 The Pages Function forwards the normalized request through the production OpenAI edit adapter. The OpenAI request explicitly uses `store: false`.
 
@@ -50,7 +51,7 @@ The generation endpoint returns validated DesignIntent and bounded provider/mode
 
 The edit endpoint returns:
 
-- one validated supported `EditCommand`;
+- one validated supported `EditCommand` in the DAI-100 AI Edit V3 single-command set: `move-entity`, `move-room`, `resize-room`, `add-entity`, `remove-entity`, `add-room`, `remove-room`, `add-corridor`, `remove-corridor`, `reconnect-corridor`, or `set-corridor-doors`;
 - provider/model identifiers;
 - bounded token-usage metadata when available.
 
@@ -84,3 +85,7 @@ DAI-074 must be reopened if the candidate adds:
 - file upload.
 
 DAI-081 added `/api/design-intent`, so the privacy audit is explicitly rerun before the hosted-demo PR merges.
+
+DAI-100 AI Edit V2 expanded the bounded Room context from ID-only to ID + `x/z/width/depth`.
+
+DAI-100 AI Edit V3 additionally exposes bounded Corridor authoring topology: `id/fromRoomId/toRoomId/width/kind/fromSide/toSide`. It still excludes Events, renderer/runtime state, files, persistence, and credentials. This is another documented outbound-data-field change, so DAI-074 must pass again before any DAI-100 replacement candidate is published.

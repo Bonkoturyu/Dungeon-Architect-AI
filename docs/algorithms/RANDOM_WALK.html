@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Algorithm Lab — Random Walk</title>
+<style>
+body{font:16px/1.6 system-ui,sans-serif;max-width:920px;margin:40px auto;padding:0 20px;color:#172033}
+code{background:#f2f4f7;padding:.12em .35em;border-radius:4px}
+pre{background:#f2f4f7;padding:14px;overflow:auto}
+h1,h2{line-height:1.25}
+</style>
+</head>
+<body>
+<h1>Algorithm Lab — Random Walk</h1>
+<p><strong>Status:</strong> DAI-100 implementation candidate.</p>
+<p>Strategy ID: <code>algorithm-lab.random-walk</code></p>
+
+<h2>Architecture</h2>
+<pre>Seeded walker
+→ discovered coarse-grid cells
+→ first-discovery spanning tree
+→ optional local adjacency loops
+→ Dungeon Architect AI adapter
+→ validated DungeonSpec</pre>
+
+<h2>Algorithm</h2>
+<ol>
+<li>Begin at grid origin.</li>
+<li>Walk in seeded cardinal directions with bounded directional persistence.</li>
+<li>Record each unique visited cell.</li>
+<li>Create one discovery-tree edge whenever a new cell is first reached.</li>
+<li>Use seeded frontier recovery after excessive revisits.</li>
+<li>Find the discovery-tree diameter and map it to first/last Room IDs.</li>
+<li>Create Room rectangles on visited cells.</li>
+<li>Add a bounded subset of unused cardinal adjacencies as loops.</li>
+</ol>
+
+<h2>Key distinction</h2>
+<p>Unlike Rooms + Mazes, Random Walk does not choose a cell region first and then carve a maze. The walker trajectory determines both the visited spatial footprint and the discovery tree.</p>
+
+<h2>Inputs</h2>
+<ul>
+<li><code>seed</code></li>
+<li><code>roomCount</code> 3–64</li>
+<li><code>extraConnectionRatio</code> 0–1</li>
+<li><code>roomSizeMin</code> / <code>roomSizeMax</code></li>
+<li><code>cellSpacing</code></li>
+<li><code>directionPersistence</code> 0–0.95</li>
+<li><code>escapeAfter</code> 8–512</li>
+</ul>
+
+<h2>Invariants</h2>
+<ul>
+<li>N Rooms and N−1 discovery-tree edges;</li>
+<li>connected graph;</li>
+<li>no self/duplicate edges;</li>
+<li>cardinal local edges only;</li>
+<li>deterministic Seed behavior;</li>
+<li>plain JSON-compatible Core output.</li>
+</ul>
+
+<h2>Product adapter</h2>
+<p>The accepted Generator V1 path supplies DesignIntent-derived content semantics. Random Walk replaces only Rooms/Corridors. Discovery edges become <code>backbone</code>; adjacency loops become <code>alternate</code>. Exact cardinal doorway hints are emitted for every Corridor.</p>
+
+<h2>Acceptance commands</h2>
+<ul>
+<li><code>npm run test:generator-random-walk</code></li>
+<li><code>npm run validate:dai-100-random-walk-matrix</code></li>
+<li><code>npm run smoke:dai-100-random-walk</code></li>
+<li><code>npm run validate:dai-100-random-walk</code></li>
+</ul>
+
+<p>Version 2 remains the Recommended/default generator.</p>
+</body>
+</html>

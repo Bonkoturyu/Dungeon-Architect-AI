@@ -58,6 +58,10 @@ async function state(page) {
   return page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
 }
 
+function clone(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
 function adjacency(snapshot) {
   const graph = new Map(snapshot.rooms.map((room) => [room.id, []]));
   for (const corridor of snapshot.corridors) {
@@ -214,6 +218,9 @@ try {
   }, null, { timeout: 30_000 });
 
   const generated = await state(page);
+  const floorOneRoomTwoBefore = clone(
+    generated.rooms.find((room) => room.id === 'room-002'),
+  );
   const floorOptions = await page.locator('#floorSelect option').allTextContents();
   const uniqueDungeonIds = new Set(generated.floorSummaries.map((floor) => floor.dungeonId));
   const uniqueSeeds = new Set(generated.floorSummaries.map((floor) => floor.seed));
@@ -313,8 +320,10 @@ try {
       floorTwoRevisited.currentFloorIndex === 1,
     floorEditsAreIsolated:
       roomTwoAfter.width === roomTwoBefore.width + 1 &&
-      floorOneRoomTwo.width === roomTwoBefore.width &&
-      floorTwoRoomTwoRevisited.width === roomTwoAfter.width,
+      JSON.stringify(floorOneRoomTwo) ===
+        JSON.stringify(floorOneRoomTwoBefore) &&
+      JSON.stringify(floorTwoRoomTwoRevisited) ===
+        JSON.stringify(roomTwoAfter),
     testRunAlwaysStartsFloorOne:
       beforeFloorAdvance.run?.floorCount === 3 &&
       beforeFloorAdvance.play?.floorIndex === 0,
@@ -361,10 +370,11 @@ try {
     generatedFloorSummaries: generated.floorSummaries,
     floorOptions,
     floorTwoEdit: {
-      before: roomTwoBefore,
-      after: roomTwoAfter,
-      floorOneSameRoom: floorOneRoomTwo,
-      revisited: floorTwoRoomTwoRevisited,
+      floorOneBefore: floorOneRoomTwoBefore,
+      floorTwoBefore: roomTwoBefore,
+      floorTwoAfter: roomTwoAfter,
+      floorOneAfterFloorTwoEdit: floorOneRoomTwo,
+      floorTwoRevisited: floorTwoRoomTwoRevisited,
     },
     carriedPlayerState,
     floorTwoStartPlayerState: floorTwoStart.play?.playerState ?? null,

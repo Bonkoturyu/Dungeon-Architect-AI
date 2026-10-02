@@ -182,6 +182,9 @@ try {
     designIntentRequestSentOnce: designIntentRequests.length === 1 && designIntentRequests[0].promptMatches,
     generatedFiveRooms: generated.rooms.length === 5 && generated.lastGeneration?.roomCount === 5,
     generationProviderRecorded: generated.lastGeneration?.selectedProvider === 'cloud',
+    generatorVersionRecorded:
+      generated.lastGeneration?.generatorVersion ===
+      (process.env.DAI_EXPECT_GENERATOR_VERSION || generated.lastGeneration?.generatorVersion),
     generatedStartEligible: generated.startAllowed === true && generated.validationCriticalCount === 0,
     generatedMvpEntitiesPresent: ['start', 'goal', 'enemy', 'treasure', 'trap'].every((type) => types.has(type)),
     generatedWorkingLogicPresent: generated.lastGeneration?.eventCount >= 1,

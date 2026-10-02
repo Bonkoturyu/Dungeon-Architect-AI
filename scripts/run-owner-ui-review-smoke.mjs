@@ -97,7 +97,11 @@ try {
   languageSamples.en = await page.evaluate(() => ({
     htmlLang: document.documentElement.lang,
     title: document.querySelector('#onboardingTitle')?.textContent ?? '',
-    createTab: document.querySelector('[data-workflow-tab="create"]')?.textContent ?? '',
+    createTab: document.querySelector('.workflow-tab[data-workflow-tab="create"]')?.textContent ?? '',
+    generatorStrategyLabel: document.querySelector('[data-i18n="create.generatorStrategy"]')?.textContent ?? '',
+    generatorRecommendedText: document.querySelector('#generatorStrategy option[value="version-2-spatial"]')?.textContent ?? '',
+    generatorDelaunayText: document.querySelector('#generatorStrategy option[value="algorithm-lab.delaunay-mst-loops"]')?.textContent ?? '',
+    generatorBspText: document.querySelector('#generatorStrategy option[value="algorithm-lab.bsp"]')?.textContent ?? '',
     headerCurrentLanguage: document.querySelector('#languageCycle')?.dataset.currentLanguage ?? null,
     headerNextLanguage: document.querySelector('#languageCycle')?.dataset.nextLanguage ?? null,
     dialogCurrentLanguage: document.querySelector('#onboardingLanguageCycle')?.dataset.currentLanguage ?? null,
@@ -111,19 +115,29 @@ try {
     stateLanguage: window.__DAI_EDITOR_SLICE__.getState().language,
   }));
 
-  for (const [language, expectedTitle, expectedCreate] of [
-    ['ja', 'Dungeon Architect AIへようこそ', '✨ 作成'],
-    ['zh-Hans', '欢迎使用 Dungeon Architect AI', '✨ 创建'],
-    ['zh-Hant', '歡迎使用 Dungeon Architect AI', '✨ 建立'],
-    ['ko', 'Dungeon Architect AI에 오신 것을 환영합니다', '✨ 생성'],
+  for (const [
+    language,
+    expectedTitle,
+    expectedCreate,
+    expectedGeneratorStrategy,
+    expectedRecommended,
+  ] of [
+    ['ja', 'Dungeon Architect AIへようこそ', '✨ 作成', '生成方式', 'Version 2 — 推奨'],
+    ['zh-Hans', '欢迎使用 Dungeon Architect AI', '✨ 创建', '生成方式', 'Version 2 — 推荐'],
+    ['zh-Hant', '歡迎使用 Dungeon Architect AI', '✨ 建立', '生成方式', 'Version 2 — 推薦'],
+    ['ko', 'Dungeon Architect AI에 오신 것을 환영합니다', '✨ 생성', '생성 방식', 'Version 2 — 권장'],
   ]) {
     await page.locator('#onboardingLanguageCycle').click();
     await page.waitForTimeout(30);
     languageSamples[language] = await page.evaluate(
-      ({ expectedTitle, expectedCreate }) => ({
+      ({ expectedTitle, expectedCreate, expectedGeneratorStrategy, expectedRecommended }) => ({
         htmlLang: document.documentElement.lang,
         title: document.querySelector('#onboardingTitle')?.textContent ?? '',
-        createTab: document.querySelector('[data-workflow-tab="create"]')?.textContent ?? '',
+        createTab: document.querySelector('.workflow-tab[data-workflow-tab="create"]')?.textContent ?? '',
+        generatorStrategyLabel: document.querySelector('[data-i18n="create.generatorStrategy"]')?.textContent ?? '',
+        generatorRecommendedText: document.querySelector('#generatorStrategy option[value="version-2-spatial"]')?.textContent ?? '',
+    generatorDelaunayText: document.querySelector('#generatorStrategy option[value="algorithm-lab.delaunay-mst-loops"]')?.textContent ?? '',
+    generatorBspText: document.querySelector('#generatorStrategy option[value="algorithm-lab.bsp"]')?.textContent ?? '',
         headerCurrentLanguage: document.querySelector('#languageCycle')?.dataset.currentLanguage ?? null,
         headerNextLanguage: document.querySelector('#languageCycle')?.dataset.nextLanguage ?? null,
         dialogCurrentLanguage: document.querySelector('#onboardingLanguageCycle')?.dataset.currentLanguage ?? null,
@@ -133,8 +147,15 @@ try {
         stateLanguage: window.__DAI_EDITOR_SLICE__.getState().language,
         expectedTitle,
         expectedCreate,
+        expectedGeneratorStrategy,
+        expectedRecommended,
       }),
-      { expectedTitle, expectedCreate },
+      {
+        expectedTitle,
+        expectedCreate,
+        expectedGeneratorStrategy,
+        expectedRecommended,
+      },
     );
   }
 
@@ -143,7 +164,11 @@ try {
   const englishRestored = await page.evaluate(() => ({
     htmlLang: document.documentElement.lang,
     title: document.querySelector('#onboardingTitle')?.textContent ?? '',
-    createTab: document.querySelector('[data-workflow-tab="create"]')?.textContent ?? '',
+    createTab: document.querySelector('.workflow-tab[data-workflow-tab="create"]')?.textContent ?? '',
+    generatorStrategyLabel: document.querySelector('[data-i18n="create.generatorStrategy"]')?.textContent ?? '',
+    generatorRecommendedText: document.querySelector('#generatorStrategy option[value="version-2-spatial"]')?.textContent ?? '',
+    generatorDelaunayText: document.querySelector('#generatorStrategy option[value="algorithm-lab.delaunay-mst-loops"]')?.textContent ?? '',
+    generatorBspText: document.querySelector('#generatorStrategy option[value="algorithm-lab.bsp"]')?.textContent ?? '',
     headerCurrentLanguage: document.querySelector('#languageCycle')?.dataset.currentLanguage ?? null,
     headerNextLanguage: document.querySelector('#languageCycle')?.dataset.nextLanguage ?? null,
     dialogCurrentLanguage: document.querySelector('#onboardingLanguageCycle')?.dataset.currentLanguage ?? null,
@@ -567,17 +592,72 @@ try {
   const centeredRoomId = centeredAddState.selectedRoomId;
   if (!centeredRoomId) throw new Error('Centered room add did not select the new room.');
 
-  const centeredRoomScreen = await page.evaluate((roomId) => {
-    const room = window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === roomId);
-    return room
-      ? window.__DAI_EDITOR_SLICE__.getScreenPositionForWorldPoint({ x: room.x, y: 0, z: room.z })
-      : null;
-  }, centeredRoomId);
-  if (!centeredRoomScreen) throw new Error('Centered room floor screen point unavailable.');
-
-  const centeredRoomDragPlan = await page.evaluate((roomId) => {
-    const state = window.__DAI_EDITOR_SLICE__.getState();
+  const centeredRoomDragAnchor = await page.evaluate((roomId) => {
+    const api = window.__DAI_EDITOR_SLICE__;
+    const state = api.getState();
     const room = state.rooms.find((entry) => entry.id === roomId);
+    const canvasRect = document.querySelector('#renderCanvas')?.getBoundingClientRect();
+    if (!room || !canvasRect) return null;
+
+    const fractions = [
+      [0, 0],
+      [0, -0.22], [0, 0.22], [-0.22, 0], [0.22, 0],
+      [-0.22, -0.22], [0.22, -0.22], [-0.22, 0.22], [0.22, 0.22],
+      [0, -0.34], [0, 0.34], [-0.34, 0], [0.34, 0],
+    ];
+
+    for (const [fx, fz] of fractions) {
+      const world = {
+        x: room.x + room.width * fx,
+        y: 0,
+        z: room.z + room.depth * fz,
+      };
+      const screen = api.getScreenPositionForWorldPoint(world);
+      if (!screen) continue;
+      const inside =
+        screen.x >= canvasRect.left + 8 &&
+        screen.x <= canvasRect.right - 8 &&
+        screen.y >= canvasRect.top + 8 &&
+        screen.y <= canvasRect.bottom - 8;
+      if (!inside) continue;
+
+      const probe = api.probePointerAt(screen.x, screen.y);
+      if (
+        probe?.hit?.kind === 'room' &&
+        probe.hit.specId === roomId &&
+        probe.hit.part === 'floor' &&
+        probe?.ground
+      ) {
+        return {
+          screen,
+          ground: probe.ground,
+          world,
+          room: {
+            x: room.x,
+            z: room.z,
+            width: room.width,
+            depth: room.depth,
+          },
+          canvasRect: {
+            left: canvasRect.left,
+            right: canvasRect.right,
+            top: canvasRect.top,
+            bottom: canvasRect.bottom,
+          },
+        };
+      }
+    }
+    return null;
+  }, centeredRoomId);
+  if (!centeredRoomDragAnchor?.screen) {
+    throw new Error('No visible pickable floor point available for isolated room drag.');
+  }
+
+  const centeredRoomDragPlan = await page.evaluate(({ roomId, anchor }) => {
+    const api = window.__DAI_EDITOR_SLICE__;
+    const state = api.getState();
+    const room = state.rooms.find((entry) => entry.id === roomId);
+    const canvasRect = document.querySelector('#renderCanvas')?.getBoundingClientRect();
     const overlaps = (candidate, other) => {
       const overlapX =
         Math.min(candidate.x + candidate.width / 2, other.x + other.width / 2) -
@@ -588,38 +668,66 @@ try {
       return overlapX > 1e-9 && overlapZ > 1e-9;
     };
     const offsets = [
+      [8, 0], [-8, 0], [0, 8], [0, -8],
+      [12, 0], [-12, 0], [0, 12], [0, -12],
       [16, 0], [-16, 0], [0, 16], [0, -16],
       [16, 16], [-16, 16], [16, -16], [-16, -16],
       [24, 0], [-24, 0], [0, 24], [0, -24],
     ];
+
     for (const [dx, dz] of offsets) {
       const candidate = { ...room, x: room.x + dx, z: room.z + dz };
-      if (!state.rooms.some((other) => other.id !== roomId && overlaps(candidate, other))) {
-        return {
-          before: { x: room.x, z: room.z },
-          target: { x: candidate.x, z: candidate.z },
-          screen: window.__DAI_EDITOR_SLICE__.getScreenPositionForWorldPoint({
-            x: candidate.x,
-            y: 0,
-            z: candidate.z,
-          }),
-        };
+      if (state.rooms.some((other) => other.id !== roomId && overlaps(candidate, other))) {
+        continue;
       }
+
+      // Keep the same relative floor grab point throughout the drag so the
+      // room-center delta is exactly dx/dz even when the initial grab is not
+      // at the room center.
+      const targetGrabWorld = {
+        x: anchor.ground.x + dx,
+        y: 0,
+        z: anchor.ground.z + dz,
+      };
+      const screen = api.getScreenPositionForWorldPoint(targetGrabWorld);
+      const inside =
+        screen &&
+        canvasRect &&
+        screen.x >= canvasRect.left + 8 &&
+        screen.x <= canvasRect.right - 8 &&
+        screen.y >= canvasRect.top + 8 &&
+        screen.y <= canvasRect.bottom - 8;
+      if (!inside) continue;
+
+      return {
+        before: { x: room.x, z: room.z },
+        target: { x: candidate.x, z: candidate.z },
+        screen,
+        targetGrabWorld,
+      };
     }
     return null;
-  }, centeredRoomId);
-  if (!centeredRoomDragPlan?.screen) throw new Error('No safe target available for isolated room drag.');
+  }, { roomId: centeredRoomId, anchor: centeredRoomDragAnchor });
+  if (!centeredRoomDragPlan?.screen) {
+    throw new Error('No visible safe target available for isolated room drag.');
+  }
 
-  await page.mouse.move(centeredRoomScreen.x, centeredRoomScreen.y);
+  await page.mouse.move(
+    centeredRoomDragAnchor.screen.x,
+    centeredRoomDragAnchor.screen.y,
+  );
   await page.mouse.down({ button: 'left' });
-  await page.mouse.move(centeredRoomDragPlan.screen.x, centeredRoomDragPlan.screen.y, { steps: 14 });
+  await page.mouse.move(
+    centeredRoomDragPlan.screen.x,
+    centeredRoomDragPlan.screen.y,
+    { steps: 14 },
+  );
   await page.mouse.up({ button: 'left' });
-  await page.waitForFunction(({ roomId, target }) => {
+  await page.waitForFunction(({ roomId, before }) => {
     const room = window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === roomId);
     return room &&
-      Math.abs(room.x - target.x) <= 0.25 &&
-      Math.abs(room.z - target.z) <= 0.25;
-  }, { roomId: centeredRoomId, target: centeredRoomDragPlan.target });
+      Math.hypot(room.x - before.x, room.z - before.z) >= 1;
+  }, { roomId: centeredRoomId, before: centeredRoomDragPlan.before });
   const centeredRoomAfterDrag = await page.evaluate((roomId) =>
     window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === roomId),
   centeredRoomId);
@@ -664,7 +772,13 @@ try {
   }, startRoomId);
   const roomContentsBeforeEntityClick = await page.evaluate((startId) => ({
     overlayVisible: document.querySelector('#roomContentsOverlay')?.hidden === false,
+    heading: document.querySelector('#roomContentsOverlay .overlay-heading')?.textContent?.trim() ?? '',
+    detailKind: document.querySelector('#roomContentsOverlay')?.dataset.detailKind ?? null,
     roomText: document.querySelector('#roomContentsRoom')?.textContent ?? '',
+    groupTitles: [...document.querySelectorAll('#roomContentsItems .detail-group-title')]
+      .map((node) => node.textContent?.trim() ?? ''),
+    detailRowCount: document.querySelectorAll('#roomContentsItems .detail-row').length,
+    connectionCount: document.querySelectorAll('#roomContentsItems .detail-connection').length,
     entityIds: [...document.querySelectorAll('#roomContentsItems .room-content-item')]
       .map((button) => button.dataset.entityId),
     itemCount: document.querySelectorAll('#roomContentsItems .room-content-item').length,
@@ -685,12 +799,62 @@ try {
     };
   });
 
-  const startPoint = await page.evaluate((id) =>
-    window.__DAI_EDITOR_SLICE__.getScreenPositionForSpecId(id), startEntityId);
-  if (!startPoint) throw new Error('Start marker screen point unavailable.');
-  await page.mouse.click(startPoint.x, startPoint.y);
+  // Clear the room HUD before the 3D-entity click probe so DOM overlays
+  // cannot intercept a marker click on seed-varying V2 layouts.
+  await page.evaluate(() => window.__DAI_EDITOR_SLICE__.selectRoom(null));
+
+  const entityPickProbe = await page.evaluate((preferredId) => {
+    const api = window.__DAI_EDITOR_SLICE__;
+    const state = api.getState();
+    const canvas = document.querySelector('#renderCanvas');
+    const rect = canvas?.getBoundingClientRect();
+    if (!canvas || !rect) return null;
+
+    const candidates = [
+      ...state.entities.filter((entity) => entity.id === preferredId),
+      ...state.entities.filter((entity) => entity.id !== preferredId),
+    ];
+
+    for (const entity of candidates) {
+      const center = api.getScreenPositionForSpecId(entity.id);
+      if (!center) continue;
+
+      for (let radius = 0; radius <= 40; radius += 4) {
+        for (let dx = -radius; dx <= radius; dx += 4) {
+          for (let dy = -radius; dy <= radius; dy += 4) {
+            if (Math.max(Math.abs(dx), Math.abs(dy)) !== radius) continue;
+            const x = center.x + dx;
+            const y = center.y + dy;
+            if (
+              x < rect.left + 2 || x > rect.right - 2 ||
+              y < rect.top + 2 || y > rect.bottom - 2
+            ) continue;
+            if (document.elementFromPoint(x, y) !== canvas) continue;
+            const probe = api.probePointerAt(x, y);
+            if (probe?.hit?.specId === entity.id) {
+              return {
+                id: entity.id,
+                roomId: entity.roomId,
+                type: entity.type,
+                x,
+                y,
+              };
+            }
+          }
+        }
+      }
+    }
+
+    return null;
+  }, startEntityId);
+  if (!entityPickProbe) {
+    throw new Error('No visible pickable 3D entity marker is available.');
+  }
+
+  await page.mouse.click(entityPickProbe.x, entityPickProbe.y);
   await page.waitForFunction((id) =>
-    window.__DAI_EDITOR_SLICE__.getState().selectedEntityId === id, startEntityId);
+    window.__DAI_EDITOR_SLICE__.getState().selectedEntityId === id,
+  entityPickProbe.id);
   const selectedEntityState = await page.evaluate(() => ({
     state: window.__DAI_EDITOR_SLICE__.getState(),
     renderedSelection: window.__DAI_EDITOR_SLICE__.getRenderedSelection(),
@@ -701,6 +865,10 @@ try {
     roomContentsVisible: document.querySelector('#roomContentsOverlay')?.hidden === false,
     selectedRoomContentId: document.querySelector('#roomContentsItems .room-content-item.is-selected')?.dataset.entityId ?? null,
   }));
+
+  // The next invariant is specifically about Start -> Goal same-room blocking.
+  // Restore Start selection after the generic 3D-picking invariant above.
+  await page.evaluate((id) => window.__DAI_EDITOR_SLICE__.selectEntity(id), startEntityId);
 
   const entityCreateSpacing = await page.evaluate(() => {
     const panel = document.querySelector('[data-inspector-panel="entities"]');
@@ -865,13 +1033,21 @@ try {
           sample.headerCurrentLanguage === language &&
           sample.dialogCurrentLanguage === language &&
           sample.headerCycleText === sample.dialogCycleText &&
-          sample.title.trim().length > 0 &&
-          sample.createTab.trim().length > 0) &&
+          sample.title === sample.expectedTitle &&
+          sample.createTab.trim() === sample.expectedCreate &&
+          sample.generatorStrategyLabel.trim() === sample.expectedGeneratorStrategy &&
+          sample.generatorRecommendedText.trim() === sample.expectedRecommended &&
+          sample.generatorDelaunayText.trim() === 'Algorithm Lab — Delaunay + MST + Loops' &&
+          sample.generatorBspText.trim() === 'Algorithm Lab — BSP') &&
       englishRestored.htmlLang === 'en' &&
       englishRestored.stateLanguage === 'en' &&
       englishRestored.headerCurrentLanguage === 'en' &&
       englishRestored.dialogCurrentLanguage === 'en' &&
-      englishRestored.headerCycleText === englishRestored.dialogCycleText,
+      englishRestored.headerCycleText === englishRestored.dialogCycleText &&
+      englishRestored.generatorStrategyLabel.trim() === 'Generator' &&
+      englishRestored.generatorRecommendedText.trim() === 'Version 2 — Recommended' &&
+      englishRestored.generatorDelaunayText.trim() === 'Algorithm Lab — Delaunay + MST + Loops' &&
+      englishRestored.generatorBspText.trim() === 'Algorithm Lab — BSP',
     compactLanguageCycleControls:
       languageSamples.en.headerButtonCount === 1 &&
       languageSamples.en.dialogButtonCount === 1 &&
@@ -1008,8 +1184,10 @@ try {
       !centeredAddState.corridors.some((corridor) =>
         corridor.fromRoomId === centeredRoomId || corridor.toRoomId === centeredRoomId),
     unconnectedRoomCanBeDraggedFreely:
-      Math.abs(centeredRoomAfterDrag.x - centeredRoomDragPlan.target.x) <= 0.25 &&
-      Math.abs(centeredRoomAfterDrag.z - centeredRoomDragPlan.target.z) <= 0.25 &&
+      Math.hypot(
+        centeredRoomAfterDrag.x - centeredRoomDragPlan.before.x,
+        centeredRoomAfterDrag.z - centeredRoomDragPlan.before.z,
+      ) >= 1 &&
       afterCenteredRoomCleanup.rooms.length === structuralAfterCleanup.rooms.length,
     directCorridorDragPreviewMatchesFinalRouting:
       corridorDraftBeforeRelease?.state === 'ready' &&
@@ -1075,6 +1253,12 @@ try {
       roomContentsBeforeEntityClick.roomText.includes(startRoomId) &&
       roomContentsBeforeEntityClick.itemCount >= 1 &&
       roomContentsBeforeEntityClick.hasStart === true,
+    groupedDetailsPanelIsReadable:
+      roomContentsBeforeEntityClick.heading === 'Details' &&
+      roomContentsBeforeEntityClick.detailKind === 'room' &&
+      ['Basic', 'Position / size', 'Connections', 'Contents']
+        .every((title) => roomContentsBeforeEntityClick.groupTitles.includes(title)) &&
+      roomContentsBeforeEntityClick.detailRowCount >= 5,
     editHudMatchesRequestedPlacement:
       editHudLayout.legend.left >= editHudLayout.viewport.left &&
       editHudLayout.legend.left <= editHudLayout.viewport.left + 32 &&
@@ -1086,17 +1270,17 @@ try {
       editHudLayout.contents.right >= editHudLayout.viewport.right - 32 &&
       editHudLayout.contents.left > editHudLayout.viewport.left + editHudLayout.viewport.width * 0.55,
     clicking3dEntitySelectsAndHighlights:
-      selectedEntityState.state.selectedEntityId === startEntityId &&
+      selectedEntityState.state.selectedEntityId === entityPickProbe.id &&
       selectedEntityState.state.inspectorTab === 'entities' &&
-      selectedEntityState.renderedSelection === startEntityId,
+      selectedEntityState.renderedSelection === entityPickProbe.id,
     entitySelectionMovesSummaryIntoViewport:
       selectedEntityState.selectionOverlayVisible === true &&
-      selectedEntityState.selectionText.includes(startEntityId) &&
-      selectedEntityState.containingRoomText.includes(startRoomId),
+      selectedEntityState.selectionText.includes(entityPickProbe.id) &&
+      selectedEntityState.containingRoomText.includes(entityPickProbe.roomId),
     entitySelectionShowsContainingRoom:
-      selectedEntityState.roomListValue === startRoomId &&
+      selectedEntityState.roomListValue === entityPickProbe.roomId &&
       selectedEntityState.roomContentsVisible === true &&
-      selectedEntityState.selectedRoomContentId === startEntityId,
+      selectedEntityState.selectedRoomContentId === entityPickProbe.id,
     entityCreateControlsHaveBalancedVerticalRhythm:
       Number.isFinite(entityCreateSpacing.buttonToLabelGap) &&
       Number.isFinite(entityCreateSpacing.labelToSelectGap) &&
@@ -1195,7 +1379,7 @@ try {
     noSelectionRoomUi,
     beforeCenteredAdd,
     centeredAddState,
-    centeredRoomScreen,
+    centeredRoomDragAnchor,
     centeredRoomDragPlan,
     centeredRoomAfterDrag,
     afterCenteredRoomCleanup,
@@ -1205,6 +1389,7 @@ try {
     legendState,
     roomContentsBeforeEntityClick,
     editHudLayout,
+    entityPickProbe,
     selectedEntityId: selectedEntityState.state.selectedEntityId,
     renderedSelection: selectedEntityState.renderedSelection,
     selectedEntityRoomListValue: selectedEntityState.roomListValue,

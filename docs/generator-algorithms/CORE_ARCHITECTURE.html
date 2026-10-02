@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Generator Core Architecture</title>
+  <link rel="stylesheet" href="./guide.css">
+</head>
+<body>
+<main>
+  <header class="hero">
+    <div class="kicker">Dungeon Architect AI</div>
+    <h1>Generator Core Architecture</h1>
+    <p class="lead">
+      生成アルゴリズムを交換可能なライブラリとして扱い、UI・Renderer・Play・AI providerから切り離すためのアーキテクチャ。
+      ES Moduleとして始めるが、同じ契約でWASM / DLL / .so / dylibへ移行できる境界を採用する。
+    </p>
+    <nav>
+      <a href="./README.html">Overview</a>
+      <a href="./ALGORITHM_GUIDE.html">Algorithm Guide</a>
+      <a href="./CORE_ARCHITECTURE.md">Markdown</a>
+    </nav>
+  </header>
+
+  <section>
+    <h2>1. レイヤ構成</h2>
+    <div class="diagram">
+      <div class="flow">
+        <div class="node">Application<br><small>UI / Prompt / DesignIntent</small></div>
+        <div class="arrow">→</div>
+        <div class="node">Strategy Registry</div>
+        <div class="arrow">→</div>
+        <div class="node">Algorithm Core + Adapter</div>
+        <div class="arrow">→</div>
+        <div class="node">DungeonSpec</div>
+        <div class="arrow">→</div>
+        <div class="node">Validation</div>
+        <div class="arrow">→</div>
+        <div class="node">Renderer / Editor / Play / Simulator</div>
+      </div>
+    </div>
+    <div class="callout">
+      下流は <code>strategyId</code> を知らなくても動く。Rendererは「BSPかDelaunayか」を意識しない。
+    </div>
+  </section>
+
+  <section>
+    <h2>2. Strategy Core package</h2>
+    <div class="two-col">
+      <article class="card">
+        <h3>現在の独立境界</h3>
+        <pre>packages/generator-strategy-core/
+├─ src/
+│  ├─ index.js
+│  └─ strategy-core.js
+└─ test/</pre>
+        <p>Strategy contract、request normalization、result envelope、provenance、registryを担当。</p>
+      </article>
+      <article class="card">
+        <h3>依存禁止</h3>
+        <p>DOM / Three.js / Editor state / Play runtime / OpenAI API / Cloudflare / Vite。</p>
+        <p>Coreの入出力はJSON互換データだけ。</p>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <h2>3. 共通Request</h2>
+    <pre><code>{
+  "apiVersion": "1.0",
+  "seed": 123456789,
+  "id": "generated-123456789",
+  "prompt": "exploration-heavy dungeon",
+  "intent": { "exploration": 0.9, "routeChoice": 0.7 },
+  "constraints": { "roomCount": 10, "floorIndex": 0 },
+  "options": { "algorithmSpecific": true },
+  "context": {}
+}</code></pre>
+    <p><strong>seed</strong>は必須。Algorithm固有parameterは <code>options</code> に閉じ込め、共通APIを汚染しない。</p>
+  </section>
+
+  <section>
+    <h2>4. 共通Result</h2>
+    <pre><code>{
+  "spec": { "...": "DungeonSpec" },
+  "provenance": {
+    "apiVersion": "1.0",
+    "strategyId": "version-2-spatial",
+    "algorithmVersion": "2",
+    "seed": 123456789
+  },
+  "diagnostics": {
+    "profile": {}
+  }
+}</code></pre>
+    <div class="grid">
+      <div class="card">
+        <h3>spec</h3>
+        <p>下流が利用する正式成果物。原則としてvalidなDungeonSpec。</p>
+      </div>
+      <div class="card">
+        <h3>provenance</h3>
+        <p>再現・比較・提出証拠。Strategy ID / Algorithm Version / Seedを保持。</p>
+      </div>
+      <div class="card">
+        <h3>diagnostics</h3>
+        <p>BSP tree、MST edges、retry数など。Application runtimeは依存しない。</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>5. Port / Adapter</h2>
+    <div class="diagram">
+      <div class="flow">
+        <div class="node">Algorithm Core</div>
+        <div class="arrow">→</div>
+        <div class="node">Algorithm-native IR</div>
+        <div class="arrow">→</div>
+        <div class="node">Strategy Adapter</div>
+        <div class="arrow">→</div>
+        <div class="node">DungeonSpec</div>
+      </div>
+    </div>
+    <p>
+      CoreをDungeon Architect AI固有のデータ型へ直接縛らない。必要に応じて自然な中間表現を返し、AdapterでDungeonSpecへ変換する。
+    </p>
+    <table>
+      <thead><tr><th>Algorithm</th><th>Natural IR example</th></tr></thead>
+      <tbody>
+        <tr><td>BSP</td><td>partition tree / leaf rooms / links</td></tr>
+        <tr><td>Delaunay + MST</td><td>points / Delaunay edges / MST edges / loop edges</td></tr>
+        <tr><td>Cellular Automata</td><td>width / height / cells</td></tr>
+        <tr><td>Gameplay Graph</td><td>semantic nodes / edges / roles</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>6. 推奨package構成</h2>
+    <pre>packages/
+├─ generator-strategy-core/
+├─ generator/
+│  └─ src/
+│     ├─ strategy-catalog.js
+│     ├─ strategies/
+│     │  ├─ v1-classic.js
+│     │  └─ v2-recommended.js
+│     └─ versions/
+└─ generator-algorithms/
+   ├─ bsp/
+   ├─ delaunay-mst/
+   ├─ rooms-mazes/
+   ├─ random-walk/
+   ├─ cellular-automata/
+   ├─ maze/
+   ├─ gameplay-graph/
+   └─ wfc/</pre>
+    <p>各algorithm directoryは将来そのまま独立repository/packageへ移せる単位にする。</p>
+  </section>
+
+  <section>
+    <h2>7. Coreの責務</h2>
+    <div class="two-col">
+      <article class="card">
+        <h3>Coreで行う</h3>
+        <ul>
+          <li>algorithm optionsのnormalize</li>
+          <li>deterministic PRNG</li>
+          <li>algorithm-native structure生成</li>
+          <li>algorithm invariant validation</li>
+          <li>plain-data result返却</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>Coreで行わない</h3>
+        <ul>
+          <li>HTML / DOM</li>
+          <li>Three.js mesh</li>
+          <li>Editor command</li>
+          <li>fetch / network</li>
+          <li>localStorage</li>
+          <li>cloud provider呼び出し</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <h2>8. DLL / shared library境界</h2>
+    <p>
+      現在はJavaScript ES Moduleだが、外部言語との境界はJSON messageとして固定する。
+      Native実装へ移してもrequest/result schemaを維持する。
+    </p>
+    <pre><code>const char* dai_generator_metadata_json(void);
+
+int dai_generate_json(
+    const char* request_utf8,
+    char** result_utf8
+);
+
+void dai_free_string(char* ptr);</code></pre>
+    <div class="grid">
+      <div class="card"><h3>Windows</h3><code>generator_bsp.dll</code></div>
+      <div class="card"><h3>Linux</h3><code>libgenerator_bsp.so</code></div>
+      <div class="card"><h3>macOS</h3><code>libgenerator_bsp.dylib</code></div>
+      <div class="card"><h3>Browser</h3><code>WASM + JS Adapter</code></div>
+    </div>
+    <div class="callout warn">
+      DLL化しやすい設計とは、Native化そのものより「Pure Core + stable DTO + explicit ownership + explicit Seed」を先に守ること。
+    </div>
+  </section>
+
+  <section>
+    <h2>9. Versionの分離</h2>
+    <table>
+      <thead><tr><th>Version</th><th>例</th><th>意味</th></tr></thead>
+      <tbody>
+        <tr><td>Strategy API Version</td><td>1.0</td><td>request/result contract</td></tr>
+        <tr><td>Generator Version</td><td>1 / 2</td><td>Dungeon Architect AIの固定生成方式</td></tr>
+        <tr><td>Algorithm Version</td><td>bsp@1</td><td>個別Coreの再現性</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>10. Recommendedはalias</h2>
+    <div class="diagram">
+      <div class="flow">
+        <div class="node">Recommended</div><div class="arrow">→</div><div class="node">version-2-spatial</div>
+      </div>
+    </div>
+    <p>将来V3等が受入されたら、Versionを壊さずRecommendedだけ付け替える。</p>
+  </section>
+
+  <section>
+    <h2>11. Testing pyramid</h2>
+    <div class="diagram">
+      <div class="flow">
+        <div class="node">Core unit</div><div class="arrow">→</div>
+        <div class="node">Determinism</div><div class="arrow">→</div>
+        <div class="node">Invariants</div><div class="arrow">→</div>
+        <div class="node">DungeonSpec</div><div class="arrow">→</div>
+        <div class="node">Renderer routeability</div><div class="arrow">→</div>
+        <div class="node">Play / Simulator</div><div class="arrow">→</div>
+        <div class="node">Browser smoke</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>12. 現在の実装</h2>
+    <ul>
+      <li><code>packages/generator-strategy-core</code></li>
+      <li><code>packages/generator/src/strategies/v1-classic.js</code></li>
+      <li><code>packages/generator/src/strategies/v2-recommended.js</code></li>
+      <li><code>packages/generator/src/strategy-catalog.js</code></li>
+    </ul>
+    <p>
+      この時点では既存Applicationの生成pathは切り替えていない。まず交換可能なCore境界を固定し、equivalence testでV1/V2の既存出力を保護する。
+    </p>
+  </section>
+</main>
+</body>
+</html>

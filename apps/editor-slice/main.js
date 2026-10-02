@@ -29,15 +29,37 @@ import {
   xpRequiredForNextLevel,
 } from '../../packages/play-core/src/progression-runtime.js';
 import { createDungeonScenePlan, createThreeRendererAdapter } from '../../packages/renderer-three/src/index.js';
-import { generateDungeonFromDesignIntent } from '../../packages/generator/src/design-intent-generator.js';
-import { DEFAULT_GENERATOR_VERSION } from '../../packages/generator/src/generator-versions.js';
+import {
+  GENERATOR_STRATEGY_V1_CLASSIC_ID,
+  GENERATOR_STRATEGY_V2_RECOMMENDED_ID,
+  GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID,
+  GENERATOR_STRATEGY_BSP_LAB_ID,
+  GENERATOR_STRATEGY_ROOMS_MAZES_LAB_ID,
+  GENERATOR_STRATEGY_RANDOM_WALK_LAB_ID,
+  GENERATOR_STRATEGY_CELLULAR_AUTOMATA_LAB_ID,
+  GENERATOR_STRATEGY_MAZE_CARVING_LAB_ID,
+  GENERATOR_STRATEGY_GAMEPLAY_GRAMMAR_LAB_ID,
+  GENERATOR_STRATEGY_WFC_LAB_ID,
+  RECOMMENDED_GENERATOR_STRATEGY_ID,
+  createBuiltinGeneratorStrategyRegistry,
+  deriveGeneratorSeedFromPrompt,
+} from '../../packages/generator/src/strategy-catalog.js';
 import {
   createDungeonRunResult,
   createDungeonRunSpec,
   startDungeonRun,
   syncDungeonRunFloor,
 } from '../../packages/run-core/src/dungeon-run.js';
-import { createProgrammaticAudio } from '../../packages/audio-presentation/src/programmatic-audio.js';
+import {
+  createProgrammaticAudio,
+  deriveReactiveAudioIntensity,
+} from '../../packages/audio-presentation/src/programmatic-audio.js';
+import {
+  createDungeonLayoutExchange,
+  createFullDungeonExport,
+  importDungeonJson,
+  serializeJsonExport,
+} from '../../packages/export-core/src/layout-exchange.js';
 import {
   bindLanguageSwitchers,
   getLanguage,
@@ -46,6 +68,7 @@ import {
 } from './i18n.js';
 
 const canvas = document.querySelector('#renderCanvas');
+const viewportShell = document.querySelector('.viewport-shell');
 const status = document.querySelector('#status');
 const modeBadge = document.querySelector('#modeBadge');
 const selectionOverlay = document.querySelector('#selectionOverlay');
@@ -66,6 +89,10 @@ const startButton = document.querySelector('#start');
 const mysteryPlayButton = document.querySelector('#mysteryPlay');
 const returnEditButton = document.querySelector('#returnEdit');
 const audioToggle = document.querySelector('#audioToggle');
+const bgmVolumeInput = document.querySelector('#bgmVolume');
+const seVolumeInput = document.querySelector('#seVolume');
+const bgmVolumeValue = document.querySelector('#bgmVolumeValue');
+const seVolumeValue = document.querySelector('#seVolumeValue');
 const playExitBar = document.querySelector('#playExitBar');
 const playExitButtons = document.querySelector('#playExitButtons');
 const roomEventBar = document.querySelector('#roomEventBar');
@@ -110,14 +137,20 @@ const addEntityButton = document.querySelector('#addEntity');
 const moveEntityButton = document.querySelector('#moveEntity');
 const removeEntityButton = document.querySelector('#removeEntity');
 const generationPrompt = document.querySelector('#generationPrompt');
+const generatorStrategySelect = document.querySelector('#generatorStrategy');
 const floorCountInput = document.querySelector('#floorCount');
 const floorSelect = document.querySelector('#floorSelect');
 const floorSummary = document.querySelector('#floorSummary');
 const generateDungeonButton = document.querySelector('#generateDungeon');
 const generationStatus = document.querySelector('#generationStatus');
+const exportLayoutJsonButton = document.querySelector('#exportLayoutJson');
+const exportFullJsonButton = document.querySelector('#exportFullJson');
+const importJsonButton = document.querySelector('#importJson');
+const importJsonInput = document.querySelector('#importJsonInput');
 const generationHistory = document.querySelector('#generationHistory');
 const authoringPreviewCover = document.querySelector('#authoringPreviewCover');
 const viewportNotice = document.querySelector('#viewportNotice');
+const actionFeedback = document.querySelector('#actionFeedback');
 const playReticle = document.querySelector('#playReticle');
 const naturalEditInput = document.querySelector('#naturalEditInput');
 const applyNaturalEditButton = document.querySelector('#applyNaturalEdit');
@@ -160,7 +193,11 @@ let canvasPointerOrigin = null;
 let corridorDraft = null;
 let roomDrag = null;
 let viewportNoticeTimer = null;
+let actionFeedbackTimer = null;
+let roomEventIntroTimer = null;
+let lastRoomEventSignature = '';
 
+const generatorStrategyRegistry = createBuiltinGeneratorStrategyRegistry();
 const audioPresentation = createProgrammaticAudio();
 
 function audioModeForUi() {
@@ -176,23 +213,58 @@ function syncAudioMode() {
   audioPresentation.setMode(audioModeForUi());
 }
 
-function renderAudioToggle() {
-  if (!audioToggle) return;
-  const audio = audioPresentation.getState();
-  const label = audio.muted ? t('audio.unmute') : t('audio.mute');
+function syncReactiveAudioIntensity() {
+  const { enemies, interactables } = roomContents();
+  const armedTrapCount = interactables.filter(
+    (entry) =>
+      entry.entity.type === 'trap' &&
+      entry.state.status === 'armed',
+  ).length;
+  const maxHp = playSession?.playerState?.maxHp ?? 1;
+  const hp = playSession?.playerState?.hp ?? maxHp;
+  const hpRatio = maxHp > 0 ? hp / maxHp : 1;
 
-  audioToggle.disabled = !audio.available;
-  audioToggle.textContent = audio.muted ? '🔇' : '🔊';
-  audioToggle.dataset.audioState = !audio.available
-    ? 'unavailable'
-    : audio.muted
-      ? 'muted'
-      : audio.unlocked
-        ? 'ready'
-        : 'locked';
-  audioToggle.title = label;
-  audioToggle.setAttribute('aria-label', label);
-  audioToggle.setAttribute('aria-pressed', String(audio.muted));
+  const profile = deriveReactiveAudioIntensity({
+    mode: audioModeForUi(),
+    designIntent: lastDesignIntent,
+    enemyCount: enemies.length,
+    armedTrapCount,
+    hpRatio,
+  });
+  return audioPresentation.setReactiveIntensity(profile);
+}
+
+function renderAudioToggle() {
+  const audio = audioPresentation.getState();
+  if (audioToggle) {
+    const label = audio.muted ? t('audio.unmute') : t('audio.mute');
+    audioToggle.disabled = !audio.available;
+    audioToggle.textContent = audio.muted ? '🔇' : '🔊';
+    audioToggle.dataset.audioState = !audio.available
+      ? 'unavailable'
+      : audio.muted
+        ? 'muted'
+        : audio.unlocked
+          ? 'ready'
+          : 'locked';
+    audioToggle.title = label;
+    audioToggle.setAttribute('aria-label', label);
+    audioToggle.setAttribute('aria-pressed', String(audio.muted));
+  }
+
+  if (bgmVolumeInput) {
+    const value = String(Math.round(audio.bgmVolume * 100));
+    if (bgmVolumeInput.value !== value) bgmVolumeInput.value = value;
+    bgmVolumeInput.disabled = !audio.available;
+    if (bgmVolumeValue) bgmVolumeValue.textContent = `${value}%`;
+  }
+
+  if (seVolumeInput) {
+    const value = String(Math.round(audio.seVolume * 100));
+    if (seVolumeInput.value !== value) seVolumeInput.value = value;
+    seVolumeInput.disabled = !audio.available;
+    if (seVolumeValue) seVolumeValue.textContent = `${value}%`;
+  }
 }
 
 function emitAudioCue(cue) {
@@ -203,6 +275,7 @@ function emitAudioCue(cue) {
 async function unlockAudioFromGesture() {
   const unlocked = await audioPresentation.unlock();
   syncAudioMode();
+  syncReactiveAudioIntensity();
   renderAudioToggle();
 
   if (unlocked) {
@@ -217,6 +290,22 @@ function toggleAudioMuted() {
   const muted = audioPresentation.toggleMuted();
   renderAudioToggle();
   return muted;
+}
+
+function setBgmVolumeFromControl() {
+  if (!bgmVolumeInput) return audioPresentation.getState().bgmVolume;
+  const value = Number(bgmVolumeInput.value) / 100;
+  const level = audioPresentation.setBgmVolume(value);
+  renderAudioToggle();
+  return level;
+}
+
+function setSeVolumeFromControl() {
+  if (!seVolumeInput) return audioPresentation.getState().seVolume;
+  const value = Number(seVolumeInput.value) / 100;
+  const level = audioPresentation.setSeVolume(value);
+  renderAudioToggle();
+  return level;
 }
 
 function clone(value) {
@@ -241,6 +330,237 @@ function authoringRunSpec(id = 'editor-run') {
   return createDungeonRunSpec(authoringFloorSpecs(), { id });
 }
 
+function exportBaseName() {
+  const id = authoringFloorSpecs()[0]?.id ?? 'dungeon';
+  const normalized = String(id)
+    .trim()
+    .replace(/[^A-Za-z0-9._-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return normalized || 'dungeon';
+}
+
+function exportProvenance() {
+  return lastGeneration
+    ? {
+        generatorStrategyId:
+          lastGeneration.generatorStrategyId ?? null,
+        generatorVersion:
+          lastGeneration.generatorVersion ?? null,
+        algorithmVersion:
+          lastGeneration.algorithmVersion ?? null,
+      }
+    : null;
+}
+
+function currentLayoutExport() {
+  const base = exportBaseName();
+  return createDungeonLayoutExchange(
+    authoringFloorSpecs(),
+    {
+      id: `${base}-layout`,
+      provenance: exportProvenance(),
+    },
+  );
+}
+
+function currentFullDungeonExport() {
+  const base = exportBaseName();
+  return createFullDungeonExport(
+    authoringFloorSpecs(),
+    { id: `${base}-run` },
+  );
+}
+
+function downloadJsonExport(value, filename) {
+  const text = serializeJsonExport(value);
+  const blob = new Blob([text], {
+    type: 'application/json;charset=utf-8',
+  });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.hidden = true;
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+  setGenerationStatus(t('export.saved', { name: filename }));
+  return { filename, text };
+}
+
+function exportLayoutJson() {
+  const base = exportBaseName();
+  return downloadJsonExport(
+    currentLayoutExport(),
+    `${base}.layout.v1.json`,
+  );
+}
+
+function exportFullJson() {
+  const base = exportBaseName();
+  return downloadJsonExport(
+    currentFullDungeonExport(),
+    `${base}.dungeon-run.v1.json`,
+  );
+}
+
+function applyImportedDungeonJson(input, { filename = null } = {}) {
+  if (mode !== 'edit' || generationBusy || naturalEditBusy) {
+    return {
+      ok: false,
+      format: null,
+      errors: [{ code: 'IMPORT_EDITOR_BUSY' }],
+    };
+  }
+
+  const imported = importDungeonJson(input);
+  if (!imported.ok) {
+    const code = imported.errors?.[0]?.code ?? 'IMPORT_FAILED';
+    setGenerationStatus(t('import.failed', { code }));
+    showViewportNotice(t('import.failed', { code }), { timeoutMs: 5200 });
+    return imported;
+  }
+
+  try {
+    for (const dungeon of imported.dungeons) {
+      createDungeonScenePlan(dungeon);
+    }
+  } catch {
+    const failed = {
+      ok: false,
+      format: imported.format,
+      dungeons: null,
+      provenance: imported.provenance ?? null,
+      errors: [{
+        code: 'IMPORT_RENDER_ROUTE_INVALID',
+        path: '$',
+        message: 'Imported dungeon cannot be routed by the renderer.',
+      }],
+    };
+    setGenerationStatus(
+      t('import.failed', { code: 'IMPORT_RENDER_ROUTE_INVALID' }),
+    );
+    showViewportNotice(
+      t('import.failed', { code: 'IMPORT_RENDER_ROUTE_INVALID' }),
+      { timeoutMs: 5200 },
+    );
+    return failed;
+  }
+
+  setAuthoringFloors(imported.dungeons, 0);
+  mode = 'edit';
+  playSession = null;
+  playSource = null;
+  dungeonRunSession = null;
+  lastDungeonRunResult = null;
+  lastPlayResult = null;
+  mysteryGeneration = null;
+  playActionClock = 0;
+  selectedRoomId = null;
+  selectedEntityId = null;
+  selectedCorridorId = null;
+  pathCheckResult = null;
+  lastNaturalEditCommand = null;
+  corridorDraft = null;
+  roomDrag = null;
+  authoringPreviewConcealed = false;
+  lastDesignIntent = null;
+
+  const provenance = imported.provenance ?? null;
+  lastGeneration = provenance
+    ? {
+        generatorStrategyId: provenance.generatorStrategyId ?? null,
+        generatorVersion: provenance.generatorVersion ?? null,
+        algorithmVersion: provenance.algorithmVersion ?? null,
+        selectedProvider: 'import',
+        floorCount: imported.dungeons.length,
+        importedFormat: imported.format,
+      }
+    : {
+        generatorStrategyId: null,
+        generatorVersion: null,
+        algorithmVersion: null,
+        selectedProvider: 'import',
+        floorCount: imported.dungeons.length,
+        importedFormat: imported.format,
+      };
+
+  if (floorCountInput) {
+    floorCountInput.value = String(imported.dungeons.length);
+  }
+  if (resultStatus) {
+    resultStatus.textContent = '';
+    resultStatus.hidden = true;
+    resultStatus.classList.remove('is-result-reveal');
+  }
+  if (resultMetrics) {
+    resultMetrics.replaceChildren();
+    resultMetrics.hidden = true;
+    resultMetrics.classList.remove('is-result-reveal');
+  }
+
+  setWorkflowTab('edit');
+  setInspectorTab('rooms');
+  renderPathStatus();
+  renderActiveSpec();
+  triggerViewportTransition('generation');
+  setGenerationStatus(
+    t('import.loaded', {
+      format: imported.format === 'layout' ? 'Layout' : 'Full',
+      count: imported.dungeons.length,
+      name: filename ?? 'JSON',
+    }),
+  );
+
+  return {
+    ok: true,
+    format: imported.format,
+    floorCount: imported.dungeons.length,
+    filename,
+    errors: [],
+  };
+}
+
+async function importJsonFile(file) {
+  if (!file) {
+    return {
+      ok: false,
+      format: null,
+      errors: [{ code: 'IMPORT_FILE_REQUIRED' }],
+    };
+  }
+
+  if (file.size > 2 * 1024 * 1024) {
+    const result = {
+      ok: false,
+      format: null,
+      errors: [{ code: 'IMPORT_FILE_TOO_LARGE' }],
+    };
+    setGenerationStatus(
+      t('import.failed', { code: 'IMPORT_FILE_TOO_LARGE' }),
+    );
+    return result;
+  }
+
+  let text;
+  try {
+    text = await file.text();
+  } catch {
+    const result = {
+      ok: false,
+      format: null,
+      errors: [{ code: 'IMPORT_FILE_READ_FAILED' }],
+    };
+    setGenerationStatus(
+      t('import.failed', { code: 'IMPORT_FILE_READ_FAILED' }),
+    );
+    return result;
+  }
+
+  return applyImportedDungeonJson(text, { filename: file.name });
+}
+
 function requestedFloorCount() {
   const parsed = Number.parseInt(floorCountInput?.value ?? '1', 10);
   if (!Number.isInteger(parsed)) return 1;
@@ -252,24 +572,122 @@ function derivedFloorSeed(baseSeed, floorIndex) {
   return (baseSeed + Math.imul(floorIndex, 0x9e3779b9)) >>> 0;
 }
 
-function generateFloorSet(intent, { prompt, count, baseSeed = null, idPrefix = null } = {}) {
-  const total = Math.max(1, Math.min(10, Number.isInteger(count) ? count : 1));
-  const first = generateDungeonFromDesignIntent(intent, {
+function generatorStrategyLabel(metadata) {
+  if (metadata.id === GENERATOR_STRATEGY_V2_RECOMMENDED_ID) {
+    return t('create.generatorRecommended');
+  }
+  if (metadata.id === GENERATOR_STRATEGY_V1_CLASSIC_ID) {
+    return t('create.generatorClassic');
+  }
+  if (metadata.id === GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID) {
+    return t('create.generatorDelaunayMst');
+  }
+  if (metadata.id === GENERATOR_STRATEGY_BSP_LAB_ID) {
+    return t('create.generatorBsp');
+  }
+  if (metadata.id === GENERATOR_STRATEGY_ROOMS_MAZES_LAB_ID) {
+    return t('create.generatorRoomsMazes');
+  }
+  if (metadata.id === GENERATOR_STRATEGY_RANDOM_WALK_LAB_ID) {
+    return t('create.generatorRandomWalk');
+  }
+  if (metadata.id === GENERATOR_STRATEGY_CELLULAR_AUTOMATA_LAB_ID) {
+    return t('create.generatorCellularAutomata');
+  }
+  if (metadata.id === GENERATOR_STRATEGY_MAZE_CARVING_LAB_ID) {
+    return t('create.generatorMazeCarving');
+  }
+  if (metadata.id === GENERATOR_STRATEGY_GAMEPLAY_GRAMMAR_LAB_ID) {
+    return t('create.generatorGameplayGrammar');
+  }
+  if (metadata.id === GENERATOR_STRATEGY_WFC_LAB_ID) {
+    return t('create.generatorWfc');
+  }
+  return metadata.displayName;
+}
+
+function renderGeneratorStrategyOptions() {
+  if (!generatorStrategySelect) return;
+  const available = generatorStrategyRegistry.list();
+  const previous =
+    generatorStrategyRegistry.has(generatorStrategySelect.value)
+      ? generatorStrategySelect.value
+      : RECOMMENDED_GENERATOR_STRATEGY_ID;
+
+  generatorStrategySelect.replaceChildren(...available.map((metadata) => {
+    const option = document.createElement('option');
+    option.value = metadata.id;
+    option.textContent = generatorStrategyLabel(metadata);
+    option.dataset.family = metadata.family;
+    option.dataset.algorithmVersion = metadata.algorithmVersion;
+    return option;
+  }));
+  generatorStrategySelect.value =
+    generatorStrategyRegistry.has(previous)
+      ? previous
+      : RECOMMENDED_GENERATOR_STRATEGY_ID;
+}
+
+function selectedGeneratorStrategyId() {
+  const selected = generatorStrategySelect?.value;
+  return generatorStrategyRegistry.has(selected)
+    ? selected
+    : RECOMMENDED_GENERATOR_STRATEGY_ID;
+}
+
+async function generateFloorSet(
+  intent,
+  {
     prompt,
-    ...(baseSeed === null ? {} : { seed: baseSeed >>> 0 }),
-    ...(idPrefix ? { id: idPrefix } : {}),
-  });
-  const rootSeed = first.profile.seed >>> 0;
-  const rootId = idPrefix ?? first.spec.id;
+    count,
+    baseSeed = null,
+    idPrefix = null,
+    strategyId = selectedGeneratorStrategyId(),
+  } = {},
+) {
+  const total = Math.max(1, Math.min(10, Number.isInteger(count) ? count : 1));
+  const rootSeed =
+    baseSeed === null
+      ? deriveGeneratorSeedFromPrompt(prompt)
+      : baseSeed >>> 0;
+  const rootId = idPrefix ?? `generated-${rootSeed}`;
+
+  async function generateFloor(seed, id) {
+    const result = await generatorStrategyRegistry.generate(strategyId, {
+      seed,
+      id,
+      prompt,
+      intent,
+    });
+    const profile = result.diagnostics?.profile ?? {};
+    return {
+      spec: result.spec,
+      profile: {
+        ...profile,
+        seed: result.provenance.seed,
+        roomCount: result.spec.rooms.length,
+        routeChoice:
+          profile.routeChoice ??
+          intent?.routeChoice ??
+          null,
+      },
+      generatorVersion: result.provenance.generatorVersion ?? null,
+      generatorStrategyId: result.provenance.strategyId,
+      algorithmVersion: result.provenance.algorithmVersion,
+      provenance: result.provenance,
+      diagnostics: result.diagnostics,
+    };
+  }
+
+  const first = await generateFloor(rootSeed, rootId);
   const generated = [first];
 
   for (let floorIndex = 1; floorIndex < total; floorIndex += 1) {
     const seed = derivedFloorSeed(rootSeed, floorIndex);
-    generated.push(generateDungeonFromDesignIntent(intent, {
-      prompt,
+    generated.push(await generateFloor(
       seed,
-      id: `${rootId}-floor-${String(floorIndex + 1).padStart(2, '0')}`,
-    }));
+      `${rootId}-floor-${String(floorIndex + 1).padStart(2, '0')}`,
+    ));
   }
 
   return generated;
@@ -329,7 +747,9 @@ function selectFloor(index) {
 function resize() {
   if (!adapter) return;
   const rect = canvas.getBoundingClientRect();
-  adapter.resize(Math.max(1, Math.floor(rect.width)), Math.max(1, Math.floor(rect.height)));
+  const width = canvas.clientWidth || rect.width;
+  const height = canvas.clientHeight || rect.height;
+  adapter.resize(Math.max(1, Math.floor(width)), Math.max(1, Math.floor(height)));
 }
 
 function nextPlayActionAt() {
@@ -424,6 +844,13 @@ function snapshotState() {
     validationCriticalCount: gate.criticalCount,
     validationErrors: gate.errors.map((entry) => ({ ...entry })),
     generationBusy,
+    generatorStrategyId: selectedGeneratorStrategyId(),
+    availableGeneratorStrategies: generatorStrategyRegistry.list().map((entry) => ({
+      id: entry.id,
+      displayName: entry.displayName,
+      family: entry.family,
+      algorithmVersion: entry.algorithmVersion,
+    })),
     lastDesignIntent: lastDesignIntent ? clone(lastDesignIntent) : null,
     lastGeneration: lastGeneration ? clone(lastGeneration) : null,
     promptHistory: [...promptHistory],
@@ -490,6 +917,81 @@ function showViewportNotice(message, { timeoutMs = 2200 } = {}) {
     viewportNotice.textContent = '';
     viewportNoticeTimer = null;
   }, timeoutMs);
+}
+
+function showActionFeedback(message, kind = 'result') {
+  if (!actionFeedback) return false;
+  if (actionFeedbackTimer) clearTimeout(actionFeedbackTimer);
+  actionFeedback.hidden = true;
+  actionFeedback.textContent = String(message);
+  actionFeedback.dataset.kind = kind;
+  void actionFeedback.offsetWidth;
+  actionFeedback.hidden = false;
+  actionFeedbackTimer = setTimeout(() => {
+    actionFeedback.hidden = true;
+    actionFeedback.textContent = '';
+    delete actionFeedback.dataset.kind;
+    actionFeedbackTimer = null;
+  }, 780);
+  return true;
+}
+
+let viewportTransitionTimer = null;
+let resultRevealTimer = null;
+
+function triggerResultReveal() {
+  if (!resultStatus || !resultMetrics) return false;
+  if (resultRevealTimer) clearTimeout(resultRevealTimer);
+  resultStatus.classList.remove('is-result-reveal');
+  resultMetrics.classList.remove('is-result-reveal');
+  void resultStatus.offsetWidth;
+  resultStatus.classList.add('is-result-reveal');
+  resultMetrics.classList.add('is-result-reveal');
+  resultRevealTimer = setTimeout(() => {
+    resultStatus.classList.remove('is-result-reveal');
+    resultMetrics.classList.remove('is-result-reveal');
+    resultRevealTimer = null;
+  }, 980);
+  return true;
+}
+
+function triggerViewportTransition(kind) {
+  if (!viewportShell) return false;
+  const className = {
+    generation: 'is-generation-reveal',
+    mode: 'is-mode-transition',
+    event: 'is-event-focus',
+    floor: 'is-floor-transition',
+    result: 'is-result-transition',
+  }[kind] ?? 'is-mode-transition';
+  viewportShell.classList.remove(
+    'is-generation-reveal',
+    'is-mode-transition',
+    'is-event-focus',
+    'is-floor-transition',
+    'is-result-transition',
+  );
+  if (viewportTransitionTimer) {
+    clearTimeout(viewportTransitionTimer);
+    viewportTransitionTimer = null;
+  }
+
+  // Force a new animation cycle even when the same transition repeats.
+  void viewportShell.offsetWidth;
+  viewportShell.classList.add(className);
+
+  const timeoutMs = {
+    generation: 620,
+    mode: 480,
+    event: 520,
+    floor: 640,
+    result: 820,
+  }[kind] ?? 480;
+  viewportTransitionTimer = setTimeout(() => {
+    viewportShell.classList.remove(className);
+    viewportTransitionTimer = null;
+  }, timeoutMs);
+  return true;
 }
 
 function friendlyEditError(error) {
@@ -726,22 +1228,160 @@ function selectCorridor(corridorId) {
   return true;
 }
 
+function createDetailRow(label, value, { mono = false } = {}) {
+  const row = document.createElement('div');
+  row.className = 'detail-row';
+
+  const key = document.createElement('span');
+  key.className = 'detail-key';
+  key.textContent = label;
+
+  const content = document.createElement('span');
+  content.className = `detail-value${mono ? ' is-mono' : ''}`;
+  content.textContent = String(value ?? '—');
+
+  row.append(key, content);
+  return row;
+}
+
+function createDetailGroup(title, children = []) {
+  const group = document.createElement('section');
+  group.className = 'detail-group';
+
+  const heading = document.createElement('div');
+  heading.className = 'detail-group-title';
+  heading.textContent = title;
+
+  const body = document.createElement('div');
+  body.className = 'detail-group-body';
+  body.append(...children);
+
+  group.append(heading, body);
+  return group;
+}
+
+function roomRoleLabel(roomId) {
+  const role = roomRole(roomId);
+  if (role === 'start') return t('entity.start');
+  if (role === 'goal') return t('entity.goal');
+  return t('details.roleNormal');
+}
+
+function roomConnectionDetails(room) {
+  const roomPlan = adapter.plan?.roomGroups.find(
+    (group) => group.specId === room.id,
+  );
+  const openingByCorridor = new Map(
+    (roomPlan?.doorOpenings ?? []).map(
+      (opening) => [opening.corridorId, opening],
+    ),
+  );
+
+  return authoringSpec().corridors
+    .filter(
+      (corridor) =>
+        corridor.fromRoomId === room.id ||
+        corridor.toRoomId === room.id,
+    )
+    .map((corridor) => {
+      const targetRoomId =
+        corridor.fromRoomId === room.id
+          ? corridor.toRoomId
+          : corridor.fromRoomId;
+      const opening = openingByCorridor.get(corridor.id);
+      const side =
+        opening?.side ??
+        (corridor.fromRoomId === room.id
+          ? corridor.fromSide
+          : corridor.toSide) ??
+        'unknown';
+      return {
+        corridor,
+        targetRoomId,
+        side,
+      };
+    })
+    .sort((left, right) => {
+      const order = {
+        north: 0,
+        east: 1,
+        south: 2,
+        west: 3,
+        unknown: 9,
+      };
+      return (
+        (order[left.side] ?? 9) -
+          (order[right.side] ?? 9) ||
+        left.corridor.id.localeCompare(
+          right.corridor.id,
+        )
+      );
+    });
+}
+
+function createConnectionItem({
+  corridor,
+  targetRoomId,
+  side,
+}) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'detail-connection';
+  button.dataset.corridorId = corridor.id;
+
+  const direction = document.createElement('span');
+  direction.className = 'detail-connection-direction';
+  direction.textContent = `${sideIcon(side)} ${t(
+    `direction.${side}`,
+  )}`;
+
+  const target = document.createElement('span');
+  target.className = 'detail-connection-target';
+  target.textContent = targetRoomId;
+
+  const id = document.createElement('span');
+  id.className = 'detail-connection-id';
+  id.textContent = corridor.id;
+
+  button.append(direction, target, id);
+  button.addEventListener('click', () =>
+    selectCorridor(corridor.id),
+  );
+  return button;
+}
+
 function renderEditContextHud() {
-  if (!selectionOverlay || !roomContentsOverlay || !roomContentsRoom || !roomContentsItems) return;
+  if (
+    !selectionOverlay ||
+    !roomContentsOverlay ||
+    !roomContentsRoom ||
+    !roomContentsItems
+  ) {
+    return;
+  }
 
   const entity = selectedEntity();
   const corridor = selectedCorridor();
   const room = entity
-    ? authoringSpec().rooms.find((entry) => entry.id === entity.roomId) ?? null
+    ? authoringSpec().rooms.find(
+        (entry) => entry.id === entity.roomId,
+      ) ?? null
     : selectedRoom();
 
-  const showHud = mode === 'edit' && workflowTab === 'edit' && !authoringPreviewConcealed;
+  const showHud =
+    mode === 'edit' &&
+    workflowTab === 'edit' &&
+    !authoringPreviewConcealed;
 
-  if (!showHud || (!room && !entity && !corridor)) {
+  if (
+    !showHud ||
+    (!room && !entity && !corridor)
+  ) {
     selectionOverlay.hidden = true;
     roomContentsOverlay.hidden = true;
     selectedLabel.hidden = true;
     entitySelectedLabel.hidden = true;
+    roomContentsRoom.textContent = '';
     roomContentsItems.replaceChildren();
     return;
   }
@@ -750,61 +1390,379 @@ function renderEditContextHud() {
 
   if (entity) {
     const presentation = entityDisplay(entity);
-    selectedLabel.textContent = `${presentation.icon} ${presentation.label} · ${entity.id}`;
+    selectedLabel.textContent =
+      `${presentation.icon} ${presentation.label} · ${entity.id}`;
     selectedLabel.hidden = false;
     entitySelectedLabel.textContent = room
-      ? `${t('entities.room')}: ${roomLabel(room.id)} · (${room.x.toFixed(1)}, ${room.z.toFixed(1)}) · ${room.width}×${room.depth}`
+      ? `${t('entities.room')}: ${roomLabel(room.id)}`
       : '';
     entitySelectedLabel.hidden = !room;
   } else if (room) {
-    selectedLabel.textContent = `${roomLabel(room.id)} · (${room.x.toFixed(1)}, ${room.z.toFixed(1)}) · ${room.width}×${room.depth}`;
+    selectedLabel.textContent = roomLabel(room.id);
     selectedLabel.hidden = false;
     entitySelectedLabel.textContent = '';
     entitySelectedLabel.hidden = true;
   } else if (corridor) {
-    selectedLabel.textContent = `⇄ ${corridorLabel(corridor)}`;
+    selectedLabel.textContent =
+      `⇄ ${corridor.id}`;
     selectedLabel.hidden = false;
     entitySelectedLabel.textContent = '';
     entitySelectedLabel.hidden = true;
   }
 
-  if (!room) {
-    roomContentsOverlay.hidden = true;
-    roomContentsItems.replaceChildren();
-    return;
-  }
-
   roomContentsOverlay.hidden = false;
-  roomContentsRoom.textContent = roomLabel(room.id);
 
-  const contents = authoringSpec().entities.filter((entry) => entry.roomId === room.id);
-  if (contents.length === 0) {
-    const empty = document.createElement('span');
-    empty.className = 'room-content-empty';
-    empty.textContent = t('overlay.empty');
-    roomContentsItems.replaceChildren(empty);
-    return;
+  const groups = [];
+
+  if (entity) {
+    const presentation = entityDisplay(entity);
+    roomContentsOverlay.dataset.detailKind =
+      'entity';
+    roomContentsRoom.textContent =
+      `${presentation.icon} ${presentation.label}`;
+
+    groups.push(
+      createDetailGroup(
+        t('details.groupBasic'),
+        [
+          createDetailRow(
+            t('details.type'),
+            presentation.label,
+          ),
+          createDetailRow(
+            t('details.id'),
+            entity.id,
+            { mono: true },
+          ),
+        ],
+      ),
+    );
+
+    if (room) {
+      groups.push(
+        createDetailGroup(
+          t('details.groupLocation'),
+          [
+            createDetailRow(
+              t('details.room'),
+              room.id,
+              { mono: true },
+            ),
+            createDetailRow(
+              t('details.position'),
+              `X ${room.x.toFixed(1)} / Z ${room.z.toFixed(1)}`,
+              { mono: true },
+            ),
+            createDetailRow(
+              t('details.roomSize'),
+              `${room.width} × ${room.depth}`,
+              { mono: true },
+            ),
+          ],
+        ),
+      );
+
+      const roomEntities =
+        authoringSpec().entities.filter(
+          (entry) => entry.roomId === room.id,
+        );
+      const roomEntityList =
+        document.createElement('div');
+      roomEntityList.className =
+        'detail-entity-list';
+
+      roomEntityList.append(
+        ...roomEntities.map((entry) => {
+          const entryPresentation =
+            entityDisplay(entry);
+          const button =
+            document.createElement('button');
+          button.type = 'button';
+          button.className =
+            `room-content-item${entry.id === selectedEntityId ? ' is-selected' : ''}`;
+          button.dataset.entityId = entry.id;
+          button.dataset.kind = entry.type;
+
+          const marker =
+            document.createElement('span');
+          marker.className =
+            'entity-marker';
+          marker.textContent =
+            entryPresentation.icon;
+
+          const label =
+            document.createElement('span');
+          label.className =
+            'room-content-label';
+          label.textContent =
+            entryPresentation.label;
+
+          const id =
+            document.createElement('span');
+          id.className =
+            'room-content-id';
+          id.textContent = entry.id;
+
+          button.append(
+            marker,
+            label,
+            id,
+          );
+          button.addEventListener(
+            'click',
+            () => selectEntity(entry.id),
+          );
+          return button;
+        }),
+      );
+
+      groups.push(
+        createDetailGroup(
+          t('details.groupContents'),
+          roomEntities.length > 0
+            ? [roomEntityList]
+            : [
+                (() => {
+                  const empty =
+                    document.createElement('span');
+                  empty.className =
+                    'room-content-empty';
+                  empty.textContent =
+                    t('overlay.empty');
+                  return empty;
+                })(),
+              ],
+        ),
+      );
+    }
+  } else if (corridor) {
+    roomContentsOverlay.dataset.detailKind =
+      'corridor';
+    roomContentsRoom.textContent =
+      `⇄ ${corridor.id}`;
+
+    groups.push(
+      createDetailGroup(
+        t('details.groupBasic'),
+        [
+          createDetailRow(
+            t('details.id'),
+            corridor.id,
+            { mono: true },
+          ),
+          createDetailRow(
+            t('details.kind'),
+            corridor.kind ?? t('details.kindDefault'),
+          ),
+          createDetailRow(
+            t('details.width'),
+            corridor.width,
+            { mono: true },
+          ),
+        ],
+      ),
+    );
+
+    const fromSide =
+      corridor.fromSide ?? 'auto';
+    const toSide =
+      corridor.toSide ?? 'auto';
+
+    groups.push(
+      createDetailGroup(
+        t('details.groupConnections'),
+        [
+          createDetailRow(
+            t('details.from'),
+            `${corridor.fromRoomId} · ${fromSide === 'auto' ? t('details.auto') : t(
+              `direction.${fromSide}`,
+            )}`,
+            { mono: true },
+          ),
+          createDetailRow(
+            t('details.to'),
+            `${corridor.toRoomId} · ${toSide === 'auto' ? t('details.auto') : t(
+              `direction.${toSide}`,
+            )}`,
+            { mono: true },
+          ),
+        ],
+      ),
+    );
+  } else if (room) {
+    roomContentsOverlay.dataset.detailKind =
+      'room';
+    roomContentsRoom.textContent =
+      roomLabel(room.id);
+
+    groups.push(
+      createDetailGroup(
+        t('details.groupBasic'),
+        [
+          createDetailRow(
+            t('details.id'),
+            room.id,
+            { mono: true },
+          ),
+          createDetailRow(
+            t('details.role'),
+            roomRoleLabel(room.id),
+          ),
+        ],
+      ),
+    );
+
+    groups.push(
+      createDetailGroup(
+        t('details.groupGeometry'),
+        [
+          createDetailRow(
+            t('details.position'),
+            `X ${room.x.toFixed(1)} / Z ${room.z.toFixed(1)}`,
+            { mono: true },
+          ),
+          createDetailRow(
+            t('details.roomSize'),
+            `${room.width} × ${room.depth}`,
+            { mono: true },
+          ),
+        ],
+      ),
+    );
+
+    const connections =
+      roomConnectionDetails(room);
+    const connectionChildren = [
+      createDetailRow(
+        t('details.connectionCount'),
+        connections.length,
+        { mono: true },
+      ),
+    ];
+    if (connections.length > 0) {
+      const list = document.createElement('div');
+      list.className = 'detail-connection-list';
+      list.append(
+        ...connections.map(
+          createConnectionItem,
+        ),
+      );
+      connectionChildren.push(list);
+    }
+    groups.push(
+      createDetailGroup(
+        t('details.groupConnections'),
+        connectionChildren,
+      ),
+    );
+
+    const contents =
+      authoringSpec().entities.filter(
+        (entry) => entry.roomId === room.id,
+      );
+    const countByType = new Map();
+    for (const entry of contents) {
+      countByType.set(
+        entry.type,
+        (countByType.get(entry.type) ?? 0) + 1,
+      );
+    }
+
+    const summary = document.createElement('div');
+    summary.className = 'detail-content-summary';
+    for (const type of [
+      'start',
+      'goal',
+      'enemy',
+      'treasure',
+      'trap',
+      'recovery',
+    ]) {
+      const count = countByType.get(type) ?? 0;
+      if (count === 0) continue;
+      const presentation = entityDisplay({
+        type,
+      });
+      const chip =
+        document.createElement('span');
+      chip.className = 'detail-count-chip';
+      chip.dataset.kind = type;
+      chip.textContent =
+        `${presentation.icon} ${presentation.label} ×${count}`;
+      summary.append(chip);
+    }
+
+    const contentChildren = [];
+    if (contents.length === 0) {
+      const empty =
+        document.createElement('span');
+      empty.className = 'room-content-empty';
+      empty.textContent = t('overlay.empty');
+      contentChildren.push(empty);
+    } else {
+      contentChildren.push(summary);
+
+      const list = document.createElement('div');
+      list.className =
+        'detail-entity-list';
+      list.append(
+        ...contents.map((entry) => {
+          const presentation =
+            entityDisplay(entry);
+          const button =
+            document.createElement('button');
+          button.type = 'button';
+          button.className =
+            `room-content-item${entry.id === selectedEntityId ? ' is-selected' : ''}`;
+          button.dataset.entityId = entry.id;
+          button.dataset.kind = entry.type;
+
+          const marker =
+            document.createElement('span');
+          marker.className =
+            'entity-marker';
+          marker.textContent =
+            presentation.icon;
+
+          const label =
+            document.createElement('span');
+          label.className =
+            'room-content-label';
+          label.textContent =
+            presentation.label;
+
+          const id =
+            document.createElement('span');
+          id.className =
+            'room-content-id';
+          id.textContent = entry.id;
+
+          button.append(
+            marker,
+            label,
+            id,
+          );
+          button.addEventListener(
+            'click',
+            () => selectEntity(entry.id),
+          );
+          return button;
+        }),
+      );
+      contentChildren.push(list);
+    }
+
+    groups.push(
+      createDetailGroup(
+        t('details.groupContents'),
+        contentChildren,
+      ),
+    );
   }
 
-  roomContentsItems.replaceChildren(...contents.map((entry) => {
-    const presentation = entityDisplay(entry);
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = `room-content-item${entry.id === selectedEntityId ? ' is-selected' : ''}`;
-    button.dataset.entityId = entry.id;
-    button.dataset.kind = entry.type;
-
-    const marker = document.createElement('span');
-    marker.className = 'entity-marker';
-    marker.textContent = presentation.icon;
-
-    const label = document.createElement('span');
-    label.textContent = presentation.label;
-
-    button.append(marker, label);
-    button.addEventListener('click', () => selectEntity(entry.id));
-    return button;
-  }));
+  roomContentsItems.replaceChildren(
+    ...groups,
+  );
 }
 
 function setInspectorTab(nextTab) {
@@ -846,6 +1804,7 @@ function updateUi() {
   document.body.dataset.mode = mode;
   document.body.dataset.workflowTab = workflowTab;
   syncAudioMode();
+  syncReactiveAudioIntensity();
   renderAudioToggle();
   if (inspectorShell) inspectorShell.dataset.inspectorTab = inspectorTab;
   if (hint) hint.hidden = true;
@@ -958,8 +1917,16 @@ function updateUi() {
   removeEntityButton.disabled = !editing || authoringBusy || !entity || entity.type === 'start' || entity.type === 'goal';
   addEntityButton.disabled = !editing || authoringBusy || !entityRoom.value;
   generationPrompt.disabled = !editing || authoringBusy;
+  if (generatorStrategySelect) {
+    generatorStrategySelect.disabled = !editing || authoringBusy;
+  }
   if (floorCountInput) floorCountInput.disabled = !editing || authoringBusy;
   const runValidation = authoringRunSpec();
+  const exportBlocked = !editing || authoringBusy || !runValidation.ok;
+  if (exportLayoutJsonButton) exportLayoutJsonButton.disabled = exportBlocked;
+  if (exportFullJsonButton) exportFullJsonButton.disabled = exportBlocked;
+  if (importJsonButton) importJsonButton.disabled = !editing || authoringBusy;
+  if (importJsonInput) importJsonInput.disabled = !editing || authoringBusy;
   generateDungeonButton.disabled = !editing || authoringBusy || !generationPrompt.value.trim();
   naturalEditInput.disabled = !editing || authoringBusy;
   applyNaturalEditButton.disabled = !editing || authoringBusy || !naturalEditInput.value.trim();
@@ -1017,7 +1984,10 @@ function applyPlayRuntimeResult(result, failurePrefix) {
 function clearEnemy(enemyId) {
   if (!playSession || mode !== 'play') return false;
   const resolved = resolveEnemyCombat(playSession, enemyId, { at: nextPlayActionAt() });
-  if (resolved?.ok) emitAudioCue('combat');
+  if (resolved?.ok) {
+    emitAudioCue('combat');
+    showActionFeedback(`${t('entity.enemy').toUpperCase()} ✓`, 'combat');
+  }
   return applyPlayRuntimeResult(resolved, 'Combat failed');
 }
 
@@ -1042,6 +2012,14 @@ function interactWithRoomEntity(action, entityId) {
       'use-recovery': 'recovery',
     };
     emitAudioCue(cueByAction[action]);
+    const feedbackByAction = {
+      'open-treasure': [`${t('entity.treasure').toUpperCase()} ✓`, 'treasure'],
+      'avoid-trap': [`${t('entity.trap').toUpperCase()} · ${t('action.avoid')}`, 'trap'],
+      'trigger-trap': [`${t('entity.trap').toUpperCase()} · ${t('action.risk')}`, 'trap'],
+      'use-recovery': [`${t('roomEvent.rest').toUpperCase()} ✓`, 'recovery'],
+    };
+    const [message, kind] = feedbackByAction[action] ?? ['', 'result'];
+    if (message) showActionFeedback(message, kind);
   }
   return applyPlayRuntimeResult(result, 'Interaction failed');
 }
@@ -1167,10 +2145,65 @@ function renderRoomEvents() {
 
   roomEventItems.replaceChildren(...cards);
   roomEventBar.hidden = cards.length === 0;
+
+  const signature = cards
+    .map((card) => `${card.dataset.kind}:${card.dataset.entityId}`)
+    .join('|');
+  if (signature && signature !== lastRoomEventSignature) {
+    if (roomEventIntroTimer) clearTimeout(roomEventIntroTimer);
+    roomEventBar.classList.remove('is-event-intro');
+    void roomEventBar.offsetWidth;
+    roomEventBar.classList.add('is-event-intro');
+    roomEventIntroTimer = setTimeout(() => {
+      roomEventBar.classList.remove('is-event-intro');
+      roomEventIntroTimer = null;
+    }, 520);
+  }
+  lastRoomEventSignature = signature;
 }
 
 function sideIcon(side) {
   return ({ north: '▲', east: '▶', south: '▼', west: '◀' })[side] ?? '◇';
+}
+
+function exitLaneInfo(side, index, total) {
+  if (total <= 1) {
+    return { marker: '', labelKey: null };
+  }
+
+  const horizontalWall =
+    side === 'north' || side === 'south';
+  const markers = horizontalWall
+    ? ['←', '•', '→']
+    : ['↑', '•', '↓'];
+  const keys = horizontalWall
+    ? ['exit.laneLeft', 'exit.laneCenter', 'exit.laneRight']
+    : ['exit.laneUpper', 'exit.laneCenter', 'exit.laneLower'];
+
+  if (total === 2) {
+    return index === 0
+      ? { marker: markers[0], labelKey: keys[0] }
+      : { marker: markers[2], labelKey: keys[2] };
+  }
+
+  if (total === 3) {
+    return {
+      marker: markers[index] ?? String(index + 1),
+      labelKey: keys[index] ?? null,
+    };
+  }
+
+  return {
+    marker: String(index + 1),
+    labelKey: null,
+  };
+}
+
+function previewPlayExit(corridorId = null) {
+  if (mode !== 'play' || !adapter) return;
+  adapter.setHighlightedSpecIds(
+    corridorId ? [corridorId] : [],
+  );
 }
 
 function renderPlayExits() {
@@ -1193,13 +2226,31 @@ function renderPlayExits() {
   );
 
   const exits = map.currentExits
-    .map((exit) => ({
-      ...exit,
-      side: openingByCorridor.get(exit.corridorId)?.side ?? null,
-    }))
+    .map((exit) => {
+      const opening =
+        openingByCorridor.get(exit.corridorId) ?? null;
+      return {
+        ...exit,
+        side: opening?.side ?? null,
+        openingOffset:
+          Number.isFinite(opening?.centerOffset)
+            ? opening.centerOffset
+            : 0,
+      };
+    })
     .sort((a, b) => {
-      const order = { north: 0, east: 1, south: 2, west: 3 };
-      return (order[a.side] ?? 9) - (order[b.side] ?? 9) || a.corridorId.localeCompare(b.corridorId);
+      const order = {
+        north: 0,
+        east: 1,
+        south: 2,
+        west: 3,
+      };
+      return (
+        (order[a.side] ?? 9) -
+          (order[b.side] ?? 9) ||
+        a.openingOffset - b.openingOffset ||
+        a.corridorId.localeCompare(b.corridorId)
+      );
     });
 
   const center = document.createElement('span');
@@ -1214,27 +2265,106 @@ function renderPlayExits() {
   }
 
   const slots = [];
-  for (const [side, sideExits] of grouped) {
+  for (const [side, unsortedSideExits] of grouped) {
+    const sideExits = [...unsortedSideExits].sort(
+      (left, right) =>
+        left.openingOffset - right.openingOffset ||
+        left.corridorId.localeCompare(
+          right.corridorId,
+        ),
+    );
+
     const slot = document.createElement('div');
     slot.className = `exit-slot side-${side}`;
+    slot.classList.toggle(
+      'has-multiple',
+      sideExits.length > 1,
+    );
 
     sideExits.forEach((exit, index) => {
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = `exit-button ${exit.explored ? 'is-known' : 'is-unknown'}`;
+      button.className =
+        `exit-button ${exit.explored ? 'is-known' : 'is-unknown'}`;
+      button.classList.toggle(
+        'is-multi',
+        sideExits.length > 1,
+      );
       button.dataset.corridorId = exit.corridorId;
       button.dataset.explored = String(exit.explored);
+
       const icon = sideIcon(exit.side);
-      button.textContent = sideExits.length > 1 ? `${icon}${index + 1}` : icon;
-      const directionKey = exit.side ?? 'unknown';
-      const direction = t(`direction.${directionKey}`);
-      button.setAttribute('aria-label', exit.explored
-        ? t('exit.return', { direction })
-        : t('exit.explore', { direction }));
+      const lane = exitLaneInfo(
+        side,
+        index,
+        sideExits.length,
+      );
+      button.textContent =
+        `${icon}${lane.marker}`;
+
+      const directionKey =
+        exit.side ?? 'unknown';
+      const direction = t(
+        `direction.${directionKey}`,
+      );
+      const laneLabel = lane.labelKey
+        ? t(lane.labelKey)
+        : '';
+      const describedDirection =
+        laneLabel
+          ? `${direction} · ${laneLabel}`
+          : direction;
+
+      button.setAttribute(
+        'aria-label',
+        exit.explored
+          ? t('exit.return', {
+              direction:
+                describedDirection,
+            })
+          : t('exit.explore', {
+              direction:
+                describedDirection,
+            }),
+      );
       button.title = exit.explored
-        ? t('exit.known', { direction })
-        : t('exit.explore', { direction });
-      button.addEventListener('click', () => movePlayToRoom(exit.targetRoomId, exit.corridorId));
+        ? t('exit.known', {
+            direction:
+              describedDirection,
+          })
+        : t('exit.explore', {
+            direction:
+              describedDirection,
+          });
+
+      button.addEventListener(
+        'pointerenter',
+        () =>
+          previewPlayExit(exit.corridorId),
+      );
+      button.addEventListener(
+        'pointerleave',
+        () => previewPlayExit(),
+      );
+      button.addEventListener(
+        'focus',
+        () =>
+          previewPlayExit(exit.corridorId),
+      );
+      button.addEventListener(
+        'blur',
+        () => previewPlayExit(),
+      );
+      button.addEventListener(
+        'click',
+        () => {
+          previewPlayExit();
+          movePlayToRoom(
+            exit.targetRoomId,
+            exit.corridorId,
+          );
+        },
+      );
       slot.append(button);
     });
     slots.push(slot);
@@ -1255,6 +2385,8 @@ function renderActiveSpec() {
     entityStates: mode === 'edit' ? null : playSession?.gameplayState?.entityStates ?? null,
     showPlayer: mode !== 'edit' && Boolean(playSession),
     playerState: mode === 'edit' ? null : playSession?.playerState ?? null,
+    designIntent: lastDesignIntent,
+    presentationMode: mode,
   });
   ensureRoomOptions();
   ensureEntityOptions();
@@ -1376,8 +2508,12 @@ function clearPathCheck() {
   adapter?.setHighlightedSpecIds([]);
 }
 
-function applyCommand(command, successMessage) {
-  if (mode !== 'edit' || generationBusy || naturalEditBusy) return false;
+function applyCommand(command, successMessage, { allowNaturalBusy = false } = {}) {
+  if (
+    mode !== 'edit' ||
+    generationBusy ||
+    (naturalEditBusy && !allowNaturalBusy)
+  ) return false;
 
   const preview = applyEditCommand(authoringSpec(), command);
   if (!preview.ok) {
@@ -1856,7 +2992,12 @@ async function generateDungeonFromPrompt() {
     }
 
     const floorCount = requestedFloorCount();
-    const generatedFloors = generateFloorSet(payload.intent, { prompt, count: floorCount });
+    const generatorStrategyId = selectedGeneratorStrategyId();
+    const generatedFloors = await generateFloorSet(payload.intent, {
+      prompt,
+      count: floorCount,
+      strategyId: generatorStrategyId,
+    });
     const generated = generatedFloors[0];
     setAuthoringFloors(generatedFloors.map((entry) => entry.spec), 0);
     selectedRoomId = null;
@@ -1871,7 +3012,9 @@ async function generateDungeonFromPrompt() {
     lastNaturalEditCommand = null;
     lastDesignIntent = clone(payload.intent);
     lastGeneration = {
-      generatorVersion: generated.generatorVersion ?? DEFAULT_GENERATOR_VERSION,
+      generatorVersion: generated.generatorVersion,
+      generatorStrategyId: generated.generatorStrategyId,
+      algorithmVersion: generated.algorithmVersion,
       selectedProvider: payload.selectedProvider ?? 'unknown',
       seed: generated.profile.seed,
       roomCount: generated.profile.roomCount,
@@ -1904,6 +3047,7 @@ async function generateDungeonFromPrompt() {
     resultStatus.textContent = '';
     resultStatus.hidden = true;
     renderActiveSpec();
+    triggerViewportTransition('generation');
     emitAudioCue('generated');
     setGenerationStatus(floorCount > 1
       ? t('generation.generatedRun', { floors: floorCount, count: lastGeneration.roomCount })
@@ -1921,8 +3065,27 @@ async function generateDungeonFromPrompt() {
 
 function naturalEditContext() {
   return {
-    rooms: authoringSpec().rooms.map((room) => ({ id: room.id })),
-    entities: authoringSpec().entities.map((entity) => ({ id: entity.id, type: entity.type, roomId: entity.roomId })),
+    rooms: authoringSpec().rooms.map((room) => ({
+      id: room.id,
+      x: room.x,
+      z: room.z,
+      width: room.width,
+      depth: room.depth,
+    })),
+    entities: authoringSpec().entities.map((entity) => ({
+      id: entity.id,
+      type: entity.type,
+      roomId: entity.roomId,
+    })),
+    corridors: authoringSpec().corridors.map((corridor) => ({
+      id: corridor.id,
+      fromRoomId: corridor.fromRoomId,
+      toRoomId: corridor.toRoomId,
+      width: corridor.width,
+      kind: corridor.kind ?? null,
+      fromSide: corridor.fromSide ?? null,
+      toSide: corridor.toSide ?? null,
+    })),
   };
 }
 
@@ -1957,24 +3120,71 @@ async function applyNaturalEdit() {
     }
 
     const command = payload.command;
-    const result = session.apply(command);
-    if (!result.ok) {
-      setNaturalEditStatus(t('natural.rejected', { code: result.error.code }));
+    const applied = applyCommand(
+      command,
+      `natural edit: ${command.type}`,
+      { allowNaturalBusy: true },
+    );
+    if (!applied) {
+      setNaturalEditStatus(
+        t('natural.rejected', { code: 'EDIT_COMMAND_REJECTED' }),
+      );
       return false;
     }
 
-    lastNaturalEditCommand = { ...command };
+    lastNaturalEditCommand = clone(command);
     if (command.type === 'move-entity') {
       selectedEntityId = command.entityId;
       selectedRoomId = null;
       selectedCorridorId = null;
       setInspectorTab('entities');
+    } else if (command.type === 'move-room' || command.type === 'resize-room') {
+      selectedRoomId = command.roomId;
+      selectedEntityId = null;
+      selectedCorridorId = null;
+      setInspectorTab('rooms');
+    } else if (command.type === 'add-entity') {
+      selectedEntityId = command.entity?.id ?? null;
+      selectedRoomId = null;
+      selectedCorridorId = null;
+      setInspectorTab('entities');
+    } else if (command.type === 'remove-entity') {
+      if (selectedEntityId === command.entityId) selectedEntityId = null;
+      selectedRoomId = null;
+      selectedCorridorId = null;
+      setInspectorTab('entities');
+    } else if (command.type === 'add-room') {
+      selectedRoomId = command.room?.id ?? null;
+      selectedEntityId = null;
+      selectedCorridorId = null;
+      setInspectorTab('rooms');
+    } else if (command.type === 'remove-room') {
+      if (selectedRoomId === command.roomId) selectedRoomId = null;
+      selectedEntityId = null;
+      selectedCorridorId = null;
+      setInspectorTab('rooms');
+    } else if (command.type === 'add-corridor') {
+      selectedCorridorId = command.corridor?.id ?? null;
+      selectedRoomId = null;
+      selectedEntityId = null;
+      setInspectorTab('corridors');
+    } else if (
+      command.type === 'reconnect-corridor' ||
+      command.type === 'set-corridor-doors'
+    ) {
+      selectedCorridorId = command.corridorId;
+      selectedRoomId = null;
+      selectedEntityId = null;
+      setInspectorTab('corridors');
+    } else if (command.type === 'remove-corridor') {
+      if (selectedCorridorId === command.corridorId) selectedCorridorId = null;
+      selectedRoomId = null;
+      selectedEntityId = null;
+      setInspectorTab('corridors');
     }
-    naturalEditInput.value = '';
-    clearPathCheck();
     renderActiveSpec();
+    naturalEditInput.value = '';
     setNaturalEditStatus(t('natural.applied', { command: command.type }));
-    setEditStatus(`natural edit: ${command.type}`);
     return true;
   } catch {
     setNaturalEditStatus(t('natural.unavailable'));
@@ -2085,6 +3295,13 @@ function finalizePlayIfNeeded() {
     syncAudioMode();
     emitAudioCue(lastPlayResult.status === 'cleared' ? 'run-clear' : 'run-fail');
     renderActiveSpec();
+    adapter.focusSpecId(playSession.currentRoomId, { preserveDistance: true });
+    triggerViewportTransition('result');
+    triggerResultReveal();
+    showActionFeedback(
+      lastPlayResult.status === 'cleared' ? t('result.cleared') : t('result.ended'),
+      'result',
+    );
     return true;
   }
 
@@ -2114,6 +3331,9 @@ function finalizePlayIfNeeded() {
     syncAudioMode();
     emitAudioCue('floor-advance');
     renderActiveSpec();
+    adapter.focusSpecId(playSession.currentRoomId, { preserveDistance: true });
+    triggerViewportTransition('floor');
+    showActionFeedback(`✓ ${t('run.floor')} ${currentFloorIndex}`, 'floor');
     return true;
   }
 
@@ -2134,6 +3354,13 @@ function finalizePlayIfNeeded() {
   syncAudioMode();
   emitAudioCue(lastDungeonRunResult.status === 'cleared' ? 'run-clear' : 'run-fail');
   renderActiveSpec();
+  adapter.focusSpecId(playSession.currentRoomId, { preserveDistance: true });
+  triggerViewportTransition('result');
+  triggerResultReveal();
+  showActionFeedback(
+    lastDungeonRunResult.status === 'cleared' ? t('result.cleared') : t('result.ended'),
+    'result',
+  );
   return true;
 }
 
@@ -2164,7 +3391,9 @@ function beginDungeonRun(runSpec, source) {
   selectedCorridorId = null;
   resultStatus.textContent = '';
   resultStatus.hidden = true;
+  resultStatus.classList.remove('is-result-reveal');
   if (resultMetrics) {
+    resultMetrics.classList.remove('is-result-reveal');
     resultMetrics.replaceChildren();
     resultMetrics.hidden = true;
   }
@@ -2175,6 +3404,7 @@ function beginDungeonRun(runSpec, source) {
   syncAudioMode();
   emitAudioCue(source === 'mystery' ? 'mystery-start' : 'play-start');
   renderActiveSpec();
+  triggerViewportTransition('mode');
   finalizePlayIfNeeded();
   return true;
 }
@@ -2203,19 +3433,25 @@ function freshMysterySeed() {
   return seed;
 }
 
-function startMysteryDungeon() {
+async function startMysteryDungeon() {
   if (mode !== 'edit' || generationBusy || naturalEditBusy || !lastDesignIntent) return false;
 
   const seed = freshMysterySeed();
-  const generatedFloors = generateFloorSet(lastDesignIntent, {
+  const generatorStrategyId =
+    lastGeneration?.generatorStrategyId ??
+    selectedGeneratorStrategyId();
+  const generatedFloors = await generateFloorSet(lastDesignIntent, {
     prompt: 'mystery-play',
     count: Math.max(1, floorSessions.length),
     baseSeed: seed,
     idPrefix: `mystery-${seed}`,
+    strategyId: generatorStrategyId,
   });
   const generated = generatedFloors[0];
   mysteryGeneration = {
-    generatorVersion: generated.generatorVersion ?? DEFAULT_GENERATOR_VERSION,
+    generatorVersion: generated.generatorVersion,
+    generatorStrategyId: generated.generatorStrategyId,
+    algorithmVersion: generated.algorithmVersion,
     seed: generated.profile.seed,
     roomCount: generated.profile.roomCount,
     routeChoice: generated.profile.routeChoice,
@@ -2249,12 +3485,33 @@ function movePlayToRoom(roomId, corridorId = null) {
     setEditStatus('Resolve room event before leaving');
     return false;
   }
+
+  const beforeFloorIndex = dungeonRunSession?.currentFloorIndex ?? currentFloorIndex;
   const moved = movePlaySession(playSession, roomId, {
     at: nextPlayActionAt(),
     corridorId,
   });
   if (moved?.ok) emitAudioCue('move');
-  return applyPlayRuntimeResult(moved, 'Move blocked');
+
+  const applied = applyPlayRuntimeResult(moved, 'Move blocked');
+  if (!applied || mode !== 'play' || !playSession) return applied;
+
+  const afterFloorIndex = dungeonRunSession?.currentFloorIndex ?? currentFloorIndex;
+  if (afterFloorIndex !== beforeFloorIndex) return applied;
+
+  const { enemies, interactables } = roomContents();
+  const hasBlockingEvent =
+    enemies.length > 0 ||
+    interactables.some(
+      (entry) => entry.entity.type === 'trap' && entry.state.status === 'armed',
+    );
+
+  if (hasBlockingEvent) {
+    adapter.focusSpecId(playSession.currentRoomId, { preserveDistance: true });
+    triggerViewportTransition('event');
+  }
+
+  return applied;
 }
 
 function returnToEdit() {
@@ -2311,7 +3568,9 @@ function returnToEdit() {
   if (goldCount) goldCount.textContent = '0';
   resultStatus.textContent = '';
   resultStatus.hidden = true;
+  resultStatus.classList.remove('is-result-reveal');
   if (resultMetrics) {
+    resultMetrics.classList.remove('is-result-reveal');
     resultMetrics.replaceChildren();
     resultMetrics.hidden = true;
   }
@@ -2322,6 +3581,7 @@ function returnToEdit() {
   setEditStatus(returningFromMystery ? 'mystery adopted into edit' : 'returned to edit');
   renderPathStatus();
   renderActiveSpec();
+  triggerViewportTransition('mode');
   canvas.focus();
   return true;
 }
@@ -2852,6 +4112,7 @@ function handleCanvasPointerCancel(event) {
 
 function refreshLocalizedUi() {
   if (!session || !adapter) return;
+  renderGeneratorStrategyOptions();
   renderPromptHistory();
   ensureRoomOptions();
   ensureEntityOptions();
@@ -2966,6 +4227,8 @@ async function run() {
     window.addEventListener('keydown', handleKeyboard);
     window.addEventListener('beforeunload', () => audioPresentation.dispose(), { once: true });
     audioToggle?.addEventListener('click', toggleAudioMuted);
+    bgmVolumeInput?.addEventListener('input', setBgmVolumeFromControl);
+    seVolumeInput?.addEventListener('input', setSeVolumeFromControl);
     renderAudioToggle();
     undoButton.addEventListener('click', undo);
     redoButton.addEventListener('click', redo);
@@ -2976,6 +4239,7 @@ async function run() {
       button.addEventListener('click', () => setInspectorTab(button.dataset.inspectorTabTarget));
     }
     setInspectorTab(inspectorTab);
+    renderGeneratorStrategyOptions();
     startButton.addEventListener('click', startDungeon);
     mysteryPlayButton.addEventListener('click', startMysteryDungeon);
     returnEditButton.addEventListener('click', returnToEdit);
@@ -3007,6 +4271,7 @@ async function run() {
     moveEntityButton.addEventListener('click', moveEntityToTargetRoom);
     removeEntityButton.addEventListener('click', removeEntity);
     generationPrompt.addEventListener('input', updateUi);
+    generatorStrategySelect?.addEventListener('change', updateUi);
     floorCountInput?.addEventListener('input', updateUi);
     floorCountInput?.addEventListener('change', () => {
       floorCountInput.value = String(requestedFloorCount());
@@ -3014,6 +4279,14 @@ async function run() {
     });
     floorSelect?.addEventListener('change', () => selectFloor(floorSelect.value));
     generateDungeonButton.addEventListener('click', generateDungeonFromPrompt);
+    exportLayoutJsonButton?.addEventListener('click', exportLayoutJson);
+    exportFullJsonButton?.addEventListener('click', exportFullJson);
+    importJsonButton?.addEventListener('click', () => importJsonInput?.click());
+    importJsonInput?.addEventListener('change', async () => {
+      const file = importJsonInput.files?.[0] ?? null;
+      await importJsonFile(file);
+      importJsonInput.value = '';
+    });
     naturalEditInput.addEventListener('input', updateUi);
     applyNaturalEditButton.addEventListener('click', applyNaturalEdit);
     renderPromptHistory();
@@ -3025,10 +4298,18 @@ async function run() {
       getScreenPositionForSpecId: (id) => adapter.getScreenPositionForSpecId(id),
       getScreenPositionForRoomWall: (roomId, side) => adapter.getScreenPositionForRoomWall(roomId, side),
       getScreenPositionForWorldPoint: (point) => adapter.getScreenPositionForWorldPoint(point),
+      probePointerAt: (clientX, clientY) => ({
+        hit: adapter.pickDetailedAt(clientX, clientY),
+        ground: adapter.getGroundPointAt(clientX, clientY),
+      }),
       getCameraState: () => adapter.getCameraState(),
       getRenderedSelection: () => adapter.selectedSpecId,
       getCharacterPresentation: () => adapter.getCharacterPresentationSummary(),
+      getAtmospherePresentation: () => adapter.getAtmospherePresentationSummary(),
+      setAtmosphereForTest: (intent, presentationMode = mode) =>
+        adapter.applyAtmosphere(intent, { mode: presentationMode }),
       getAudioPresentation: () => audioPresentation.getState(),
+      syncReactiveAudioForTest: () => syncReactiveAudioIntensity(),
       unlockAudioForTest: async () => {
         const unlocked = await audioPresentation.unlock();
         syncAudioMode();
@@ -3036,6 +4317,9 @@ async function run() {
         return unlocked;
       },
       showViewportNoticeForTest: (message, options) => showViewportNotice(message, options),
+      showActionFeedbackForTest: (message, kind) => showActionFeedback(message, kind),
+      triggerViewportTransitionForTest: (kind) => triggerViewportTransition(kind),
+      triggerResultRevealForTest: () => triggerResultReveal(),
       getCurrentRoomPlan: () => {
         const roomId = playSession?.currentRoomId ?? selectedRoomId;
         const group = adapter.plan?.roomGroups.find((room) => room.specId === roomId) ?? null;
@@ -3059,7 +4343,20 @@ async function run() {
       removeSelectedCorridor,
       resizeSelectedRoom,
       checkStartGoalPath,
+      getGeneratorStrategies: () => generatorStrategyRegistry.list().map((entry) => ({ ...entry })),
+      setGeneratorStrategy: (id) => {
+        if (!generatorStrategyRegistry.has(id) || !generatorStrategySelect) return false;
+        generatorStrategySelect.value = id;
+        updateUi();
+        return true;
+      },
       generateDungeonFromPrompt,
+      getLayoutExport: currentLayoutExport,
+      getFullDungeonExport: currentFullDungeonExport,
+      exportLayoutJson,
+      exportFullJson,
+      importDungeonJsonTextForTest: (input, options) =>
+        applyImportedDungeonJson(input, options),
       applyNaturalEdit,
       evaluateStartGateForSpec: (spec) => evaluateStartGate(spec),
       startDungeon,

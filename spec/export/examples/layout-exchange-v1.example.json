@@ -1,0 +1,58 @@
+{
+  "schema": "dungeon-layout-exchange",
+  "schemaVersion": "1.0",
+  "id": "example-layout",
+  "source": {
+    "application": "Dungeon Architect AI",
+    "dungeonSpecVersion": "1.0",
+    "generatorStrategyId": "version-2-spatial",
+    "generatorVersion": "2",
+    "algorithmVersion": "2"
+  },
+  "coordinateSystem": {
+    "plane": "XZ",
+    "units": "abstract",
+    "roomPosition": "center",
+    "roomSize": "full-extent",
+    "positiveX": "east",
+    "positiveZ": "south"
+  },
+  "floors": [
+    {
+      "id": "floor-01",
+      "index": 0,
+      "dungeonId": "example-dungeon",
+      "seed": 123456789,
+      "rooms": [
+        {
+          "id": "room-001",
+          "x": 0,
+          "z": 0,
+          "width": 8,
+          "depth": 8,
+          "roles": ["start"]
+        },
+        {
+          "id": "room-002",
+          "x": 12,
+          "z": 0,
+          "width": 9,
+          "depth": 8,
+          "roles": ["goal"]
+        }
+      ],
+      "connections": [
+        {
+          "id": "corridor-001",
+          "fromRoomId": "room-001",
+          "toRoomId": "room-002",
+          "width": 3,
+          "enabled": true,
+          "kind": "backbone",
+          "fromSide": "east",
+          "toSide": "west"
+        }
+      ]
+    }
+  ]
+}

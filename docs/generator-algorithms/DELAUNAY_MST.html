@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Delaunay + MST + Loops — Dungeon Architect AI</title>
+  <link rel="stylesheet" href="./guide.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Algorithm Lab</div>
+  <h1>Delaunay + MST + Loops</h1>
+  <p class="lead">
+    Roomを自然に散布し、Delaunay triangulationで近傍候補を作り、
+    MSTで接続性を保証してから一部edgeをloopとして戻す生成方式。
+  </p>
+  <nav>
+    <a href="./README.html">Overview</a>
+    <a href="./ALGORITHM_GUIDE.html">Algorithm Guide</a>
+    <a href="./CORE_ARCHITECTURE.html">Core Architecture</a>
+    <a href="./DELAUNAY_MST.md">Markdown</a>
+  </nav>
+</header>
+
+<section>
+<h2>処理の流れ</h2>
+<div class="diagram">
+  <div class="flow">
+    <div class="node">Room scatter</div><div class="arrow">→</div>
+    <div class="node">Delaunay</div><div class="arrow">→</div>
+    <div class="node">MST</div><div class="arrow">→</div>
+    <div class="node">Restore loops</div><div class="arrow">→</div>
+    <div class="node">Algorithm IR</div><div class="arrow">→</div>
+    <div class="node">Adapter</div><div class="arrow">→</div>
+    <div class="node">DungeonSpec</div>
+  </div>
+</div>
+</section>
+
+<section>
+<h2>1. Room scatter</h2>
+<div class="diagram"><pre>
+      A
+
+ B          C
+
+        D
+
+ F             E
+</pre></div>
+<p>SeedからRoom centerを生成する。最低中心間距離を要求し、Room rectangleのoverlapも最終invariantで検査する。</p>
+</section>
+
+<section>
+<h2>2. Delaunay triangulation</h2>
+<div class="diagram"><pre>
+      A
+     / \
+    B---C
+     \ / \
+      D---E
+     /
+    F
+</pre></div>
+<p>近傍Room同士の接続候補を作る。現在は外部runtime libraryを使わないproject-authored Bowyer-Watson実装。</p>
+</section>
+
+<section>
+<h2>3. Minimum Spanning Tree</h2>
+<div class="two-col">
+<div class="card"><h3>候補graph</h3><pre>A---B
+|\ /|
+| X |
+|/ \|
+C---D</pre></div>
+<div class="card"><h3>MST</h3><pre>A---B
+    |
+    D
+    |
+    C</pre></div>
+</div>
+<p>全Roomをつなぐ最小treeをKruskal + Union-Findで選ぶ。Room数Nならedge数はN-1。</p>
+</section>
+
+<section>
+<h2>4. Loop restoration</h2>
+<div class="diagram"><pre>
+MST                    With loop
+A---B                   A---B
+    |                   |   |
+    D---E      →        C---D---E
+    |
+    C
+</pre></div>
+<p>MSTに採用されなかったDelaunay edgeから、SeedとloopRatioに基づいてboundedなsubsetを戻す。</p>
+</section>
+
+<section>
+<h2>Core / Adapter separation</h2>
+<div class="diagram">
+  <div class="flow">
+    <div class="node">Reusable Core</div><div class="arrow">→</div>
+    <div class="node">rooms / triangles / edges</div><div class="arrow">→</div>
+    <div class="node">DAI Adapter</div><div class="arrow">→</div>
+    <div class="node">DungeonSpec</div>
+  </div>
+</div>
+<div class="grid">
+  <div class="card"><h3>Core knows</h3><p>Seed, Room count, loopRatio, geometry, Delaunay, MST, loop selection.</p></div>
+  <div class="card"><h3>Core does not know</h3><p>DOM, Three.js, Editor, Play, AI provider, DesignIntent, DungeonSpec.</p></div>
+</div>
+</section>
+
+<section>
+<h2>Core API</h2>
+<pre><code>generateDelaunayMstCore({
+  seed: 123456789,
+  roomCount: 10,
+  loopRatio: 0.6
+})</code></pre>
+<table>
+<thead><tr><th>Input</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td>seed</td><td>deterministic Seed</td></tr>
+<tr><td>roomCount</td><td>Room数</td></tr>
+<tr><td>loopRatio</td><td>loop量 0～1</td></tr>
+<tr><td>roomSizeMin / Max</td><td>Room size range</td></tr>
+<tr><td>minCenterDistance</td><td>最低中心間距離</td></tr>
+<tr><td>scatterStep</td><td>coordinate quantization</td></tr>
+</tbody>
+</table>
+</section>
+
+<section>
+<h2>Algorithm-native output</h2>
+<pre><code>{
+  algorithm: "delaunay-mst-loops",
+  algorithmVersion: "1",
+  rooms,
+  triangles,
+  delaunayEdges,
+  mstEdges,
+  loopEdges,
+  finalEdges,
+  diagnostics
+}</code></pre>
+</section>
+
+<section>
+<h2>Determinism</h2>
+<div class="diagram">
+  <div class="flow">
+    <div class="node">Same Seed</div><div class="arrow">→</div>
+    <div class="node">Same scatter</div><div class="arrow">→</div>
+    <div class="node">Same Delaunay</div><div class="arrow">→</div>
+    <div class="node">Same MST</div><div class="arrow">→</div>
+    <div class="node">Same loops</div>
+  </div>
+</div>
+<p>同じAlgorithm Version + Seed + optionsなら同じplain-data outputを返す。</p>
+</section>
+
+<section>
+<h2>Diagnostics</h2>
+<table>
+<thead><tr><th>Metric</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td>triangleCount</td><td>Delaunay構造</td></tr>
+<tr><td>delaunayEdgeCount</td><td>接続候補数</td></tr>
+<tr><td>mstEdgeCount</td><td>必ずN-1</td></tr>
+<tr><td>loopCandidateCount</td><td>loop候補</td></tr>
+<tr><td>loopEdgeCount</td><td>採用loop数</td></tr>
+<tr><td>cycleRank</td><td>graph cycle数の基礎指標</td></tr>
+</tbody>
+</table>
+</section>
+
+<section>
+<h2>Acceptance</h2>
+<div class="callout">
+Core単体でdeterminism・connectivity・overlap・loop bounds・fail-closedを確認し、
+Adapterでvalid DungeonSpecと既存MVP content semanticsを確認する。
+Core gateが通るまではProduct selectorへ登録しない。
+</div>
+</section>
+</main>
+</body>
+</html>

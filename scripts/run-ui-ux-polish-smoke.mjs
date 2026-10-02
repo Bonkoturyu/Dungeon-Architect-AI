@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright-core';
+import { exitLabelsAreSpatialNotOrdinal } from './ui-ux-polish-checks.mjs';
 
 const chromePath = process.env.CHROME_PATH || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 const port = Number(process.env.DAI_UI_UX_PORT || '4191');
@@ -112,6 +113,8 @@ try {
       emptySelectionChipsHidden: selected.hidden === true && entitySelected.hidden === true,
       canvasCssWidth: canvasRect.width,
       canvasCssHeight: canvasRect.height,
+      canvasClientWidth: canvas.clientWidth,
+      canvasClientHeight: canvas.clientHeight,
       canvasBackingWidth: canvas.width,
       canvasBackingHeight: canvas.height,
       horizontalOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -128,10 +131,15 @@ try {
   await page.click('#start');
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().mode === 'play', null, { timeout: 30_000 });
   await page.waitForFunction(() => {
+    const viewport = document.querySelector('.viewport-shell');
+    return viewport &&
+      !viewport.classList.contains('is-mode-transition');
+  }, null, { timeout: 5_000 });
+
+  await page.waitForFunction(() => {
     const canvas = document.querySelector('#renderCanvas');
-    const rect = canvas.getBoundingClientRect();
-    return Math.abs(canvas.width - rect.width) <= 1 &&
-      Math.abs(canvas.height - rect.height) <= 1;
+    return Math.abs(canvas.width - canvas.clientWidth) <= 1 &&
+      Math.abs(canvas.height - canvas.clientHeight) <= 1;
   }, null, { timeout: 5_000 });
 
   const playLayout = await page.evaluate(() => {
@@ -160,10 +168,17 @@ try {
       viewportHudBorder: viewportLabelStyle.borderStyle,
       viewportHudBackground: viewportLabelStyle.backgroundColor,
       playAsidePosition: asideStyle.position,
+      playAsideDisplay: asideStyle.display,
       exitPadWidth: exitPad?.width ?? 0,
       exitPadHeight: exitPad?.height ?? 0,
+      exitButtonTexts: [...document.querySelectorAll('#playExitButtons .exit-button')]
+        .map((button) => button.textContent?.trim() ?? ''),
+      multiExitButtonTexts: [...document.querySelectorAll('#playExitButtons .exit-button.is-multi')]
+        .map((button) => button.textContent?.trim() ?? ''),
       canvasCssWidth: canvasRect.width,
       canvasCssHeight: canvasRect.height,
+      canvasClientWidth: canvas.clientWidth,
+      canvasClientHeight: canvas.clientHeight,
       canvasBackingWidth: canvas.width,
       canvasBackingHeight: canvas.height,
       horizontalOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -261,28 +276,37 @@ try {
       Math.abs(editLayout.canvasBackingHeight - editLayout.canvasCssHeight) <= 1,
     playModeApplied: playLayout.bodyMode === 'play',
     playCanvasMatchesExpandedLayout:
-      Math.abs(playLayout.canvasBackingWidth - playLayout.canvasCssWidth) <= 1 &&
-      Math.abs(playLayout.canvasBackingHeight - playLayout.canvasCssHeight) <= 1,
+      Math.abs(playLayout.canvasBackingWidth - playLayout.canvasClientWidth) <= 1 &&
+      Math.abs(playLayout.canvasBackingHeight - playLayout.canvasClientHeight) <= 1,
     authoringPanelsHiddenInPlay: playLayout.hiddenEditorPanels >= 3,
     playViewportExpands: playLayout.viewportWidth > editLayout.viewportWidth,
     playInstructionIsModeAware: playLayout.viewportHelp.includes('Auto-map'),
     playPanelCompact:
       playLayout.validationHidden === true &&
-      playLayout.playMetrics.includes('MOVE') &&
-      playLayout.playMetrics.includes('MAP') &&
-      playLayout.playAsidePosition === 'absolute',
+      ['LV', 'HP', 'EXP', 'G']
+        .every((label) => playLayout.playMetrics.includes(label)) &&
+      playLayout.playAsideDisplay === 'none' &&
+      playLayout.asideWidth === 0,
     playHudClearlyNonInteractive:
       playLayout.viewportHudBorder === 'none' &&
       playLayout.viewportHudBackground === 'rgba(0, 0, 0, 0)',
     exitInstructionMinimal:
       playLayout.exitPrompt === 'CHOOSE EXIT',
     spatialExitPadPresent:
-      playLayout.exitPadWidth >= 130 &&
-      playLayout.exitPadWidth <= 150 &&
-      playLayout.exitPadHeight >= 130 &&
-      playLayout.exitPadHeight <= 150,
+      playLayout.exitPadWidth >= 185 &&
+      playLayout.exitPadWidth <= 205 &&
+      playLayout.exitPadHeight >= 185 &&
+      playLayout.exitPadHeight <= 205,
+    multipleExitLabelsAreSpatialNotOrdinal:
+      exitLabelsAreSpatialNotOrdinal(
+        playLayout.exitButtonTexts,
+        playLayout.multiExitButtonTexts,
+      ),
     resultModeApplied: resultLayout.bodyMode === 'result',
-    resultVisible: resultLayout.resultText.includes('CLEARED') && resultLayout.playText.includes('MOVE'),
+    resultVisible:
+      resultLayout.resultText.includes('CLEARED') &&
+      ['LV', 'HP', 'EXP', 'G']
+        .every((label) => resultLayout.playText.includes(label)),
     authoringPanelsHiddenInResult: resultLayout.editorPanelsHidden === true,
     resultInstructionIsModeAware: resultLayout.viewportHelp.toLowerCase().includes('run complete'),
     returnToEditRestoresMode: returnedMode === 'edit',

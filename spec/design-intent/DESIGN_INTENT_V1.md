@@ -21,6 +21,28 @@ All values are normalized to `0..1`.
 - `backtracking`
 - `targetDifficulty`
 
+## Semantic calibration
+
+Provider translation uses the following meanings for the normalized axes:
+
+- `fairness`: avoidable/predictable treatment rather than arbitrary punishment;
+- `tension`: sustained pressure, fear, or urgency;
+- `exploration`: incentive for optional discovery and detours;
+- `greedPunishment`: how strongly pursuing optional or tempting rewards increases risk, cost, or danger;
+- `routeChoice`: amount of meaningful branching;
+- `learnability`: how well observation or prior failure lets the player improve;
+- `combatDensity`: frequency of enemy/combat encounters;
+- `trapDensity`: frequency of traps/hazards;
+- `rewardDensity`: frequency and availability of meaningful rewards or tempting reward opportunities;
+- `deception`: misleading cues, bait, false safety, or deliberately obscured risk;
+- `telegraphStrength`: clarity of warnings before danger;
+- `backtracking`: amount of returning through already visited spaces;
+- `targetDifficulty`: overall intended challenge.
+
+`0.5` is reserved for genuinely neutral/moderate intent. Clear directional wording should move the relevant axis meaningfully away from `0.5`.
+
+Greed/reward wording is calibrated independently from deception: explicit consequences for optional/tempting rewards are a strong positive `greedPunishment` signal; prominent recurring rewards/treasure raise `rewardDensity`; `deception` rises only when bait, misleading cues, false safety, hidden risk, or deliberate trickery are also implied.
+
 ## Target duration
 
 `targetDuration` is the expected completion time for one normal playthrough, stored in seconds and validated to `120..1800`.

@@ -3,10 +3,24 @@ import test from 'node:test';
 import { handleNaturalEditRequest, onRequest } from '../../functions/api/natural-edit.js';
 
 const context = {
-  rooms: [{ id: 'room-start' }, { id: 'room-goal' }],
+  rooms: [
+    { id: 'room-start', x: 0, z: 0, width: 8, depth: 8 },
+    { id: 'room-goal', x: 12, z: 0, width: 8, depth: 8 },
+  ],
   entities: [
     { id: 'treasure-1', type: 'treasure', roomId: 'room-start' },
     { id: 'goal-1', type: 'goal', roomId: 'room-goal' },
+  ],
+  corridors: [
+    {
+      id: 'corridor-1',
+      fromRoomId: 'room-start',
+      toRoomId: 'room-goal',
+      width: 3,
+      kind: 'manual',
+      fromSide: 'east',
+      toSide: 'west',
+    },
   ],
 };
 

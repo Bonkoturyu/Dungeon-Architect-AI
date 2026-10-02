@@ -1,0 +1,5 @@
+{
+  "name": "@dungeon-architect/export-core",
+  "private": true,
+  "type": "module"
+}
