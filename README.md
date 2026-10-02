@@ -101,7 +101,9 @@ The repository also retains the frozen ten-case DesignIntent regression corpus a
 
 追加敵・罠は1階合計100体が標準上限。実測に基づく高度設定は250まで。相対位置指定など解釈できない表現は確認が必要です。ブラウザのRecommendedはV3です。V1/V2の明示選択とライブラリ既定V1は維持しています。Start/Goalも通常・ランダム・各特殊種類から選択できます。特殊Goalは敵・罠を全処理した後に「この階をクリア」で進み、店の購入はどの場所でも任意です。現時点の共通レイヤー変更はローカル候補で、公開デモ反映とは別です。
 
-最新のUI・数量差別化は [ユーザーフィードバック対応](docs/testing/UI_FEEDBACK_2026-10-02.md)、共通レイヤーの初期検証は [生成方式維持・Auto・端点設定](docs/testing/ROOM_CONTENT_LAYER_2026-10-02.md)、既存V3の検証と制約は [特殊部屋V3検証](docs/testing/SPECIAL_ROOMS_V3_2026-10-02.md) を参照してください。
+難易度は生成ボタンの直前で選択します。「文章に合わせる」は自然文の指定を使い、未指定なら標準です。やさしい／標準／難しいを選ぶと文章より優先し、自動・手動の両方に適用します。確認画面ではランダムの抽選結果を表示せず、明示した種類・Start/Goalだけを編集できます。抽選結果は生成後に確認できます。[難易度・ランダム表示の検証](docs/testing/GENERATION_SETTINGS_2026-10-02.md)を参照してください。
+
+UI・数量差別化は [ユーザーフィードバック対応](docs/testing/UI_FEEDBACK_2026-10-02.md)、共通レイヤーの初期検証は [生成方式維持・Auto・端点設定](docs/testing/ROOM_CONTENT_LAYER_2026-10-02.md)、既存V3の検証と制約は [特殊部屋V3検証](docs/testing/SPECIAL_ROOMS_V3_2026-10-02.md) を参照してください。
 
 ## 罠の回避判定
 

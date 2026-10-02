@@ -1,6 +1,6 @@
 import { resolveRoomConfigurationPresence } from '../../packages/intent/src/endpoint-room-plans.js';
 import { measurePerformance, measurePerformanceAsync, startPerformanceProbe, stopPerformanceProbe } from '../../packages/renderer-three/src/performance-probe.js';
-import { reviewRoomPlan, createRoomPlanConfig } from './room-plan-review.js';
+import { reviewRoomPlan, createRoomPlanConfig, resolveGenerationDifficulty } from './room-plan-review.js';
 import { TRAP_RULES_V1 } from '../../packages/core/src/trap-rules.js';
 import { applyRoomContentLayer } from '../../packages/generator/src/room-content-layer.js';
 import { parseFallbackRoomRequests } from '../../packages/intent/src/room-requests.js';
@@ -150,6 +150,7 @@ const generationPrompt = document.querySelector('#generationPrompt');
 const generatorStrategySelect = document.querySelector('#generatorStrategy');
 const generationAutoInput = document.querySelector('#generationAuto');
 const generationManualInput = document.querySelector('#generationManual');
+const generationDifficultySelect = document.querySelector('#generationDifficulty');
 const generationModeHint = document.querySelector('#generationAutoHint');
 const floorCountInput = document.querySelector('#floorCount');
 const floorSelect = document.querySelector('#floorSelect');
@@ -1982,6 +1983,7 @@ function updateUiImplementation() {
   if (floorCountInput) floorCountInput.disabled = !editing || authoringBusy;
   if (generationAutoInput) generationAutoInput.disabled = !editing || authoringBusy;
   if (generationManualInput) generationManualInput.disabled = !editing || authoringBusy;
+  if (generationDifficultySelect) generationDifficultySelect.disabled = !editing || authoringBusy;
   if (generationModeHint) {
     generationModeHint.dataset.i18n = generationAutoInput?.checked ? 'create.autoHint' : 'create.manualHint';
     generationModeHint.textContent = t(generationModeHint.dataset.i18n);
@@ -3107,10 +3109,10 @@ async function generateDungeonFromPrompt() {
     const floorCount = requestedFloorCount();
     const generatorStrategyId = selectedGeneratorStrategyId();
     const requests = payload.roomRequests ?? parseFallbackRoomRequests(prompt);
-    const requestedDifficulty = payload.difficulty ?? null;
+    const requestedDifficulty = resolveGenerationDifficulty(generationDifficultySelect?.value, payload.difficulty);
     let specialRoomConfig = null;
     {
-      const reviewOptions = { requests, floorCount, seed: deriveGeneratorSeedFromPrompt(prompt), difficulty: requestedDifficulty ?? 'normal', roomsPerFloor: Math.min(20, Math.max(5, Math.round(payload.intent.targetDuration / 60))), warnings: payload.warnings ?? [], language: getLanguage(), strategyLabel: generatorStrategyLabel(generatorStrategyRegistry.list().find(({ id }) => id === generatorStrategyId)) };
+      const reviewOptions = { requests, floorCount, seed: deriveGeneratorSeedFromPrompt(prompt), difficulty: requestedDifficulty, roomsPerFloor: Math.min(20, Math.max(5, Math.round(payload.intent.targetDuration / 60))), warnings: payload.warnings ?? [], language: getLanguage(), strategyLabel: generatorStrategyLabel(generatorStrategyRegistry.list().find(({ id }) => id === generatorStrategyId)) };
       if (generationAutoInput?.checked && reviewOptions.warnings.length) {
         throw new Error(t('roomReview.autoWarnings', { warnings: reviewOptions.warnings.join(' ') }));
       }

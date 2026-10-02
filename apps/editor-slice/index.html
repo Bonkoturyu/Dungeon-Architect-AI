@@ -2369,6 +2369,16 @@
             </div>
             <p id="generationAutoHint" class="muted" data-i18n="create.manualHint">Review and adjust settings before generating.</p>
           </fieldset>
+          <label class="generation-difficulty-field">
+            <span data-i18n="roomReview.difficulty">Difficulty</span>
+            <select id="generationDifficulty" aria-describedby="generationDifficultyHint">
+              <option value="prompt" data-i18n="create.difficultyPrompt">Use prompt (Normal if unspecified)</option>
+              <option value="easy" data-i18n="roomReview.easy">Easy</option>
+              <option value="normal" data-i18n="roomReview.normal">Normal</option>
+              <option value="hard" data-i18n="roomReview.hard">Hard</option>
+            </select>
+            <span id="generationDifficultyHint" class="muted" data-i18n="create.difficultyHint">Choosing a difficulty here overrides the prompt in either generation mode.</span>
+          </label>
           <button id="generateDungeon" class="primary-action wide-action" type="button" data-i18n="create.generate">Generate</button>
           <p id="generationStatus" class="muted" aria-live="polite"></p>
           <div class="export-actions">

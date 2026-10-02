@@ -1,4 +1,4 @@
-import { requestedEndpointPolicies, resolveRoomConfigurationPresence } from '../../packages/intent/src/endpoint-room-plans.js';
+import { endpointPolicyAtFloor, requestedEndpointPolicies, resolveRoomConfigurationPresence } from '../../packages/intent/src/endpoint-room-plans.js';
 import { getMessage } from './i18n.js';
 import { DEFAULT_SPECIAL_ROOM_ENTITY_LIMIT, MAX_SPECIAL_ROOM_ENTITY_LIMIT } from '../../packages/intent/src/room-limits.js';
 import { SPECIAL_ROOM_KINDS } from '../../packages/intent/src/room-requests.js';
@@ -20,6 +20,19 @@ export const DIFFICULTY_PROFILES = {
   normal: { enemyDamage: 4, trapDamage: 6, recoveryHealing: 8, monsterCount: 3, trapCount: 4 },
 };
 
+// 明示したUI選択を優先。「文章に合わせる」のときだけ自然文の難易度を採用する。
+export function resolveGenerationDifficulty(selection = 'prompt', requestedDifficulty = null) {
+  if (Object.hasOwn(DIFFICULTY_PROFILES, selection)) return selection;
+  return Object.hasOwn(DIFFICULTY_PROFILES, requestedDifficulty) ? requestedDifficulty : 'normal';
+}
+
+// 抽選済みプランは生成用に保持し、確認画面には明示した種類だけを表示する。
+export function visibleRoomPlans(plans, { policies, endpointPolicies }) {
+  return plans.filter((plan) => plan.targetRole
+    ? endpointPolicyAtFloor(endpointPolicies, plan.targetRole, plan.floorNumber) !== 'random'
+    : policies[plan.kind] === 'include');
+}
+
 // Autoと手動確認で共通の、Seed付き既定値解決。作者状態を変更しない。
 export function createRoomPlanConfig({ requests, floorCount, seed, difficulty = 'normal', roomsPerFloor = 8,
   policies = requestedPresencePolicies(requests), endpointPolicies = requestedEndpointPolicies(requests), overrides = {}, specialRoomEntityLimit = DEFAULT_SPECIAL_ROOM_ENTITY_LIMIT }) {
@@ -36,6 +49,7 @@ export function createRoomPlanConfig({ requests, floorCount, seed, difficulty = 
 
 export function reviewRoomPlan({ requests, floorCount, seed, difficulty = 'normal', roomsPerFloor = 8, warnings = [], language = 'en', strategyLabel = '' }) {
   const text = (key, variables = {}) => getMessage(language, `roomReview.${key}`, variables);
+  const selectedDifficulty = resolveGenerationDifficulty(difficulty);
   return new Promise((resolve) => {
     const dialog = document.createElement('dialog'); dialog.className = 'special-room-review';
     dialog.style.cssText = 'color:#e7edf5;background:#111827;border:1px solid #526278;border-radius:12px;padding:0;width:min(760px,90vw);max-height:85vh;overflow:hidden;';
@@ -52,8 +66,7 @@ export function reviewRoomPlan({ requests, floorCount, seed, difficulty = 'norma
     const endpointInputs = {};
     const endpointFloorInputs = { start: {}, goal: {} };
     const initialEndpoints = requestedEndpointPolicies(requests);
-    const presenceSummary = document.createElement('p');
-    const presenceWarning = document.createElement('p');
+    const randomNote = document.createElement('p'); randomNote.className = 'room-review-random-note'; randomNote.textContent = text('randomHidden');
     for (const kind of SPECIAL_ROOM_KINDS) {
       const label = document.createElement('label'); label.style.cssText = 'display:block;margin:8px 0;'; label.textContent = `${kindLabel(kind)} `;
       const select = document.createElement('select'); select.name = `presence-${kind}`;
@@ -79,16 +92,14 @@ export function reviewRoomPlan({ requests, floorCount, seed, difficulty = 'norma
       }
     }
     const endpointNote = document.createElement('p'); endpointNote.textContent = text('endpointNote'); body.append(endpointNote);
-    body.append(presenceSummary, presenceWarning);
+    body.append(randomNote);
     const currentEndpoints = () => Object.fromEntries(['start', 'goal'].map((role) => [role, Object.keys(endpointFloorInputs[role]).length
       ? { default: endpointInputs[role].value, floors: Object.fromEntries(Object.entries(endpointFloorInputs[role]).map(([floor, input]) => [floor, input.value])) }
       : endpointInputs[role].value]));
     const currentPolicies = () => Object.fromEntries(SPECIAL_ROOM_KINDS.map((kind) => [kind, policyInputs[kind].value]));
     for (const warning of warnings) { const p = document.createElement('p'); p.textContent = warning; body.append(p); }
-    const difficultyLabel = document.createElement('label'); difficultyLabel.textContent = text('difficulty');
-    const difficultyInput = document.createElement('select'); difficultyInput.name = 'difficulty';
-    for (const key of ['easy', 'normal', 'hard']) { const option = document.createElement('option'); option.value = key; option.textContent = ({easy:text('easy'),normal:text('normal'),hard:text('hard')})[key]; difficultyInput.append(option); }
-    difficultyInput.value = difficulty in DIFFICULTY_PROFILES ? difficulty : 'normal'; difficultyLabel.append(difficultyInput); body.append(difficultyLabel);
+    const difficultySummary = document.createElement('p'); difficultySummary.dataset.reviewDifficulty = selectedDifficulty;
+    difficultySummary.textContent = text('selectedDifficulty', { difficulty: text(selectedDifficulty) }); body.append(difficultySummary);
     const advanced = document.createElement('details');
     const summary = document.createElement('summary'); summary.textContent = text('advanced'); advanced.append(summary);
     const limitLabel = document.createElement('label'); limitLabel.textContent = text('limit');
@@ -106,22 +117,20 @@ export function reviewRoomPlan({ requests, floorCount, seed, difficulty = 'norma
       input.addEventListener('input', () => onChange(input.value === '' && nullable ? null : Number(input.value))); label.append(input); parent.append(label); return input;
     };
     const render = () => {
-      const profile = DIFFICULTY_PROFILES[difficultyInput.value];
+      const profile = DIFFICULTY_PROFILES[selectedDifficulty];
       const defaults = { ...NORMAL_ROOM_DEFAULTS, 'monster-house': profile.monsterCount, 'trap-house': profile.trapCount,
         offers: NORMAL_ROOM_DEFAULTS.offers.map((offer) => offer.type === 'healing' ? { ...offer, healing: profile.recoveryHealing } : { ...offer }) };
       currentDefaults = defaults;
       try {
         const resolved = resolveRoomConfigurationPresence({ requests, policies: currentPolicies(), endpointPolicies: currentEndpoints(), defaults, floorCount, roomsPerFloor, seed, overrides: Object.fromEntries(dirtyValues), specialRoomEntityLimit: Number(limitInput.value) });
         plans = resolved.roomPlans;
-        presenceSummary.textContent = text('seedResult') + SPECIAL_ROOM_KINDS.map((kind) => `${kindLabel(kind)} ${resolved.presence[kind].placed ? text('included') : text('absent')}`).join(' / ') + text('seedNote');
-        presenceSummary.textContent += ' ' + resolved.endpointPresence.map(({ role, floorNumber, kind }) => `${text('floor')} ${floorNumber} ${text(role)}: ${kind === 'normal' ? text('normalRoom') : kindLabel(kind)}`).join(' / ');
-        presenceWarning.textContent = resolved.warnings.join(' ');
+        randomNote.hidden = !Object.values(currentPolicies()).includes('random') && !resolved.endpointPresence.some(({ policy }) => policy === 'random');
         error.textContent = '';
       } catch (cause) { error.textContent = cause.message; return; }
       confirm.disabled = false;
       profileLine.textContent = text('profile', { enemy: profile.enemyDamage, trap: profile.trapDamage, healing: profile.recoveryHealing });
       roomsContainer.replaceChildren();
-      for (const plan of plans) {
+      for (const plan of visibleRoomPlans(plans, { policies: currentPolicies(), endpointPolicies: currentEndpoints() })) {
         const group = document.createElement('fieldset'); group.style.margin = '12px 0'; group.dataset.planId = plan.id;
         const title = document.createElement('legend'); title.textContent = kindLabel(plan.kind) + (plan.targetRole ? ` · ${text(plan.targetRole)}` : ''); group.append(title);
         const floorInput = field(group, text('floor'), plan.floorNumber, (value) => editPlan(plan, 'floorNumber', value)); floorInput.max = String(floorCount); floorInput.disabled = !!plan.targetRole;
@@ -145,7 +154,6 @@ export function reviewRoomPlan({ requests, floorCount, seed, difficulty = 'norma
     const cancel = document.createElement('button'); cancel.type = 'button'; cancel.textContent = text('cancel'); cancel.addEventListener('click', () => dialog.close('cancel'));
     const confirm = document.createElement('button'); confirm.type = 'submit'; confirm.textContent = text('generate'); confirm.className = 'primary-action';
     const actions = document.createElement('div'); actions.className = 'special-room-review-actions'; actions.style.cssText = 'display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;'; actions.append(cancel, confirm); header.append(actions);
-    difficultyInput.addEventListener('change', render);
     for (const input of [...Object.values(policyInputs), ...Object.values(endpointInputs), ...Object.values(endpointFloorInputs).flatMap((inputs) => Object.values(inputs))]) input.addEventListener('change', render);
     let result = null;
     form.addEventListener('submit', (event) => {
@@ -169,7 +177,7 @@ export function reviewRoomPlan({ requests, floorCount, seed, difficulty = 'norma
         }
         plans = resolvedPlans;
       } catch (cause) { error.textContent = cause.message; return; }
-      result = { roomPlans: plans, presenceSpec, specialRoomEntityLimit, difficulty: difficultyInput.value, difficultyProfile: Object.fromEntries(["enemyDamage", "trapDamage", "recoveryHealing"].map((key) => [key, DIFFICULTY_PROFILES[difficultyInput.value][key]])), equipmentRules: { ...EQUIPMENT_RULES_V1 } }; dialog.close('confirm');
+      result = { roomPlans: plans, presenceSpec, specialRoomEntityLimit, difficulty: selectedDifficulty, difficultyProfile: Object.fromEntries(["enemyDamage", "trapDamage", "recoveryHealing"].map((key) => [key, DIFFICULTY_PROFILES[selectedDifficulty][key]])), equipmentRules: { ...EQUIPMENT_RULES_V1 } }; dialog.close('confirm');
     });
     dialog.addEventListener('close', () => { dialog.remove(); resolve(result); }, { once: true });
     dialog.append(form); document.body.append(dialog); render(); dialog.showModal();
