@@ -26,6 +26,7 @@ Dungeon Architect AI の生成方式を、将来の改良で上書きせず追�
 | --- | --- | --- | --- |
 | V1 | Frozen baseline | Yes (library default) | `packages/generator/src/versions/v1/` |
 | V2 | DAI-100 locally accepted candidate | No (candidate browser selects explicitly) | `packages/generator/src/versions/v2/` |
+| V3 | 特殊部屋・店・難易度のローカル検証候補 | Yes (browser Recommended; library default is V1) | `packages/generator/src/versions/v3/` |
 
 `DEFAULT_GENERATOR_VERSION = "1"`
 
@@ -226,3 +227,22 @@ Version省略時は現在の既定Versionを使う。
 
 - [Dungeon Generation Algorithms Research](../research/DUNGEON_GENERATION_ALGORITHMS.md)
 - [DungeonSpec v1](../../spec/dungeon/DUNGEON_SPEC_V1.md)
+
+
+## Version 3 — 特殊部屋・店・難易度
+
+V2の空間生成をそのまま使用し、明示された部屋planと装備／難易度ルールを追加する。V1/V2の実装・乱数列・出力は変更しない。planも新ルールもなければV2と同じSpecを返す。
+
+- monster-house：指定個数の休眠敵と入室時one-shot起動
+- trap-house：指定個数の罠
+- shop：指定商品・価格・在庫。指定部屋の通常生成内容は置換し、Start/Goalは保護
+- 店の最高価格商品1つ分のG専用宝箱を、店より前の通常部屋に置く。前に通常部屋がなければStartを使う
+- 生成前に未指定値を確認・変更でき、明示値を無言で減らさない
+- 追加敵・罠は1階合計100が既定。検証環境での高度設定最大250。生成の前に合計上限を検査
+- 難易度／装備効果は新しいSpecの明示ルール。旧Specのプレイ挙動は維持
+
+公開APIの `version:"3"`、strategy `version-3-special-rooms` から利用する。LibraryのdefaultはV1を維持し、ユーザー承認に基づきbrowser Recommended aliasはV3へ変更した。V1/V2は明示選択可能。
+
+詳しい承認値、測定条件、検証結果、未検証事項は `docs/testing/SPECIAL_ROOMS_V3_2026-10-02.md` を参照。
+
+未指定の特殊部屋種別は、それぞれ独立したSeed streamで1/3の確率で存在を決める。明示include/excludeを優先し、部屋容量不足ではrandom候補だけを除外して確認画面に理由を表示する。Mysteryの新Seedではrandom有無も再決定する。

@@ -21,7 +21,8 @@ There is no account, profile, analytics, advertising, telemetry, or database fea
 
 When the user presses **Generate dungeon**, the browser sends a same-origin `POST /api/design-intent` request containing only:
 
-- the natural-language generation request.
+- the natural-language generation request;
+- fixed `includeRoomRequests: true` schema-selection flag (no additional user data).
 
 The Pages Function routes the request through the production Cloud → deterministic fallback intent router.
 
@@ -47,7 +48,7 @@ The Pages Function forwards the normalized request through the production OpenAI
 
 ## Response boundary
 
-The generation endpoint returns validated DesignIntent and bounded provider/model/usage metadata.
+The generation endpoint returns validated DesignIntent, optional validated special-room requests (explicit numbers or null), difficulty and interpretation warnings, and bounded provider/model/usage metadata. Unspecified gameplay values are proposed locally and confirmed before generation. No existing dungeon, player state, gold balance or inventory is sent for generation.
 
 The edit endpoint returns:
 

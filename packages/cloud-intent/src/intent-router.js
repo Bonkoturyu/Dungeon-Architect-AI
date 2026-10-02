@@ -1,3 +1,4 @@
+import { validateRoomRequests } from '../../intent/src/room-requests.js';
 import { parseFallbackIntent } from "../../intent/src/fallback-parser.js";
 import { validateDesignIntent } from "../../intent/src/design-intent.js";
 
@@ -54,8 +55,10 @@ function normalizeSuccessfulResult(result) {
       { category: "invalid" }
     );
   }
+  if (result.roomRequests !== undefined && !validateRoomRequests(result.roomRequests).valid) return errorResult("ROUTER_ROOM_REQUESTS_INVALID", "Invalid room requests", { category: "invalid" });
   return {
     ok: true,
+    ...(result.roomRequests !== undefined ? { roomRequests: clone(result.roomRequests), difficulty: result.difficulty ?? null, warnings: result.warnings ?? [] } : {}),
     intent: clone(result.intent),
     meta: result.meta && typeof result.meta === "object" ? clone(result.meta) : null
   };
@@ -271,6 +274,7 @@ async function runProvider(provider, attemptFn, prompt, {
           status: "success",
           selectedProvider: provider,
           intent: clone(invocation.result.intent),
+          ...(invocation.result.roomRequests !== undefined ? { roomRequests: clone(invocation.result.roomRequests), difficulty: invocation.result.difficulty, warnings: invocation.result.warnings } : {}),
           meta: invocation.result.meta ? clone(invocation.result.meta) : null,
           attempts: clone(attempts)
         }

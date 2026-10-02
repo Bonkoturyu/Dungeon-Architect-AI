@@ -143,7 +143,11 @@
     "validate:dai-100-owner-polish": "node scripts/run-dai-100-owner-polish-validation.mjs",
     "validate:dai-100-owner-polish:bundle": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-logged.ps1 -NpmScript validate:dai-100-owner-polish -Label dai-100-owner-polish",
     "start:local": "node scripts/start-local.mjs",
-    "test:tooling": "node --test tests/tooling/*.test.js"
+    "test:tooling": "node --test tests/tooling/*.test.js",
+    "smoke:special-rooms": "node scripts/run-special-rooms-smoke.mjs",
+    "bench:special-room-capacity": "node scripts/benchmark-special-room-capacity.mjs",
+    "profile:user-flows": "node scripts/profile-user-flows.mjs",
+    "profile:core": "node scripts/profile-special-room-core.mjs"
   },
   "devDependencies": {
     "@babylonjs/core": "9.18.0",

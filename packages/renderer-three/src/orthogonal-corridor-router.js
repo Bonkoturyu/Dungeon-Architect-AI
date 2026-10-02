@@ -336,6 +336,14 @@ export function planOrthogonalCorridors(spec, {
             const fromOutside = outsidePoint(fromRoom, fromSide, clearance, fromOffset);
             const toOutside = outsidePoint(toRoom, toSide, clearance, toOffset);
 
+            const reused = usage.get(fromRoom.id).get(fromSide) + usage.get(toRoom.id).get(toSide);
+            const directionalPenalty = targetSidePenalty(fromRoom, toRoom, fromSide) + targetSidePenalty(toRoom, fromRoom, toSide);
+            const offsetPenalty = (Math.abs(fromOffset) > EPSILON ? 100 : 0) + (Math.abs(toOffset) > EPSILON ? 100 : 0) + (Math.abs(fromOffset) + Math.abs(toOffset)) * 0.01;
+            // 全経路長は端点間のManhattan距離以上。既存bestを改善できない候補は探索しない。
+            // 負のbendPenaltyではこの下界を使えない。丸め誤差にも保守的な余裕を設ける。
+            const lowerBound = reused * reusedDoorPenalty + directionalPenalty + offsetPenalty + segmentLength(fromDoor, toDoor);
+            if (best && bendPenalty >= 0 && lowerBound > best.score + EPSILON * Math.max(1, Math.abs(best.score))) continue;
+
             const endpointSegments = [
               [fromDoor, fromOutside],
               [toOutside, toDoor],
@@ -371,18 +379,6 @@ export function planOrthogonalCorridors(spec, {
               previousAxis = axis;
             }
 
-            const reused =
-              usage.get(fromRoom.id).get(fromSide) +
-              usage.get(toRoom.id).get(toSide);
-            const directionalPenalty =
-              targetSidePenalty(fromRoom, toRoom, fromSide) +
-              targetSidePenalty(toRoom, fromRoom, toSide);
-            // Preserve centered doors whenever they work. Along-wall offsets are
-            // deterministic resilience candidates, not an aesthetic preference.
-            const offsetPenalty =
-              (Math.abs(fromOffset) > EPSILON ? 100 : 0) +
-              (Math.abs(toOffset) > EPSILON ? 100 : 0) +
-              (Math.abs(fromOffset) + Math.abs(toOffset)) * 0.01;
             const score =
               reused * reusedDoorPenalty +
               directionalPenalty +

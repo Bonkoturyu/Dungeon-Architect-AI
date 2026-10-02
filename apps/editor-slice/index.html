@@ -1361,7 +1361,26 @@
       box-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
       backdrop-filter: blur(9px);
     }
+    /* 多商品/多数Entityでも出口パッドを覆わず、一覧内でスクロールする。 */
+    .room-events {
+      top: calc(50% - 80px);
+      max-height: min(42vh, calc(100% - 330px));
+    }
+    .special-room-review::backdrop { background: rgba(5, 10, 20, 0.65); }
+    .special-room-review input {
+      color: #e7edf5;
+      background: #1e293b;
+      border: 1px solid #526278;
+      border-radius: 5px;
+      padding: 7px;
+    }
+    .special-room-review fieldset { border: 1px solid #526278; border-radius: 10px; }
     .room-event-heading {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #151b24;
+      padding-bottom: 5px;
       display: block;
       margin: 0 0 7px 2px;
       color: #aab6c7;

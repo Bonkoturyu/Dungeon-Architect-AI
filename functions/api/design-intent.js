@@ -1,3 +1,5 @@
+import { generateOpenAIRoomDesign } from '../../packages/cloud-intent/src/room-design-adapter.js';
+import { parseFallbackRoomRequests, inferRequestedDifficulty } from '../../packages/intent/src/room-requests.js';
 import { createOpenAIHttpTransport } from '../../packages/cloud-intent/src/openai-http-transport.js';
 import { generateOpenAIIntent } from '../../packages/cloud-intent/src/cloud-intent-adapter.js';
 import { routeDesignIntent } from '../../packages/cloud-intent/src/intent-router.js';
@@ -30,6 +32,7 @@ async function readJsonBody(request) {
 export async function handleDesignIntentRequest(request, env, {
   createTransport = createOpenAIHttpTransport,
   generate = generateOpenAIIntent,
+  generateRoomDesign = generateOpenAIRoomDesign,
   route = routeDesignIntent,
 } = {}) {
   let body;
@@ -48,7 +51,7 @@ export async function handleDesignIntentRequest(request, env, {
   const cloudAttempt = apiKey
     ? async (inputPrompt, { signal } = {}) => {
         const transport = createTransport({ apiKey });
-        return generate(inputPrompt, {
+        return (body.includeRoomRequests === true ? generateRoomDesign : generate)(inputPrompt, {
           transport,
           reasoningEffort: 'low',
           maxOutputTokens: 4096,
@@ -77,9 +80,23 @@ export async function handleDesignIntentRequest(request, env, {
     return jsonResponse(422, { ok: false, error: { code: 'DESIGN_INTENT_UNAVAILABLE' } });
   }
 
+  let fallbackRooms;
+  if (body.includeRoomRequests === true && result.roomRequests === undefined) {
+    try { fallbackRooms = parseFallbackRoomRequests(prompt); }
+    catch (error) { return jsonResponse(422, { ok: false, error: { code: 'ROOM_REQUEST_INVALID', message: error.message } }); }
+  }
   return jsonResponse(200, {
     ok: true,
     intent: result.intent,
+    ...(body.includeRoomRequests === true ? {
+      roomRequests: result.roomRequests ?? fallbackRooms,
+      difficulty: result.roomRequests !== undefined ? result.difficulty ?? null : inferRequestedDifficulty(prompt),
+      warnings: result.warnings ?? (result.selectedProvider === "fallback" ? [
+        "Special-room fallback supports a limited Japanese/English vocabulary; review every count, location and price before generation.",
+        ...(/near|before|after|entrance|入口|出口|近く|手前|奥/i.test(prompt) && !/room-\d+/i.test(prompt) ? ["Relative room locations were not applied. Choose a floor and exact room ID in the review, or leave the room ID blank for seeded placement."] : []),
+        ...(/\d+\s*G\b/i.test(prompt) && fallbackRooms?.some((room) => room.kind === 'shop' && room.offers.length === 0) ? ["A price was mentioned without a supported item-price phrase. The proposed shop prices need review."] : []),
+      ] : []),
+    } : {}),
     selectedProvider: result.selectedProvider,
     meta: result.meta ? {
       provider: result.meta.provider ?? result.selectedProvider,

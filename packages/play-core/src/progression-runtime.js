@@ -140,9 +140,12 @@ export function deterministicTreasureReward(session, treasureId) {
   const hash = rewardHash(session, "treasure", treasureId);
   const slot = (hash & 1) === 0 ? "weapon" : "armor";
   const tier = 1 + ((hash >>> 4) % 3);
+  const treasure = session?.snapshot?.entities?.find((entity) => entity.type === "treasure" && entity.id === treasureId);
+  const configuredGold = treasure?.goldReward;
+  if (configuredGold !== undefined && (!Number.isSafeInteger(configuredGold) || configuredGold < 0)) throw new RangeError("Invalid treasure gold reward");
   return {
-    gold: 5 + ((hash >>> 8) % 11),
-    item: {
+    gold: configuredGold ?? 5 + ((hash >>> 8) % 11),
+    item: treasure?.rewardItem === false ? null : {
       id: `${slot}-tier-${tier}`,
       slot,
       tier

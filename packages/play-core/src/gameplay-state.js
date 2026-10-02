@@ -93,7 +93,7 @@ export function applyGameplayStateCommand(state, command, { entityIds = [] } = {
         throw new RangeError(`unknown entityId: ${command.entityId}`);
       }
       assertPlainObject(command.state, "entity state");
-      next.entityStates[command.entityId] = clone(command.state);
+      Object.defineProperty(next.entityStates, command.entityId, { value: clone(command.state), enumerable: true, configurable: true, writable: true });
       return next;
     }
 

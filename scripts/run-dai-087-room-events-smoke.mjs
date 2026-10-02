@@ -161,6 +161,8 @@ try {
   await page.goto(url, { waitUntil: 'networkidle', timeout: 60_000 });
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__?.ready === true && window.__DAI_ONBOARDING__?.ready === true, null, { timeout: 60_000 });
   await page.evaluate(() => window.__DAI_ONBOARDING__.close());
+  // Legacy regression pins V2; V3 review/random presence has its own smoke.
+  await page.evaluate(() => window.__DAI_EDITOR_SLICE__.setGeneratorStrategy('version-2-spatial'));
 
   await page.fill('#generationPrompt', prompt);
   await page.click('#generateDungeon');
@@ -278,16 +280,16 @@ try {
       resultText.includes('TRAP'),
     playerStatsVisible:
       resultText.includes('HP') &&
-      resultText.includes('DMG') &&
-      resultText.includes('HEAL') &&
+      resultText.includes('Damage') &&
+      resultText.includes('Healing') &&
       hpReadout === `${result.result?.playerState?.hp ?? 0}/${result.result?.playerState?.maxHp ?? 0}`,
     progressionMetricsVisible:
       resultText.includes('LV') &&
-      resultText.includes('XP') &&
+      resultText.includes('EXP') &&
       resultText.includes('G') &&
-      resultText.includes('LOOT') &&
-      resultText.includes('WPN') &&
-      resultText.includes('ARM') &&
+      resultText.includes('Loot') &&
+      resultText.includes('Weapon') &&
+      resultText.includes('Armor') &&
       levelReadout === String(result.result?.playerState?.level ?? 1) &&
       goldReadout === String(result.result?.playerState?.gold ?? 0) &&
       xpReadout.startsWith(`${result.result?.playerState?.xp ?? 0}/`),

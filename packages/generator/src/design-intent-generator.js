@@ -2,6 +2,7 @@ import {
   DEFAULT_GENERATOR_VERSION,
   GENERATOR_VERSION_V1,
   GENERATOR_VERSION_V2,
+  GENERATOR_VERSION_V3,
   normalizeGeneratorVersion,
 } from './generator-versions.js';
 import {
@@ -19,6 +20,17 @@ import {
   generateDungeonFromDesignIntentV2,
   seedFromPromptV2,
 } from './versions/v2/design-intent-generator.js';
+import {
+  deriveGenerationProfileV3,
+  generateDungeonFromDesignIntentV3,
+  seedFromPromptV3,
+} from './versions/v3/design-intent-generator.js';
+
+export {
+  deriveGenerationProfileV3,
+  generateDungeonFromDesignIntentV3,
+  seedFromPromptV3,
+} from './versions/v3/design-intent-generator.js';
 
 export {
   deriveGenerationProfileV1,
@@ -32,6 +44,8 @@ export function seedFromPrompt(prompt, { version = DEFAULT_GENERATOR_VERSION } =
       return seedFromPromptV1(prompt);
     case GENERATOR_VERSION_V2:
       return seedFromPromptV2(prompt);
+    case GENERATOR_VERSION_V3:
+      return seedFromPromptV3(prompt);
     default:
       throw new RangeError(`Unsupported generator version: ${version}`);
   }
@@ -46,6 +60,8 @@ export function deriveGenerationProfile(intent, {
       return deriveGenerationProfileV1(intent, options);
     case GENERATOR_VERSION_V2:
       return deriveGenerationProfileV2(intent, options);
+    case GENERATOR_VERSION_V3:
+      return deriveGenerationProfileV3(intent, options);
     default:
       throw new RangeError(`Unsupported generator version: ${version}`);
   }
@@ -65,6 +81,11 @@ export function generateDungeonFromDesignIntent(intent, {
     case GENERATOR_VERSION_V2:
       return {
         ...generateDungeonFromDesignIntentV2(intent, options),
+        generatorVersion: normalizedVersion,
+      };
+    case GENERATOR_VERSION_V3:
+      return {
+        ...generateDungeonFromDesignIntentV3(intent, options),
         generatorVersion: normalizedVersion,
       };
     default:

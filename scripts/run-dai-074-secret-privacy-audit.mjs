@@ -271,9 +271,9 @@ const checks = {
     !/\bconsole\.(?:log|error|warn|info)\b/.test(functionSource) &&
     !/\bconsole\.(?:log|error|warn|info)\b/.test(designFunctionSource),
   browserHasNoPersistentStorageUse: persistenceFindings.length === 0,
-  browserGenerationUsesPromptOnly:
+  browserGenerationUsesPromptAndFixedSchemaFlag:
     editorSource.includes("window.__DAI_DESIGN_INTENT_ENDPOINT__ || '/api/design-intent'") &&
-    editorSource.includes('body: JSON.stringify({ prompt })'),
+    editorSource.includes('body: JSON.stringify({ prompt, includeRoomRequests: true })'),
   browserNaturalEditUsesBoundedContext:
     editorSource.includes('body: JSON.stringify({ prompt, context: naturalEditContext() })') &&
     editorSource.includes('rooms: authoringSpec().rooms.map((room) => ({') &&

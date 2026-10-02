@@ -288,3 +288,27 @@ test('goal room remains renderable when moved upward from the owner-reviewed off
   assert.ok(moved.corridorGroups.every((group) =>
     Array.isArray(group.route) && group.route.length >= 1));
 });
+
+test('dense room markers use distinct positions instead of wrapping seven slots', () => {
+  const spec = structuredClone(fixture);
+  const roomId = spec.rooms[1].id;
+  spec.entities.push(...Array.from({length:100},(_,index)=>({id:`dense-enemy-${index}`,type:'enemy',roomId})));
+  const plan = createDungeonScenePlan(spec);
+  const markers = plan.markers.filter(marker=>marker.roomId===roomId);
+  assert.equal(new Set(markers.map(marker=>`${marker.position.x},${marker.position.z}`)).size,markers.length);
+});
+
+test('scene-plan cache isolates caller mutations and invalidates geometry, entity and style edits', () => {
+  const spec=structuredClone(fixture);
+  const original=createDungeonScenePlan(spec);
+  const pristine=structuredClone(original);
+  original.markers[0].position.x=99999;original.roomGroups.length=0;
+  assert.deepEqual(createDungeonScenePlan(structuredClone(spec)),pristine);
+  const edited=structuredClone(spec);edited.rooms[1].x+=1;
+  assert.notDeepEqual(createDungeonScenePlan(edited).roomGroups,pristine.roomGroups);
+  edited.entities.push({id:'added',type:'trap',roomId:'b'});
+  assert.equal(createDungeonScenePlan(edited).markers.length,pristine.markers.length+1);
+  assert.notDeepEqual(createDungeonScenePlan(spec,{wallThickness:.4}).roomGroups,pristine.roomGroups);
+  spec.entities[0].roomId='missing';
+  assert.throws(()=>createDungeonScenePlan(spec),DungeonScenePlanError);
+});

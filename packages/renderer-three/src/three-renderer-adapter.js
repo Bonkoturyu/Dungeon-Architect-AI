@@ -1,3 +1,5 @@
+import { createDrawBatcher } from './draw-batch.js';
+import { measurePerformance } from './performance-probe.js';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import {
@@ -227,6 +229,7 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
   const boundsBox = new THREE.Box3();
   const boundsCenter = new THREE.Vector3();
   let disposed = false;
+  const drawBatch = createDrawBatcher(() => { if (!disposed) measurePerformance('renderer.draw', () => renderer.render(scene, camera)); });
   let lastPlan = null;
   let selectedSpecId = null;
   let selectionHelper = null;
@@ -519,7 +522,7 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
       updateTransientDefeats(now);
       characterMotionLastDraw = now;
       characterMotionRenderedFrames += 1;
-      renderer.render(scene, camera);
+      measurePerformance('renderer.draw', () => renderer.render(scene, camera));
     }
 
     if (characterMotionTargets().length > 0 || transientDefeats.length > 0) {
@@ -827,6 +830,9 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     } else if (marker.type === 'trap') {
       geometry = new THREE.CylinderGeometry(0.82, 0.82, marker.height, 6);
       material = materials.trap;
+    } else if (marker.type === 'shop') {
+      geometry = new THREE.BoxGeometry(1.35, marker.height, 1.0);
+      material = materials.treasure;
     } else if (marker.type === 'recovery') {
       geometry = new THREE.IcosahedronGeometry(0.58, 0);
       material = materials.recovery;
@@ -931,9 +937,9 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     controls.update();
   }
 
-  function draw() {
-    renderer.render(scene, camera);
-  }
+  function draw() { drawBatch.draw(); }
+
+  function withDeferredDraws(operation) { assertAlive(); return drawBatch.run(operation); }
 
   function render(
     spec,
@@ -953,14 +959,14 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
       drawScene: false,
     });
     const previousPlan = lastPlan;
-    const fullPlan = createDungeonScenePlan(spec);
-    const plan = visibility ? projectDungeonScenePlan(fullPlan, visibility) : fullPlan;
-    const { stagingRoot, stagingMap, playerGroup } = buildStagingScene(plan, {
+    const fullPlan = measurePerformance('renderer.scenePlan', () => createDungeonScenePlan(spec));
+    const plan = visibility ? measurePerformance('renderer.projectPlan', () => projectDungeonScenePlan(fullPlan, visibility)) : fullPlan;
+    const { stagingRoot, stagingMap, playerGroup } = measurePerformance('renderer.buildScene', () => buildStagingScene(plan, {
       resultMode,
       entityStates,
       showPlayer,
       playerState,
-    });
+    }));
     const previousVisibility = previousPlan?.visibility ?? null;
     const nextVisibility = plan.visibility ?? null;
     const visibilityChanged =
@@ -976,7 +982,7 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
       visibilityChanged;
 
     captureDefeatedEnemyEffects(stagingMap, entityStates);
-    clearRenderedSpec();
+    measurePerformance('renderer.disposePrevious', () => clearRenderedSpec());
     for (const child of [...stagingRoot.children]) {
       stagingRoot.remove(child);
       root.add(child);
@@ -1247,7 +1253,9 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     return getScreenPositionForWorldPoint(point);
   }
 
-  function setSelectedSpecId(id) {
+  function setSelectedSpecId(...args) { return measurePerformance('renderer.setSelectedSpecId', () => setSelectedSpecIdImplementation(...args)); }
+
+  function setSelectedSpecIdImplementation(id) {
     assertAlive();
     clearSelectionHelper();
     selectedSpecId = null;
@@ -1291,7 +1299,9 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     draw();
   }
 
-  function setContextSpecId(id) {
+  function setContextSpecId(...args) { return measurePerformance('renderer.setContextSpecId', () => setContextSpecIdImplementation(...args)); }
+
+  function setContextSpecIdImplementation(id) {
     assertAlive();
     clearContextHelper();
     if (id == null) {
@@ -1328,7 +1338,9 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     return true;
   }
 
-  function setHighlightedSpecIds(ids = []) {
+  function setHighlightedSpecIds(...args) { return measurePerformance('renderer.setHighlightedSpecIds', () => setHighlightedSpecIdsImplementation(...args)); }
+
+  function setHighlightedSpecIdsImplementation(ids = []) {
     assertAlive();
     clearPathHelpers();
     for (const id of [...new Set(ids)].filter((value) => typeof value === 'string')) {
@@ -1433,6 +1445,7 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
 
   return {
     render,
+    withDeferredDraws,
     resize,
     getObjectBySpecId,
     pickSpecAt,

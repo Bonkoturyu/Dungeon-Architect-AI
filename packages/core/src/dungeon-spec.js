@@ -6,7 +6,24 @@ export const ENTITY_TYPES = Object.freeze([
   "enemy",
   "treasure",
   "trap",
-  "recovery"
+  "recovery",
+  "shop"
+]);
+
+export const ROOM_KINDS = Object.freeze([
+  "normal",
+  "monster-house",
+  "trap-house",
+  "shop"
+]);
+
+export const SHOP_OFFER_TYPES = Object.freeze(["healing", "weapon", "armor"]);
+export const DUNGEON_DIFFICULTIES = Object.freeze(["easy", "normal", "hard"]);
+
+export const EQUIPMENT_RULE_FIELDS = Object.freeze([
+  "weaponEnemyReductionPerTier",
+  "armorDamageReductionPerTier",
+  "minimumPositiveDamage"
 ]);
 
 export const CORRIDOR_SIDES = Object.freeze([
@@ -40,6 +57,8 @@ export const EVENT_ACTION_TYPES = Object.freeze([
 ]);
 
 const ENTITY_TYPE_SET = new Set(ENTITY_TYPES);
+const ROOM_KIND_SET = new Set(ROOM_KINDS);
+const SHOP_OFFER_TYPE_SET = new Set(SHOP_OFFER_TYPES);
 const CORRIDOR_SIDE_SET = new Set(CORRIDOR_SIDES);
 const EVENT_TRIGGER_TYPE_SET = new Set(EVENT_TRIGGER_TYPES);
 const EVENT_CONDITION_TYPE_SET = new Set(EVENT_CONDITION_TYPES);
@@ -168,6 +187,10 @@ function validateRooms(rooms, ids, roomIds, errors) {
 
     registerId(room.id, `${path}.id`, ids, errors);
     if (typeof room.id === "string" && room.id.trim() !== "") roomIds.add(room.id);
+
+    if (room.kind !== undefined && !ROOM_KIND_SET.has(room.kind)) {
+      pushError(errors, "ROOM_KIND_UNSUPPORTED", `${path}.kind`, `Unsupported room kind: ${String(room.kind)}`);
+    }
 
     for (const field of ["x", "z", "width", "depth"]) {
       if (!isFiniteNumber(room[field])) {
@@ -311,6 +334,16 @@ function validateEntities(entities, ids, roomIds, entityIds, entityTypeById, err
       pushError(errors, "BOOLEAN_REQUIRED", `${path}.initiallyActive`, "initiallyActive must be a boolean when provided.");
     }
 
+    if (entity.type === "shop") {
+      errors.push(...validateShopOffers(entity.offers, `${path}.offers`).errors);
+    }
+    if (entity.type === "treasure" && entity.goldReward !== undefined && (!Number.isSafeInteger(entity.goldReward) || entity.goldReward < 0)) {
+      pushError(errors, "TREASURE_GOLD_INVALID", `${path}.goldReward`, "goldReward must be a non-negative safe integer when provided.");
+    }
+    if (entity.type === "treasure" && entity.rewardItem !== undefined && typeof entity.rewardItem !== "boolean") {
+      pushError(errors, "BOOLEAN_REQUIRED", `${path}.rewardItem`, "rewardItem must be a boolean when provided.");
+    }
+
     if (typeof entity.roomId !== "string" || !roomIds.has(entity.roomId)) {
       pushError(errors, "ROOM_REFERENCE_MISSING", `${path}.roomId`, `Unknown room reference: ${String(entity.roomId)}`);
     }
@@ -343,6 +376,56 @@ function validateEntities(entities, ids, roomIds, entityIds, entityTypeById, err
       );
     }
   }
+}
+
+// 商品IDは店舗内で一意。価格・数量・効果を推測せず、明示値だけを受け付ける。
+export function validateShopOffers(offers, path = "offers") {
+  const errors = [];
+  if (!Array.isArray(offers) || offers.length === 0) {
+    pushError(errors, "SHOP_OFFERS_REQUIRED", path, "Shop offers must be a non-empty array.");
+    return { valid: false, errors };
+  }
+  const offerIds = new Set();
+  offers.forEach((offer, index) => {
+    const offerPath = `${path}[${index}]`;
+    if (!isRecord(offer)) {
+      pushError(errors, "OBJECT_REQUIRED", offerPath, "Shop offer must be an object.");
+      return;
+    }
+    registerId(offer.id, `${offerPath}.id`, offerIds, errors);
+    if (!SHOP_OFFER_TYPE_SET.has(offer.type)) {
+      pushError(errors, "SHOP_OFFER_TYPE_UNSUPPORTED", `${offerPath}.type`, `Unsupported shop offer type: ${String(offer.type)}`);
+    }
+    if (!Number.isSafeInteger(offer.price) || offer.price < 0) {
+      pushError(errors, "SHOP_PRICE_INVALID", `${offerPath}.price`, "price must be a non-negative safe integer.");
+    }
+    if (!Number.isSafeInteger(offer.stock) || offer.stock < 1) {
+      pushError(errors, "SHOP_STOCK_INVALID", `${offerPath}.stock`, "stock must be a positive safe integer.");
+    }
+    const effectField = offer.type === "healing" ? "healing" : ["weapon", "armor"].includes(offer.type) ? "tier" : null;
+    if (effectField && (!Number.isSafeInteger(offer[effectField]) || offer[effectField] < 1)) {
+      pushError(errors, "SHOP_EFFECT_INVALID", `${offerPath}.${effectField}`, `${effectField} must be a positive safe integer.`);
+    }
+    const forbiddenField = offer.type === "healing" ? "tier" : ["weapon", "armor"].includes(offer.type) ? "healing" : null;
+    if (forbiddenField && offer[forbiddenField] !== undefined) {
+      pushError(errors, "SHOP_EFFECT_UNSUPPORTED", `${offerPath}.${forbiddenField}`, `${forbiddenField} does not apply to ${offer.type} offers.`);
+    }
+  });
+  return { valid: errors.length === 0, errors };
+}
+
+export function validateEquipmentRules(rules, path = "equipmentRules") {
+  const errors = [];
+  if (!isRecord(rules)) {
+    pushError(errors, "OBJECT_REQUIRED", path, "equipmentRules must be an object.");
+    return { valid: false, errors };
+  }
+  for (const field of EQUIPMENT_RULE_FIELDS) {
+    if (!Number.isSafeInteger(rules[field]) || rules[field] < 0) {
+      pushError(errors, "EQUIPMENT_RULE_INVALID", `${path}.${field}`, `${field} must be a non-negative safe integer.`);
+    }
+  }
+  return { valid: errors.length === 0, errors };
 }
 
 function validateReachability(spec, roomIds, errors) {
@@ -564,6 +647,14 @@ export function validateDungeonSpec(spec) {
   }
 
   validateId(spec.id, "id", errors);
+
+  if (spec.difficulty !== undefined && !DUNGEON_DIFFICULTIES.includes(spec.difficulty)) {
+    pushError(errors, "DIFFICULTY_UNSUPPORTED", "difficulty", "difficulty must be easy, normal, or hard.");
+  }
+
+  if (spec.equipmentRules !== undefined) {
+    errors.push(...validateEquipmentRules(spec.equipmentRules).errors);
+  }
 
   if (!Number.isSafeInteger(spec.seed) || spec.seed < 0) {
     pushError(errors, "SEED_INVALID", "seed", "seed must be a non-negative safe integer.");
