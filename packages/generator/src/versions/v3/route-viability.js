@@ -1,3 +1,4 @@
+import { TRAP_AVOIDANCE_VERSION } from '../../../../core/src/trap-rules.js';
 import { startPlaySession, movePlaySession, completePlayGoal, DEFAULT_PLAYER_MAX_HP } from '../../../../play-core/src/play-session.js';
 import { getEnemyState, listRoomEnemies, resolveEnemyCombat, DEFAULT_ENEMY_DAMAGE } from '../../../../play-core/src/enemy-runtime.js';
 import { listRoomInteractables, openTreasure, avoidTrap, useRecovery, DEFAULT_RECOVERY_HEALING, DEFAULT_TRAP_DAMAGE, deterministicTrapAvoidance } from '../../../../play-core/src/interaction-runtime.js';
@@ -86,7 +87,7 @@ function attemptWitness(spec, policy, adjacency, initialPlayerState) {
               [offer.type]: { id: `witness-${offer.type}`, slot: offer.type, tier: offer.tier } } } };
             const gain = spec.entities.filter(({ type }) => type === 'enemy' || type === 'trap').reduce((sum, entity) => {
               if (entity.type === 'trap') return sum + BigInt(trapDamage(session, entity) - trapDamage(projected, entity));
-              if (spec.trapRules && getEnemyState(session, entity.id).state.status === 'defeated') return sum;
+              if (getEnemyState(session, entity.id).state.status === 'defeated') return sum;
               return sum + BigInt(getEffectiveDamage(session, entity.damage ?? DEFAULT_ENEMY_DAMAGE, 'enemy')
                 - getEffectiveDamage(projected, entity.damage ?? DEFAULT_ENEMY_DAMAGE, 'enemy'));
             }, 0n);
@@ -108,9 +109,9 @@ function attemptWitness(spec, policy, adjacency, initialPlayerState) {
   function resolveRoom() {
     if (session.status !== 'playing') return;
     for (const { entity } of listRoomInteractables(session).filter(({ entity }) => entity.type === 'treasure')) perform('open-treasure', entity.id, () => openTreasure(session, entity.id));
-    if (session.snapshot.trapRules) { shop(); heal(); }
+    shop(); heal();
     for (const { entity } of listRoomInteractables(session).filter(({ entity }) => entity.type === 'trap')) {
-      if (session.snapshot.trapRules) heal(trapDamage(session, entity));
+      heal(trapDamage(session, entity));
       perform('avoid-trap', entity.id, () => avoidTrap(session, entity.id));
       if (session.status !== 'playing') return;
     }
@@ -183,14 +184,14 @@ function inspect(spec, adjacency, initialPlayerState) {
   return { witness: viable[0] ?? null, attempts };
 }
 
-// 新規生成の配置だけを補正する。Difficulty未指定の従来互換APIや編集済みSpecは対象外。
+// 新規生成の配置だけを補正する。Difficulty未指定の低レベル生成APIや編集済みSpecは対象外。
 // 実Playを再生する有限個の方策による証拠であり、失敗は「数学的に解なし」を意味しない。
 export function guardGeneratedRouteV3(spec, { roomPlans = [], difficultyProfile, shopPlacementGuard, initialPlayerState = null, normalRoomCapacity = null } = {}) {
   if (difficultyProfile === undefined) return null;
   const adjacency = topology(spec);
   const initial = inspect(spec, adjacency, initialPlayerState);
   const assumptions = { initialHp: initialPlayerState?.hp ?? DEFAULT_PLAYER_MAX_HP, initialEquipment: initialPlayerState?.equipment ?? 'none', initialGold: initialPlayerState?.gold ?? 0,
-    scope: initialPlayerState ? 'provided-carried-player-state' : 'fresh-player-single-floor', traps: spec.trapRules?.version ?? 'avoided', ordinaryRoomEnemies: 'cleared-before-exit',
+    scope: initialPlayerState ? 'provided-carried-player-state' : 'fresh-player-single-floor', traps: TRAP_AVOIDANCE_VERSION, ordinaryRoomEnemies: 'cleared-before-exit',
     search: 'four deterministic bounded policies, not an exhaustive solvability solver',
     carriedStateGuarantee: initialPlayerState !== null };
   const changes = [];
@@ -228,25 +229,25 @@ export function guardGeneratedRouteV3(spec, { roomPlans = [], difficultyProfile,
   checked = inspect(candidate, adjacency, initialPlayerState);
   accepted = accept(checked);
   if (accepted) return accepted;
-  // 低被害経路の外へ通常敵（新ルールでは通常罠も）を寄せる。家の敵/明示された部屋、Goalへは動かさない。
+  // 低被害経路の外へ通常敵・罠を寄せる。家の敵/明示された部屋、Goalへは動かさない。
   const session = startPlaySession(candidate, { initialPlayerState }).session;
   const path = routeTo(session, goal, adjacency);
   const protectedShopPath = new Set(shopPlacementGuard?.route?.pathRoomIds ?? []);
   const outside = candidate.rooms.filter((room) => isNormal(room) && room.id !== start && room.id !== goal
     && !path.includes(room.id) && !protectedShopPath.has(room.id)).sort((left, right) => compareId(left.id, right.id));
   if (outside.length) {
-    for (const entity of baselineEntities.filter(({ type, roomId }) => (type === 'enemy' || (candidate.trapRules && type === 'trap')) && path.includes(roomId))) {
+    for (const entity of baselineEntities.filter(({ type, roomId }) => ['enemy', 'trap'].includes(type) && path.includes(roomId))) {
       for (const destination of normalRoomCapacity ? outside : [outside[0]]) if (move(entity, destination.id)) break;
     }
     checked = inspect(candidate, adjacency, initialPlayerState);
     accepted = accept(checked);
     if (accepted) return accepted;
   }
-  // 自動MonsterHouse（新ルールでは自動TrapHouseも）を通常部屋と丸ごと入れ替える。敵・loot・event IDは保持。
+  // 自動MonsterHouse・TrapHouseを通常部屋と丸ごと入れ替える。敵・loot・event IDは保持。
   // 候補は部屋数×自動家数まで。明示した部屋、shop、Start/Goalには触れない。
   const budgetRoomIds = new Set(candidate.entities.filter(({ id }) => id.startsWith('v3:shop-budget:')).map(({ roomId }) => roomId));
   const autoHouses = roomPlans.map((plan, index) => ({ ...plan, id: plan.id ?? `room-plan-${index + 1}` }))
-    .filter(({ kind, roomId, targetRole }) => (kind === 'monster-house' || (candidate.trapRules && kind === 'trap-house')) && roomId === null && !targetRole);
+    .filter(({ kind, roomId, targetRole }) => ['monster-house', 'trap-house'].includes(kind) && roomId === null && !targetRole);
   for (const plan of autoHouses) {
     const houseRoomId = candidate.entities.find(({ id }) => id === `v3:${plan.id}:${plan.kind === 'monster-house' ? 'enemy' : 'trap'}-1`)?.roomId;
     if (!houseRoomId) continue;

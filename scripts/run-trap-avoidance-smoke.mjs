@@ -17,7 +17,8 @@ const vite = process.env.DAI_SMOKE_URL ? null : spawn(process.execPath, ['node_m
 const checks = [], errors = []; let browser;
 function fixture({ legacy = false, armor = false, goal = false, seed = 2 } = {}) {
   const spec = generateDungeonSpecV3({ seed, roomCount: 3, routeChoice: 0 });
-  if (!legacy) spec.trapRules = { ...TRAP_RULES_V1 };
+  if (legacy) delete spec.trapRules;
+  else spec.trapRules = { ...TRAP_RULES_V1 };
   const roomId = goal ? 'room-003' : 'room-002';
   spec.entities.push({ id: 'trap-test', type: 'trap', roomId, warning: 'floor-cracks', damage: 6 });
   if (armor) {
@@ -92,8 +93,9 @@ try {
   await page.locator('[data-action="avoid-trap"]').click(); assert.equal((await state()).play.playerState.hp, 16); checks.push('armor-visible-and-applied');
   await open(); await start([fixture()]); await move('room-002'); await page.locator('[data-action="avoid-trap"]').click();
   assert.equal((await state()).play.playerState.hp, 14); checks.push('reload-import-identical-failure');
-  await start([fixture({ legacy: true })]); await move('room-002'); assert.match(await page.locator('.room-event').innerText(), /100%/);
-  await page.locator('[data-action="avoid-trap"]').click(); assert.equal((await state()).play.playerState.hp, 20); checks.push('legacy-100-percent-compatibility');
+  await start([fixture({ legacy: true })]); await move('room-002'); assert.match(await page.locator('.room-event').innerText(), /70%/);
+  assert.deepEqual((await state()).play.snapshot.trapRules, TRAP_RULES_V1);
+  await page.locator('[data-action="avoid-trap"]').click(); assert.equal((await state()).play.playerState.hp, 14); checks.push('missing-rules-import-normalizes-to-current-fixed-failure');
   await start([fixture({ goal: true })]); await move('room-002'); await move('room-003'); assert.equal((await state()).mode, 'play');
   await page.locator('[data-action="avoid-trap"]').click(); await page.locator('[data-action="complete-goal"]').click(); assert.equal((await state()).mode, 'result'); checks.push('goal-trap-resolves-before-completion');
   await start([fixture(), { ...fixture(), id: 'trap-smoke-floor-2' }]);

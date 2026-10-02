@@ -1,4 +1,5 @@
 import { getEffectiveDamage } from './equipment-runtime.js';
+import { TRAP_RULES_V1 } from '../../core/src/trap-rules.js';
 import { validateDungeonSpec } from "../../core/src/dungeon-spec.js";
 import { applyGameplayStateCommand, createGameplayState } from "./gameplay-state.js";
 import { dispatchSupportedEvents, isRuntimeCorridorEnabled } from "./event-runtime.js";
@@ -126,6 +127,7 @@ export function startPlaySession(
   }
 
   const snapshot = clone(authoringSpec);
+  if (snapshot.trapRules === undefined) snapshot.trapRules = { ...TRAP_RULES_V1 };
   const start = findEntity(snapshot, "start");
   const goal = findEntity(snapshot, "goal");
 
@@ -170,7 +172,7 @@ export function startPlaySession(
 
 function isSpecialGoal(session) {
   return ['monster-house', 'trap-house', 'shop'].includes(session.snapshot.rooms.find(({ id }) => id === session.goalRoomId)?.kind)
-    || !!session.snapshot.trapRules && session.snapshot.entities.some(({ type, roomId }) => roomId === session.goalRoomId && ['trap', 'enemy'].includes(type));
+    || session.snapshot.entities.some(({ type, roomId }) => roomId === session.goalRoomId && ['trap', 'enemy'].includes(type));
 }
 
 export function getGoalCompletionState(session) {
@@ -200,16 +202,13 @@ export function movePlaySession(session, targetRoomId, { at = session?.startedAt
     return { ok: false, error: { code: "SESSION_NOT_PLAYING", message: "Session is not in playing state." } };
   }
 
-  const currentRoom = session.snapshot.rooms.find((room) => room.id === session.currentRoomId);
-  if (session.snapshot.trapRules || ['monster-house', 'trap-house'].includes(currentRoom?.kind)) {
-    const blocked = session.snapshot.entities.some((entity) => {
-      if (entity.roomId !== session.currentRoomId) return false;
-      const state = session.gameplayState.entityStates[entity.id];
-      return (entity.type === 'enemy' && (state?.status ?? (entity.initiallyActive === false ? 'dormant' : 'active')) === 'active') ||
-        (entity.type === 'trap' && (state?.status ?? 'armed') === 'armed');
-    });
-    if (blocked) return { ok: false, error: { code: 'SPECIAL_ROOM_BLOCKED', message: 'Resolve all enemies and traps before leaving this room.' } };
-  }
+  const blocked = session.snapshot.entities.some((entity) => {
+    if (entity.roomId !== session.currentRoomId) return false;
+    const state = session.gameplayState.entityStates[entity.id];
+    return (entity.type === 'enemy' && (state?.status ?? (entity.initiallyActive === false ? 'dormant' : 'active')) === 'active') ||
+      (entity.type === 'trap' && (state?.status ?? 'armed') === 'armed');
+  });
+  if (blocked) return { ok: false, error: { code: 'SPECIAL_ROOM_BLOCKED', message: 'Resolve all enemies and traps before leaving this room.' } };
 
   const adjacency = buildAdjacency(session);
   if (!adjacency.has(targetRoomId)) {

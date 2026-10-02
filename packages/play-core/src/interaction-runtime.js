@@ -289,9 +289,8 @@ export function avoidTrap(session, trapId, options = {}) {
   let avoidance;
   try { avoidance = deterministicTrapAvoidance(session, trapId); }
   catch (error) { return { ok: false, error: { code: 'TRAP_RULES_UNSUPPORTED', message: error.message } }; }
-  // 旧Specのイベント/状態形式も維持する。
-  const result = resolveTrap(session, trapId, avoidance.outcome, { ...options, avoidance: session.snapshot.trapRules ? avoidance : null });
-  return result.ok && session.snapshot.trapRules ? { ...result, avoidance } : result;
+  const result = resolveTrap(session, trapId, avoidance.outcome, { ...options, avoidance });
+  return result.ok ? { ...result, avoidance } : result;
 }
 
 export function triggerTrap(session, trapId, options = {}) {

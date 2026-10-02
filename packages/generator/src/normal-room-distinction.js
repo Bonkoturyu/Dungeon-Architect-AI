@@ -5,7 +5,7 @@ function referenced(spec, id) {
   return spec.events.some((event) => [event.trigger, ...(event.conditions ?? []), ...event.actions].some((entry) => entry.entityId === id || entry.enemyIds?.includes(id)));
 }
 
-// special-rooms-2。ハウスの明示内容を変えず、自動生成された通常内容だけを分散・抑制する。
+// ハウスの明示内容を変えず、自動生成された通常内容だけを分散・抑制する。
 export function applyNormalRoomDistinction(spec, config) {
   const limits = {};
   const protectedIds = new Set(spec.entities.filter(({ type }) => type === 'start' || type === 'goal').map(({ roomId }) => roomId));

@@ -1,4 +1,4 @@
-import { TRAP_AVOIDANCE_VERSION, TRAP_AVOIDANCE_SUCCESS_CHANCE } from '../../core/src/trap-rules.js';
+import { TRAP_AVOIDANCE_VERSION, TRAP_AVOIDANCE_SUCCESS_CHANCE, TRAP_RULES_V1 } from '../../core/src/trap-rules.js';
 
 export { TRAP_RULES_V1 } from '../../core/src/trap-rules.js';
 
@@ -17,8 +17,7 @@ function hash32(text) {
 }
 
 export function getTrapAvoidanceChance(session) {
-  const rules = session?.snapshot?.trapRules;
-  if (rules === undefined) return 1; // 旧DungeonSpecの確実回避は維持する。
+  const rules = session?.snapshot?.trapRules === undefined ? TRAP_RULES_V1 : session.snapshot.trapRules;
   if (!rules || rules.version !== TRAP_AVOIDANCE_VERSION || Object.keys(rules).some((key) => key !== 'version')) {
     throw new RangeError('TRAP_RULES_UNSUPPORTED');
   }
@@ -28,7 +27,6 @@ export function getTrapAvoidanceChance(session) {
 // 生成検査・実Play・simulationが同じ純粋関数を使用する。
 export function deterministicTrapAvoidance(session, trapId) {
   const successChance = getTrapAvoidanceChance(session);
-  if (successChance === 1) return { version: 'legacy-always-avoid', successChance, roll: null, outcome: 'avoided' };
   const seed = session?.snapshot?.seed;
   if (!Number.isSafeInteger(seed) || seed < 0 || typeof trapId !== 'string' || !trapId.trim()) throw new RangeError('TRAP_ROLL_INPUT_INVALID');
   const roll = hash32(JSON.stringify([TRAP_AVOIDANCE_VERSION, seed, trapId])) / 0x100000000;

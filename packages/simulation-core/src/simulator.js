@@ -79,14 +79,14 @@ function interactableObservation(session) {
       warning,
       status: state.status,
       inspections: state.inspections ?? 0,
-      ...(session.snapshot.trapRules && entity.type === 'trap' ? { avoidanceChance: getTrapAvoidanceChance(session), failureDamage: getEffectiveDamage(session, entity.damage ?? DEFAULT_TRAP_DAMAGE, 'trap') } : {}),
+      ...(entity.type === 'trap' ? { avoidanceChance: getTrapAvoidanceChance(session), failureDamage: getEffectiveDamage(session, entity.damage ?? DEFAULT_TRAP_DAMAGE, 'trap') } : {}),
     }))
     .sort((a, b) => a.id.localeCompare(b.id));
 }
 
 function availableActions(adjacentRoomIds, enemies, interactables, session) {
   const actions = [];
-  const blocked = session.snapshot.trapRules && (enemies.length > 0 || interactables.some(({ type }) => type === 'trap'));
+  const blocked = enemies.length > 0 || interactables.some(({ type }) => type === 'trap');
   if (!blocked) for (const roomId of adjacentRoomIds) actions.push({ type: 'move', roomId });
 
   for (const enemy of enemies) {
@@ -104,7 +104,6 @@ function availableActions(adjacentRoomIds, enemies, interactables, session) {
       case 'trap':
         actions.push({ type: 'inspect-trap', trapId: entity.id });
         actions.push({ type: 'avoid-trap', trapId: entity.id });
-        if (!session.snapshot.trapRules) actions.push({ type: 'trigger-trap', trapId: entity.id });
         break;
       case 'recovery':
         actions.push({ type: 'use-recovery', recoveryId: entity.id });
@@ -133,7 +132,7 @@ export function createSimulationObservation(session, { step = 0 } = {}) {
     schemaVersion: '1.0',
     step,
     playStatus: session.status,
-    ...(session.snapshot.trapRules ? { blockingRoomEvents: true, trapRules: clone(session.snapshot.trapRules) } : {}),
+    blockingRoomEvents: true, trapRules: clone(session.snapshot.trapRules),
     currentRoomId: session.currentRoomId,
     goalRoomId: session.goalRoomId,
     ...(session.snapshot.rooms.find(({ id }) => id === session.currentRoomId)?.kind ? { currentRoomKind: session.snapshot.rooms.find(({ id }) => id === session.currentRoomId).kind } : {}),

@@ -240,9 +240,9 @@ shop商品在庫には適用せず、特殊部屋の配置処理の負荷を制�
 
 検証記録は`artifacts/special-rooms/tri-state-presence-after-route-guard.json`、`multifloor-route-viability.json`に保存する。生成時間には攻略経路検証のコストも含まれるため、以前の軽量V3生成だけの測定値をそのまま流用せず、`generation-after-route-guard.json`を参照する。
 
-## 罠回避ルール（任意、後方互換）
+## 罠回避ルール（省略時は現行ルール）
 
 `trapRules: { "version": "seeded-avoidance-1" }` は回避成功率70%の固定Seed判定を有効にする。
 版・各階の`seed`・罠Entity IDだけから成功/失敗を決定し、成功は無傷、失敗は既存damageと防具軽減を適用する。
 いずれも一度だけ解決する。未知の版・余分なルール項目は拒否する。
-`trapRules`未指定の旧Specは100%回避を維持する。詳細は `docs/testing/TRAP_AVOIDANCE_2026-10-02.md`。
+`trapRules`未指定でも同じ70%判定を使う。JSON importとSTART時の実行snapshotで現行ルールを補完し、元の地形・Entity個数・Seed・IDは変えない。100%回避の互換分岐はない。共通内容レイヤーの旧版1/2は提供せず、指定された場合は`ROOM_CONTENT_LAYER_VERSION_UNSUPPORTED`で拒否する。地形Generator V1/V2とその他の生成方式は別の選択軸として維持する。詳細は `docs/testing/CURRENT_CONTENT_RULES_2026-10-02.md`。

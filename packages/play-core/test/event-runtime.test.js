@@ -7,7 +7,7 @@ import {
   startPlaySession
 } from "../src/play-session.js";
 import { defeatEnemy, getEnemyState, listRoomEnemies } from "../src/enemy-runtime.js";
-import { inspectTreasure, openTreasure } from "../src/interaction-runtime.js";
+import { avoidTrap, listRoomInteractables, inspectTreasure, openTreasure } from "../src/interaction-runtime.js";
 import {
   dispatchSupportedEvents,
   getRuntimeDoorState,
@@ -44,6 +44,8 @@ test("on_open_treasure executes constrained actions once and enables a disabled 
 
   let session = startPlaySession(spec, { startedAt: 100 }).session;
   session = movePlaySession(session, "room-middle", { at: 101 }).session;
+  for (const { enemy } of listRoomEnemies(session)) session = defeatEnemy(session, enemy.id).session;
+  for (const { entity } of listRoomInteractables(session).filter(({ entity }) => entity.type === 'trap')) session = avoidTrap(session, entity.id).session;
 
   const blocked = movePlaySession(session, "room-goal", { at: 102 });
   assert.equal(blocked.ok, false);

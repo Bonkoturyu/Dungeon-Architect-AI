@@ -6,6 +6,7 @@ import {
   validateShopOffers,
 } from '../../../../core/src/dungeon-spec.js';
 import { createPrng, pickIndex } from '../v1/prng.js';
+import { TRAP_RULES_V1 } from '../../../../core/src/trap-rules.js';
 import { guardFirstShopPlacementV3 } from './shop-placement.js';
 import {
   DEFAULT_SPECIAL_ROOM_ENTITY_LIMIT,
@@ -104,7 +105,7 @@ function referencesRemovedEntity(event, removedIds) {
 export function decorateGeneratedSpecV3(spec, {
   roomPlans = [],
   equipmentRules,
-  trapRules,
+  trapRules = TRAP_RULES_V1,
   trapWarning,
   difficulty,
   difficultyProfile,
@@ -129,10 +130,8 @@ export function decorateGeneratedSpecV3(spec, {
       }
     }
   }
-  if (trapRules !== undefined) {
-    assertValidation(validateTrapRules(trapRules), 'Invalid trap rules');
-    spec.trapRules = { ...trapRules };
-  }
+  assertValidation(validateTrapRules(trapRules), 'Invalid trap rules');
+  spec.trapRules = { ...trapRules };
   const selected = guardFirstShopPlacementV3(spec, selectRooms(spec, roomPlans), { difficultyProfile, initialPlayerState, equipmentRules });
   const selectedPlans = selected.plans;
   if (diagnostics && selected.diagnostics) diagnostics.shopPlacementGuard = selected.diagnostics;
