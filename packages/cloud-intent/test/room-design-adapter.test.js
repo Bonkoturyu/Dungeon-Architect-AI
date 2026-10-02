@@ -59,3 +59,30 @@ test('real unmocked fallback endpoint accepts separated normal/special endpoint 
     }
   }
 });
+
+test('real fallback preserves compound roles and different endpoint kinds on different floors', async () => {
+  for(const prompt of ['Start in a normal room and make the Goal random','スタートは通常の部屋、ゴールはランダム','1階のゴールに店。2階のゴールに敵3体のモンスターハウス。']) {
+    const response=await handleDesignIntentRequest(new Request('https://example.test/api/design-intent',{method:'POST',body:JSON.stringify({prompt,includeRoomRequests:true})}),{});
+    assert.equal(response.status,200); const body=await response.json(); assert.equal(body.selectedProvider,'fallback');
+    assert.equal(body.roomRequests.length,2);
+    if(prompt.startsWith('1階'))assert.deepEqual(body.roomRequests.map(({floorNumber,kind})=>[floorNumber,kind]),[[1,'shop'],[2,'monster-house']]);
+    else {assert.equal(body.roomRequests.find(({targetRole})=>targetRole==='start').presence,'include');assert.equal(body.roomRequests.find(({targetRole})=>targetRole==='goal').presence,'random');}
+  }
+});
+
+
+test('real fallback keeps integer floor sentence boundaries and rejects fractional floors', async () => {
+  for (const kind of ['normal room', 'shop']) {
+    const response = await handleDesignIntentRequest(new Request('https://example.test/api/design-intent', {
+      method: 'POST', body: JSON.stringify({ prompt: `A ${kind} at the start on floor 2. The goal is random.`, includeRoomRequests: true }),
+    }), {});
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.selectedProvider, 'fallback');
+    assert.deepEqual(body.roomRequests.map(({ targetRole, presence, floorNumber }) => [targetRole, presence, floorNumber]), [['start', 'include', 2], ['goal', 'random', null]]);
+  }
+  const invalid = await handleDesignIntentRequest(new Request('https://example.test/api/design-intent', {
+    method: 'POST', body: JSON.stringify({ prompt: 'A normal room at the start on floor 2.5. The goal is random.', includeRoomRequests: true }),
+  }), {});
+  assert.equal(invalid.status, 422);
+});

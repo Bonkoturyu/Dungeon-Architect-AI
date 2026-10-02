@@ -27,7 +27,7 @@ export function createRoomPlanConfig({ requests, floorCount, seed, difficulty = 
   const profile = DIFFICULTY_PROFILES[selectedDifficulty];
   const defaults = { ...NORMAL_ROOM_DEFAULTS, 'monster-house': profile.monsterCount, 'trap-house': profile.trapCount,
     offers: NORMAL_ROOM_DEFAULTS.offers.map((offer) => offer.type === 'healing' ? { ...offer, healing: profile.recoveryHealing } : { ...offer }) };
-  const presenceSpec = { requests: structuredClone(requests), policies: { ...policies }, endpointPolicies: { ...endpointPolicies }, defaults: structuredClone(defaults), roomsPerFloor, overrides: { ...overrides } };
+  const presenceSpec = { requests: structuredClone(requests), policies: { ...policies }, endpointPolicies: structuredClone(endpointPolicies), defaults: structuredClone(defaults), roomsPerFloor, overrides: { ...overrides } };
   const resolved = resolveRoomConfigurationPresence({ ...presenceSpec, floorCount, seed, specialRoomEntityLimit });
   return { roomPlans: resolved.roomPlans, presenceSpec, specialRoomEntityLimit, difficulty: selectedDifficulty,
     difficultyProfile: Object.fromEntries(['enemyDamage', 'trapDamage', 'recoveryHealing'].map((key) => [key, profile[key]])),
@@ -50,6 +50,7 @@ export function reviewRoomPlan({ requests, floorCount, seed, difficulty = 'norma
     const initialPolicies = requestedPresencePolicies(requests);
     const policyInputs = {};
     const endpointInputs = {};
+    const endpointFloorInputs = { start: {}, goal: {} };
     const initialEndpoints = requestedEndpointPolicies(requests);
     const presenceSummary = document.createElement('p');
     const presenceWarning = document.createElement('p');
@@ -59,18 +60,29 @@ export function reviewRoomPlan({ requests, floorCount, seed, difficulty = 'norma
       for (const [value, caption] of [['random',text('random')],['include',text('include')],['exclude',text('exclude')]]) { const option = document.createElement('option'); option.value = value; option.textContent = caption; select.append(option); }
       select.value = initialPolicies[kind]; policyInputs[kind] = select; label.append(select); body.append(label);
     }
-    for (const role of ['start', 'goal']) {
-      const label = document.createElement('label'); label.style.cssText = 'display:block;margin:8px 0;'; label.textContent = text(role) + ' ';
-      const select = document.createElement('select'); select.name = `endpoint-${role}`;
-      for (const value of ['normal', 'random', ...SPECIAL_ROOM_KINDS]) {
-        const option = document.createElement('option'); option.value = value;
-        option.textContent = value === 'normal' ? text('normalRoom') : value === 'random' ? text('endpointRandom') : kindLabel(value); select.append(option);
+    const endpointSelect = (role, value, floor = null) => {
+      const label = document.createElement('label'); label.style.cssText = 'display:block;margin:8px 0;';
+      label.textContent = `${text(role)}${floor === null ? '' : ` · ${text('floor')} ${floor}`} `;
+      const select = document.createElement('select'); select.name = `endpoint-${role}${floor === null ? '' : `-floor-${floor}`}`;
+      for (const key of ['normal', 'random', ...SPECIAL_ROOM_KINDS]) {
+        const option = document.createElement('option'); option.value = key;
+        option.textContent = key === 'normal' ? text('normalRoom') : key === 'random' ? text('endpointRandom') : kindLabel(key); select.append(option);
       }
-      select.value = initialEndpoints[role]; endpointInputs[role] = select; label.append(select); body.append(label);
+      select.value = value; label.append(select); body.append(label); return select;
+    };
+    for (const role of ['start', 'goal']) {
+      const initial = initialEndpoints[role];
+      endpointInputs[role] = endpointSelect(role, typeof initial === 'string' ? initial : initial.default);
+      if (typeof initial !== 'string') {
+        endpointInputs[role].parentElement.firstChild.textContent = `${text(role)} · ${text('otherFloors')} `;
+        for (const [floor, value] of Object.entries(initial.floors)) endpointFloorInputs[role][floor] = endpointSelect(role, value, floor);
+      }
     }
     const endpointNote = document.createElement('p'); endpointNote.textContent = text('endpointNote'); body.append(endpointNote);
     body.append(presenceSummary, presenceWarning);
-    const currentEndpoints = () => Object.fromEntries(['start', 'goal'].map((role) => [role, endpointInputs[role].value]));
+    const currentEndpoints = () => Object.fromEntries(['start', 'goal'].map((role) => [role, Object.keys(endpointFloorInputs[role]).length
+      ? { default: endpointInputs[role].value, floors: Object.fromEntries(Object.entries(endpointFloorInputs[role]).map(([floor, input]) => [floor, input.value])) }
+      : endpointInputs[role].value]));
     const currentPolicies = () => Object.fromEntries(SPECIAL_ROOM_KINDS.map((kind) => [kind, policyInputs[kind].value]));
     for (const warning of warnings) { const p = document.createElement('p'); p.textContent = warning; body.append(p); }
     const difficultyLabel = document.createElement('label'); difficultyLabel.textContent = text('difficulty');
@@ -134,7 +146,7 @@ export function reviewRoomPlan({ requests, floorCount, seed, difficulty = 'norma
     const confirm = document.createElement('button'); confirm.type = 'submit'; confirm.textContent = text('generate'); confirm.className = 'primary-action';
     const actions = document.createElement('div'); actions.className = 'special-room-review-actions'; actions.style.cssText = 'display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;'; actions.append(cancel, confirm); header.append(actions);
     difficultyInput.addEventListener('change', render);
-    for (const input of Object.values({ ...policyInputs, ...endpointInputs })) input.addEventListener('change', render);
+    for (const input of [...Object.values(policyInputs), ...Object.values(endpointInputs), ...Object.values(endpointFloorInputs).flatMap((inputs) => Object.values(inputs))]) input.addEventListener('change', render);
     let result = null;
     form.addEventListener('submit', (event) => {
       event.preventDefault();

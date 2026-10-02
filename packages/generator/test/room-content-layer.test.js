@@ -32,6 +32,7 @@ test('all 11 strategies preserve geometry/provenance or reject infeasible conten
     assert.equal(result.provenance.generatorVersion, base.provenance.generatorVersion);
     assert.equal(result.provenance.contentLayerVersion, ROOM_CONTENT_LAYER_VERSION);
     assert.equal(validateDungeonSpec(result.spec).valid, true);
+    for (const [type, houseKind] of [['enemy','monster-house'],['trap','trap-house']]) for (const room of result.spec.rooms.filter(({kind})=>kind!==houseKind)) assert.ok(result.spec.entities.filter(e=>e.roomId===room.id&&e.type===type).length<=result.diagnostics.profile.normalRoomDistinction.limits[type]);
     assert.deepEqual(applyRoomContentLayer(base, DEFAULT_DESIGN_INTENT, config), result);
     const witness = result.diagnostics.profile.routeViability.witness;
     assert.equal(replayRouteWitnessV3(startPlaySession(result.spec).session, witness).status, 'cleared');
@@ -63,4 +64,22 @@ test('BSP multi-floor layer carries the prior witness state rather than restorin
     const session = replayRouteWitnessV3(startPlaySession(result.spec, { initialPlayerState: state }).session, witness);
     assert.equal(session.status, 'cleared'); assert.deepEqual(session.playerState, witness.playerState); state = session.playerState;
   }
+});
+
+test('content layer V1 remains selectable while V2 enforces smaller non-house counts', async () => {
+  let adjusted = 0;
+  for (let seed=0;seed<24;seed++) {
+    const config=createRoomPlanConfig({requests:[],floorCount:1,roomsPerFloor:8,seed,difficulty:'easy',policies:{'monster-house':'exclude','trap-house':'exclude',shop:'exclude'},endpointPolicies:{start:'normal',goal:'normal'}});
+    const base=await registry.generate('algorithm-lab.bsp',request(seed));
+    const archived=applyRoomContentLayer(base,DEFAULT_DESIGN_INTENT,config,{version:'special-rooms-1'});
+    assert.equal(archived.provenance.contentLayerVersion,'special-rooms-1');
+    const next=applyRoomContentLayer(base,DEFAULT_DESIGN_INTENT,config);
+    assert.equal(next.provenance.contentLayerVersion,'special-rooms-2');
+    assert.deepEqual(shape(next.spec),shape(archived.spec));
+    const limits=next.diagnostics.profile.normalRoomDistinction.limits;
+    assert.deepEqual(limits,{enemy:1,trap:2});
+    for(const room of next.spec.rooms)for(const type of ['enemy','trap'])assert.ok(next.spec.entities.filter(e=>e.roomId===room.id&&e.type===type).length<=limits[type]);
+    adjusted+=Number(next.diagnostics.profile.normalRoomDistinction.changes.length>0);
+  }
+  assert.ok(adjusted>0);
 });

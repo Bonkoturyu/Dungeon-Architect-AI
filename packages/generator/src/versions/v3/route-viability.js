@@ -168,7 +168,7 @@ function inspect(spec, adjacency, initialPlayerState) {
 
 // 新規生成の配置だけを補正する。Difficulty未指定の従来互換APIや編集済みSpecは対象外。
 // 実Playを再生する有限個の方策による証拠であり、失敗は「数学的に解なし」を意味しない。
-export function guardGeneratedRouteV3(spec, { roomPlans = [], difficultyProfile, shopPlacementGuard, initialPlayerState = null } = {}) {
+export function guardGeneratedRouteV3(spec, { roomPlans = [], difficultyProfile, shopPlacementGuard, initialPlayerState = null, normalRoomCapacity = null } = {}) {
   if (difficultyProfile === undefined) return null;
   const adjacency = topology(spec);
   const initial = inspect(spec, adjacency, initialPlayerState);
@@ -185,9 +185,12 @@ export function guardGeneratedRouteV3(spec, { roomPlans = [], difficultyProfile,
   const candidate = structuredClone(spec);
   const baselineEntities = candidate.entities.filter(({ id }) => !id.startsWith('v3:'));
   const move = (entity, roomId) => {
-    if (entity.roomId === roomId) return;
+    if (entity.roomId === roomId) return true;
+    if (normalRoomCapacity && ['enemy', 'trap'].includes(entity.type) && isNormal(candidate.rooms.find(({ id }) => id === roomId))
+      && candidate.entities.filter((entry) => entry.type === entity.type && entry.roomId === roomId).length >= normalRoomCapacity[entity.type]) return false;
     changes.push({ entityId: entity.id, type: entity.type, fromRoomId: entity.roomId, toRoomId: roomId });
     entity.roomId = roomId;
+    return true;
   };
   const accept = (checked) => {
     if (!checked.witness) return null;
@@ -215,7 +218,9 @@ export function guardGeneratedRouteV3(spec, { roomPlans = [], difficultyProfile,
   const outside = candidate.rooms.filter((room) => isNormal(room) && room.id !== start && room.id !== goal
     && !path.includes(room.id) && !protectedShopPath.has(room.id)).sort((left, right) => compareId(left.id, right.id));
   if (outside.length) {
-    for (const entity of baselineEntities.filter(({ type, roomId }) => type === 'enemy' && path.includes(roomId))) move(entity, outside[0].id);
+    for (const entity of baselineEntities.filter(({ type, roomId }) => type === 'enemy' && path.includes(roomId))) {
+      for (const destination of normalRoomCapacity ? outside : [outside[0]]) if (move(entity, destination.id)) break;
+    }
     checked = inspect(candidate, adjacency, initialPlayerState);
     accepted = accept(checked);
     if (accepted) return accepted;
