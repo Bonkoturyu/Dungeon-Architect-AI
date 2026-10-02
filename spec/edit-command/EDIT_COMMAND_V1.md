@@ -161,8 +161,5 @@ See `NATURAL_EDIT_V2.md` for the accepted five-command historical contract and `
 - doorway offset editing along a wall (v1 structural UI selects the cardinal wall side only)
 - shortcut/event logic editing from the manual UI
 - batch transactions
-- natural-language room creation/removal
-- natural-language corridor creation/removal/reconnection
-- natural-language doorway-side editing
 - natural-language event-logic editing
 - multi-command natural-language transactions

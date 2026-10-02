@@ -58,8 +58,8 @@ DungeonSpec
 - `delaunay-mst/` — Product accepted; independent Core + app Adapter
 - `bsp/` — Core + app Adapter implementation in progress
 - `rooms-mazes/`
-- `gameplay-graph/`
-- `maze/`
+- `gameplay-grammar/`
+- `maze-carving/`
 - `random-walk/`
 - `cellular-automata/`
 - `wfc/`

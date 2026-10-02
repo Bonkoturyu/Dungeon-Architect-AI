@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright-core';
+import { exitLabelsAreSpatialNotOrdinal } from './ui-ux-polish-checks.mjs';
 
 const chromePath = process.env.CHROME_PATH || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 const port = Number(process.env.DAI_UI_UX_PORT || '4191');
@@ -297,13 +298,9 @@ try {
       playLayout.exitPadHeight >= 185 &&
       playLayout.exitPadHeight <= 205,
     multipleExitLabelsAreSpatialNotOrdinal:
-      playLayout.exitButtonTexts.every(
-        (text) => !/^[▲▶▼◀][12]$/.test(text),
-      ) &&
-      playLayout.multiExitButtonTexts.every(
-        (text) =>
-          /[↑↓←→•]/.test(text) ||
-          !/^[▲▶▼◀][12]$/.test(text),
+      exitLabelsAreSpatialNotOrdinal(
+        playLayout.exitButtonTexts,
+        playLayout.multiExitButtonTexts,
       ),
     resultModeApplied: resultLayout.bodyMode === 'result',
     resultVisible:
