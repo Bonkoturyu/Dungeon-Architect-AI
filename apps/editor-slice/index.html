@@ -1101,6 +1101,7 @@
     }
     .play-metrics {
       display: flex;
+      flex-direction: column;
       flex-wrap: nowrap;
       align-items: center;
       justify-content: center;
@@ -1111,6 +1112,8 @@
       font-weight: 780;
       letter-spacing: 0.015em;
     }
+    .play-stat-values, .play-equipment-values { display:flex;align-items:center;justify-content:center;gap:8px 18px; }
+    .play-equipment-values { font-size:0.8125rem; }
     .metric {
       display: inline-flex;
       align-items: baseline;
@@ -1363,8 +1366,8 @@
     }
     /* 多商品/多数Entityでも出口パッドを覆わず、一覧内でスクロールする。 */
     .room-events {
-      top: calc(50% - 80px);
-      max-height: min(42vh, calc(100% - 330px));
+      top: calc(50% - 104px);
+      max-height: min(42vh, calc(100% - 354px));
     }
     .special-room-review::backdrop { background: rgba(5, 10, 20, 0.65); }
     .special-room-review input {
@@ -2289,10 +2292,16 @@
           <div class="play-summary">
             <span id="playModeLabel" class="play-mode-pill" hidden></span>
             <div id="playStatus" class="play-metrics" aria-live="polite">
+              <div class="play-stat-values">
               <span class="metric"><span class="metric-label">LV</span><span id="levelCount">1</span></span>
               <span class="metric"><span class="metric-label">HP</span><span id="hpCount">0/0</span></span>
               <span class="metric"><span class="metric-label">EXP</span><span id="xpCount">0/20</span></span>
               <span class="metric"><span class="metric-label">G</span><span id="goldCount">0</span></span>
+              </div>
+              <div class="play-equipment-values">
+                <span class="metric"><span class="metric-label" data-i18n="result.weapon">Weapon</span><span id="weaponTierCount">Unequipped</span></span>
+                <span class="metric"><span class="metric-label" data-i18n="result.armor">Armor</span><span id="armorTierCount">Unequipped</span></span>
+              </div>
             </div>
             <div class="play-aux-metrics" aria-hidden="true">
               <span id="moveCount">0</span>
@@ -2341,11 +2350,14 @@
             <span data-i18n="create.floors">Floors (1–10)</span>
             <input id="floorCount" type="number" min="1" max="10" step="1" value="1" inputmode="numeric" aria-label="Dungeon floor count">
           </label>
-          <label class="generation-auto-field" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <input id="generationAuto" type="checkbox" style="width:auto;" aria-describedby="generationAutoHint">
-            <span data-i18n="create.auto">Auto: skip room review</span>
-          </label>
-          <p id="generationAutoHint" class="muted" data-i18n="create.autoHint">Keep explicit prompt settings; choose omitted values automatically.</p>
+          <fieldset class="generation-mode-field" style="padding:0;border:0;margin:12px 0;" aria-describedby="generationAutoHint">
+            <legend data-i18n="create.settings">Generation settings</legend>
+            <div style="display:flex;gap:20px;flex-wrap:wrap;">
+              <label style="display:inline-flex;align-items:center;gap:6px;"><input id="generationAuto" type="radio" name="generationMode" value="auto" style="width:auto;"><span data-i18n="create.auto">Automatic</span></label>
+              <label style="display:inline-flex;align-items:center;gap:6px;"><input id="generationManual" type="radio" name="generationMode" value="manual" style="width:auto;" checked><span data-i18n="create.manual">Manual</span></label>
+            </div>
+            <p id="generationAutoHint" class="muted" data-i18n="create.manualHint">Review and adjust settings before generating.</p>
+          </fieldset>
           <button id="generateDungeon" class="primary-action wide-action" type="button" data-i18n="create.generate">Generate</button>
           <p id="generationStatus" class="muted" aria-live="polite"></p>
           <div class="export-actions">

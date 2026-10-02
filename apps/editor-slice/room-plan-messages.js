@@ -40,8 +40,8 @@ export const ROOM_PLAN_MESSAGES = {
     "roomReview.changed": "Proposals changed with your settings. Review them and confirm again.",
     "roomReview.cancelled": "Generation cancelled",
     "roomReview.autoWarnings": "Auto needs clarification: {warnings}",
-    "create.auto": "Auto: skip room review",
-    "create.autoHint": "Keep explicit prompt settings; choose omitted values automatically.",
+    "create.auto": "Automatic",
+    "create.autoHint": "Set up the dungeon from your description, then generate.",
     "create.generatorV3": "Version 3 — Recommended (Special rooms)",
     "create.generatorV2": "Version 2 — Previous spatial version",
     "roomReview.start": "Start",
@@ -58,7 +58,14 @@ export const ROOM_PLAN_MESSAGES = {
     "roomReview.noUpgrade": "No upgrade",
     "roomReview.buy": "Buy",
     "roomReview.goalReady": "Ready to finish this floor.",
-    "roomReview.viabilityConflict": "No safe route was confirmed for these settings. Turn Auto off to adjust the difficulty, house counts, or Start/Goal kinds. The current dungeon was kept."
+    "roomReview.viabilityConflict": "No safe route was confirmed for these settings. Turn Auto off to adjust the difficulty, house counts, or Start/Goal kinds. The current dungeon was kept.",
+    "create.settings": "Generation settings",
+    "create.manual": "Manual",
+    "create.manualHint": "Review and adjust the settings before generating.",
+    "roomReview.otherFloors": "Other floors",
+    "play.unequipped": "Unequipped",
+    "play.leaveShop": "Leave shop",
+    "play.openShop": "Open shop"
   },
   "ja": {
     "roomReview.heading": "部屋仕様を確認して生成",
@@ -101,8 +108,8 @@ export const ROOM_PLAN_MESSAGES = {
     "roomReview.changed": "設定変更に合わせて候補を更新しました。内容を確認して、もう一度生成を押してください。",
     "roomReview.cancelled": "生成をキャンセルしました",
     "roomReview.autoWarnings": "Auto生成には指定の確認が必要です：{warnings}",
-    "create.auto": "Auto：確認をスキップ",
-    "create.autoHint": "プロンプトの明示指定を優先し、未指定値は自動で決めます。",
+    "create.auto": "自動",
+    "create.autoHint": "文章に合わせて設定して生成",
     "create.generatorV3": "Version 3 — 推奨（特殊部屋）",
     "create.generatorV2": "Version 2 — 以前の方式",
     "roomReview.start": "スタート",
@@ -119,7 +126,14 @@ export const ROOM_PLAN_MESSAGES = {
     "roomReview.noUpgrade": "装備済み以上",
     "roomReview.buy": "購入",
     "roomReview.goalReady": "この階を終了できます。",
-    "roomReview.viabilityConflict": "この設定で攻略経路を確認できませんでした。AutoをOFFにして難易度・ハウスの数・Start/Goalの種類を調整してください。元のダンジョンは変更していません。"
+    "roomReview.viabilityConflict": "この設定で攻略経路を確認できませんでした。AutoをOFFにして難易度・ハウスの数・Start/Goalの種類を調整してください。元のダンジョンは変更していません。",
+    "create.settings": "生成設定",
+    "create.manual": "手動",
+    "create.manualHint": "設定を確認・調整して生成",
+    "roomReview.otherFloors": "その他の階",
+    "play.unequipped": "未装備",
+    "play.leaveShop": "店から出る",
+    "play.openShop": "店を開く"
   },
   "zh-Hans": {
     "roomReview.heading": "确认房间设置",
@@ -162,8 +176,8 @@ export const ROOM_PLAN_MESSAGES = {
     "roomReview.changed": "设置已更新。请确认内容后再次生成。",
     "roomReview.cancelled": "已取消生成",
     "roomReview.autoWarnings": "Auto生成需要确认：{warnings}",
-    "create.auto": "Auto：跳过房间确认",
-    "create.autoHint": "优先保留提示中的明确设置，自动决定未指定的值。",
+    "create.auto": "自动",
+    "create.autoHint": "按描述设置并生成",
     "create.generatorV3": "Version 3 — 推荐（特殊房间）",
     "create.generatorV2": "Version 2 — 旧版空间生成",
     "roomReview.start": "起点",
@@ -180,7 +194,14 @@ export const ROOM_PLAN_MESSAGES = {
     "roomReview.noUpgrade": "无需升级",
     "roomReview.buy": "购买",
     "roomReview.goalReady": "可以完成此层。",
-    "roomReview.viabilityConflict": "未能确认此设置下的安全路线。请关闭Auto并调整难度、敌人数量或起点／终点类型。当前地牢保持不变。"
+    "roomReview.viabilityConflict": "未能确认此设置下的安全路线。请关闭Auto并调整难度、敌人数量或起点／终点类型。当前地牢保持不变。",
+    "create.settings": "生成设置",
+    "create.manual": "手动",
+    "create.manualHint": "确认、调整设置后生成",
+    "roomReview.otherFloors": "其他楼层",
+    "play.unequipped": "未装备",
+    "play.leaveShop": "离开商店",
+    "play.openShop": "打开商店"
   },
   "zh-Hant": {
     "roomReview.heading": "確認房間設定",
@@ -223,8 +244,8 @@ export const ROOM_PLAN_MESSAGES = {
     "roomReview.changed": "設定已更新。請確認內容後再次生成。",
     "roomReview.cancelled": "已取消生成",
     "roomReview.autoWarnings": "Auto生成需要確認：{warnings}",
-    "create.auto": "Auto：略過房間確認",
-    "create.autoHint": "優先保留提示中的明確設定，自動決定未指定的值。",
+    "create.auto": "自動",
+    "create.autoHint": "依描述設定並生成",
     "create.generatorV3": "Version 3 — 推薦（特殊房間）",
     "create.generatorV2": "Version 2 — 舊版空間生成",
     "roomReview.start": "起點",
@@ -241,7 +262,14 @@ export const ROOM_PLAN_MESSAGES = {
     "roomReview.noUpgrade": "無需升級",
     "roomReview.buy": "購買",
     "roomReview.goalReady": "可以完成此層。",
-    "roomReview.viabilityConflict": "未能確認此設定下的安全路線。請關閉Auto並調整難度、敵人數量或起點／終點類型。目前地牢保持不變。"
+    "roomReview.viabilityConflict": "未能確認此設定下的安全路線。請關閉Auto並調整難度、敵人數量或起點／終點類型。目前地牢保持不變。",
+    "create.settings": "生成設定",
+    "create.manual": "手動",
+    "create.manualHint": "確認、調整設定後生成",
+    "roomReview.otherFloors": "其他樓層",
+    "play.unequipped": "未裝備",
+    "play.leaveShop": "離開商店",
+    "play.openShop": "開啟商店"
   },
   "ko": {
     "roomReview.heading": "방 설정 확인",
@@ -284,8 +312,8 @@ export const ROOM_PLAN_MESSAGES = {
     "roomReview.changed": "설정에 따라 제안이 변경되었습니다. 확인 후 다시 생성하세요.",
     "roomReview.cancelled": "생성이 취소되었습니다",
     "roomReview.autoWarnings": "Auto 생성에 확인이 필요합니다: {warnings}",
-    "create.auto": "Auto: 방 설정 확인 건너뛰기",
-    "create.autoHint": "프롬프트의 명시적 설정을 우선하고 나머지는 자동으로 정합니다.",
+    "create.auto": "자동",
+    "create.autoHint": "설명에 맞춰 설정하고 생성",
     "create.generatorV3": "Version 3 — 추천 (특수 방)",
     "create.generatorV2": "Version 2 — 이전 공간 생성",
     "roomReview.start": "시작",
@@ -302,6 +330,13 @@ export const ROOM_PLAN_MESSAGES = {
     "roomReview.noUpgrade": "업그레이드 없음",
     "roomReview.buy": "구매",
     "roomReview.goalReady": "이 층을 완료할 수 있습니다.",
-    "roomReview.viabilityConflict": "이 설정에서 안전한 경로를 확인하지 못했습니다. Auto를 끄고 난이도, 하우스 수량, 시작/목표 종류를 조정하세요. 현재 던전은 유지됩니다."
+    "roomReview.viabilityConflict": "이 설정에서 안전한 경로를 확인하지 못했습니다. Auto를 끄고 난이도, 하우스 수량, 시작/목표 종류를 조정하세요. 현재 던전은 유지됩니다.",
+    "create.settings": "생성 설정",
+    "create.manual": "수동",
+    "create.manualHint": "설정을 확인·조정한 뒤 생성",
+    "roomReview.otherFloors": "다른 층",
+    "play.unequipped": "미장착",
+    "play.leaveShop": "상점 나가기",
+    "play.openShop": "상점 열기"
   }
 };

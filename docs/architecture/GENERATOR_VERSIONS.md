@@ -252,3 +252,8 @@ V2の空間生成をそのまま使用し、明示された部屋planと装備�
 ブラウザでは全Strategyの選択地形を維持し、その新規生成結果に特殊部屋・店・難易度を適用できる。`generatorStrategyId` / `algorithmVersion` / `generatorVersion`は地形の由来を示し、`contentLayerVersion: "special-rooms-1"`は内容処理を別に示す。V3の内容処理は二重実行しない。無装飾ライブラリAPIは従来出力を保持する。
 
 Start/Goalの明示設定・ランダム、Auto、Play終了条件は [共通内容レイヤー検証](../testing/ROOM_CONTENT_LAYER_2026-10-02.md) を参照。
+
+
+## 共通内容レイヤー special-rooms-2
+
+通常部屋と各ハウスの敵／罠数を区別するため、地形を変えずに自動内容を分散・抑制し、攻略経路を再検査する。`contentLayerVersion: "special-rooms-2"` を記録する。V1の内容レイヤーは明示的に選択可能なまま保存し、基礎Generator V1/V2/V3やAlgorithm Labの地形実装は変更しない。数量基準・明示指定保護・検証は [UIフィードバック検証](../testing/UI_FEEDBACK_2026-10-02.md) を参照。

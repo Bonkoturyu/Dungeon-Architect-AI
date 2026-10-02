@@ -112,6 +112,8 @@ const hpCount = document.querySelector('#hpCount');
 const levelCount = document.querySelector('#levelCount');
 const xpCount = document.querySelector('#xpCount');
 const goldCount = document.querySelector('#goldCount');
+const weaponTierCount = document.querySelector('#weaponTierCount');
+const armorTierCount = document.querySelector('#armorTierCount');
 const roomSelect = document.querySelector('#roomSelect');
 const roomWidth = document.querySelector('#roomWidth');
 const roomDepth = document.querySelector('#roomDepth');
@@ -146,6 +148,8 @@ const removeEntityButton = document.querySelector('#removeEntity');
 const generationPrompt = document.querySelector('#generationPrompt');
 const generatorStrategySelect = document.querySelector('#generatorStrategy');
 const generationAutoInput = document.querySelector('#generationAuto');
+const generationManualInput = document.querySelector('#generationManual');
+const generationModeHint = document.querySelector('#generationAutoHint');
 const floorCountInput = document.querySelector('#floorCount');
 const floorSelect = document.querySelector('#floorSelect');
 const floorSummary = document.querySelector('#floorSummary');
@@ -205,6 +209,8 @@ let viewportNoticeTimer = null;
 let actionFeedbackTimer = null;
 let roomEventIntroTimer = null;
 let lastRoomEventSignature = '';
+let shopUiRoomKey = null;
+let shopUiDismissed = false;
 
 const generatorStrategyRegistry = createBuiltinGeneratorStrategyRegistry();
 const audioPresentation = createProgrammaticAudio();
@@ -1073,19 +1079,24 @@ function refreshGateImplementation() {
 }
 
 function roomRole(roomId) {
-  const entities = authoringSpec().entities;
+  const entities = mode === 'play' && playSession ? playSession.snapshot.entities : authoringSpec().entities;
   if (entities.some((entity) => entity.type === 'start' && entity.roomId === roomId)) return 'start';
   if (entities.some((entity) => entity.type === 'goal' && entity.roomId === roomId)) return 'goal';
   return null;
 }
 
+function roomKindLabel(roomId) {
+  const rooms = mode === 'play' && playSession ? playSession.snapshot.rooms : authoringSpec().rooms;
+  const kind = rooms.find(({ id }) => id === roomId)?.kind;
+  const keys = { 'monster-house': 'monsterHouse', 'trap-house': 'trapHouse', shop: 'shop' };
+  return keys[kind] ? t(`roomReview.${keys[kind]}`) : '';
+}
+
 function roomLabel(roomId) {
   const role = roomRole(roomId);
-  if (role === 'start') return `◆ ${t('entity.start')} · ${roomId}`;
-  if (role === 'goal') return `★ ${t('entity.goal')} · ${roomId}`;
-  const room = (playSession?.snapshot?.rooms ?? authoringSpec().rooms).find((entry) => entry.id === roomId);
-  const kinds = { 'monster-house': getLanguage() === 'ja' ? 'モンスターハウス' : 'Monster house', 'trap-house': getLanguage() === 'ja' ? 'トラップハウス' : 'Trap house', shop: getLanguage() === 'ja' ? '店' : 'Shop' };
-  return `▦ ${roomId}${kinds[room?.kind] ? ` · ${kinds[room.kind]}` : ''}`;
+  const base = role === 'start' ? `◆ ${t('entity.start')} · ${roomId}` : role === 'goal' ? `★ ${t('entity.goal')} · ${roomId}` : `▦ ${roomId}`;
+  const kind = roomKindLabel(roomId);
+  return `${base}${kind ? ` · ${kind}` : ''}`;
 }
 
 function entityDisplay(entity) {
@@ -1096,7 +1107,7 @@ function entityDisplay(entity) {
     treasure: { icon: '▣', label: t('entity.treasure') },
     trap: { icon: '⚠', label: t('entity.trap') },
     recovery: { icon: '✚', label: t('entity.recovery') },
-    shop: { icon: '¤', label: getLanguage() === 'ja' ? '店' : 'Shop' },
+    shop: { icon: '¤', label: t('roomReview.shop') },
   };
   return table[entity.type] ?? { icon: '◇', label: entity.type };
 }
@@ -1307,9 +1318,9 @@ function createDetailGroup(title, children = []) {
 
 function roomRoleLabel(roomId) {
   const role = roomRole(roomId);
-  if (role === 'start') return t('entity.start');
-  if (role === 'goal') return t('entity.goal');
-  return t('details.roleNormal');
+  const kind = roomKindLabel(roomId);
+  const roleLabel = role === 'start' ? t('entity.start') : role === 'goal' ? t('entity.goal') : '';
+  return [roleLabel, kind].filter(Boolean).join(' · ') || t('details.roleNormal');
 }
 
 function roomConnectionDetails(room) {
@@ -1969,6 +1980,11 @@ function updateUiImplementation() {
   }
   if (floorCountInput) floorCountInput.disabled = !editing || authoringBusy;
   if (generationAutoInput) generationAutoInput.disabled = !editing || authoringBusy;
+  if (generationManualInput) generationManualInput.disabled = !editing || authoringBusy;
+  if (generationModeHint) {
+    generationModeHint.dataset.i18n = generationAutoInput?.checked ? 'create.autoHint' : 'create.manualHint';
+    generationModeHint.textContent = t(generationModeHint.dataset.i18n);
+  }
   const runValidation = authoringRunSpec();
   const exportBlocked = !editing || authoringBusy || !runValidation.ok;
   if (exportLayoutJsonButton) exportLayoutJsonButton.disabled = exportBlocked;
@@ -2081,11 +2097,14 @@ function renderRoomEvents(...args) { return measurePerformance('ui.renderRoomEve
 
 function renderRoomEventsImplementation() {
   if (!roomEventBar || !roomEventItems || !playSession || mode !== 'play') {
+    shopUiRoomKey = null; shopUiDismissed = false;
     if (roomEventBar) roomEventBar.hidden = true;
     if (roomEventItems) roomEventItems.replaceChildren();
     return;
   }
 
+  const roomKey = `${playSession.snapshot.id}:${playSession.currentRoomId}`;
+  if (shopUiRoomKey !== roomKey) { shopUiRoomKey = roomKey; shopUiDismissed = false; }
   const { enemies, interactables } = roomContents();
   const heading = roomEventBar.querySelector('.room-event-heading');
   if (heading) heading.textContent = roomLabel(playSession.currentRoomId);
@@ -2191,7 +2210,20 @@ function renderRoomEventsImplementation() {
     cards.push(card);
   }
 
-  for (const shop of listRoomShops(playSession)) {
+  const shops = listRoomShops(playSession);
+  const shopOfferList = document.createElement('div'); shopOfferList.id = 'shopOfferList'; shopOfferList.style.cssText = 'display:grid;gap:8px;'; shopOfferList.hidden = shopUiDismissed;
+  if (shopUiDismissed) shopOfferList.style.display = 'none';
+  if (shops.length && heading) {
+    const toggle = document.createElement('button'); toggle.type = 'button'; toggle.dataset.action = shopUiDismissed ? 'open-shop' : 'leave-shop';
+    toggle.textContent = t(shopUiDismissed ? 'play.openShop' : 'play.leaveShop'); toggle.setAttribute('aria-expanded', String(!shopUiDismissed)); toggle.setAttribute('aria-controls', 'shopOfferList');
+    toggle.addEventListener('click', () => {
+      if (mode !== 'play') return;
+      shopUiDismissed = !shopUiDismissed; renderRoomEvents();
+      roomEventBar.querySelector('[data-action="open-shop"], [data-action="leave-shop"]')?.focus();
+    });
+    heading.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;'; heading.append(toggle);
+  }
+  for (const shop of shops) {
     for (const offer of shop.offers) {
       const card = document.createElement('div'); card.className = 'room-event'; card.dataset.entityId = shop.entity.id; card.dataset.kind = 'shop';
       const label = document.createElement('span'); label.className = 'room-event-type';
@@ -2202,9 +2234,11 @@ function renderRoomEventsImplementation() {
       const reason = offer.remaining <= 0 ? (t('roomReview.soldOut')) : player.gold < offer.price ? (t('roomReview.needGold')) : offer.type === 'healing' && player.hp >= player.maxHp ? (t('roomReview.fullHp')) : ['weapon', 'armor'].includes(offer.type) && (player.equipment[offer.type]?.tier ?? 0) >= offer.tier ? (t('roomReview.noUpgrade')) : null;
       buy.disabled = reason !== null; buy.textContent = reason ?? (t('roomReview.buy'));
       buy.addEventListener('click', () => { if (mode !== 'play') return; const result = measurePerformance('play.purchaseCore', () => purchaseShopOffer(playSession, shop.entity.id, offer.id, { at: nextPlayActionAt() })); if (result.ok) emitAudioCue('treasure'); applyPlayRuntimeResult(result, 'Purchase failed'); });
-      card.append(label, note, buy); cards.push(card);
+      card.append(label, note, buy); shopOfferList.append(card);
     }
   }
+
+  if (shops.length) { shopOfferList.dataset.kind = 'shop'; shopOfferList.dataset.entityId = shops[0].entity.id; cards.push(shopOfferList); }
 
   const entityOrder = new Map(
     (playSession.snapshot?.entities ?? []).map((entity, index) => [entity.id, index]),
@@ -3154,7 +3188,7 @@ async function generateDungeonFromPrompt() {
     setEditStatus(floorCount > 1 ? `generated ${floorCount}-floor run` : 'generated new dungeon');
     return true;
   } catch (error) {
-    const conflict = /FIRST_SHOP_SURVIVAL_CONFLICT|ROUTE_VIABILITY_CONFLICT/.test(error.message ?? '');
+    const conflict = /FIRST_SHOP_SURVIVAL_CONFLICT|ROUTE_VIABILITY_CONFLICT|NORMAL_ROOM_CAPACITY_CONFLICT|NORMAL_ROOM_EXPLICIT_CONTENT_CONFLICT/.test(error.message ?? '');
     setGenerationStatus(conflict ? t('roomReview.viabilityConflict') : `${t('generation.unavailable')} · ${error.message ?? 'UNKNOWN'}`);
     return false;
   } finally {
@@ -3316,6 +3350,8 @@ function redo() {
 }
 
 function updatePlayReadout() {
+  if (weaponTierCount) weaponTierCount.textContent = playSession?.playerState?.equipment?.weapon ? `T${playSession.playerState.equipment.weapon.tier}` : t('play.unequipped');
+  if (armorTierCount) armorTierCount.textContent = playSession?.playerState?.equipment?.armor ? `T${playSession.playerState.equipment.armor.tier}` : t('play.unequipped');
   if (!playSession) {
     if (moveCount) moveCount.textContent = '0';
     if (mappedCount) mappedCount.textContent = '0';
@@ -3482,6 +3518,7 @@ function finalizePlayIfNeeded() {
 }
 
 function beginDungeonRun(runSpec, source) {
+  shopUiRoomKey = null; shopUiDismissed = false;
   const result = startDungeonRun(runSpec, { startedAt: 0 });
   if (!result.ok) {
     setEditStatus(`Play blocked: ${result.errors?.[0]?.code ?? 'VALIDATION'}`);
@@ -4406,6 +4443,8 @@ async function run() {
     removeEntityButton.addEventListener('click', removeEntity);
     generationPrompt.addEventListener('input', updateUi);
     generatorStrategySelect?.addEventListener('change', updateUi);
+    generationAutoInput?.addEventListener('change', updateUi);
+    generationManualInput?.addEventListener('change', updateUi);
     floorCountInput?.addEventListener('input', updateUi);
     floorCountInput?.addEventListener('change', () => {
       floorCountInput.value = String(requestedFloorCount());

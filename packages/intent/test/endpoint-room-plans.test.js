@@ -69,3 +69,60 @@ test('fallback scopes mixed normal and special endpoint sentences independently 
   assert.throws(() => parseFallbackRoomRequests('2.5階のスタートは通常の部屋。'), /INTEGER_REQUIRED/);
   assert.throws(() => parseFallbackRoomRequests('A normal room at the start on floor -2.'), /INTEGER_REQUIRED/);
 });
+
+test('endpoint kinds are preserved per floor, with specific floors overriding a shared default', () => {
+  const requests = parseFallbackRoomRequests('1階のゴールに店。2階のゴールに敵3体のモンスターハウス。');
+  const config = createRoomPlanConfig({ ...base, requests });
+  assert.deepEqual(config.presenceSpec.endpointPolicies.goal, { default:'normal', floors:{1:'shop',2:'monster-house'} });
+  assert.deepEqual(config.roomPlans.filter(({targetRole})=>targetRole==='goal').map(({floorNumber,kind})=>[floorNumber,kind]), [[1,'shop'],[2,'monster-house']]);
+  const edited = createRoomPlanConfig({ ...base, requests, endpointPolicies:{ ...config.presenceSpec.endpointPolicies, goal:{default:'normal',floors:{1:'shop',2:'trap-house'}} } });
+  assert.equal(edited.roomPlans.find(({targetRole,floorNumber})=>targetRole==='goal'&&floorNumber===2).kind,'trap-house');
+  const defaultRequests = parseFallbackRoomRequests('ゴールに店。2階のゴールに敵3体のモンスターハウス。');
+  const shared = createRoomPlanConfig({ ...base, floorCount:3, requests:defaultRequests });
+  assert.deepEqual(shared.roomPlans.filter(({targetRole})=>targetRole==='goal').map(({floorNumber,kind})=>[floorNumber,kind]),[[1,'shop'],[2,'monster-house'],[3,'shop']]);
+  assert.throws(()=>createRoomPlanConfig({...base,requests:parseFallbackRoomRequests('1階のゴールに店。1階のゴールにモンスターハウス。')}),/ENDPOINT_KIND_CONFLICT/);
+  assert.throws(()=>createRoomPlanConfig({...base,requests:parseFallbackRoomRequests('3階のゴールに店。')}),/ROOM_REQUEST_FLOOR_MISSING/);
+});
+
+test('compound endpoint clauses preserve each role, random policy, and explicit negation', () => {
+  for(const prompt of ['Start in a normal room and make the Goal random','スタートは通常の部屋、ゴールはランダム','スタートは通常の部屋にしてゴールはランダム']) {
+    const config=createRoomPlanConfig({...base,requests:parseFallbackRoomRequests(prompt)});
+    assert.deepEqual(config.presenceSpec.endpointPolicies,{start:'normal',goal:'random'});
+  }
+  for(const prompt of ['Start in a normal room and make the Goal a shop','スタートは通常の部屋、ゴールに店']) {
+    const config=createRoomPlanConfig({...base,requests:parseFallbackRoomRequests(prompt)});
+    assert.deepEqual(config.presenceSpec.endpointPolicies,{start:'normal',goal:'shop'});
+  }
+  for(const prompt of ['No shop at Start and make the Goal a normal room','スタートに店は置かない、ゴールは通常の部屋']) {
+    const requests=parseFallbackRoomRequests(prompt);
+    assert.equal(requests.find(({targetRole})=>targetRole==='start').presence,'exclude');
+    assert.equal(requests.find(({targetRole})=>targetRole==='goal').kind,'normal');
+  }
+});
+
+
+test('integer sentence endings separate endpoint policies without accepting decimal or negative floors', () => {
+  for (const prompt of [
+    'A normal room at the start on floor 2. The goal is random.',
+    '2階のスタートは通常の部屋。ゴールはランダム。',
+  ]) {
+    const requests = parseFallbackRoomRequests(prompt);
+    assert.deepEqual(requests.map(({ targetRole, presence, floorNumber }) => [targetRole, presence, floorNumber]), [['start', 'include', 2], ['goal', 'random', null]]);
+  }
+  for (const prompt of [
+    'A shop at the start on floor 2. A normal room at the goal.',
+    'A normal room at the start on floor 2. A shop at the goal.',
+    'No shop at the start on floor 2. The goal is random.',
+  ]) {
+    const requests = parseFallbackRoomRequests(prompt);
+    assert.equal(requests.length, 2);
+    assert.equal(requests.find(({ targetRole }) => targetRole === 'start').floorNumber, 2);
+    assert.equal(requests.find(({ targetRole }) => targetRole === 'goal').floorNumber, null);
+    if (prompt.startsWith('No')) assert.equal(requests.find(({ targetRole }) => targetRole === 'start').presence, 'exclude');
+  }
+  for (const floor of ['2.5', '-2', '-2.5']) {
+    for (const kind of ['normal room', 'shop']) {
+      assert.throws(() => parseFallbackRoomRequests(`A ${kind} at the start on floor ${floor}. The goal is random.`), /INTEGER_REQUIRED/);
+    }
+  }
+});
