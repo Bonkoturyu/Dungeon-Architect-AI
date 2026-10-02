@@ -135,6 +135,8 @@ try {
   }
   if ((await page.evaluate(() => window.__DAI_ONBOARDING__.getState().open)) === true) {
     await page.evaluate(() => window.__DAI_ONBOARDING__.close());
+  // Legacy regression pins V2; V3 review/random presence has its own smoke.
+  await page.evaluate(() => window.__DAI_EDITOR_SLICE__.setGeneratorStrategy('version-2-spatial'));
   }
 
   await page.fill('#generationPrompt', prompt);

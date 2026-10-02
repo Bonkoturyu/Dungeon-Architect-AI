@@ -5,6 +5,7 @@ import {
   DEFAULT_GENERATOR_VERSION,
   GENERATOR_VERSION_V1,
   GENERATOR_VERSION_V2,
+  GENERATOR_VERSION_V3,
   SUPPORTED_GENERATOR_VERSIONS,
 } from '../src/generator-versions.js';
 import {
@@ -18,11 +19,12 @@ import {
   generateDungeonFromDesignIntentV2,
 } from '../src/design-intent-generator.js';
 
-test('Version 1 remains the frozen library default while Version 2 is registered', () => {
+test('Version 1 remains the frozen library default while Versions 2 and 3 are registered', () => {
   assert.equal(DEFAULT_GENERATOR_VERSION, '1');
   assert.equal(GENERATOR_VERSION_V1, '1');
   assert.equal(GENERATOR_VERSION_V2, '2');
-  assert.deepEqual(SUPPORTED_GENERATOR_VERSIONS, ['1', '2']);
+  assert.equal(GENERATOR_VERSION_V3, '3');
+  assert.deepEqual(SUPPORTED_GENERATOR_VERSIONS, ['1', '2', '3']);
 });
 
 test('default DungeonSpec generation is byte-identical to explicit Version 1', () => {

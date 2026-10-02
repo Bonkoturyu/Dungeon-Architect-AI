@@ -1,3 +1,9 @@
+import { resolveSpecialRoomPresence } from '../../packages/intent/src/special-room-presence.js';
+import { measurePerformance, measurePerformanceAsync, startPerformanceProbe, stopPerformanceProbe } from '../../packages/renderer-three/src/performance-probe.js';
+import { reviewRoomPlan } from './room-plan-review.js';
+import { parseFallbackRoomRequests } from '../../packages/intent/src/room-requests.js';
+import { listRoomShops, purchaseShopOffer } from '../../packages/play-core/src/shop-runtime.js';
+import { getEffectiveDamage } from '../../packages/play-core/src/equipment-runtime.js';
 import { EditSession } from '../../packages/editor-core/src/edit-session.js';
 import { applyEditCommand } from '../../packages/editor-core/src/edit-command.js';
 import {
@@ -173,6 +179,7 @@ let selectedEntityId = null;
 let selectedCorridorId = null;
 let generationBusy = false;
 let lastDesignIntent = null;
+let lastSpecialRoomConfig = null;
 let lastGeneration = null;
 let naturalEditBusy = false;
 let lastNaturalEditCommand = null;
@@ -352,7 +359,9 @@ function exportProvenance() {
     : null;
 }
 
-function currentLayoutExport() {
+function currentLayoutExport(...args) { return measurePerformance('ui.currentLayoutExport', () => currentLayoutExportImplementation(...args)); }
+
+function currentLayoutExportImplementation() {
   const base = exportBaseName();
   return createDungeonLayoutExchange(
     authoringFloorSpecs(),
@@ -363,7 +372,9 @@ function currentLayoutExport() {
   );
 }
 
-function currentFullDungeonExport() {
+function currentFullDungeonExport(...args) { return measurePerformance('ui.currentFullDungeonExport', () => currentFullDungeonExportImplementation(...args)); }
+
+function currentFullDungeonExportImplementation() {
   const base = exportBaseName();
   return createFullDungeonExport(
     authoringFloorSpecs(),
@@ -405,7 +416,9 @@ function exportFullJson() {
   );
 }
 
-function applyImportedDungeonJson(input, { filename = null } = {}) {
+function applyImportedDungeonJson(...args) { return measurePerformance('ui.applyImportedDungeonJson', () => applyImportedDungeonJsonImplementation(...args)); }
+
+function applyImportedDungeonJsonImplementation(input, { filename = null } = {}) {
   if (mode !== 'edit' || generationBusy || naturalEditBusy) {
     return {
       ok: false,
@@ -466,6 +479,7 @@ function applyImportedDungeonJson(input, { filename = null } = {}) {
   roomDrag = null;
   authoringPreviewConcealed = false;
   lastDesignIntent = null;
+  lastSpecialRoomConfig = null;
 
   const provenance = imported.provenance ?? null;
   lastGeneration = provenance
@@ -573,8 +587,9 @@ function derivedFloorSeed(baseSeed, floorIndex) {
 }
 
 function generatorStrategyLabel(metadata) {
+  if (metadata.id === 'version-3-special-rooms') return getLanguage() === 'ja' ? 'Version 3 — 推奨（特殊部屋）' : 'Version 3 — Recommended (Special rooms)';
   if (metadata.id === GENERATOR_STRATEGY_V2_RECOMMENDED_ID) {
-    return t('create.generatorRecommended');
+    return getLanguage() === 'ja' ? 'Version 2 — 以前の方式' : 'Version 2 — Previous spatial version';
   }
   if (metadata.id === GENERATOR_STRATEGY_V1_CLASSIC_ID) {
     return t('create.generatorClassic');
@@ -643,6 +658,7 @@ async function generateFloorSet(
     baseSeed = null,
     idPrefix = null,
     strategyId = selectedGeneratorStrategyId(),
+    specialRoomConfig = null,
   } = {},
 ) {
   const total = Math.max(1, Math.min(10, Number.isInteger(count) ? count : 1));
@@ -651,15 +667,25 @@ async function generateFloorSet(
       ? deriveGeneratorSeedFromPrompt(prompt)
       : baseSeed >>> 0;
   const rootId = idPrefix ?? `generated-${rootSeed}`;
+  if (specialRoomConfig?.presenceSpec) {
+    const resolved = resolveSpecialRoomPresence({ ...specialRoomConfig.presenceSpec, seed: rootSeed, floorCount: total, specialRoomEntityLimit: specialRoomConfig.specialRoomEntityLimit });
+    specialRoomConfig = { ...specialRoomConfig, roomPlans: resolved.roomPlans };
+  }
 
-  async function generateFloor(seed, id) {
-    const result = await generatorStrategyRegistry.generate(strategyId, {
+  let carriedWitnessState = null;
+  async function generateFloor(seed, id, floorNumber = 1) {
+    const result = await measurePerformanceAsync('generation.strategy', () => generatorStrategyRegistry.generate(strategyId, {
       seed,
       id,
       prompt,
       intent,
-    });
+      options: specialRoomConfig ? { ...specialRoomConfig, initialPlayerState: carriedWitnessState, roomPlans: specialRoomConfig.roomPlans.filter((plan) => plan.floorNumber === floorNumber) } : {},
+    }));
     const profile = result.diagnostics?.profile ?? {};
+    if (strategyId === 'version-3-special-rooms' && specialRoomConfig) {
+      if (!profile.routeViability?.witness?.playerState) throw new Error('ROUTE_VIABILITY_WITNESS_MISSING');
+      carriedWitnessState = clone(profile.routeViability.witness.playerState);
+    }
     return {
       spec: result.spec,
       profile: {
@@ -687,6 +713,7 @@ async function generateFloorSet(
     generated.push(await generateFloor(
       seed,
       `${rootId}-floor-${String(floorIndex + 1).padStart(2, '0')}`,
+      floorIndex + 1,
     ));
   }
 
@@ -1006,7 +1033,9 @@ function friendlyEditError(error) {
   return `Blocked: ${code}`;
 }
 
-function refreshGate() {
+function refreshGate(...args) { return measurePerformance('ui.refreshGate', () => refreshGateImplementation(...args)); }
+
+function refreshGateImplementation() {
   const currentGate = evaluateStartGate(authoringSpec());
   const runValidation = authoringRunSpec();
 
@@ -1047,7 +1076,9 @@ function roomLabel(roomId) {
   const role = roomRole(roomId);
   if (role === 'start') return `◆ ${t('entity.start')} · ${roomId}`;
   if (role === 'goal') return `★ ${t('entity.goal')} · ${roomId}`;
-  return `▦ ${roomId}`;
+  const room = (playSession?.snapshot?.rooms ?? authoringSpec().rooms).find((entry) => entry.id === roomId);
+  const kinds = { 'monster-house': getLanguage() === 'ja' ? 'モンスターハウス' : 'Monster house', 'trap-house': getLanguage() === 'ja' ? 'トラップハウス' : 'Trap house', shop: getLanguage() === 'ja' ? '店' : 'Shop' };
+  return `▦ ${roomId}${kinds[room?.kind] ? ` · ${kinds[room.kind]}` : ''}`;
 }
 
 function entityDisplay(entity) {
@@ -1058,6 +1089,7 @@ function entityDisplay(entity) {
     treasure: { icon: '▣', label: t('entity.treasure') },
     trap: { icon: '⚠', label: t('entity.trap') },
     recovery: { icon: '✚', label: t('entity.recovery') },
+    shop: { icon: '¤', label: getLanguage() === 'ja' ? '店' : 'Shop' },
   };
   return table[entity.type] ?? { icon: '◇', label: entity.type };
 }
@@ -1091,7 +1123,9 @@ function renderPromptHistory() {
   }));
 }
 
-function ensureRoomOptions() {
+function ensureRoomOptions(...args) { return measurePerformance('ui.ensureRoomOptions', () => ensureRoomOptionsImplementation(...args)); }
+
+function ensureRoomOptionsImplementation() {
   const currentTarget = entityRoom.value;
   const rooms = authoringSpec().rooms;
   const entity = selectedEntity();
@@ -1131,7 +1165,9 @@ function ensureRoomOptions() {
   }
 }
 
-function ensureEntityOptions() {
+function ensureEntityOptions(...args) { return measurePerformance('ui.ensureEntityOptions', () => ensureEntityOptionsImplementation(...args)); }
+
+function ensureEntityOptionsImplementation() {
   const entities = authoringSpec().entities;
   entitySelect.replaceChildren(...entities.map((entity) => {
     const presentation = entityDisplay(entity);
@@ -1155,7 +1191,9 @@ function corridorLabel(corridor) {
   return `${corridor.id} · ${corridor.fromRoomId} [${from}] → ${corridor.toRoomId} [${to}]`;
 }
 
-function ensureCorridorOptions() {
+function ensureCorridorOptions(...args) { return measurePerformance('ui.ensureCorridorOptions', () => ensureCorridorOptionsImplementation(...args)); }
+
+function ensureCorridorOptionsImplementation() {
   const spec = authoringSpec();
   const rooms = spec.rooms;
   const corridors = spec.corridors;
@@ -1793,7 +1831,9 @@ function setWorkflowTab(nextTab) {
   return true;
 }
 
-function updateUi() {
+function updateUi(...args) { return measurePerformance('ui.updateUi', () => updateUiImplementation(...args)); }
+
+function updateUiImplementation() {
   const room = selectedRoom();
   const entity = selectedEntity();
   const corridor = selectedCorridor();
@@ -1983,7 +2023,7 @@ function applyPlayRuntimeResult(result, failurePrefix) {
 
 function clearEnemy(enemyId) {
   if (!playSession || mode !== 'play') return false;
-  const resolved = resolveEnemyCombat(playSession, enemyId, { at: nextPlayActionAt() });
+  const resolved = measurePerformance('play.combatCore', () => resolveEnemyCombat(playSession, enemyId, { at: nextPlayActionAt() }));
   if (resolved?.ok) {
     emitAudioCue('combat');
     showActionFeedback(`${t('entity.enemy').toUpperCase()} ✓`, 'combat');
@@ -2024,7 +2064,9 @@ function interactWithRoomEntity(action, entityId) {
   return applyPlayRuntimeResult(result, 'Interaction failed');
 }
 
-function renderRoomEvents() {
+function renderRoomEvents(...args) { return measurePerformance('ui.renderRoomEvents', () => renderRoomEventsImplementation(...args)); }
+
+function renderRoomEventsImplementation() {
   if (!roomEventBar || !roomEventItems || !playSession || mode !== 'play') {
     if (roomEventBar) roomEventBar.hidden = true;
     if (roomEventItems) roomEventItems.replaceChildren();
@@ -2032,6 +2074,8 @@ function renderRoomEvents() {
   }
 
   const { enemies, interactables } = roomContents();
+  const heading = roomEventBar.querySelector('.room-event-heading');
+  if (heading) heading.textContent = roomLabel(playSession.currentRoomId);
   const cards = [];
 
   for (const { enemy } of enemies) {
@@ -2048,7 +2092,7 @@ function renderRoomEvents() {
     const note = document.createElement('span');
     note.className = 'room-event-note';
     const reward = deterministicEnemyReward(playSession, enemy.id);
-    note.textContent = `${t('roomEvent.blocks')} · -${enemy.damage ?? DEFAULT_ENEMY_DAMAGE} HP · +${reward.xp} XP · +${reward.gold}G`;
+    note.textContent = `${t('roomEvent.blocks')} · -${getEffectiveDamage(playSession, enemy.damage ?? DEFAULT_ENEMY_DAMAGE, 'enemy')} HP · +${reward.xp} XP · +${reward.gold}G`;
 
     const actions = document.createElement('div');
     actions.className = 'room-event-actions';
@@ -2085,12 +2129,12 @@ function renderRoomEvents() {
     note.className = 'room-event-note';
     if (entity.type === 'trap') {
       const base = warning === 'floor-cracks' ? t('roomEvent.cracked') : t('roomEvent.off');
-      note.textContent = `${base} · -${entity.damage ?? DEFAULT_TRAP_DAMAGE} HP`;
+      note.textContent = `${base} · -${getEffectiveDamage(playSession, entity.damage ?? DEFAULT_TRAP_DAMAGE, 'trap')} HP`;
     } else if (entity.type === 'treasure') {
       const reward = deterministicTreasureReward(playSession, entity.id);
-      const rewardIcon = reward.item.slot === 'weapon' ? '⚔' : '▰';
+      const rewardIcon = reward.item?.slot === 'weapon' ? '⚔' : '▰';
       const base = warning === 'suspicious-glow' ? t('roomEvent.suspicious') : t('roomEvent.optional');
-      note.textContent = `${base} · +${reward.gold}G · ${rewardIcon} T${reward.item.tier}`;
+      note.textContent = `${base} · +${reward.gold}G${reward.item ? ` · ${rewardIcon} T${reward.item.tier}` : ''}`;
     } else {
       note.textContent = `${t('roomEvent.optional')} · +${entity.healing ?? DEFAULT_RECOVERY_HEALING} HP`;
     }
@@ -2132,6 +2176,21 @@ function renderRoomEvents() {
 
     card.append(type, note, actions);
     cards.push(card);
+  }
+
+  for (const shop of listRoomShops(playSession)) {
+    for (const offer of shop.offers) {
+      const card = document.createElement('div'); card.className = 'room-event'; card.dataset.entityId = shop.entity.id; card.dataset.kind = 'shop';
+      const label = document.createElement('span'); label.className = 'room-event-type';
+      label.textContent = `${getLanguage() === 'ja' ? '店' : 'SHOP'} · ${offer.type === 'healing' ? `+${offer.healing} HP` : `${offer.type === 'weapon' ? t('result.weapon') : t('result.armor')} T${offer.tier}`}`;
+      const note = document.createElement('span'); note.className = 'room-event-note'; note.textContent = `${offer.price}G · ${getLanguage() === 'ja' ? '在庫' : 'Stock'} ${offer.remaining}`;
+      const buy = document.createElement('button'); buy.type = 'button'; buy.dataset.action = 'buy-offer'; buy.dataset.offerId = offer.id;
+      const player = playSession.playerState;
+      const reason = offer.remaining <= 0 ? (getLanguage() === 'ja' ? '売り切れ' : 'Sold out') : player.gold < offer.price ? (getLanguage() === 'ja' ? 'G不足' : 'Need G') : offer.type === 'healing' && player.hp >= player.maxHp ? (getLanguage() === 'ja' ? 'HP満タン' : 'Full HP') : ['weapon', 'armor'].includes(offer.type) && (player.equipment[offer.type]?.tier ?? 0) >= offer.tier ? (getLanguage() === 'ja' ? '装備済み以上' : 'No upgrade') : null;
+      buy.disabled = reason !== null; buy.textContent = reason ?? (getLanguage() === 'ja' ? '購入' : 'Buy');
+      buy.addEventListener('click', () => { if (mode !== 'play') return; const result = measurePerformance('play.purchaseCore', () => purchaseShopOffer(playSession, shop.entity.id, offer.id, { at: nextPlayActionAt() })); if (result.ok) emitAudioCue('treasure'); applyPlayRuntimeResult(result, 'Purchase failed'); });
+      card.append(label, note, buy); cards.push(card);
+    }
   }
 
   const entityOrder = new Map(
@@ -2206,7 +2265,9 @@ function previewPlayExit(corridorId = null) {
   );
 }
 
-function renderPlayExits() {
+function renderPlayExits(...args) { return measurePerformance('ui.renderPlayExits', () => renderPlayExitsImplementation(...args)); }
+
+function renderPlayExitsImplementation() {
   if (!playExitBar || !playExitButtons || !playSession || mode !== 'play') {
     if (playExitBar) playExitBar.hidden = true;
     if (playExitButtons) playExitButtons.replaceChildren();
@@ -2374,7 +2435,9 @@ function renderPlayExits() {
   playExitBar.hidden = exits.length === 0;
 }
 
-function renderActiveSpec() {
+function renderActiveSpec(...args) { return measurePerformance('ui.renderActiveSpec', () => adapter.withDeferredDraws(() => renderActiveSpecImplementation(...args))); }
+
+function renderActiveSpecImplementation() {
   const spec = activeRenderSpec();
   const visibility = mode === 'edit' || !playSession
     ? null
@@ -2972,11 +3035,11 @@ async function generateDungeonFromPrompt() {
 
   try {
     const endpoint = window.__DAI_DESIGN_INTENT_ENDPOINT__ || '/api/design-intent';
-    const response = await fetch(endpoint, {
+    const response = await measurePerformanceAsync('generation.intentRequest', () => fetch(endpoint, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ prompt }),
-    });
+      body: JSON.stringify({ prompt, includeRoomRequests: true }),
+    }));
 
     let payload = null;
     try {
@@ -2987,16 +3050,25 @@ async function generateDungeonFromPrompt() {
 
     if (!response.ok || payload?.ok !== true || !payload.intent) {
       const code = payload?.error?.code || `HTTP_${response.status}`;
-      setGenerationStatus(`error: ${code}`);
+      setGenerationStatus(`error: ${code}${payload?.error?.message ? ` · ${payload.error.message}` : ''}`);
       return false;
     }
 
     const floorCount = requestedFloorCount();
-    const generatorStrategyId = selectedGeneratorStrategyId();
+    let generatorStrategyId = selectedGeneratorStrategyId();
+    const requests = payload.roomRequests ?? parseFallbackRoomRequests(prompt);
+    const requestedDifficulty = payload.difficulty ?? null;
+    let specialRoomConfig = null;
+    if (requests.length || requestedDifficulty || generatorStrategyId === 'version-3-special-rooms') {
+      specialRoomConfig = await reviewRoomPlan({ requests, floorCount, seed: deriveGeneratorSeedFromPrompt(prompt), difficulty: requestedDifficulty ?? 'normal', roomsPerFloor: Math.min(20, Math.max(5, Math.round(payload.intent.targetDuration / 60))), warnings: payload.warnings ?? [], language: getLanguage() });
+      if (!specialRoomConfig) { setGenerationStatus(getLanguage() === 'ja' ? '生成をキャンセルしました' : 'Generation cancelled'); return false; }
+      generatorStrategyId = 'version-3-special-rooms';
+    }
     const generatedFloors = await generateFloorSet(payload.intent, {
       prompt,
       count: floorCount,
       strategyId: generatorStrategyId,
+      specialRoomConfig,
     });
     const generated = generatedFloors[0];
     setAuthoringFloors(generatedFloors.map((entry) => entry.spec), 0);
@@ -3011,6 +3083,8 @@ async function generateDungeonFromPrompt() {
     lastPlayResult = null;
     lastNaturalEditCommand = null;
     lastDesignIntent = clone(payload.intent);
+    lastSpecialRoomConfig = specialRoomConfig ? clone(specialRoomConfig) : null;
+    if (generatorStrategySelect) generatorStrategySelect.value = generatorStrategyId;
     lastGeneration = {
       generatorVersion: generated.generatorVersion,
       generatorStrategyId: generated.generatorStrategyId,
@@ -3054,8 +3128,8 @@ async function generateDungeonFromPrompt() {
       : t('generation.generated', { count: lastGeneration.roomCount }));
     setEditStatus(floorCount > 1 ? `generated ${floorCount}-floor run` : 'generated new dungeon');
     return true;
-  } catch {
-    setGenerationStatus(t('generation.unavailable'));
+  } catch (error) {
+    setGenerationStatus(`${t('generation.unavailable')} · ${error.message ?? 'UNKNOWN'}`);
     return false;
   } finally {
     generationBusy = false;
@@ -3451,6 +3525,15 @@ function freshMysterySeed() {
 }
 
 async function startMysteryDungeon() {
+  try { return await startMysteryDungeonImplementation(); }
+  catch (error) {
+    const message = `Mystery blocked: ${error.message ?? 'GENERATION_FAILED'}`;
+    setEditStatus(message); setGenerationStatus(message); showViewportNotice(message, { timeoutMs: 5200 });
+    return false;
+  }
+}
+
+async function startMysteryDungeonImplementation() {
   if (mode !== 'edit' || generationBusy || naturalEditBusy || !lastDesignIntent) return false;
 
   const seed = freshMysterySeed();
@@ -3463,6 +3546,7 @@ async function startMysteryDungeon() {
     baseSeed: seed,
     idPrefix: `mystery-${seed}`,
     strategyId: generatorStrategyId,
+    specialRoomConfig: lastSpecialRoomConfig,
   });
   const generated = generatedFloors[0];
   mysteryGeneration = {
@@ -4317,6 +4401,8 @@ async function run() {
     window.__DAI_EDITOR_SLICE__ = {
       ready: true,
       failed: false,
+      startPerformanceProbe,
+      stopPerformanceProbe,
       getState: snapshotState,
       getScreenPositionForSpecId: (id) => adapter.getScreenPositionForSpecId(id),
       getScreenPositionForRoomWall: (roomId, side) => adapter.getScreenPositionForRoomWall(roomId, side),

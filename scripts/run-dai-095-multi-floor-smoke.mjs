@@ -208,6 +208,8 @@ try {
     window.__DAI_ONBOARDING__?.ready === true,
   null, { timeout: 60_000 });
   await page.evaluate(() => window.__DAI_ONBOARDING__.close());
+  // Legacy regression pins V2; V3 review/random presence has its own smoke.
+  await page.evaluate(() => window.__DAI_EDITOR_SLICE__.setGeneratorStrategy('version-2-spatial'));
 
   await page.fill('#generationPrompt', prompt);
   await page.fill('#floorCount', '3');
@@ -338,7 +340,7 @@ try {
       result.run?.status === 'cleared' &&
       result.run?.floorsCompleted === 3 &&
       result.run?.currentFloorIndex === 2,
-    resultShowsFloorCompletion: resultText.includes('FLOOR 3/3'),
+    resultShowsFloorCompletion: /Floors\s+3\/3/.test(resultText),
     testPlayDoesNotMutateAuthoring:
       JSON.stringify(authoringAfterPlay) === JSON.stringify(authoringBeforePlay),
     mysteryKeepsThreeFloors:

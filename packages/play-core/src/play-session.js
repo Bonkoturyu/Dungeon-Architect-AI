@@ -1,3 +1,4 @@
+import { getEffectiveDamage } from './equipment-runtime.js';
 import { validateDungeonSpec } from "../../core/src/dungeon-spec.js";
 import { applyGameplayStateCommand, createGameplayState } from "./gameplay-state.js";
 import { dispatchSupportedEvents, isRuntimeCorridorEnabled } from "./event-runtime.js";
@@ -172,6 +173,17 @@ export function movePlaySession(session, targetRoomId, { at = session?.startedAt
     return { ok: false, error: { code: "SESSION_NOT_PLAYING", message: "Session is not in playing state." } };
   }
 
+  const currentRoom = session.snapshot.rooms.find((room) => room.id === session.currentRoomId);
+  if (['monster-house', 'trap-house'].includes(currentRoom?.kind)) {
+    const blocked = session.snapshot.entities.some((entity) => {
+      if (entity.roomId !== session.currentRoomId) return false;
+      const state = session.gameplayState.entityStates[entity.id];
+      return (entity.type === 'enemy' && (state?.status ?? (entity.initiallyActive === false ? 'dormant' : 'active')) === 'active') ||
+        (entity.type === 'trap' && (state?.status ?? 'armed') === 'armed');
+    });
+    if (blocked) return { ok: false, error: { code: 'SPECIAL_ROOM_BLOCKED', message: 'Resolve all enemies and traps before leaving this room.' } };
+  }
+
   const adjacency = buildAdjacency(session);
   if (!adjacency.has(targetRoomId)) {
     return { ok: false, error: { code: "ROOM_NOT_FOUND", message: `Unknown room: ${targetRoomId}` } };
@@ -281,7 +293,10 @@ export function applyPlayerDamage(
     return { ok: false, error: { code: "PLAYER_STATE_INVALID", message: "Player HP state is invalid." } };
   }
 
-  const applied = Math.min(amount, hpBefore);
+  let effectiveDamage;
+  try { effectiveDamage = getEffectiveDamage(next, amount, sourceType); }
+  catch (error) { return { ok: false, error: { code: "EQUIPMENT_RULES_INVALID", message: error.message } }; }
+  const applied = Math.min(effectiveDamage, hpBefore);
   next.playerState.hp = hpBefore - applied;
   if (applied > 0) {
     next.gameplayState = applyGameplayStateCommand(next.gameplayState, {

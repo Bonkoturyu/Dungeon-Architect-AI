@@ -436,7 +436,7 @@ try {
       designIntentRequests[0].promptMatches === true &&
       JSON.stringify(
         designIntentRequests[0].keys,
-      ) === JSON.stringify(['prompt']),
+      ) === JSON.stringify(['includeRoomRequests', 'prompt']),
 
     browserErrorsAbsent:
       consoleErrors.length === 0 &&

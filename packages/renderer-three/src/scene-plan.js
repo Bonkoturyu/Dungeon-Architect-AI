@@ -1,3 +1,4 @@
+import { measurePerformance } from './performance-probe.js';
 import { validateDungeonSpec } from '../../core/src/dungeon-spec.js';
 import { corridorRouteSegments, planOrthogonalCorridors } from './orthogonal-corridor-router.js';
 
@@ -435,11 +436,22 @@ export function shouldRenderMarkerForRuntime(marker, entityStates) {
   return true;
 }
 
+const SCENE_PLAN_CACHE_LIMIT = 16;
+const scenePlanCache = new Map();
+export function clearScenePlanCache() { scenePlanCache.clear(); }
+
 export function createDungeonScenePlan(spec, style = {}) {
   const validation = validateDungeonSpec(spec);
   if (!validation.valid) throw new DungeonScenePlanError(validation.errors);
 
   const config = { ...DEFAULT_SCENE_STYLE, ...style };
+  const cacheable = Object.keys(DEFAULT_SCENE_STYLE).every((key) => Number.isFinite(config[key]));
+  const cacheKey = cacheable ? JSON.stringify([spec, Object.keys(DEFAULT_SCENE_STYLE).map((key) => config[key])]) : null;
+  if (cacheKey !== null && scenePlanCache.has(cacheKey)) {
+    const cached = scenePlanCache.get(cacheKey);
+    scenePlanCache.delete(cacheKey); scenePlanCache.set(cacheKey, cached);
+    return structuredClone(cached);
+  }
   const roomById = new Map(spec.rooms.map((room) => [room.id, room]));
   const touchingByCorridor = new Map();
   const routedCorridors = [];
@@ -469,7 +481,7 @@ export function createDungeonScenePlan(spec, style = {}) {
   let strictError = null;
   for (const outerMargin of strictMargins) {
     try {
-      corridorRoutes = planOrthogonalCorridors(routedSpec, { outerMargin });
+      corridorRoutes = measurePerformance('renderer.routeCorridors', () => planOrthogonalCorridors(routedSpec, { outerMargin }));
       if (outerMargin !== strictMargins[0]) {
         routingFallbackUsed = true;
         routingFallbackMode = `strict-expanded-${outerMargin}`;
@@ -482,10 +494,10 @@ export function createDungeonScenePlan(spec, style = {}) {
 
   if (!corridorRoutes) {
     try {
-      corridorRoutes = planOrthogonalCorridors(routedSpec, {
+      corridorRoutes = measurePerformance('renderer.routeCorridors', () => planOrthogonalCorridors(routedSpec, {
         allowCrossings: true,
         outerMargin: 32,
-      });
+      }));
       routingFallbackUsed = true;
       routingFallbackMode = 'crossing-fallback';
     } catch {
@@ -622,7 +634,12 @@ export function createDungeonScenePlan(spec, style = {}) {
       });
 
     entities.forEach((entity, index) => {
-      const slot = markerSlots[index % markerSlots.length];
+      const columns = Math.ceil(Math.sqrt(entities.length));
+      const rows = Math.ceil(entities.length / columns);
+      const slot = entities.length <= markerSlots.length ? markerSlots[index] : {
+        x: ((index % columns) - (columns - 1) / 2) * (0.65 / Math.max(1, columns - 1)),
+        z: (Math.floor(index / columns) - (rows - 1) / 2) * (0.65 / Math.max(1, rows - 1)),
+      };
       const height = entity.type === 'trap' ? 0.18 : entity.type === 'treasure' ? 0.7 : config.markerHeight;
       markers.push({
         specId: entity.id,
@@ -642,7 +659,7 @@ export function createDungeonScenePlan(spec, style = {}) {
     });
   }
 
-  return {
+  const result = {
     sourceSpecId: spec.id,
     roomGroups,
     corridorGroups,
@@ -651,4 +668,9 @@ export function createDungeonScenePlan(spec, style = {}) {
     routingFallbackUsed,
     routingFallbackMode,
   };
+  if (cacheKey !== null) {
+    scenePlanCache.set(cacheKey, structuredClone(result));
+    while (scenePlanCache.size > SCENE_PLAN_CACHE_LIMIT) scenePlanCache.delete(scenePlanCache.keys().next().value);
+  }
+  return result;
 }

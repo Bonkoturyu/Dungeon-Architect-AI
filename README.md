@@ -93,6 +93,16 @@ The repository also retains the frozen ten-case DesignIntent regression corpus a
 
 `spec/design-intent/fixtures/dai-045-prompt-regression-v1.json`
 
+## 特殊部屋・店・難易度（V3 ローカル候補）
+
+自然文でモンスターハウス／トラップハウス／店、個数、対象階、明示Room IDを指定できます。未指定の種類は各1/3の確率でラン全体に1部屋、明示した「置く／置かない」は優先します。確認画面でランダム／必ず置く／置かないを切り替えられ、同じSeedなら同じ結果です。生成前の確認画面で未指定値を調整し、承認してからV3生成します。店ではGでHP回復・武器・防具を購入でき、装備による被害軽減があります。敵の自由移動は追加していません。
+
+例：`標準のダンジョン。room-003に敵3体のモンスターハウス。room-004に罠4個のトラップハウス。room-002に店。`
+
+追加敵・罠は1階合計100体が標準上限。実測に基づく高度設定は250まで。相対位置指定など解釈できない表現は確認が必要です。ブラウザのRecommendedはV3です。V1/V2の明示選択とライブラリ既定V1は維持しています。現時点の変更はローカル候補で、公開デモ反映とは別です。
+
+検証と制約は [特殊部屋V3検証](docs/testing/SPECIAL_ROOMS_V3_2026-10-02.md) を参照してください。
+
 ## Generator versions and research
 
 The current production generator is frozen as **Generator Version 1**. Future generation methods are added as Version 2, Version 3, and so on without deleting or silently replacing earlier implementations.

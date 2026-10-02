@@ -34,8 +34,7 @@ function defaultEnemyState(enemy) {
   };
 }
 
-function enemyState(session, enemyId) {
-  const enemy = findEnemy(session, enemyId);
+function enemyState(session, enemyId, enemy = findEnemy(session, enemyId)) {
   if (!enemy) return null;
   const stored = session?.gameplayState?.entityStates?.[enemyId];
   return stored ? { ...defaultEnemyState(enemy), ...clone(stored) } : defaultEnemyState(enemy);
@@ -51,15 +50,6 @@ function setFlag(session, key, value) {
     key,
     value
   });
-}
-
-function setEntityState(session, entityId, state) {
-  const entityIds = session.snapshot.entities.map((entity) => entity.id);
-  session.gameplayState = applyGameplayStateCommand(session.gameplayState, {
-    type: "set-entity-state",
-    entityId,
-    state
-  }, { entityIds });
 }
 
 function setInventoryCount(session, itemId, count) {
@@ -109,13 +99,15 @@ function conditionsPass(session, event) {
 }
 
 function applySpawnEnemyGroup(session, action, at) {
+  const enemies = new Map(session.snapshot.entities.filter((entity) => entity.type === "enemy").map((enemy) => [enemy.id, enemy]));
+  const pending = new Map();
   for (const enemyId of action.enemyIds) {
-    const enemy = findEnemy(session, enemyId);
+    const enemy = enemies.get(enemyId);
     if (!enemy) {
       return { ok: false, error: { code: "EVENT_ENEMY_NOT_FOUND", message: `Unknown enemy: ${enemyId}` } };
     }
 
-    const current = enemyState(session, enemyId);
+    const current = enemyState(session, enemyId, enemy);
     if (current.status === "defeated") {
       return {
         ok: false,
@@ -123,10 +115,17 @@ function applySpawnEnemyGroup(session, action, at) {
       };
     }
 
-    if (current.status === "dormant") {
-      setEntityState(session, enemyId, { ...current, status: "active", spawnedAt: at });
-      session.events.push({ type: "enemy-spawned", enemyId, roomId: enemy.roomId, at });
-    }
+    if (current.status === "dormant" && !pending.has(enemyId)) pending.set(enemyId, {
+      state: { ...current, status: "active", spawnedAt: at }, roomId: enemy.roomId,
+    });
+  }
+  // dispatchSupportedEventsのtransaction用candidateは既にdeep clone済み。
+  // 全参照を検証してからまとめて更新し、敵ごとの全gameplayState cloneを避ける。
+  for (const [enemyId, { state, roomId }] of pending) {
+    Object.defineProperty(session.gameplayState.entityStates, enemyId, {
+      value: state, enumerable: true, configurable: true, writable: true,
+    });
+    session.events.push({ type: "enemy-spawned", enemyId, roomId, at });
   }
   return { ok: true };
 }

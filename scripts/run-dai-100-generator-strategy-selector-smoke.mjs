@@ -379,9 +379,9 @@ try {
       initial.optionValues.includes(GENERATOR_STRATEGY_GAMEPLAY_GRAMMAR_LAB_ID) &&
       initial.optionValues.includes(GENERATOR_STRATEGY_WFC_LAB_ID),
     recommendedSelectedByDefault:
-      initial.selectedValue === GENERATOR_STRATEGY_V2_RECOMMENDED_ID &&
+      initial.selectedValue === 'version-3-special-rooms' &&
       initial.state.generatorStrategyId ===
-        GENERATOR_STRATEGY_V2_RECOMMENDED_ID,
+        'version-3-special-rooms',
     classicSelectionGeneratesV1:
       classic.lastGeneration?.generatorVersion === '1' &&
       classic.lastGeneration?.generatorStrategyId ===

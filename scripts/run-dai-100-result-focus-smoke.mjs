@@ -285,6 +285,8 @@ try {
     { timeout: 60_000 },
   );
   await page.evaluate(() => window.__DAI_ONBOARDING__.close());
+  // Legacy Result fixture pins V2; V3 confirmation is covered separately.
+  await page.evaluate(() => window.__DAI_EDITOR_SLICE__.setGeneratorStrategy('version-2-spatial'));
 
   await page.fill('#generationPrompt', prompt);
   await page.fill('#floorCount', '2');
