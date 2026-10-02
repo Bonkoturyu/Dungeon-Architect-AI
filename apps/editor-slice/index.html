@@ -1137,18 +1137,48 @@
       letter-spacing: 0.06em;
     }
     .result-metrics {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 6px 10px;
-      margin-top: 9px;
-      color: #aeb9c9;
-      font: 0.66rem ui-monospace, SFMono-Regular, Consolas, monospace;
-    }
-    .result-metric strong {
+      display: grid;
+      gap: 14px;
+      margin: 14px 0 0;
       color: #e6ebf3;
-      font-weight: 850;
-      letter-spacing: 0.05em;
+      font-variant-numeric: tabular-nums;
+    }
+    .result-metric-group h3 {
+      margin: 0 0 3px;
+      color: #dce8f5;
+      font-size: 0.875rem;
+      font-weight: 800;
+      line-height: 1.4;
+    }
+    .result-metric-group dl {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0 16px;
+      margin: 0;
+    }
+    .result-metric {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      min-width: 0;
+      padding: 7px 0;
+      border-bottom: 1px solid rgba(185, 197, 212, 0.15);
+      line-height: 1.4;
+    }
+    .result-metric dt {
+      min-width: 0;
+      color: #b9c5d4;
+      font-size: 0.875rem;
+      overflow-wrap: anywhere;
+    }
+    .result-metric dd {
+      margin: 0;
+      color: #f4f7fb;
+      font: 780 1rem ui-monospace, SFMono-Regular, Consolas, monospace;
+      letter-spacing: 0.015em;
+      text-align: right;
+      overflow-wrap: anywhere;
     }
     .danger-action { border-color: #6d4549; color: #ffc5c5; }
 
@@ -1170,13 +1200,14 @@
       z-index: 5;
       top: 14px;
       right: 14px;
-      width: 244px;
+      width: min(340px, calc(100% - 28px));
+      max-height: calc(100% - 28px);
       min-height: 0;
       padding: 0;
       border: 0;
       background: transparent;
-      overflow: visible;
-      pointer-events: none;
+      overflow: auto;
+      pointer-events: auto;
     }
 
     body[data-mode="result"] aside .panel-play {
@@ -1559,6 +1590,8 @@
       body[data-mode="result"] aside {
         position: static;
         width: auto;
+        max-height: none;
+        overflow: visible;
         padding: 14px;
         background: var(--surface-1);
       }
@@ -2019,7 +2052,7 @@
       font-size: 1.2rem;
     }
     .result-banner { font-size: 1rem; }
-    .result-metric { font-size: 0.8125rem; }
+    body[data-mode="result"] .result-banner { margin-top: 0; }
 
     canvas {
       cursor: grab;
@@ -2317,7 +2350,7 @@
           </div>
           <p class="mode-note editor-only" data-i18n="play.note">Test = current · Mystery = unseen</p>
           <p id="resultStatus" class="result-banner" aria-live="polite" hidden></p>
-          <div id="resultMetrics" class="result-metrics" hidden></div>
+          <div id="resultMetrics" class="result-metrics" tabindex="0" role="region" aria-labelledby="resultStatus" hidden></div>
         </fieldset>
 
         <fieldset class="panel-ai editor-only" data-workflow-panel="edit">

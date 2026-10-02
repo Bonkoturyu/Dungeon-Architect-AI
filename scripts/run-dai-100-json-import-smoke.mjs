@@ -190,6 +190,28 @@ try {
     () => globalThis.__DAI_IMPORT_EXECUTED__ ?? null,
   );
 
+  // 配列でないRoom/Connectionを実際のファイル入力経路でも安全に拒否する。
+  const malformedCollectionImports = [];
+  for (const field of ['rooms', 'connections']) {
+    const malformed = structuredClone(original.layout);
+    malformed.floors[0][field] = {};
+    const expectedCode = field === 'rooms' ? 'LAYOUT_IMPORT_ROOMS_INVALID' : 'LAYOUT_IMPORT_CONNECTIONS_INVALID';
+    const before = JSON.stringify(await exportValues(page));
+    await page.locator('#importJsonInput').setInputFiles({
+      name: `malformed-${field}.json`,
+      mimeType: 'application/json',
+      buffer: Buffer.from(JSON.stringify(malformed)),
+    });
+    await page.waitForFunction((code) => document.querySelector('#generationStatus').textContent.includes(code), expectedCode);
+    malformedCollectionImports.push({
+      field,
+      code: expectedCode,
+      message: await page.locator('#generationStatus').textContent(),
+      statePreserved: JSON.stringify(await exportValues(page)) === before,
+      startStillAllowed: (await state(page)).startAllowed,
+    });
+  }
+
   await page.screenshot({
     path: path.join(outputDir, 'json-import.png'),
     fullPage: true,
@@ -266,6 +288,8 @@ try {
       JSON.stringify(afterInvalid.corridors) === JSON.stringify(beforeInvalid.corridors) &&
       JSON.stringify(afterInvalid.entities) === JSON.stringify(beforeInvalid.entities),
 
+    malformedFileCollectionsFailClosed: malformedCollectionImports.every((entry) => entry.statePreserved && entry.startStillAllowed && entry.message.includes(entry.code)),
+
     importDoesNotExecuteJsonText:
       executionMarker === null,
 
@@ -314,6 +338,7 @@ try {
       startAllowed: afterLayout.startAllowed,
     },
     invalidResult,
+    malformedCollectionImports,
     executionMarker,
     consoleErrors,
     pageErrors,
