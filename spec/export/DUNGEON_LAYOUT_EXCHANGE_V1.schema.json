@@ -25,7 +25,8 @@
         "dungeonSpecVersion": { "const": "1.0" },
         "generatorStrategyId": { "type": "string", "minLength": 1 },
         "generatorVersion": { "type": "string", "minLength": 1 },
-        "algorithmVersion": { "type": "string", "minLength": 1 }
+        "algorithmVersion": { "type": "string", "minLength": 1 },
+        "contentLayerVersion": { "type": "string", "minLength": 1 }
       }
     },
     "coordinateSystem": {

@@ -86,7 +86,7 @@ function inspectFirstShop(spec, plans, difficultyProfile, adjacency, initialPlay
     settled.add(current.roomId);
     if (shops.has(current.roomId)) return evaluateUnassistedPath(spec, current.path, enemies, initialPlayerState);
     for (const next of adjacency.get(current.roomId)) {
-      if (next === goal || settled.has(next)) continue;
+      if ((next === goal && !plans.some(({ roomId }) => roomId === goal)) || settled.has(next)) continue;
       frontier.push({ roomId: next, cost: current.cost + costs.get(next), path: [...current.path, next] });
     }
   }

@@ -160,12 +160,38 @@ export function startPlaySession(
   }
   session = dispatched.session;
 
-  if (session.currentRoomId === session.goalRoomId) {
+  if (session.currentRoomId === session.goalRoomId && !isSpecialGoal(session)) {
     session.status = "cleared";
     session.completedAt = startedAt;
   }
 
   return { ok: true, blocked: false, session };
+}
+
+function isSpecialGoal(session) {
+  return ['monster-house', 'trap-house', 'shop'].includes(session.snapshot.rooms.find(({ id }) => id === session.goalRoomId)?.kind);
+}
+
+export function getGoalCompletionState(session) {
+  if (!isPlaying(session) || session.currentRoomId !== session.goalRoomId) return { available: false, blocked: false };
+  const blocked = session.snapshot.entities.some((entity) => {
+    if (entity.roomId !== session.goalRoomId) return false;
+    const status = session.gameplayState.entityStates[entity.id]?.status;
+    return (entity.type === 'enemy' && (status ?? (entity.initiallyActive === false ? 'dormant' : 'active')) !== 'defeated') ||
+      (entity.type === 'trap' && (status ?? 'armed') === 'armed');
+  });
+  return { available: true, blocked };
+}
+
+// 店での購入は一切クリア条件にしない。特殊Goalは任意のタイミングで明示終了できる。
+export function completePlayGoal(session, { at = session?.startedAt ?? 0 } = {}) {
+  const state = getGoalCompletionState(session);
+  if (!state.available) return { ok: false, error: { code: 'GOAL_NOT_AVAILABLE' } };
+  if (state.blocked) return { ok: false, error: { code: 'SPECIAL_ROOM_BLOCKED' } };
+  const next = clone(session);
+  next.status = 'cleared'; next.failureReason = null; next.completedAt = at;
+  next.events.push({ type: 'complete-goal', roomId: next.goalRoomId, at });
+  return { ok: true, session: next };
 }
 
 export function movePlaySession(session, targetRoomId, { at = session?.startedAt ?? 0, corridorId = null } = {}) {
@@ -259,7 +285,7 @@ export function movePlaySession(session, targetRoomId, { at = session?.startedAt
   if (!dispatched.ok) return dispatched;
   next = dispatched.session;
 
-  if (targetRoomId === next.goalRoomId) {
+  if (targetRoomId === next.goalRoomId && !isSpecialGoal(next)) {
     next.status = "cleared";
     next.failureReason = null;
     next.completedAt = at;

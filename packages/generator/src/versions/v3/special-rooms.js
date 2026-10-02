@@ -47,6 +47,7 @@ function validateRoomPlans(roomPlans, specialRoomEntityLimit) {
       throw new TypeError(`${label}.floorNumber must be a positive safe integer`);
     }
     floors.add(plan.floorNumber);
+    if (plan.targetRole !== undefined && !['start', 'goal'].includes(plan.targetRole)) throw new RangeError('Invalid endpoint role');
     if (plan.roomId !== null) assertNonEmptyString(plan.roomId, `${label}.roomId`);
     if (plan.kind === 'shop') {
       if (plan.entityCount !== null) throw new TypeError(`${label}.entityCount must be null for a shop`);
@@ -64,6 +65,7 @@ function validateRoomPlans(roomPlans, specialRoomEntityLimit) {
 }
 
 function selectRooms(spec, roomPlans) {
+  roomPlans = roomPlans.map((plan) => plan.targetRole ? { ...plan, roomId: spec.entities.find(({ type }) => type === plan.targetRole)?.roomId } : plan);
   const protectedRoomIds = new Set(spec.entities
     .filter(({ type }) => type === 'start' || type === 'goal')
     .map(({ roomId }) => roomId));
@@ -72,7 +74,7 @@ function selectRooms(spec, roomPlans) {
   for (const plan of roomPlans) {
     if (plan.roomId === null) continue;
     if (!roomIds.has(plan.roomId)) throw new RangeError(`Unknown special room: ${plan.roomId}`);
-    if (protectedRoomIds.has(plan.roomId)) throw new RangeError(`Special room cannot replace Start or Goal: ${plan.roomId}`);
+    if (protectedRoomIds.has(plan.roomId) && !plan.targetRole) throw new RangeError(`Special room cannot replace Start or Goal: ${plan.roomId}`);
     if (reserved.has(plan.roomId)) throw new RangeError(`Multiple room plans target the same room: ${plan.roomId}`);
     reserved.add(plan.roomId);
   }
@@ -87,7 +89,7 @@ function selectRooms(spec, roomPlans) {
   return roomPlans.map((plan, index) => ({
     ...plan,
     id: plan.id === undefined ? `room-plan-${index + 1}` : plan.id,
-    autoAssigned: plan.roomId === null,
+    autoAssigned: plan.roomId === null && !plan.targetRole,
     roomId: plan.roomId ?? candidates.splice(pickIndex(prng, candidates.length), 1)[0],
   }));
 }

@@ -1,6 +1,7 @@
-import { resolveSpecialRoomPresence } from '../../packages/intent/src/special-room-presence.js';
+import { resolveRoomConfigurationPresence } from '../../packages/intent/src/endpoint-room-plans.js';
 import { measurePerformance, measurePerformanceAsync, startPerformanceProbe, stopPerformanceProbe } from '../../packages/renderer-three/src/performance-probe.js';
-import { reviewRoomPlan } from './room-plan-review.js';
+import { reviewRoomPlan, createRoomPlanConfig } from './room-plan-review.js';
+import { applyRoomContentLayer } from '../../packages/generator/src/room-content-layer.js';
 import { parseFallbackRoomRequests } from '../../packages/intent/src/room-requests.js';
 import { listRoomShops, purchaseShopOffer } from '../../packages/play-core/src/shop-runtime.js';
 import { getEffectiveDamage } from '../../packages/play-core/src/equipment-runtime.js';
@@ -13,7 +14,7 @@ import {
   wallSideFromPart,
 } from '../../packages/editor-core/src/corridor-drag.js';
 import { evaluateStartGate } from '../../packages/editor-core/src/start-gate.js';
-import { movePlaySession, createPlayResult } from '../../packages/play-core/src/play-session.js';
+import { movePlaySession, createPlayResult, completePlayGoal, getGoalCompletionState } from '../../packages/play-core/src/play-session.js';
 import { createRendererVisibilityFromPlaySession, derivePlayMap } from '../../packages/play-core/src/play-map.js';
 import {
   DEFAULT_ENEMY_DAMAGE,
@@ -144,6 +145,7 @@ const moveEntityButton = document.querySelector('#moveEntity');
 const removeEntityButton = document.querySelector('#removeEntity');
 const generationPrompt = document.querySelector('#generationPrompt');
 const generatorStrategySelect = document.querySelector('#generatorStrategy');
+const generationAutoInput = document.querySelector('#generationAuto');
 const floorCountInput = document.querySelector('#floorCount');
 const floorSelect = document.querySelector('#floorSelect');
 const floorSummary = document.querySelector('#floorSummary');
@@ -355,6 +357,7 @@ function exportProvenance() {
           lastGeneration.generatorVersion ?? null,
         algorithmVersion:
           lastGeneration.algorithmVersion ?? null,
+        contentLayerVersion: lastGeneration.contentLayerVersion ?? null,
       }
     : null;
 }
@@ -487,6 +490,7 @@ function applyImportedDungeonJsonImplementation(input, { filename = null } = {})
         generatorStrategyId: provenance.generatorStrategyId ?? null,
         generatorVersion: provenance.generatorVersion ?? null,
         algorithmVersion: provenance.algorithmVersion ?? null,
+        contentLayerVersion: provenance.contentLayerVersion ?? null,
         selectedProvider: 'import',
         floorCount: imported.dungeons.length,
         importedFormat: imported.format,
@@ -587,9 +591,9 @@ function derivedFloorSeed(baseSeed, floorIndex) {
 }
 
 function generatorStrategyLabel(metadata) {
-  if (metadata.id === 'version-3-special-rooms') return getLanguage() === 'ja' ? 'Version 3 — 推奨（特殊部屋）' : 'Version 3 — Recommended (Special rooms)';
+  if (metadata.id === 'version-3-special-rooms') return t('create.generatorV3');
   if (metadata.id === GENERATOR_STRATEGY_V2_RECOMMENDED_ID) {
-    return getLanguage() === 'ja' ? 'Version 2 — 以前の方式' : 'Version 2 — Previous spatial version';
+    return t('create.generatorV2');
   }
   if (metadata.id === GENERATOR_STRATEGY_V1_CLASSIC_ID) {
     return t('create.generatorClassic');
@@ -668,21 +672,23 @@ async function generateFloorSet(
       : baseSeed >>> 0;
   const rootId = idPrefix ?? `generated-${rootSeed}`;
   if (specialRoomConfig?.presenceSpec) {
-    const resolved = resolveSpecialRoomPresence({ ...specialRoomConfig.presenceSpec, seed: rootSeed, floorCount: total, specialRoomEntityLimit: specialRoomConfig.specialRoomEntityLimit });
+    const resolved = resolveRoomConfigurationPresence({ ...specialRoomConfig.presenceSpec, seed: rootSeed, floorCount: total, specialRoomEntityLimit: specialRoomConfig.specialRoomEntityLimit });
     specialRoomConfig = { ...specialRoomConfig, roomPlans: resolved.roomPlans };
   }
 
   let carriedWitnessState = null;
   async function generateFloor(seed, id, floorNumber = 1) {
-    const result = await measurePerformanceAsync('generation.strategy', () => generatorStrategyRegistry.generate(strategyId, {
+    const floorConfig = specialRoomConfig ? { ...specialRoomConfig, initialPlayerState: carriedWitnessState, roomPlans: specialRoomConfig.roomPlans.filter((plan) => plan.floorNumber === floorNumber) } : null;
+    const baseResult = await measurePerformanceAsync('generation.strategy', () => generatorStrategyRegistry.generate(strategyId, {
       seed,
       id,
       prompt,
       intent,
-      options: specialRoomConfig ? { ...specialRoomConfig, initialPlayerState: carriedWitnessState, roomPlans: specialRoomConfig.roomPlans.filter((plan) => plan.floorNumber === floorNumber) } : {},
+      options: floorConfig ?? {},
     }));
+    const result = applyRoomContentLayer(baseResult, intent, floorConfig);
     const profile = result.diagnostics?.profile ?? {};
-    if (strategyId === 'version-3-special-rooms' && specialRoomConfig) {
+    if (specialRoomConfig) {
       if (!profile.routeViability?.witness?.playerState) throw new Error('ROUTE_VIABILITY_WITNESS_MISSING');
       carriedWitnessState = clone(profile.routeViability.witness.playerState);
     }
@@ -700,6 +706,7 @@ async function generateFloorSet(
       generatorVersion: result.provenance.generatorVersion ?? null,
       generatorStrategyId: result.provenance.strategyId,
       algorithmVersion: result.provenance.algorithmVersion,
+      contentLayerVersion: result.provenance.contentLayerVersion ?? null,
       provenance: result.provenance,
       diagnostics: result.diagnostics,
     };
@@ -1961,6 +1968,7 @@ function updateUiImplementation() {
     generatorStrategySelect.disabled = !editing || authoringBusy;
   }
   if (floorCountInput) floorCountInput.disabled = !editing || authoringBusy;
+  if (generationAutoInput) generationAutoInput.disabled = !editing || authoringBusy;
   const runValidation = authoringRunSpec();
   const exportBlocked = !editing || authoringBusy || !runValidation.ok;
   if (exportLayoutJsonButton) exportLayoutJsonButton.disabled = exportBlocked;
@@ -2019,6 +2027,11 @@ function applyPlayRuntimeResult(result, failurePrefix) {
   if (finalizePlayIfNeeded()) return true;
   renderActiveSpec();
   return true;
+}
+
+function finishCurrentGoal() {
+  if (!playSession || mode !== 'play') return false;
+  return applyPlayRuntimeResult(completePlayGoal(playSession, { at: nextPlayActionAt() }), 'Goal completion failed');
 }
 
 function clearEnemy(enemyId) {
@@ -2182,12 +2195,12 @@ function renderRoomEventsImplementation() {
     for (const offer of shop.offers) {
       const card = document.createElement('div'); card.className = 'room-event'; card.dataset.entityId = shop.entity.id; card.dataset.kind = 'shop';
       const label = document.createElement('span'); label.className = 'room-event-type';
-      label.textContent = `${getLanguage() === 'ja' ? '店' : 'SHOP'} · ${offer.type === 'healing' ? `+${offer.healing} HP` : `${offer.type === 'weapon' ? t('result.weapon') : t('result.armor')} T${offer.tier}`}`;
-      const note = document.createElement('span'); note.className = 'room-event-note'; note.textContent = `${offer.price}G · ${getLanguage() === 'ja' ? '在庫' : 'Stock'} ${offer.remaining}`;
+      label.textContent = `${t('roomReview.shop')} · ${offer.type === 'healing' ? `+${offer.healing} HP` : `${offer.type === 'weapon' ? t('result.weapon') : t('result.armor')} T${offer.tier}`}`;
+      const note = document.createElement('span'); note.className = 'room-event-note'; note.textContent = `${offer.price}G · ${t('roomReview.stock')} ${offer.remaining}`;
       const buy = document.createElement('button'); buy.type = 'button'; buy.dataset.action = 'buy-offer'; buy.dataset.offerId = offer.id;
       const player = playSession.playerState;
-      const reason = offer.remaining <= 0 ? (getLanguage() === 'ja' ? '売り切れ' : 'Sold out') : player.gold < offer.price ? (getLanguage() === 'ja' ? 'G不足' : 'Need G') : offer.type === 'healing' && player.hp >= player.maxHp ? (getLanguage() === 'ja' ? 'HP満タン' : 'Full HP') : ['weapon', 'armor'].includes(offer.type) && (player.equipment[offer.type]?.tier ?? 0) >= offer.tier ? (getLanguage() === 'ja' ? '装備済み以上' : 'No upgrade') : null;
-      buy.disabled = reason !== null; buy.textContent = reason ?? (getLanguage() === 'ja' ? '購入' : 'Buy');
+      const reason = offer.remaining <= 0 ? (t('roomReview.soldOut')) : player.gold < offer.price ? (t('roomReview.needGold')) : offer.type === 'healing' && player.hp >= player.maxHp ? (t('roomReview.fullHp')) : ['weapon', 'armor'].includes(offer.type) && (player.equipment[offer.type]?.tier ?? 0) >= offer.tier ? (t('roomReview.noUpgrade')) : null;
+      buy.disabled = reason !== null; buy.textContent = reason ?? (t('roomReview.buy'));
       buy.addEventListener('click', () => { if (mode !== 'play') return; const result = measurePerformance('play.purchaseCore', () => purchaseShopOffer(playSession, shop.entity.id, offer.id, { at: nextPlayActionAt() })); if (result.ok) emitAudioCue('treasure'); applyPlayRuntimeResult(result, 'Purchase failed'); });
       card.append(label, note, buy); cards.push(card);
     }
@@ -2202,6 +2215,14 @@ function renderRoomEventsImplementation() {
     return leftOrder - rightOrder || String(left.dataset.entityId).localeCompare(String(right.dataset.entityId));
   });
 
+  const goalCompletion = getGoalCompletionState(playSession);
+  if (goalCompletion.available) {
+    const card = document.createElement('div'); card.className = 'room-event'; card.dataset.kind = 'goal';
+    const note = document.createElement('span'); note.textContent = goalCompletion.blocked ? t('roomReview.goalBlocked') : playSession.snapshot.rooms.find(({ id }) => id === playSession.goalRoomId)?.kind === 'shop' ? t('roomReview.goalOptional') : t('roomReview.goalReady');
+    const finish = document.createElement('button'); finish.type = 'button'; finish.dataset.action = 'complete-goal'; finish.className = 'primary-action';
+    finish.disabled = goalCompletion.blocked; finish.textContent = t('roomReview.finishGoal'); finish.addEventListener('click', finishCurrentGoal);
+    card.append(note, finish); cards.unshift(card);
+  }
   roomEventItems.replaceChildren(...cards);
   roomEventBar.hidden = cards.length === 0;
 
@@ -3055,14 +3076,17 @@ async function generateDungeonFromPrompt() {
     }
 
     const floorCount = requestedFloorCount();
-    let generatorStrategyId = selectedGeneratorStrategyId();
+    const generatorStrategyId = selectedGeneratorStrategyId();
     const requests = payload.roomRequests ?? parseFallbackRoomRequests(prompt);
     const requestedDifficulty = payload.difficulty ?? null;
     let specialRoomConfig = null;
-    if (requests.length || requestedDifficulty || generatorStrategyId === 'version-3-special-rooms') {
-      specialRoomConfig = await reviewRoomPlan({ requests, floorCount, seed: deriveGeneratorSeedFromPrompt(prompt), difficulty: requestedDifficulty ?? 'normal', roomsPerFloor: Math.min(20, Math.max(5, Math.round(payload.intent.targetDuration / 60))), warnings: payload.warnings ?? [], language: getLanguage() });
-      if (!specialRoomConfig) { setGenerationStatus(getLanguage() === 'ja' ? '生成をキャンセルしました' : 'Generation cancelled'); return false; }
-      generatorStrategyId = 'version-3-special-rooms';
+    {
+      const reviewOptions = { requests, floorCount, seed: deriveGeneratorSeedFromPrompt(prompt), difficulty: requestedDifficulty ?? 'normal', roomsPerFloor: Math.min(20, Math.max(5, Math.round(payload.intent.targetDuration / 60))), warnings: payload.warnings ?? [], language: getLanguage(), strategyLabel: generatorStrategyLabel(generatorStrategyRegistry.list().find(({ id }) => id === generatorStrategyId)) };
+      if (generationAutoInput?.checked && reviewOptions.warnings.length) {
+        throw new Error(t('roomReview.autoWarnings', { warnings: reviewOptions.warnings.join(' ') }));
+      }
+      specialRoomConfig = generationAutoInput?.checked ? createRoomPlanConfig(reviewOptions) : await reviewRoomPlan(reviewOptions);
+      if (!specialRoomConfig) { setGenerationStatus(t('roomReview.cancelled')); return false; }
     }
     const generatedFloors = await generateFloorSet(payload.intent, {
       prompt,
@@ -3089,6 +3113,7 @@ async function generateDungeonFromPrompt() {
       generatorVersion: generated.generatorVersion,
       generatorStrategyId: generated.generatorStrategyId,
       algorithmVersion: generated.algorithmVersion,
+      contentLayerVersion: generated.contentLayerVersion,
       selectedProvider: payload.selectedProvider ?? 'unknown',
       seed: generated.profile.seed,
       roomCount: generated.profile.roomCount,
@@ -3129,7 +3154,8 @@ async function generateDungeonFromPrompt() {
     setEditStatus(floorCount > 1 ? `generated ${floorCount}-floor run` : 'generated new dungeon');
     return true;
   } catch (error) {
-    setGenerationStatus(`${t('generation.unavailable')} · ${error.message ?? 'UNKNOWN'}`);
+    const conflict = /FIRST_SHOP_SURVIVAL_CONFLICT|ROUTE_VIABILITY_CONFLICT/.test(error.message ?? '');
+    setGenerationStatus(conflict ? t('roomReview.viabilityConflict') : `${t('generation.unavailable')} · ${error.message ?? 'UNKNOWN'}`);
     return false;
   } finally {
     generationBusy = false;
@@ -3553,6 +3579,7 @@ async function startMysteryDungeonImplementation() {
     generatorVersion: generated.generatorVersion,
     generatorStrategyId: generated.generatorStrategyId,
     algorithmVersion: generated.algorithmVersion,
+    contentLayerVersion: generated.contentLayerVersion,
     seed: generated.profile.seed,
     roomCount: generated.profile.roomCount,
     routeChoice: generated.profile.routeChoice,
@@ -4472,6 +4499,7 @@ async function run() {
       startMysteryDungeon,
       movePlayToRoom,
       clearEnemy,
+      finishCurrentGoal,
       interactWithRoomEntity,
       returnToEdit,
     };

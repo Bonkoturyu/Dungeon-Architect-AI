@@ -246,3 +246,9 @@ V2の空間生成をそのまま使用し、明示された部屋planと装備�
 詳しい承認値、測定条件、検証結果、未検証事項は `docs/testing/SPECIAL_ROOMS_V3_2026-10-02.md` を参照。
 
 未指定の特殊部屋種別は、それぞれ独立したSeed streamで1/3の確率で存在を決める。明示include/excludeを優先し、部屋容量不足ではrandom候補だけを除外して確認画面に理由を表示する。Mysteryの新Seedではrandom有無も再決定する。
+
+## 共通内容レイヤー special-rooms-1
+
+ブラウザでは全Strategyの選択地形を維持し、その新規生成結果に特殊部屋・店・難易度を適用できる。`generatorStrategyId` / `algorithmVersion` / `generatorVersion`は地形の由来を示し、`contentLayerVersion: "special-rooms-1"`は内容処理を別に示す。V3の内容処理は二重実行しない。無装飾ライブラリAPIは従来出力を保持する。
+
+Start/Goalの明示設定・ランダム、Auto、Play終了条件は [共通内容レイヤー検証](../testing/ROOM_CONTENT_LAYER_2026-10-02.md) を参照。

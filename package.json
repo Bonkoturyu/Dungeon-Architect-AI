@@ -147,7 +147,8 @@
     "smoke:special-rooms": "node scripts/run-special-rooms-smoke.mjs",
     "bench:special-room-capacity": "node scripts/benchmark-special-room-capacity.mjs",
     "profile:user-flows": "node scripts/profile-user-flows.mjs",
-    "profile:core": "node scripts/profile-special-room-core.mjs"
+    "profile:core": "node scripts/profile-special-room-core.mjs",
+    "smoke:room-content": "node scripts/run-room-content-ui-smoke.mjs"
   },
   "devDependencies": {
     "@babylonjs/core": "9.18.0",

@@ -14,12 +14,13 @@ export const ROOM_REQUESTS_JSON_SCHEMA = {
   type: 'array', maxItems: 200, items: {
     type: 'object', additionalProperties: false,
     properties: {
-      kind: { type: 'string', enum: SPECIAL_ROOM_KINDS },
+      kind: { type: 'string', enum: [...SPECIAL_ROOM_KINDS, 'normal'] },
       presence: { type: 'string', enum: ['include', 'exclude', 'random'] },
       roomCount: { ...nullableInteger, maximum: 200 }, entityCount: { ...nullableInteger, maximum: MAX_SPECIAL_ROOM_ENTITY_LIMIT },
+      targetRole: { type: ['string', 'null'], enum: ['start', 'goal', null] },
       floorNumber: { ...nullableInteger, maximum: 10 }, roomId: { type: ['string', 'null'] },
       offers: { type: 'array', items: offerSchema },
-    }, required: ['kind', 'presence', 'roomCount', 'entityCount', 'floorNumber', 'roomId', 'offers'],
+    }, required: ['kind', 'presence', 'roomCount', 'entityCount', 'floorNumber', 'roomId', 'targetRole', 'offers'],
   },
 };
 const validInteger = (value, min = 1) => value === null || (Number.isSafeInteger(value) && value >= min);
@@ -29,10 +30,11 @@ export function validateRoomRequests(requests) {
   if (!Array.isArray(requests)) return { valid: false, errors: ['ROOM_REQUESTS_ARRAY_REQUIRED'] };
   const explicitFloorCounts = new Map();
   for (const request of requests) {
-    if (!request || !SPECIAL_ROOM_KINDS.includes(request.kind) ||
-      Object.keys(request).some((key) => !['kind', 'presence', 'roomCount', 'entityCount', 'floorNumber', 'roomId', 'offers'].includes(key)) ||
+    if (!request || ![...SPECIAL_ROOM_KINDS, 'normal'].includes(request.kind) ||
+      Object.keys(request).some((key) => !['kind', 'presence', 'roomCount', 'entityCount', 'floorNumber', 'roomId', 'targetRole', 'offers'].includes(key)) ||
       (request.presence !== undefined && !['include', 'exclude', 'random'].includes(request.presence)) ||
       !['roomCount', 'entityCount', 'floorNumber'].every((key) => validInteger(request[key])) ||
+      (request.targetRole !== undefined && request.targetRole !== null && !['start', 'goal'].includes(request.targetRole)) ||
       !(request.roomId === null || (typeof request.roomId === 'string' && request.roomId.trim())) || !Array.isArray(request.offers)) {
       errors.push('ROOM_REQUEST_INVALID'); continue;
     }
@@ -48,6 +50,8 @@ export function validateRoomRequests(requests) {
         !validInteger(offer.price, 0) || !['stock', 'healing', 'tier'].every((key) => validInteger(offer[key])) ||
         (offer.type === 'healing' ? offer.tier !== null : offer.healing !== null)) errors.push('SHOP_OFFER_REQUEST_INVALID');
     }
+    if (request.kind === 'normal' && (!request.targetRole || request.entityCount !== null || request.offers.length)) errors.push('NORMAL_ROOM_ENDPOINT_REQUIRED');
+    if (request.targetRole && (request.roomId !== null || (request.roomCount !== null && request.roomCount !== 1))) errors.push('ENDPOINT_LOCATION_CONFLICT');
     if (request.kind !== 'shop' && request.offers.length) errors.push('HOUSE_OFFERS_UNSUPPORTED');
     if (request.kind === 'shop' && request.entityCount !== null) errors.push('SHOP_ENTITY_COUNT_UNSUPPORTED');
   }
@@ -86,6 +90,8 @@ export function parseFallbackRoomRequests(prompt) {
       : kind === 'trap-house' ? clause.match(/(?:罠|トラップ)\s*(\d+)\s*(?:個)?|(?<![\d.\-])(\d+)\s*traps/i) : null);
     const floor = clause.match(/(\d+)\s*(?:階|F)|floor\s*(\d+)/i);
     const room = clause.match(/\broom-\d+\b/i);
+    const roles = [...new Set([...clause.matchAll(/スタート|開始地点|ゴール|終了地点|\bstart(?:ing)?(?: room)?\b|\bgoal(?: room)?\b/gi)].map((entry) => /スタート|開始|start/i.test(entry[0]) ? 'start' : 'goal'))];
+    if (roles.length > 1) throw new RangeError('ENDPOINT_KIND_CONFLICT: specify Start and Goal separately');
     const offers = [];
     if (kind === 'shop') {
       const offerPattern = /(回復|healing|heal|武器|weapon|防具|armor)\s*(?:T\s*(\d+))?\s*(?:(\d+)\s*HP)?\s*(?:を|は|=|:|for)?\s*(\d+)\s*G/gi;
@@ -101,7 +107,18 @@ export function parseFallbackRoomRequests(prompt) {
     }
     requests.push({ kind, presence, roomCount: count ? Number(count[1]) : beforeCount ? Number(beforeCount[1]) : null,
       entityCount: entityMatch ? Number(entityMatch[1] ?? entityMatch[2]) : null,
-      floorNumber: floor ? Number(floor[1] ?? floor[2]) : null, roomId: room?.[0] ?? null, offers });
+      floorNumber: floor ? Number(floor[1] ?? floor[2]) : null, roomId: room?.[0] ?? null, ...(roles.length ? { targetRole: roles[0] } : {}), offers });
+  }
+  // 通常部屋/ランダムの端点指定も、特殊種類のキーワードなしで保持する。
+  for (const clause of text.split(/[。.;\n]/)) {
+    const roleMatch = clause.match(/スタート|開始地点|ゴール|終了地点|\bstart(?:ing)?(?: room)?\b|\bgoal(?: room)?\b/i);
+    if (!roleMatch || /モンスターハウス|monster\s*house|トラップハウス|罠ハウス|trap\s*house|ショップ|お店|店|\bshop|\bstore/i.test(clause)) continue;
+    const normal = /通常(?:の)?部屋|普通(?:の)?部屋|normal\s*room/i.test(clause);
+    const random = /ランダム|\brandom/i.test(clause);
+    if (!normal && !random) continue;
+    const role = /スタート|開始|start/i.test(roleMatch[0]) ? 'start' : 'goal';
+    const floor = clause.match(/(\d+)\s*(?:階|F)|floor\s*(\d+)/i);
+    requests.push({ kind: 'normal', presence: random ? 'random' : 'include', roomCount: 1, entityCount: null, floorNumber: floor ? Number(floor[1] ?? floor[2]) : null, roomId: null, targetRole: role, offers: [] });
   }
   const validation = validateRoomRequests(requests);
   if (!validation.valid) throw new RangeError(validation.errors.join(','));
@@ -114,6 +131,8 @@ export function resolveRoomRequests(requests, defaults, { floorCount, seed = 0 }
   if (!Number.isSafeInteger(floorCount) || floorCount < 1) throw new TypeError('Invalid floor count');
   const plans = [];
   for (const request of requests) {
+    // 通常/ランダムの端点指定は上位resolverが扱い、特殊部屋planにはしない。
+    if (request.kind === 'normal') continue;
     const roomCount = request.roomCount ?? defaults.roomCount;
     // 既存generatorが作れる全Room数を超える指定は展開せず拒否する。
     if (!Number.isSafeInteger(roomCount) || roomCount < 1 || roomCount > floorCount * 20) throw new RangeError('ROOM_REQUEST_CAPACITY_EXCEEDED');
@@ -130,7 +149,7 @@ export function resolveRoomRequests(requests, defaults, { floorCount, seed = 0 }
           ...(offer.type === 'healing' ? { healing: offer.healing ?? base.healing } : { tier: offer.tier ?? base.tier }),
         };
       }) : [];
-      plans.push({ id: `special-${plans.length + 1}`, kind: request.kind, floorNumber, roomId: request.roomId,
+      plans.push({ id: `special-${plans.length + 1}`, kind: request.kind, floorNumber, roomId: request.roomId, ...(request.targetRole ? { targetRole: request.targetRole } : {}),
         entityCount: request.kind === 'shop' ? null : request.entityCount ?? defaults[request.kind], offers });
     }
   }

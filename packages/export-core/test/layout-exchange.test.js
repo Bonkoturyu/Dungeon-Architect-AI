@@ -342,3 +342,13 @@ test('automatic import rejects malformed JSON and unsupported objects', () => {
     'IMPORT_FORMAT_UNSUPPORTED',
   );
 });
+
+test('optional content-layer provenance survives Layout export/import without claiming a new base generator', () => {
+  const source = { generatorStrategyId: 'algorithm-lab.bsp', algorithmVersion: '1', contentLayerVersion: 'special-rooms-1' };
+  const value = createDungeonLayoutExchange([fixture], { provenance: source });
+  assert.equal(value.source.generatorVersion, undefined);
+  const imported = importDungeonLayoutExchange(JSON.stringify(value));
+  assert.equal(imported.ok, true);
+  assert.equal(imported.provenance.contentLayerVersion, source.contentLayerVersion);
+  assert.equal(imported.provenance.generatorStrategyId, source.generatorStrategyId);
+});

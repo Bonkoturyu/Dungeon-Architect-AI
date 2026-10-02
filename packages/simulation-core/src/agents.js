@@ -121,8 +121,18 @@ function hazardPenaltyByRoom(spec) {
 }
 
 function policy(fn, id) {
-  Object.defineProperty(fn, 'policyId', { value: id, enumerable: true });
-  return fn;
+  const wrapped = (observation, trace) => {
+    if (['monster-house', 'trap-house'].includes(observation.currentRoomKind)) {
+      const enemy = observation.enemies[0];
+      if (enemy) return { type: 'combat-enemy', enemyId: enemy.id };
+      const trap = observation.interactables.find(({ type }) => type === 'trap');
+      if (trap) return { type: 'avoid-trap', trapId: trap.id };
+    }
+    if (observation.availableActions.some(({ type }) => type === 'complete-goal')) return { type: 'complete-goal' };
+    return fn(observation, trace);
+  };
+  Object.defineProperty(wrapped, 'policyId', { value: id, enumerable: true });
+  return wrapped;
 }
 
 export function createShortestPathAgent(spec) {

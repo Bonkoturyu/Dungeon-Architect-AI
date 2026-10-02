@@ -40,6 +40,7 @@ Optional when known:
 - `generatorStrategyId`
 - `generatorVersion`
 - `algorithmVersion`
+- `contentLayerVersion`（任意。選択した地形生成と独立した特殊部屋レイヤーの版）
 
 Prompt text and DesignIntent are intentionally excluded from the generic format.
 
