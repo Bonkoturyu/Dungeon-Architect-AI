@@ -231,7 +231,7 @@ Version省略時は現在の既定Versionを使う。
 
 ## Version 3 — 特殊部屋・店・難易度
 
-V2の空間生成をそのまま使用し、明示された部屋planと装備／難易度ルールを追加する。V1/V2の実装・乱数列・出力は変更しない。planも新ルールもなければV2と同じSpecを返す。
+V2の空間生成をそのまま使用し、明示された部屋planと装備／難易度ルールを追加する。V1/V2の地形生成実装・乱数列・出力は変更しない。planや装備／難易度の指定がなければ、V2と同じ内容に現行の`trapRules`を付与したSpecを返す。
 
 - monster-house：指定個数の休眠敵と入室時one-shot起動
 - trap-house：指定個数の罠
@@ -239,21 +239,23 @@ V2の空間生成をそのまま使用し、明示された部屋planと装備�
 - 店の最高価格商品1つ分のG専用宝箱を、店より前の通常部屋に置く。前に通常部屋がなければStartを使う
 - 生成前に未指定値を確認・変更でき、明示値を無言で減らさない
 - 追加敵・罠は1階合計100が既定。検証環境での高度設定最大250。生成の前に合計上限を検査
-- 難易度／装備効果は新しいSpecの明示ルール。旧Specのプレイ挙動は維持
+- 難易度／装備効果はSpecの明示ルール。罠は現行の固定Seed・回避率70%を使い、ルール未指定の旧SpecもSTART時にコピーへ補完する
 
 公開APIの `version:"3"`、strategy `version-3-special-rooms` から利用する。LibraryのdefaultはV1を維持し、ユーザー承認に基づきbrowser Recommended aliasはV3へ変更した。V1/V2は明示選択可能。
 
 詳しい承認値、測定条件、検証結果、未検証事項は `docs/testing/SPECIAL_ROOMS_V3_2026-10-02.md` を参照。
 
-未指定の特殊部屋種別は、それぞれ独立したSeed streamで1/3の確率で存在を決める。明示include/excludeを優先し、部屋容量不足ではrandom候補だけを除外して確認画面に理由を表示する。Mysteryの新Seedではrandom有無も再決定する。
+未指定の特殊部屋種別は、それぞれ独立したSeed streamで1/3の確率で存在を決める。明示include/excludeを優先し、部屋容量不足ではrandom候補だけを除外する。確認画面では抽選結果を伏せ、明示した部屋だけを詳細表示・編集する。Mysteryの新Seedではrandom有無も再決定する。
 
-## 共通内容レイヤー special-rooms-1
+## 共通内容レイヤー special-rooms-3
 
-ブラウザでは全Strategyの選択地形を維持し、その新規生成結果に特殊部屋・店・難易度を適用できる。`generatorStrategyId` / `algorithmVersion` / `generatorVersion`は地形の由来を示し、`contentLayerVersion: "special-rooms-1"`は内容処理を別に示す。V3の内容処理は二重実行しない。無装飾ライブラリAPIは従来出力を保持する。
+ブラウザでは全11Strategyの選択地形を維持し、その新規生成結果に特殊部屋・店・難易度を適用する。`generatorStrategyId` / `algorithmVersion` / `generatorVersion`は地形の由来を示し、`contentLayerVersion: "special-rooms-3"`は内容処理を別に示す。V3の内容処理は二重実行しない。Generator V1/V2の地形APIと、共通内容レイヤーの版は独立している。
 
-Start/Goalの明示設定・ランダム、Auto、Play終了条件は [共通内容レイヤー検証](../testing/ROOM_CONTENT_LAYER_2026-10-02.md) を参照。
+通常部屋と各ハウスの敵／罠数を区別し、地形を変えずに自動内容を分散・抑制して、罠失敗を含む実Playの生存経路を再検査する。明示した個数・部屋設定は保護する。罠は`seeded-avoidance-1`の固定判定で、成功率70%、成功時は無傷、失敗時は装備を考慮した被害を適用し、どちらも1回で解決する。
 
 
-## 共通内容レイヤー special-rooms-2
+共通内容レイヤーは現行3のみを公開する。旧`special-rooms-1` / `special-rooms-2`の版定数・関数exportは廃止し、旧版文字列の明示選択は`ROOM_CONTENT_LAYER_VERSION_UNSUPPORTED`で拒否する。BSPを含む11生成方式やGenerator V1/V2を廃止する変更ではない。
 
-通常部屋と各ハウスの敵／罠数を区別するため、地形を変えずに自動内容を分散・抑制し、攻略経路を再検査する。`contentLayerVersion: "special-rooms-2"` を記録する。V1の内容レイヤーは明示的に選択可能なまま保存し、基礎Generator V1/V2/V3やAlgorithm Labの地形実装は変更しない。数量基準・明示指定保護・検証は [UIフィードバック検証](../testing/UI_FEEDBACK_2026-10-02.md) を参照。
+Full/Layout JSON読込とSTARTは、未指定の罠ルールを現行値へ正規化する。地形・明示個数・ID・Seedは変更せず、元の作者データを直接書き換えない。通常部屋も起動中の敵・未処理の罠を解決してから退出する。Goalの完了を妨げる敵も起動中だけで、休眠敵は数えない。入室や宝箱などのイベントで敵が起動した後は、撃破するまで完了できない。店での購入は任意。
+
+現行の範囲と検証は[現行内容ルールへの統一](../testing/CURRENT_CONTENT_RULES_2026-10-02.md)と[難易度・ランダム表示](../testing/GENERATION_SETTINGS_2026-10-02.md)を参照。旧[共通内容レイヤー検証](../testing/ROOM_CONTENT_LAYER_2026-10-02.md)・[UIフィードバック検証](../testing/UI_FEEDBACK_2026-10-02.md)は当時の測定記録であり、旧APIの提供を保証するものではない。
