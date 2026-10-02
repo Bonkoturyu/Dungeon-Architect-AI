@@ -1,3 +1,5 @@
+import { deterministicTrapAvoidance } from '../../../../play-core/src/trap-avoidance.js';
+import { DEFAULT_TRAP_DAMAGE } from '../../../../play-core/src/interaction-runtime.js';
 import { getEffectiveDamage } from '../../../../play-core/src/equipment-runtime.js';
 import { DEFAULT_PLAYER_MAX_HP } from '../../../../play-core/src/play-session.js';
 import { DEFAULT_ENEMY_DAMAGE } from '../../../../play-core/src/enemy-runtime.js';
@@ -34,7 +36,22 @@ function enemiesByRoom(spec, plans, difficultyProfile) {
   }));
 }
 
-function evaluateUnassistedPath(spec, pathRoomIds, enemies, initialPlayerState) {
+function trapsByRoom(spec, plans, difficultyProfile, initialPlayerState, equipmentRules) {
+  const replacements = new Map(plans.map((plan) => [plan.roomId, plan]));
+  const session = { snapshot: { ...spec, equipmentRules }, playerState: initialPlayerState };
+  return new Map(spec.rooms.map(({ id }) => {
+    const plan = replacements.get(id);
+    const traps = plan ? plan.kind === 'trap-house' ? Array.from({ length: plan.entityCount }, (_, index) => ({
+      id: `v3:${plan.id}:trap-${index + 1}`, damage: difficultyProfile?.trapDamage ?? DEFAULT_TRAP_DAMAGE,
+    })) : [] : spec.entities.filter((entity) => entity.type === 'trap' && entity.roomId === id).map((entity) => ({
+      id: entity.id, damage: difficultyProfile?.trapDamage ?? entity.damage ?? DEFAULT_TRAP_DAMAGE,
+    }));
+    return [id, traps.filter((trap) => deterministicTrapAvoidance(session, trap.id).outcome === 'triggered')
+      .map((trap) => ({ ...trap, damage: getEffectiveDamage(session, trap.damage, 'trap') }))];
+  }));
+}
+
+function evaluateUnassistedPath(spec, pathRoomIds, enemies, traps, initialPlayerState) {
   let hp = initialPlayerState?.hp ?? DEFAULT_PLAYER_MAX_HP;
   let maxHp = initialPlayerState?.maxHp ?? hp;
   let level = initialPlayerState?.level ?? DEFAULT_PLAYER_LEVEL;
@@ -43,6 +60,13 @@ function evaluateUnassistedPath(spec, pathRoomIds, enemies, initialPlayerState) 
   let damage = 0n;
   let minimumHp = hp;
   for (const roomId of pathRoomIds) {
+    for (const trap of traps.get(roomId)) {
+      damage += BigInt(trap.damage);
+      hp -= trap.damage;
+      minimumHp = Math.min(minimumHp, Math.max(0, hp));
+      if (hp <= 0) return { survives: false, pathRoomIds, shopRoomId: pathRoomIds.at(-1),
+        enemyCount, hp: 0, minimumHp, failedTrapId: trap.id };
+    }
     // XPは既存の表示値で比較できる。同室では高XPの敵から処理して早めのLevel Upを狙う。
     const ordered = enemies.get(roomId).map((enemy) => ({ ...enemy,
       xp: deterministicEnemyReward({ dungeonSeed: spec.seed }, enemy.id).xp,
@@ -72,10 +96,11 @@ function inspectFirstShop(spec, plans, difficultyProfile, adjacency, initialPlay
   const start = spec.entities.find(({ type }) => type === 'start').roomId;
   const goal = spec.entities.find(({ type }) => type === 'goal').roomId;
   const enemies = enemiesByRoom(spec, plans, difficultyProfile);
+  const traps = trapsByRoom(spec, plans, difficultyProfile, initialPlayerState, equipmentRules);
   if (initialPlayerState) for (const entries of enemies.values()) for (const enemy of entries) {
     enemy.damage = getEffectiveDamage({ snapshot: { equipmentRules }, playerState: initialPlayerState }, enemy.damage, 'enemy');
   }
-  const costs = new Map([...enemies].map(([id, entries]) => [id, entries.reduce((sum, enemy) => sum + BigInt(enemy.damage), 0n)]));
+  const costs = new Map([...enemies].map(([id, entries]) => [id, [...entries, ...traps.get(id)].reduce((sum, entity) => sum + BigInt(entity.damage), 0n)]));
   const frontier = [{ roomId: start, cost: 0n, path: [start] }];
   const settled = new Set();
   while (frontier.length) {
@@ -84,7 +109,7 @@ function inspectFirstShop(spec, plans, difficultyProfile, adjacency, initialPlay
     const current = frontier.shift();
     if (settled.has(current.roomId)) continue;
     settled.add(current.roomId);
-    if (shops.has(current.roomId)) return evaluateUnassistedPath(spec, current.path, enemies, initialPlayerState);
+    if (shops.has(current.roomId)) return evaluateUnassistedPath(spec, current.path, enemies, traps, initialPlayerState);
     for (const next of adjacency.get(current.roomId)) {
       if ((next === goal && !plans.some(({ roomId }) => roomId === goal)) || settled.has(next)) continue;
       frontier.push({ roomId: next, cost: current.cost + costs.get(next), path: [...current.path, next] });
@@ -107,13 +132,13 @@ function distancesFrom(adjacency, start) {
 }
 
 // 実行時のHP/XP定数を使用し、無限経路列挙をしない保守的な入口到達判定。
-// 罠は既存の回避処理を使う。任意の装備loot/回復には依存しない。
+// 罠は実Playと同じ固定Seedの失敗判定・防具軽減を見込む。任意の装備loot/回復には依存しない。
 export function guardFirstShopPlacementV3(spec, plans, { difficultyProfile, initialPlayerState = null, equipmentRules = spec.equipmentRules } = {}) {
   if (!plans.some(({ kind }) => kind === 'shop')) return { plans, diagnostics: null };
   if (initialPlayerState !== null) initialPlayerState = normalizePlayerState(initialPlayerState);
   const adjacency = adjacencyOf(spec);
   const initial = inspectFirstShop(spec, plans, difficultyProfile, adjacency, initialPlayerState, equipmentRules);
-  const assumptions = `${initialPlayerState ? 'Provided carried HP/XP/equipment' : 'Default fresh-player HP/XP'}; minimum effective-damage route; deterministic enemy XP/level-up healing; traps avoided; optional equipment/recovery ignored.`;
+  const assumptions = `${initialPlayerState ? 'Provided carried HP/XP/equipment' : 'Default fresh-player HP/XP'}; minimum effective-damage route; deterministic enemy XP/level-up healing; traps ${spec.trapRules?.version ?? 'avoided'}; optional equipment/recovery ignored.`;
   if (initial.survives) return { plans, diagnostics: { status: 'preserved', assumptions, route: initial, changes: [] } };
   const protectedIds = new Set(spec.entities.filter(({ type }) => type === 'start' || type === 'goal').map(({ roomId }) => roomId));
   const occupied = new Set(plans.map(({ roomId }) => roomId));
@@ -143,5 +168,5 @@ export function guardFirstShopPlacementV3(spec, plans, { difficultyProfile, init
         ] } };
     }
   }
-  throw new RangeError('FIRST_SHOP_SURVIVAL_CONFLICT: no permitted automatic shop placement passes the conservative pre-shop combat check; explicit room IDs were not changed');
+  throw new RangeError('FIRST_SHOP_SURVIVAL_CONFLICT: no permitted automatic shop placement passes the conservative pre-shop hazard check; explicit room IDs were not changed');
 }

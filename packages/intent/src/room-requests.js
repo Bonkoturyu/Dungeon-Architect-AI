@@ -60,7 +60,11 @@ export function validateRoomRequests(requests) {
 
 export function parseFallbackRoomRequests(prompt) {
   // 別の端点名を導く接続詞だけを節境界にする。種類同士のandや数量表現は維持する。
-  const text = String(prompt ?? '').normalize('NFKC').replace(/(?:\band\b|\bbut\b|[、,]|そして|それから|にして)(?=\s*(?:(?:make|keep|set)\s+)?(?:the\s+)?(?:スタート|開始地点|ゴール|終了地点|\bstart(?:ing)?\b|\bgoal\b))/gi, '。');
+  const text = String(prompt ?? '').normalize('NFKC')
+    .replace(/(?:\band\b|\bbut\b|[、,]|そして|それから|にして)(?=\s*(?:(?:make|keep|set)\s+)?(?:the\s+)?(?:スタート|開始地点|ゴール|終了地点|\bstart(?:ing)?\b|\bgoal\b))/gi, '。')
+    // 独立した追加命令は直前の端点・randomを継承しない。商品列挙のandは切らない。
+    .replace(/(?:\band\b|\bbut\b)(?=\s*(?:also\s+)?(?:add|place|include)\s+(?:(?:a|an|the|another|one|\d+)\s+)?(?:shops?|stores?|monster\s*houses?|trap\s*houses?)\b)/gi, '。')
+    .replace(/(?:[、,]|そして|それから)(?=\s*(?:さらに|別に|追加で)?\s*(?:モンスターハウス|トラップハウス|罠ハウス|ショップ|お店|店)(?:を)?(?:追加|設置|配置|置))/g, '。');
   const keyword = /モンスターハウス|monster\s*houses?|トラップハウス|罠ハウス|trap\s*houses?|ショップ|お店|店(?:舗)?|\bshops?\b|\bstores?\b/gi;
   const matches = [...text.matchAll(keyword)];
   const boundaries = [0];

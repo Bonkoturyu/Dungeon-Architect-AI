@@ -1425,6 +1425,17 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+    /* 成功率と失敗時被害は省略せず表示する。長い翻訳でも罠カード内で折り返す。 */
+    .room-event[data-kind="trap"] {
+      grid-template-columns: minmax(40px, auto) minmax(0, 1fr) auto;
+    }
+    .room-event[data-kind="trap"] .room-event-note {
+      overflow: visible;
+      text-overflow: clip;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      line-height: 1.45;
+    }
     .room-event-actions {
       display: flex;
       gap: 5px;

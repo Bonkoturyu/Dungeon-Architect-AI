@@ -126,3 +126,33 @@ test('integer sentence endings separate endpoint policies without accepting deci
     }
   }
 });
+
+test('independent trailing room commands do not inherit Goal random or its endpoint role', () => {
+  for (const prompt of [
+    'Start in a normal room and make the Goal random and add a shop',
+    'Start in a normal room and make the Goal random and also include a shop',
+    'Start in a normal room and make the Goal random but place a shop',
+    'スタートは通常の部屋、ゴールはランダム、さらに店を追加',
+    'スタートは通常の部屋、ゴールはランダム、店を追加',
+  ]) {
+    const requests = parseFallbackRoomRequests(prompt);
+    assert.equal(requests.length, 3, prompt);
+    assert.equal(requests.find(({ kind }) => kind === 'shop').targetRole, undefined, prompt);
+    assert.equal(requests.find(({ kind }) => kind === 'shop').presence, 'include', prompt);
+    const config = createRoomPlanConfig({ ...base, requests });
+    assert.deepEqual(config.presenceSpec.endpointPolicies, { start: 'normal', goal: 'random' }, prompt);
+    assert.equal(config.presenceSpec.policies.shop, 'include', prompt);
+  }
+});
+
+test('independent additions retain explicit floor/counts and shop product conjunctions', () => {
+  const requests = parseFallbackRoomRequests('Make the Goal random and add 2 shops on floor 2 selling healing 8HP 10G and weapon T2 20G');
+  const shop = requests.find(({ kind }) => kind === 'shop');
+  assert.equal(shop.targetRole, undefined); assert.equal(shop.presence, 'include');
+  assert.equal(shop.roomCount, 2); assert.equal(shop.floorNumber, 2);
+  assert.deepEqual(shop.offers.map(({ type, price }) => [type, price]), [['healing', 10], ['weapon', 20]]);
+  assert.equal(requests.find(({ targetRole }) => targetRole === 'goal').floorNumber, null);
+  const explicit = parseFallbackRoomRequests('Start in a normal room and add a shop at the Goal');
+  assert.equal(explicit.find(({ kind }) => kind === 'shop').targetRole, 'goal');
+  assert.equal(explicit.find(({ targetRole }) => targetRole === 'start').kind, 'normal');
+});

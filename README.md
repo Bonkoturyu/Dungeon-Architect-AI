@@ -103,6 +103,10 @@ The repository also retains the frozen ten-case DesignIntent regression corpus a
 
 最新のUI・数量差別化は [ユーザーフィードバック対応](docs/testing/UI_FEEDBACK_2026-10-02.md)、共通レイヤーの初期検証は [生成方式維持・Auto・端点設定](docs/testing/ROOM_CONTENT_LAYER_2026-10-02.md)、既存V3の検証と制約は [特殊部屋V3検証](docs/testing/SPECIAL_ROOMS_V3_2026-10-02.md) を参照してください。
 
+## 罠の回避判定
+
+新規生成の罠は「回避を試みる」1操作で、成功率70%（全難易度共通の暫定値）と失敗時の被害を表示します。成功は無傷、失敗は罠が発動し、どちらも1回で解決済みになります。同じ階Seed・罠IDでは再PlayやFull JSON再Importでも判定が変わりません。新内容レイヤーは失敗分の被害を含む攻略経路を実Playで検査し、指定を守って確認できない場合は生成を拒否します。旧JSONの100%回避は維持します。詳細と検証範囲は[罠回避検証](docs/testing/TRAP_AVOIDANCE_2026-10-02.md)を参照してください。
+
 ## Generator versions and research
 
 The current production generator is frozen as **Generator Version 1**. Future generation methods are added as Version 2, Version 3, and so on without deleting or silently replacing earlier implementations.

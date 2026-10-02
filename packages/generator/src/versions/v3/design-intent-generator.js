@@ -13,6 +13,7 @@ export const deriveGenerationProfileV3 = deriveGenerationProfileV2;
 export function generateDungeonFromDesignIntentV3(intent, {
   roomPlans = [],
   equipmentRules,
+  trapRules,
   difficulty,
   difficultyProfile,
   specialRoomEntityLimit,
@@ -24,6 +25,7 @@ export function generateDungeonFromDesignIntentV3(intent, {
   decorateGeneratedSpecV3(result.spec, {
     roomPlans,
     equipmentRules,
+    trapRules,
     difficulty,
     difficultyProfile,
     specialRoomEntityLimit,

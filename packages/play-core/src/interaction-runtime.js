@@ -2,6 +2,8 @@ import { applyGameplayStateCommand } from "./gameplay-state.js";
 import { dispatchSupportedEvents } from "./event-runtime.js";
 import { applyPlayerDamage, applyPlayerHealing } from "./play-session.js";
 import { grantTreasureReward } from "./progression-runtime.js";
+import { deterministicTrapAvoidance } from './trap-avoidance.js';
+export { deterministicTrapAvoidance, getTrapAvoidanceChance } from './trap-avoidance.js';
 
 export const DEFAULT_TRAP_DAMAGE = 6;
 export const DEFAULT_RECOVERY_HEALING = 8;
@@ -236,7 +238,7 @@ function resolveTrap(
   session,
   trapId,
   resolution,
-  { at = session?.startedAt ?? 0, damage = resolution === "triggered" ? DEFAULT_TRAP_DAMAGE : 0 } = {}
+  { at = session?.startedAt ?? 0, damage = resolution === "triggered" ? DEFAULT_TRAP_DAMAGE : 0, avoidance = null } = {}
 ) {
   const validation = validateAction(session, "trap", trapId);
   if (!validation.ok) return validation;
@@ -253,7 +255,7 @@ function resolveTrap(
   }
 
   const next = clone(session);
-  setEntityState(next, trapId, { ...previousState, status: resolution, resolvedAt: at });
+  setEntityState(next, trapId, { ...previousState, status: resolution, resolvedAt: at, ...(avoidance ? { avoidance } : {}) });
   if (resolution === "triggered") incrementCounter(next, "trapsTriggered", 1);
   incrementInteraction(next);
   next.events.push({
@@ -261,6 +263,7 @@ function resolveTrap(
     trapId,
     roomId: validation.entity.roomId,
     warning: validation.entity.warning ?? null,
+    ...(avoidance ? { avoidance } : {}),
     at
   });
   const dispatched = dispatchEntityTriggers(next, trapId, ["on_interact_entity"], at);
@@ -281,7 +284,14 @@ function resolveTrap(
 }
 
 export function avoidTrap(session, trapId, options = {}) {
-  return resolveTrap(session, trapId, "avoided", options);
+  const validation = validateAction(session, 'trap', trapId);
+  if (!validation.ok) return validation;
+  let avoidance;
+  try { avoidance = deterministicTrapAvoidance(session, trapId); }
+  catch (error) { return { ok: false, error: { code: 'TRAP_RULES_UNSUPPORTED', message: error.message } }; }
+  // 旧Specのイベント/状態形式も維持する。
+  const result = resolveTrap(session, trapId, avoidance.outcome, { ...options, avoidance: session.snapshot.trapRules ? avoidance : null });
+  return result.ok && session.snapshot.trapRules ? { ...result, avoidance } : result;
 }
 
 export function triggerTrap(session, trapId, options = {}) {

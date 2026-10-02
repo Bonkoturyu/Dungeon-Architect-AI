@@ -239,3 +239,10 @@ shop商品在庫には適用せず、特殊部屋の配置処理の負荷を制�
 初階は標準20HP・装備なし・0Gで検証する。2階以降は生成API/Strategyの`initialPlayerState`へ前階の`witness.playerState`をそのまま渡し、HP/最大HP/XP/level/G/装備を引き継いだ状態で検証する。Runの実遷移と操作列の再生でも状態の一致を検証する。プレイヤーが異なる行動をした場合や、敵・罠を追加編集した場合までの生存保証ではない。`assumptions.scope`は`fresh-player-single-floor`または`provided-carried-player-state`を明示する。
 
 検証記録は`artifacts/special-rooms/tri-state-presence-after-route-guard.json`、`multifloor-route-viability.json`に保存する。生成時間には攻略経路検証のコストも含まれるため、以前の軽量V3生成だけの測定値をそのまま流用せず、`generation-after-route-guard.json`を参照する。
+
+## 罠回避ルール（任意、後方互換）
+
+`trapRules: { "version": "seeded-avoidance-1" }` は回避成功率70%の固定Seed判定を有効にする。
+版・各階の`seed`・罠Entity IDだけから成功/失敗を決定し、成功は無傷、失敗は既存damageと防具軽減を適用する。
+いずれも一度だけ解決する。未知の版・余分なルール項目は拒否する。
+`trapRules`未指定の旧Specは100%回避を維持する。詳細は `docs/testing/TRAP_AVOIDANCE_2026-10-02.md`。

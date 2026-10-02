@@ -169,7 +169,8 @@ export function startPlaySession(
 }
 
 function isSpecialGoal(session) {
-  return ['monster-house', 'trap-house', 'shop'].includes(session.snapshot.rooms.find(({ id }) => id === session.goalRoomId)?.kind);
+  return ['monster-house', 'trap-house', 'shop'].includes(session.snapshot.rooms.find(({ id }) => id === session.goalRoomId)?.kind)
+    || !!session.snapshot.trapRules && session.snapshot.entities.some(({ type, roomId }) => roomId === session.goalRoomId && ['trap', 'enemy'].includes(type));
 }
 
 export function getGoalCompletionState(session) {
@@ -200,7 +201,7 @@ export function movePlaySession(session, targetRoomId, { at = session?.startedAt
   }
 
   const currentRoom = session.snapshot.rooms.find((room) => room.id === session.currentRoomId);
-  if (['monster-house', 'trap-house'].includes(currentRoom?.kind)) {
+  if (session.snapshot.trapRules || ['monster-house', 'trap-house'].includes(currentRoom?.kind)) {
     const blocked = session.snapshot.entities.some((entity) => {
       if (entity.roomId !== session.currentRoomId) return false;
       const state = session.gameplayState.entityStates[entity.id];
