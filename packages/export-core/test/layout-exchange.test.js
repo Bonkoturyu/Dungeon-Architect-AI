@@ -261,6 +261,53 @@ test('layout import fails closed on unknown fields and invalid role counts', () 
   );
 });
 
+test('layout import rejects non-array collections without throwing or mutating input', () => {
+  const layout = createDungeonLayoutExchange([clone(fixture)]);
+  for (const [field, code] of [
+    ['rooms', 'LAYOUT_IMPORT_ROOMS_INVALID'],
+    ['connections', 'LAYOUT_IMPORT_CONNECTIONS_INVALID'],
+  ]) {
+    for (const value of [{}, 'invalid', 42, false, null, undefined]) {
+      const invalid = clone(layout);
+      if (value === undefined) delete invalid.floors[0][field];
+      else invalid.floors[0][field] = value;
+      const before = clone(invalid);
+
+      for (const importer of [importDungeonLayoutExchange, importDungeonJson]) {
+        for (const input of [invalid, serializeJsonExport(invalid)]) {
+          const result = importer(input);
+          assert.equal(result.ok, false);
+          assert.equal(result.format, 'layout');
+          assert.equal(result.dungeons, null);
+          assert.ok(result.errors.some((entry) =>
+            entry.code === code && entry.path === `floors[0].${field}`));
+        }
+      }
+      assert.deepEqual(invalid, before);
+    }
+  }
+});
+
+test('layout import reports both invalid collections and continues checking other floors', () => {
+  const second = clone(fixture);
+  second.id = 'invalid-collections-floor-02';
+  const layout = createDungeonLayoutExchange([clone(fixture), second]);
+  layout.floors[0].rooms = {};
+  layout.floors[0].connections = false;
+  layout.floors[1].rooms = 'invalid';
+  layout.floors[1].connections = 42;
+
+  const result = importDungeonJson(layout);
+  assert.equal(result.ok, false);
+  assert.equal(result.dungeons, null);
+  assert.deepEqual(result.errors.map(({ code, path }) => ({ code, path })), [
+    { code: 'LAYOUT_IMPORT_ROOMS_INVALID', path: 'floors[0].rooms' },
+    { code: 'LAYOUT_IMPORT_CONNECTIONS_INVALID', path: 'floors[0].connections' },
+    { code: 'LAYOUT_IMPORT_ROOMS_INVALID', path: 'floors[1].rooms' },
+    { code: 'LAYOUT_IMPORT_CONNECTIONS_INVALID', path: 'floors[1].connections' },
+  ]);
+});
+
 test('full import fails closed and leaves source values untouched', () => {
   const exported = createFullDungeonExport([clone(fixture)], {
     id: 'bad-full',

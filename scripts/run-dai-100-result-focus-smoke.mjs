@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { chromium } from 'playwright-core';
+import { MESSAGE_CATALOGS } from '../apps/editor-slice/i18n.js';
 import { DEFAULT_DESIGN_INTENT } from '../packages/intent/src/design-intent.js';
 
 const chromePath =
@@ -298,6 +299,8 @@ try {
     () => window.__DAI_EDITOR_SLICE__.getState().mode === 'play',
   );
 
+  await page.waitForFunction(() => !document.querySelector('.viewport-shell').classList.contains('is-mode-transition'));
+  await page.screenshot({ path: path.join(outputDir, 'play-status-reference.png'), fullPage: true });
   let current = await state(page);
   const firstSnapshot = current.play.snapshot;
   const blockerRooms = [...new Set(
@@ -371,7 +374,75 @@ try {
     fullPage: true,
   });
 
+  // オーナー指摘の右上Result: 値保持・言語切替・狭幅/文字拡大を確認する。
+  const resultLayoutSamples = [];
+  const originalValues = await page.locator('#resultMetrics dd').allTextContents();
+  for (const viewport of [{ width: 1440, height: 900 }, { width: 1024, height: 768 }, { width: 800, height: 600 }]) {
+    await page.setViewportSize(viewport);
+    for (let languageIndex = 0; languageIndex < 5; languageIndex += 1) {
+      resultLayoutSamples.push(await page.evaluate(() => {
+        const card = document.querySelector('body[data-mode="result"] aside');
+        const rect = card.getBoundingClientRect();
+        const metrics = [...document.querySelectorAll('#resultMetrics .result-metric')];
+        return {
+          language: document.documentElement.lang,
+          banner: document.querySelector('#resultStatus').textContent,
+          playerLabels: [...document.querySelectorAll('.result-metric-group:first-child dt')].map((node) => node.textContent),
+          viewport: { width: innerWidth, height: innerHeight },
+          bounds: { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom },
+          count: metrics.length,
+          groupSizes: [...document.querySelectorAll('.result-metric-group')].map((group) => group.querySelectorAll('.result-metric').length),
+          overflow: Math.max(0, card.scrollWidth - card.clientWidth),
+          values: metrics.map((metric) => metric.querySelector('dd').textContent),
+          labelFont: parseFloat(getComputedStyle(metrics[0].querySelector('dt')).fontSize),
+          valueFont: parseFloat(getComputedStyle(metrics[0].querySelector('dd')).fontSize),
+          pairsDoNotOverlap: metrics.every((metric) => {
+            const label = metric.querySelector('dt').getBoundingClientRect();
+            const value = metric.querySelector('dd').getBoundingClientRect();
+            return label.right <= value.left && label.width > 0 && value.width > 0;
+          }),
+        };
+      }));
+      await page.click('#languageCycle');
+    }
+  }
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.click('#languageCycle'); // 日本語はオーナー添付画像と比較する。
+  await page.screenshot({ path: path.join(outputDir, 'result-readability-ja.png'), fullPage: true });
+  await page.locator('body[data-mode="result"] aside').screenshot({ path: path.join(outputDir, 'result-card-ja.png') });
+  await page.setViewportSize({ width: 1024, height: 768 });
+  await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
+  await page.locator('#resultMetrics').focus();
+  await page.keyboard.press('End');
+  await page.waitForFunction(() => {
+    const card = document.querySelector('body[data-mode="result"] aside');
+    return Math.abs(card.scrollHeight - card.clientHeight - card.scrollTop) < 2;
+  });
+  const enlargedText = await page.evaluate(() => {
+    const card = document.querySelector('body[data-mode="result"] aside');
+    const lastValue = [...card.querySelectorAll('.result-metric dd')].at(-1);
+    const rect = card.getBoundingClientRect();
+    const lastRect = lastValue.getBoundingClientRect();
+    return {
+      overflow: Math.max(0, card.scrollWidth - card.clientWidth),
+      insideViewport: rect.left >= 0 && rect.right <= innerWidth && rect.bottom <= innerHeight,
+      lastMetricReachable: lastRect.bottom <= rect.bottom && lastRect.top >= rect.top,
+      valueFont: parseFloat(getComputedStyle(lastValue).fontSize),
+    };
+  });
+  await page.screenshot({ path: path.join(outputDir, 'result-readability-enlarged.png'), fullPage: true });
+  await page.evaluate(() => { document.documentElement.style.fontSize = ''; });
+  await page.setViewportSize({ width: 1440, height: 900 });
+
   const checks = {
+    resultMetricsReadableAcrossLanguagesAndSizes: resultLayoutSamples.every((sample) =>
+      sample.banner === MESSAGE_CATALOGS[sample.language]['result.cleared'] &&
+      JSON.stringify(sample.playerLabels) === '["LV","HP","EXP","G"]' &&
+      sample.count === 13 && JSON.stringify(sample.groupSizes) === '[4,2,7]' && sample.overflow === 0 && sample.labelFont >= 14 && sample.valueFont >= 16 &&
+      sample.pairsDoNotOverlap && sample.bounds.left >= 0 && sample.bounds.right <= sample.viewport.width &&
+      (sample.viewport.width <= 800 || sample.bounds.bottom <= sample.viewport.height) && JSON.stringify(sample.values) === JSON.stringify(originalValues)),
+    enlargedResultTextRemainsReachable: enlargedText.overflow === 0 && enlargedText.insideViewport &&
+      enlargedText.lastMetricReachable && enlargedText.valueFont >= 32,
     eventFocusTriggered:
       eventFocus.viewportClassName.includes('is-event-focus'),
     eventFocusTargetsCurrentRoom:
@@ -411,6 +482,10 @@ try {
       httpErrors.length === 0,
   };
 
+  await page.click('#returnEdit');
+  checks.returnToEditHidesResult = (await state(page)).mode === 'edit' &&
+    await page.locator('#resultMetrics').isHidden();
+
   const falseChecks = Object.entries(checks)
     .filter(([, value]) => value !== true)
     .map(([name]) => name);
@@ -428,6 +503,8 @@ try {
     resultTransition,
     resultSettled,
     reducedMotion,
+    resultLayoutSamples,
+    enlargedText,
     consoleErrors,
     pageErrors,
     failedRequests,

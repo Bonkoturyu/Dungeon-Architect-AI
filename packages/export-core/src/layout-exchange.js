@@ -445,12 +445,15 @@ function validateLayoutExchangeShape(value) {
         ),
       );
     }
+    if (!Array.isArray(floor.rooms) || !Array.isArray(floor.connections)) {
+      return;
+    }
 
     const roomIds = new Set();
     let startRoleCount = 0;
     let goalRoleCount = 0;
 
-    (floor.rooms ?? []).forEach((room, roomIndex) => {
+    floor.rooms.forEach((room, roomIndex) => {
       const roomPath = `${floorPath}.rooms[${roomIndex}]`;
       if (
         !isRecord(room) ||
@@ -550,7 +553,7 @@ function validateLayoutExchangeShape(value) {
     }
 
     const connectionIds = new Set();
-    (floor.connections ?? []).forEach((connection, connectionIndex) => {
+    floor.connections.forEach((connection, connectionIndex) => {
       const connectionPath =
         `${floorPath}.connections[${connectionIndex}]`;
       if (!isRecord(connection)) {

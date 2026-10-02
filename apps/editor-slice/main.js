@@ -3255,27 +3255,44 @@ function renderResultMetrics(result) {
   const metrics = result?.metrics ?? {};
   const player = result?.playerState ?? {};
   const items = [
-    ['FLOOR', `${lastDungeonRunResult?.floorsCompleted ?? 1}/${lastDungeonRunResult?.floorCount ?? 1}`],
-    ['HP', `${player.hp ?? 0}/${player.maxHp ?? 0}`],
-    ['LV', player.level ?? 1],
-    ['XP', `${player.xp ?? 0}/${xpRequiredForNextLevel(player.level ?? 1)}`],
-    ['G', player.gold ?? 0],
-    ['LOOT', metrics.lootCollected ?? 0],
-    ['WPN', player.equipment?.weapon ? `T${player.equipment.weapon.tier}` : '—'],
-    ['ARM', player.equipment?.armor ? `T${player.equipment.armor.tier}` : '—'],
-    ['DMG', metrics.damageTaken ?? 0],
-    ['HEAL', metrics.healingReceived ?? 0],
+    [t('result.floor'), `${lastDungeonRunResult?.floorsCompleted ?? 1}/${lastDungeonRunResult?.floorCount ?? 1}`],
+    [t('result.hp'), `${player.hp ?? 0}/${player.maxHp ?? 0}`],
+    [t('result.level'), player.level ?? 1],
+    [t('result.xp'), `${player.xp ?? 0}/${xpRequiredForNextLevel(player.level ?? 1)}`],
+    [t('result.gold'), player.gold ?? 0],
+    [t('result.loot'), metrics.lootCollected ?? 0],
+    [t('result.weapon'), player.equipment?.weapon ? `T${player.equipment.weapon.tier}` : '—'],
+    [t('result.armor'), player.equipment?.armor ? `T${player.equipment.armor.tier}` : '—'],
+    [t('result.damage'), metrics.damageTaken ?? 0],
+    [t('result.healing'), metrics.healingReceived ?? 0],
     [t('result.enemy'), metrics.enemiesCleared ?? 0],
     [t('result.chest'), metrics.treasuresOpened ?? 0],
     [t('result.trap'), metrics.trapsTriggered ?? 0],
   ];
-  resultMetrics.replaceChildren(...items.map(([label, value]) => {
-    const item = document.createElement('span');
-    item.className = 'result-metric';
-    const strong = document.createElement('strong');
-    strong.textContent = label;
-    item.append(strong, document.createTextNode(` ${value}`));
-    return item;
+  const groups = [
+    ['result.group.player', [['LV', items[2][1]], ['HP', items[1][1]], ['EXP', items[3][1]], ['G', items[4][1]]]],
+    ['result.group.equipment', items.slice(6, 8)],
+    ['result.group.run', [items[0], items[5], ...items.slice(8)]],
+  ];
+  resultMetrics.replaceChildren(...groups.map(([heading, metrics]) => {
+    const group = document.createElement('section');
+    group.className = 'result-metric-group';
+    const title = document.createElement('h3');
+    title.textContent = t(heading);
+    const list = document.createElement('dl');
+    list.replaceChildren(...metrics.map(([label, value]) => {
+      const item = document.createElement('div');
+      item.className = 'result-metric';
+      const term = document.createElement('dt');
+      term.className = 'metric-label';
+      term.textContent = label;
+      const description = document.createElement('dd');
+      description.textContent = String(value);
+      item.append(term, description);
+      return item;
+    }));
+    group.append(title, list);
+    return group;
   }));
   resultMetrics.hidden = false;
 }
@@ -4122,7 +4139,13 @@ function refreshLocalizedUi() {
   updatePlayReadout();
   renderRoomEvents();
   renderPlayExits();
-  if (lastPlayResult) renderResultMetrics(lastPlayResult);
+  if (lastPlayResult) {
+    renderResultMetrics(lastPlayResult);
+    if (mode === 'result') {
+      resultStatus.textContent = (lastDungeonRunResult ?? lastPlayResult).status === 'cleared'
+        ? t('result.cleared') : t('result.ended');
+    }
+  }
   renderEditContextHud();
   updateUi();
 }
