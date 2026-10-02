@@ -10,9 +10,15 @@ const vite=process.env.DAI_SMOKE_URL ? null : spawn(process.execPath,['node_modu
 let browser; const errors=[]; const checks=[];
 try {
   const url=process.env.DAI_SMOKE_URL || `http://127.0.0.1:${port}/apps/editor-slice/index.html`;
-  for(let i=0;i<100;i++){try {if((await fetch(url)).ok)break;}catch{} await new Promise(r=>setTimeout(r,100));}
+  if (!process.env.DAI_SMOKE_URL) for(let i=0;i<100;i++){try {if((await fetch(url)).ok)break;}catch{} await new Promise(r=>setTimeout(r,100));}
   browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'/usr/bin/chromium',headless:false});
   const page=await browser.newPage({viewport:{width:1440,height:900}});
+  if (process.env.EXPECTED_DEPLOY_SHA) {
+    await page.goto(new URL('build-info.json',url).href);
+    const buildInfo=JSON.parse(await page.locator('body').innerText());
+    assert.equal(buildInfo.commitSha,process.env.EXPECTED_DEPLOY_SHA);
+    fs.writeFileSync(path.join(output,'build-info.json'),JSON.stringify(buildInfo,null,2));
+  }
   page.on('pageerror',e=>errors.push(String(e))); page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
   const requests=[['shop','room-002',null],['monster-house','room-003',3],['trap-house','room-004',4]].map(([kind,roomId,entityCount])=>({kind,roomId,entityCount,roomCount:1,floorNumber:1,offers:[]}));
   let activeRequests=requests;
