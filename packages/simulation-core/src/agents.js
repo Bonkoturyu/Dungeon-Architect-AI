@@ -1,3 +1,4 @@
+import { getTrapAvoidanceChance } from '../../play-core/src/trap-avoidance.js';
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
@@ -114,7 +115,7 @@ function hazardPenaltyByRoom(spec) {
   const penalty = new Map(spec.rooms.map((room) => [room.id, 0]));
   for (const entity of spec.entities) {
     if (!penalty.has(entity.roomId)) continue;
-    if (entity.type === 'trap') penalty.set(entity.roomId, penalty.get(entity.roomId) + 6);
+    if (entity.type === 'trap') penalty.set(entity.roomId, penalty.get(entity.roomId) + (spec.trapRules ? (entity.damage ?? 6) * (1 - getTrapAvoidanceChance({ snapshot: spec })) : 6));
     if (entity.type === 'enemy') penalty.set(entity.roomId, penalty.get(entity.roomId) + 4);
   }
   return penalty;
@@ -122,7 +123,7 @@ function hazardPenaltyByRoom(spec) {
 
 function policy(fn, id) {
   const wrapped = (observation, trace) => {
-    if (['monster-house', 'trap-house'].includes(observation.currentRoomKind)) {
+    if (observation.blockingRoomEvents || ['monster-house', 'trap-house'].includes(observation.currentRoomKind)) {
       const enemy = observation.enemies[0];
       if (enemy) return { type: 'combat-enemy', enemyId: enemy.id };
       const trap = observation.interactables.find(({ type }) => type === 'trap');

@@ -2,6 +2,7 @@ import {
   DUNGEON_DIFFICULTIES,
   validateDungeonSpec,
   validateEquipmentRules,
+  validateTrapRules,
   validateShopOffers,
 } from '../../../../core/src/dungeon-spec.js';
 import { createPrng, pickIndex } from '../v1/prng.js';
@@ -103,6 +104,7 @@ function referencesRemovedEntity(event, removedIds) {
 export function decorateGeneratedSpecV3(spec, {
   roomPlans = [],
   equipmentRules,
+  trapRules,
   trapWarning,
   difficulty,
   difficultyProfile,
@@ -126,6 +128,10 @@ export function decorateGeneratedSpecV3(spec, {
         throw new TypeError(`difficultyProfile.${field} must be an explicit positive safe integer`);
       }
     }
+  }
+  if (trapRules !== undefined) {
+    assertValidation(validateTrapRules(trapRules), 'Invalid trap rules');
+    spec.trapRules = { ...trapRules };
   }
   const selected = guardFirstShopPlacementV3(spec, selectRooms(spec, roomPlans), { difficultyProfile, initialPlayerState, equipmentRules });
   const selectedPlans = selected.plans;

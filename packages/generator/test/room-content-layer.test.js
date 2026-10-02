@@ -73,8 +73,9 @@ test('content layer V1 remains selectable while V2 enforces smaller non-house co
     const base=await registry.generate('algorithm-lab.bsp',request(seed));
     const archived=applyRoomContentLayer(base,DEFAULT_DESIGN_INTENT,config,{version:'special-rooms-1'});
     assert.equal(archived.provenance.contentLayerVersion,'special-rooms-1');
-    const next=applyRoomContentLayer(base,DEFAULT_DESIGN_INTENT,config);
+    const next=applyRoomContentLayer(base,DEFAULT_DESIGN_INTENT,config,{version:'special-rooms-2'});
     assert.equal(next.provenance.contentLayerVersion,'special-rooms-2');
+    assert.equal(next.spec.trapRules,undefined);
     assert.deepEqual(shape(next.spec),shape(archived.spec));
     const limits=next.diagnostics.profile.normalRoomDistinction.limits;
     assert.deepEqual(limits,{enemy:1,trap:2});

@@ -1,3 +1,5 @@
+import { TRAP_AVOIDANCE_VERSION } from './trap-rules.js';
+
 export const DUNGEON_SPEC_VERSION = "1.0";
 
 export const ENTITY_TYPES = Object.freeze([
@@ -414,6 +416,14 @@ export function validateShopOffers(offers, path = "offers") {
   return { valid: errors.length === 0, errors };
 }
 
+export function validateTrapRules(rules, path = 'trapRules') {
+  const errors = [];
+  if (!isRecord(rules) || rules.version !== TRAP_AVOIDANCE_VERSION || Object.keys(rules).some((key) => key !== 'version')) {
+    pushError(errors, 'TRAP_RULES_UNSUPPORTED', path, `Expected { version: "${TRAP_AVOIDANCE_VERSION}" }.`);
+  }
+  return { valid: errors.length === 0, errors };
+}
+
 export function validateEquipmentRules(rules, path = "equipmentRules") {
   const errors = [];
   if (!isRecord(rules)) {
@@ -655,6 +665,7 @@ export function validateDungeonSpec(spec) {
   if (spec.equipmentRules !== undefined) {
     errors.push(...validateEquipmentRules(spec.equipmentRules).errors);
   }
+  if (spec.trapRules !== undefined) errors.push(...validateTrapRules(spec.trapRules).errors);
 
   if (!Number.isSafeInteger(spec.seed) || spec.seed < 0) {
     pushError(errors, "SEED_INVALID", "seed", "seed must be a non-negative safe integer.");

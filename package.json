@@ -148,7 +148,9 @@
     "bench:special-room-capacity": "node scripts/benchmark-special-room-capacity.mjs",
     "profile:user-flows": "node scripts/profile-user-flows.mjs",
     "profile:core": "node scripts/profile-special-room-core.mjs",
-    "smoke:room-content": "node scripts/run-room-content-ui-smoke.mjs"
+    "smoke:room-content": "node scripts/run-room-content-ui-smoke.mjs",
+    "validate:trap-avoidance": "node scripts/validate-trap-avoidance.mjs",
+    "smoke:trap-avoidance": "node scripts/run-trap-avoidance-smoke.mjs"
   },
   "devDependencies": {
     "@babylonjs/core": "9.18.0",

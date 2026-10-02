@@ -1,6 +1,7 @@
 import { resolveRoomConfigurationPresence } from '../../packages/intent/src/endpoint-room-plans.js';
 import { measurePerformance, measurePerformanceAsync, startPerformanceProbe, stopPerformanceProbe } from '../../packages/renderer-three/src/performance-probe.js';
 import { reviewRoomPlan, createRoomPlanConfig } from './room-plan-review.js';
+import { TRAP_RULES_V1 } from '../../packages/core/src/trap-rules.js';
 import { applyRoomContentLayer } from '../../packages/generator/src/room-content-layer.js';
 import { parseFallbackRoomRequests } from '../../packages/intent/src/room-requests.js';
 import { listRoomShops, purchaseShopOffer } from '../../packages/play-core/src/shop-runtime.js';
@@ -27,7 +28,7 @@ import {
   listRoomInteractables,
   openTreasure,
   avoidTrap,
-  triggerTrap,
+  getTrapAvoidanceChance,
   useRecovery,
 } from '../../packages/play-core/src/interaction-runtime.js';
 import {
@@ -684,7 +685,7 @@ async function generateFloorSet(
 
   let carriedWitnessState = null;
   async function generateFloor(seed, id, floorNumber = 1) {
-    const floorConfig = specialRoomConfig ? { ...specialRoomConfig, initialPlayerState: carriedWitnessState, roomPlans: specialRoomConfig.roomPlans.filter((plan) => plan.floorNumber === floorNumber) } : null;
+    const floorConfig = specialRoomConfig ? { ...specialRoomConfig, trapRules: { ...TRAP_RULES_V1 }, initialPlayerState: carriedWitnessState, roomPlans: specialRoomConfig.roomPlans.filter((plan) => plan.floorNumber === floorNumber) } : null;
     const baseResult = await measurePerformanceAsync('generation.strategy', () => generatorStrategyRegistry.generate(strategyId, {
       seed,
       id,
@@ -2066,7 +2067,6 @@ function interactWithRoomEntity(action, entityId) {
   const handlers = {
     'open-treasure': () => openTreasure(playSession, entityId, { at }),
     'avoid-trap': () => avoidTrap(playSession, entityId, { at }),
-    'trigger-trap': () => triggerTrap(playSession, entityId, { at }),
     'use-recovery': () => useRecovery(playSession, entityId, { at }),
   };
   const handler = handlers[action];
@@ -2076,15 +2076,14 @@ function interactWithRoomEntity(action, entityId) {
   if (result?.ok) {
     const cueByAction = {
       'open-treasure': 'treasure',
-      'avoid-trap': 'trap-avoid',
-      'trigger-trap': 'trap-trigger',
+      'avoid-trap': result.avoidance?.outcome === 'triggered' ? 'trap-trigger' : 'trap-avoid',
       'use-recovery': 'recovery',
     };
     emitAudioCue(cueByAction[action]);
     const feedbackByAction = {
       'open-treasure': [`${t('entity.treasure').toUpperCase()} ✓`, 'treasure'],
-      'avoid-trap': [`${t('entity.trap').toUpperCase()} · ${t('action.avoid')}`, 'trap'],
-      'trigger-trap': [`${t('entity.trap').toUpperCase()} · ${t('action.risk')}`, 'trap'],
+      'avoid-trap': [`${t('entity.trap').toUpperCase()} · ${result.avoidance?.outcome === 'triggered'
+        ? t('trap.triggered', { damage: result.applied ?? 0 }) : t('trap.avoided')}`, 'trap'],
       'use-recovery': [`${t('roomEvent.rest').toUpperCase()} ✓`, 'recovery'],
     };
     const [message, kind] = feedbackByAction[action] ?? ['', 'result'];
@@ -2161,7 +2160,9 @@ function renderRoomEventsImplementation() {
     note.className = 'room-event-note';
     if (entity.type === 'trap') {
       const base = warning === 'floor-cracks' ? t('roomEvent.cracked') : t('roomEvent.off');
-      note.textContent = `${base} · -${getEffectiveDamage(playSession, entity.damage ?? DEFAULT_TRAP_DAMAGE, 'trap')} HP`;
+      const chance = Math.round(getTrapAvoidanceChance(playSession) * 100);
+      const damage = getEffectiveDamage(playSession, entity.damage ?? DEFAULT_TRAP_DAMAGE, 'trap');
+      note.textContent = `${base} · ${t('trap.chance', { chance })}${chance < 100 ? ` · ${t('trap.failureDamage', { damage })}` : ''}`;
     } else if (entity.type === 'treasure') {
       const reward = deterministicTreasureReward(playSession, entity.id);
       const rewardIcon = reward.item?.slot === 'weapon' ? '⚔' : '▰';
@@ -2189,13 +2190,7 @@ function renderRoomEventsImplementation() {
       avoid.textContent = t('action.avoid');
       avoid.addEventListener('click', () => interactWithRoomEntity('avoid-trap', entity.id));
 
-      const risk = document.createElement('button');
-      risk.type = 'button';
-      risk.className = 'risk-action';
-      risk.dataset.action = 'trigger-trap';
-      risk.textContent = t('action.risk');
-      risk.addEventListener('click', () => interactWithRoomEntity('trigger-trap', entity.id));
-      actions.append(avoid, risk);
+      actions.append(avoid);
     } else if (entity.type === 'recovery') {
       const use = document.createElement('button');
       use.type = 'button';

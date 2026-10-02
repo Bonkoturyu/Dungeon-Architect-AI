@@ -25,6 +25,7 @@ export const generatorStrategyV3SpecialRooms = createGeneratorStrategy({
       id: request.id,
       roomPlans: request.options.roomPlans,
       equipmentRules: request.options.equipmentRules,
+      trapRules: request.options.trapRules,
       difficulty: request.options.difficulty,
       difficultyProfile: request.options.difficultyProfile,
       specialRoomEntityLimit: request.options.specialRoomEntityLimit,
