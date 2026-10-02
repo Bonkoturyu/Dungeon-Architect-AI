@@ -38,3 +38,24 @@ test('invalid fallback count returns a controlled client error', async () => {
   const response=await handleDesignIntentRequest(new Request('https://example.test/api/design-intent',{method:'POST',body:JSON.stringify({prompt:'monster house with -5 enemies',includeRoomRequests:true})}),{});
   assert.equal(response.status,422); assert.equal((await response.json()).error.code,'ROOM_REQUEST_INVALID');
 });
+
+test('real unmocked fallback endpoint accepts separated normal/special endpoint sentences', async () => {
+  for (const prompt of [
+    '初心者向けダンジョン。スタートは通常の部屋。ゴールに店。',
+    'A beginner dungeon. The start is a normal room. A shop at the goal.',
+    '店はなし。スタートに敵2体のモンスターハウス。ゴールは通常の部屋。',
+  ]) {
+    const response = await handleDesignIntentRequest(new Request('https://example.test/api/design-intent', {
+      method: 'POST', body: JSON.stringify({ prompt, includeRoomRequests: true }),
+    }), {});
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.ok, true); assert.equal(body.selectedProvider, 'fallback');
+    assert.ok(body.roomRequests.some(({ targetRole }) => targetRole === 'start'));
+    assert.ok(body.roomRequests.some(({ targetRole }) => targetRole === 'goal'));
+    if (prompt.startsWith('店はなし')) {
+      assert.equal(body.roomRequests.find(({ kind, targetRole }) => kind === 'shop' && !targetRole).presence, 'exclude');
+      assert.equal(body.roomRequests.find(({ targetRole }) => targetRole === 'start').entityCount, 2);
+    }
+  }
+});

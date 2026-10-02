@@ -74,9 +74,16 @@ export function parseFallbackRoomRequests(prompt) {
   const requests = [];
   for (const [index, match] of matches.entries()) {
     const kind = /モンスター|monster/i.test(match[0]) ? 'monster-house' : /トラップ|罠|trap/i.test(match[0]) ? 'trap-house' : 'shop';
-    const clause = text.slice(boundaries[index], boundaries[index + 1]);
-    const localAfter = text.slice(match.index + match[0].length, boundaries[index + 1]);
-    const before = text.slice(boundaries[index], match.index);
+    // 別文の通常端点指定などを、この種類のtargetRoleへ混ぜない。小数点は文区切りではない。
+    const prefix = text.slice(boundaries[index], match.index);
+    const lastSentence = [...prefix.matchAll(/[。;\n]|(?<!\d)\.(?!\d)/g)].at(-1);
+    const clauseStart = lastSentence ? boundaries[index] + lastSentence.index + lastSentence[0].length : boundaries[index];
+    const suffix = text.slice(match.index + match[0].length, boundaries[index + 1]);
+    const nextSentence = suffix.match(/[。;\n]|(?<!\d)\.(?!\d)/);
+    const clauseEnd = nextSentence ? match.index + match[0].length + nextSentence.index : boundaries[index + 1];
+    const clause = text.slice(clauseStart, clauseEnd);
+    const localAfter = text.slice(match.index + match[0].length, clauseEnd);
+    const before = text.slice(clauseStart, match.index);
     const excluded = /^(?:は|を|が)?\s*(?:なし|無し|不要|いらない|置かない|入れない|作らない|設置しない|配置しない|禁止|なく(?:して|す))/.test(localAfter) ||
       /(?:no|without|exclude|excluding|don't(?:\s+(?:include|add|place))?|do not(?:\s+(?:include|add|place))?)\s*$/i.test(before) ||
       /^\s*(?:(?:are|is)\s*)?(?:not\s+(?:allowed|wanted|included)|excluded)/i.test(localAfter);
@@ -110,12 +117,13 @@ export function parseFallbackRoomRequests(prompt) {
       floorNumber: floor ? Number(floor[1] ?? floor[2]) : null, roomId: room?.[0] ?? null, ...(roles.length ? { targetRole: roles[0] } : {}), offers });
   }
   // 通常部屋/ランダムの端点指定も、特殊種類のキーワードなしで保持する。
-  for (const clause of text.split(/[。.;\n]/)) {
+  for (const clause of text.split(/[。;\n]|(?<!\d)\.(?!\d)/)) {
     const roleMatch = clause.match(/スタート|開始地点|ゴール|終了地点|\bstart(?:ing)?(?: room)?\b|\bgoal(?: room)?\b/i);
     if (!roleMatch || /モンスターハウス|monster\s*house|トラップハウス|罠ハウス|trap\s*house|ショップ|お店|店|\bshop|\bstore/i.test(clause)) continue;
     const normal = /通常(?:の)?部屋|普通(?:の)?部屋|normal\s*room/i.test(clause);
     const random = /ランダム|\brandom/i.test(clause);
     if (!normal && !random) continue;
+    if (/(?:-\d+(?:\.\d+)?|\d+\.\d+)\s*(?:階|F)|floor\s*(?:-\d+|\d+\.\d+)/i.test(clause)) throw new RangeError('ROOM_REQUEST_INTEGER_REQUIRED');
     const role = /スタート|開始|start/i.test(roleMatch[0]) ? 'start' : 'goal';
     const floor = clause.match(/(\d+)\s*(?:階|F)|floor\s*(\d+)/i);
     requests.push({ kind: 'normal', presence: random ? 'random' : 'include', roomCount: 1, entityCount: null, floorNumber: floor ? Number(floor[1] ?? floor[2]) : null, roomId: null, targetRole: role, offers: [] });

@@ -46,3 +46,26 @@ test('endpoint capacity keeps explicit counts and drops only seeded optional hou
   assert.equal(config.roomPlans.reduce((sum, plan) => sum + (plan.entityCount ?? 0), 0), 100);
   assert.throws(() => createRoomPlanConfig({ ...base, floorCount:1, requests: parseFallbackRoomRequests('スタートに敵100体のモンスターハウス。ゴールに罠4個のトラップハウス。') }), /ENTITY_LIMIT/);
 });
+
+
+test('fallback scopes mixed normal and special endpoint sentences independently in both languages', () => {
+  for (const prompt of ['初心者向けダンジョン。スタートは通常の部屋。ゴールに店。', 'A beginner dungeon. The start is a normal room. A shop at the goal.']) {
+    const requests = parseFallbackRoomRequests(prompt);
+    assert.equal(requests.find(({ targetRole }) => targetRole === 'start').kind, 'normal');
+    assert.equal(requests.find(({ targetRole }) => targetRole === 'goal').kind, 'shop');
+    const config = createRoomPlanConfig({ ...base, requests });
+    assert.equal(config.presenceSpec.endpointPolicies.start, 'normal');
+    assert.equal(config.presenceSpec.endpointPolicies.goal, 'shop');
+  }
+  for (const prompt of ['スタートに店。ゴールは通常の部屋。', 'A shop at the start. A normal room at the goal.']) {
+    const requests = parseFallbackRoomRequests(prompt);
+    assert.equal(requests.find(({ targetRole }) => targetRole === 'start').kind, 'shop');
+    assert.equal(requests.find(({ targetRole }) => targetRole === 'goal').kind, 'normal');
+  }
+  const negative = parseFallbackRoomRequests('店はなし。スタートに敵2体のモンスターハウス。ゴールは通常の部屋。');
+  assert.equal(negative.find(({ kind, targetRole }) => kind === 'shop' && !targetRole).presence, 'exclude');
+  assert.equal(negative.find(({ targetRole }) => targetRole === 'start').entityCount, 2);
+  assert.equal(negative.find(({ targetRole }) => targetRole === 'goal').kind, 'normal');
+  assert.throws(() => parseFallbackRoomRequests('2.5階のスタートは通常の部屋。'), /INTEGER_REQUIRED/);
+  assert.throws(() => parseFallbackRoomRequests('A normal room at the start on floor -2.'), /INTEGER_REQUIRED/);
+});
