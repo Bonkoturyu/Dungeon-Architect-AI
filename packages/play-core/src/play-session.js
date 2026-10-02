@@ -180,7 +180,7 @@ export function getGoalCompletionState(session) {
   const blocked = session.snapshot.entities.some((entity) => {
     if (entity.roomId !== session.goalRoomId) return false;
     const status = session.gameplayState.entityStates[entity.id]?.status;
-    return (entity.type === 'enemy' && (status ?? (entity.initiallyActive === false ? 'dormant' : 'active')) !== 'defeated') ||
+    return (entity.type === 'enemy' && (status ?? (entity.initiallyActive === false ? 'dormant' : 'active')) === 'active') ||
       (entity.type === 'trap' && (status ?? 'armed') === 'armed');
   });
   return { available: true, blocked };
