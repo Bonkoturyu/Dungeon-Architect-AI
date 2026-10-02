@@ -15,8 +15,8 @@ import {
   useRecovery
 } from "../src/interaction-runtime.js";
 
-function fixture() {
-  const spec = generateDungeonSpec({ seed: 32032, roomCount: 6, routeChoice: 0, id: "interaction-fixture" });
+function fixture({ seed = 32032 } = {}) {
+  const spec = generateDungeonSpec({ seed, roomCount: 6, routeChoice: 0, id: "interaction-fixture" });
   spec.entities.push(
     { id: "treasure-test", type: "treasure", roomId: "room-002", warning: "floor-scratches" },
     { id: "trap-test", type: "trap", roomId: "room-003", warning: "floor-cracks" },
@@ -77,7 +77,7 @@ test("treasure opening requires current room and increments exactly once", () =>
 });
 
 test("trap can be inspected and avoided without incrementing trapsTriggered", () => {
-  let session = startPlaySession(fixture()).session;
+  let session = startPlaySession(fixture({ seed: 0 })).session;
   session = movePlaySession(session, "room-002").session;
   session = movePlaySession(session, "room-003").session;
 
@@ -153,6 +153,7 @@ test("interaction runtime rejects unknown IDs and finished-session actions", () 
 
   for (const roomId of ["room-002", "room-003", "room-004", "room-005", "room-006"]) {
     session = movePlaySession(session, roomId).session;
+    if (roomId === 'room-003') session = avoidTrap(session, 'trap-test').session;
   }
   assert.equal(session.status, "cleared");
 

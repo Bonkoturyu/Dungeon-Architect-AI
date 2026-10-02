@@ -1,3 +1,4 @@
+import { TRAP_AVOIDANCE_VERSION } from '../../../../core/src/trap-rules.js';
 import { deterministicTrapAvoidance } from '../../../../play-core/src/trap-avoidance.js';
 import { DEFAULT_TRAP_DAMAGE } from '../../../../play-core/src/interaction-runtime.js';
 import { getEffectiveDamage } from '../../../../play-core/src/equipment-runtime.js';
@@ -138,7 +139,7 @@ export function guardFirstShopPlacementV3(spec, plans, { difficultyProfile, init
   if (initialPlayerState !== null) initialPlayerState = normalizePlayerState(initialPlayerState);
   const adjacency = adjacencyOf(spec);
   const initial = inspectFirstShop(spec, plans, difficultyProfile, adjacency, initialPlayerState, equipmentRules);
-  const assumptions = `${initialPlayerState ? 'Provided carried HP/XP/equipment' : 'Default fresh-player HP/XP'}; minimum effective-damage route; deterministic enemy XP/level-up healing; traps ${spec.trapRules?.version ?? 'avoided'}; optional equipment/recovery ignored.`;
+  const assumptions = `${initialPlayerState ? 'Provided carried HP/XP/equipment' : 'Default fresh-player HP/XP'}; minimum effective-damage route; deterministic enemy XP/level-up healing; traps ${TRAP_AVOIDANCE_VERSION}; optional equipment/recovery ignored.`;
   if (initial.survives) return { plans, diagnostics: { status: 'preserved', assumptions, route: initial, changes: [] } };
   const protectedIds = new Set(spec.entities.filter(({ type }) => type === 'start' || type === 'goal').map(({ roomId }) => roomId));
   const occupied = new Set(plans.map(({ roomId }) => roomId));

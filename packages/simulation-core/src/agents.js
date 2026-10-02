@@ -115,7 +115,7 @@ function hazardPenaltyByRoom(spec) {
   const penalty = new Map(spec.rooms.map((room) => [room.id, 0]));
   for (const entity of spec.entities) {
     if (!penalty.has(entity.roomId)) continue;
-    if (entity.type === 'trap') penalty.set(entity.roomId, penalty.get(entity.roomId) + (spec.trapRules ? (entity.damage ?? 6) * (1 - getTrapAvoidanceChance({ snapshot: spec })) : 6));
+    if (entity.type === 'trap') penalty.set(entity.roomId, penalty.get(entity.roomId) + (entity.damage ?? 6) * (1 - getTrapAvoidanceChance({ snapshot: spec })));
     if (entity.type === 'enemy') penalty.set(entity.roomId, penalty.get(entity.roomId) + 4);
   }
   return penalty;

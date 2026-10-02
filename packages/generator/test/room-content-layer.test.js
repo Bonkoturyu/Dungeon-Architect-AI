@@ -66,17 +66,16 @@ test('BSP multi-floor layer carries the prior witness state rather than restorin
   }
 });
 
-test('content layer V1 remains selectable while V2 enforces smaller non-house counts', async () => {
+test('the current content layer enforces smaller non-house counts and rejects retired selectors', async () => {
   let adjusted = 0;
   for (let seed=0;seed<24;seed++) {
     const config=createRoomPlanConfig({requests:[],floorCount:1,roomsPerFloor:8,seed,difficulty:'easy',policies:{'monster-house':'exclude','trap-house':'exclude',shop:'exclude'},endpointPolicies:{start:'normal',goal:'normal'}});
     const base=await registry.generate('algorithm-lab.bsp',request(seed));
-    const archived=applyRoomContentLayer(base,DEFAULT_DESIGN_INTENT,config,{version:'special-rooms-1'});
-    assert.equal(archived.provenance.contentLayerVersion,'special-rooms-1');
-    const next=applyRoomContentLayer(base,DEFAULT_DESIGN_INTENT,config,{version:'special-rooms-2'});
-    assert.equal(next.provenance.contentLayerVersion,'special-rooms-2');
-    assert.equal(next.spec.trapRules,undefined);
-    assert.deepEqual(shape(next.spec),shape(archived.spec));
+    for (const version of ['special-rooms-1', 'special-rooms-2']) assert.throws(() => applyRoomContentLayer(base,DEFAULT_DESIGN_INTENT,config,{version}), /ROOM_CONTENT_LAYER_VERSION_UNSUPPORTED/);
+    const next=applyRoomContentLayer(base,DEFAULT_DESIGN_INTENT,config);
+    assert.equal(next.provenance.contentLayerVersion,ROOM_CONTENT_LAYER_VERSION);
+    assert.equal(next.spec.trapRules.version,'seeded-avoidance-1');
+    assert.deepEqual(shape(next.spec),shape(base.spec));
     const limits=next.diagnostics.profile.normalRoomDistinction.limits;
     assert.deepEqual(limits,{enemy:1,trap:2});
     for(const room of next.spec.rooms)for(const type of ['enemy','trap'])assert.ok(next.spec.entities.filter(e=>e.roomId===room.id&&e.type===type).length<=limits[type]);

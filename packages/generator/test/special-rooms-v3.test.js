@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { DEFAULT_DESIGN_INTENT } from '../../intent/src/design-intent.js';
 import { validateConfirmedRoomPlanLimits } from '../../intent/src/room-limits.js';
 import { validateDungeonSpec } from '../../core/src/dungeon-spec.js';
+import { TRAP_RULES_V1 } from '../../core/src/trap-rules.js';
 import { DEFAULT_SPECIAL_ROOM_ENTITY_LIMIT, MAX_SPECIAL_ROOM_ENTITY_LIMIT, generateDungeonSpec, generateDungeonSpecV2, generateDungeonSpecV3 } from '../src/dungeon-generator.js';
 import {
   deriveGenerationProfile,
@@ -24,9 +25,10 @@ const roomPlans = [
 ];
 const equipmentRules = { weaponEnemyReductionPerTier: 1, armorDamageReductionPerTier: 1, minimumPositiveDamage: 1 };
 
-test('V3 without plans or explicit rules is byte-identical to the V2 baseline', () => {
-  assert.equal(JSON.stringify(generateDungeonSpecV3(options)), JSON.stringify(generateDungeonSpecV2(options)));
-  assert.equal(JSON.stringify(generateDungeonFromDesignIntentV3(intent, options)), JSON.stringify(generateDungeonFromDesignIntentV2(intent, options)));
+test('V3 without plans preserves the V2 baseline contents and adds current trap rules', () => {
+  assert.deepEqual(generateDungeonSpecV3(options), { ...generateDungeonSpecV2(options), trapRules: { ...TRAP_RULES_V1 } });
+  const baseline = generateDungeonFromDesignIntentV2(intent, options);
+  assert.deepEqual(generateDungeonFromDesignIntentV3(intent, options), { ...baseline, spec: { ...baseline.spec, trapRules: { ...TRAP_RULES_V1 } } });
   assert.equal(seedFromPrompt('fixture', { version: '3' }), seedFromPrompt('fixture', { version: '2' }));
   assert.deepEqual(deriveGenerationProfile(intent, { version: '3', seed: options.seed }), deriveGenerationProfile(intent, { version: '2', seed: options.seed }));
 });

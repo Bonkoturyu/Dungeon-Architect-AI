@@ -77,11 +77,13 @@ test('failed avoidance applies armor and can end a run without leaving an armed/
   assert.equal(avoidTrap(failed, 'trap-test').error.code, 'SESSION_NOT_PLAYING');
 });
 
-test('legacy schema without trapRules retains guaranteed avoidance; invalid rules fail closed', () => {
+test('missing trapRules uses the current fixed roll without changing the source; invalid rules fail closed', () => {
   const spec = fixture(2); delete spec.trapRules;
   assert.equal(validateDungeonSpec(spec).valid, true);
-  assert.equal(getTrapAvoidanceChance(entered(spec)), 1);
-  assert.equal(avoidTrap(entered(spec), 'trap-test').session.playerState.hp, 20);
+  assert.equal(getTrapAvoidanceChance(entered(spec)), 0.7);
+  assert.equal(avoidTrap(entered(spec), 'trap-test').session.playerState.hp, 14);
+  assert.deepEqual(entered(spec).snapshot.trapRules, TRAP_RULES_V1);
+  assert.equal(spec.trapRules, undefined);
   for (const rules of [null, {}, { version: 'unknown' }, { version: TRAP_RULES_V1.version, successChance: 1 }]) {
     assert.ok(validateDungeonSpec({ ...spec, trapRules: rules }).errors.some(({ code }) => code === 'TRAP_RULES_UNSUPPORTED'));
     assert.equal(startPlaySession({ ...spec, trapRules: rules }).ok, false);

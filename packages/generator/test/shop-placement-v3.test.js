@@ -51,12 +51,14 @@ test('previous hard pre-shop bottlenecks receive deterministic auto-shop relocat
 });
 
 test('already-safe placement is preserved and does not force an early shop room', () => {
-  const result = generateDungeonFromDesignIntentV3(DEFAULT_DESIGN_INTENT, { seed: 0, roomPlans: plans, difficultyProfile });
+  const result = generateDungeonFromDesignIntentV3(DEFAULT_DESIGN_INTENT, { seed: 1, roomPlans: plans, difficultyProfile });
   assert.equal(result.profile.shopPlacementGuard.status, 'preserved');
   assert.deepEqual(result.profile.shopPlacementGuard.changes, []);
   const base = generateDungeonSpecV2({ seed: 0, roomCount: 8, routeChoice: 0 });
   const selected = [{ ...plans[2], roomId: 'room-007', autoAssigned: true }];
   assert.equal(guardFirstShopPlacementV3(base, selected).plans[0].roomId, 'room-007');
+  // Seed 0は店まで安全でも、その先の現行罠判定では有限探索で生存経路を確認できない。
+  assert.throws(() => generateDungeonFromDesignIntentV3(DEFAULT_DESIGN_INTENT, { seed: 0, roomPlans: plans, difficultyProfile }), /ROUTE_VIABILITY_CONFLICT/);
 });
 
 test('guard swaps auto rooms only when there is no free ordinary room and never moves explicit assignments', () => {

@@ -1,4 +1,5 @@
 import { validateDungeonSpec } from '../../core/src/dungeon-spec.js';
+import { TRAP_RULES_V1 } from '../../core/src/trap-rules.js';
 import {
   createDungeonRunSpec,
   validateDungeonRunSpec,
@@ -714,6 +715,7 @@ function layoutFloorToDungeonSpec(floor) {
 
   const spec = {
     schemaVersion: '1.0',
+    trapRules: { ...TRAP_RULES_V1 },
     id: floor.dungeonId,
     seed: floor.seed,
     rooms: floor.rooms.map((room) => ({
@@ -885,7 +887,11 @@ export function importFullDungeonExport(input) {
   return {
     ok: true,
     format: 'full',
-    dungeons: parsed.value.floors.map((floor) => clone(floor.dungeon)),
+    dungeons: parsed.value.floors.map((floor) => {
+      const dungeon = clone(floor.dungeon);
+      if (dungeon.trapRules === undefined) dungeon.trapRules = { ...TRAP_RULES_V1 };
+      return dungeon;
+    }),
     provenance: null,
     errors: [],
   };

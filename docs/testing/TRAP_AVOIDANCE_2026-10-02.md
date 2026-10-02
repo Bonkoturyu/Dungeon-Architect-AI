@@ -11,8 +11,8 @@ Room Eventsの「回避／踏む」を「回避を試みる」1ボタンへ変�
 - 新しい任意フィールド `DungeonSpec.trapRules = { version: 'seeded-avoidance-1' }` を追加。schemaVersionは1.0のまま、未知の版・余分なルール項目は検証エラー
 - 版・各階のDungeonSpec.seed・trapIdから固定32bitハッシュを計算し、0以上1未満へ正規化して0.7と比較する。部屋ID、操作順、時刻、HP、装備は抽選に含めない
 - ブラウザの各階Seedは既存のderivedFloorSeedを使用。同じSpecの再Play、Full JSON再Import、同じSeedの再生成・reload後も同じ判定。Mysteryの新Seedでは別の判定になる
-- 旧SpecでtrapRulesがない場合は従来の100%回避を維持し、UIにも100%と表示する。旧Specへの暗黙移行はしない
-- 新規生成の内容レイヤーはspecial-rooms-3。special-rooms-1/2の明示選択と旧V1/V2地形生成を維持。V3 APIではtrapRulesが明示されたときだけ新判定を使う
+- 現行方針ではtrapRules未指定でも70%回避を使い、JSON importとSTART時にルールを補完する。初回実装の100%互換は廃止した
+- 内容レイヤーはspecial-rooms-3のみ。special-rooms-1/2の選択APIは廃止し、V1/V2を含む11の地形生成方式は維持する。V3 APIでも罠ルールの既定は現行版。整理の詳細は [現行ルールへの統一](CURRENT_CONTENT_RULES_2026-10-02.md)
 - Full JSON export/importはルールを保存する。地形のみのLayout Exchangeにはもともと敵・罠のゲーム内容を含めない
 - 強制triggerTrap APIは旧テスト・診断用途で残すが、ブラウザには公開しない。新ルールのsimulation観測も「踏む」を選択肢にしない
 
@@ -31,7 +31,7 @@ Room Eventsの「回避／踏む」を「回避を試みる」1ボタンへ変�
 
 ## 検証
 
-実行結果と証拠は以下に記録する。
+以下は初回PR #65時点の実行結果。互換分岐廃止後の再検証は [現行ルールへの統一](CURRENT_CONTENT_RULES_2026-10-02.md) に記録する。
 
 - 全Node suite: 540件、失敗0。build・構文・legal/privacy監査も通過
 - Node回帰: 固定判定ベクトル、成功/失敗、二重操作、順序独立、再Play/Full JSON再Import、防具、死亡、旧Spec、未知版拒否、Goal、simulation一致

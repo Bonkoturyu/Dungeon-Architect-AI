@@ -34,7 +34,7 @@ test('aggregate metrics capture deterministic contrast across the three built-in
   assert.equal(aggregate.successRate, 1);
   assert.equal(aggregate.failureCount, 0);
   assert.equal(aggregate.failureConcentration, null);
-  assert.equal(aggregate.means.steps, 3);
+  assert.equal(aggregate.means.steps, 3.666667);
   assert.equal(aggregate.means.moves, 2.666667);
   assert.equal(aggregate.means.detourMoves, 0.666667);
   assert.equal(aggregate.means.backtrackMoves, 0);
@@ -83,7 +83,11 @@ test('failure concentration is derived from actual failed simulation runs', () =
 test('per-run metrics detect revisit/backtracking and structural detour', () => {
   const scriptedRooms = ['room-safe-1', 'room-start', 'room-hazard', 'room-goal'];
   let cursor = 0;
-  const revisitPolicy = () => ({ type: 'move', roomId: scriptedRooms[cursor++] });
+  const revisitPolicy = (observation) => {
+    if (observation.enemies.length) return { type: 'combat-enemy', enemyId: observation.enemies[0].id };
+    const trap = observation.interactables.find(({ type }) => type === 'trap');
+    return trap ? { type: 'avoid-trap', trapId: trap.id } : { type: 'move', roomId: scriptedRooms[cursor++] };
+  };
   const simulation = run(revisitPolicy, 'revisit-probe');
   const metrics = projectSimulationMetrics(fixture, simulation);
 

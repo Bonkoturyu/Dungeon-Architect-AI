@@ -6,6 +6,7 @@ import {
   applyPlayerDamage,
   applyPlayerHealing,
   createPlayResult,
+  completePlayGoal,
   movePlaySession,
   startPlaySession
 } from "../src/play-session.js";
@@ -332,6 +333,9 @@ test("enemy runtime rejects unknown enemies and actions after session completion
   for (const roomId of ["room-002", "room-003", "room-004", "room-005"]) {
     session = movePlaySession(session, roomId).session;
   }
+  assert.equal(session.status, 'playing');
+  session = defeatEnemy(session, 'enemy-test').session;
+  session = completePlayGoal(session).session;
   assert.equal(session.status, "cleared");
   const afterClear = defeatEnemy(session, "enemy-test");
   assert.equal(afterClear.ok, false);

@@ -106,6 +106,9 @@ test('same spec and deterministic policy produce the same simulation trace and r
 
 test('step limit bounds non-terminating policies and returns a stopped PlayResult', () => {
   const policy = (observation) => {
+    if (observation.enemies.length) return { type: 'combat-enemy', enemyId: observation.enemies[0].id };
+    const trap = observation.interactables.find(({ type }) => type === 'trap');
+    if (trap) return { type: 'avoid-trap', trapId: trap.id };
     if (observation.currentRoomId === 'room-start') return { type: 'move', roomId: 'room-middle' };
     return { type: 'move', roomId: 'room-start' };
   };
@@ -147,6 +150,7 @@ test('combat-enemy simulation action uses real damage and progression reward', (
   const actions = [
     { type: 'move', roomId: 'room-middle' },
     { type: 'combat-enemy', enemyId: 'enemy-1' },
+    { type: 'avoid-trap', trapId: 'trap-1' },
     { type: 'move', roomId: 'room-goal' },
   ];
   let index = 0;

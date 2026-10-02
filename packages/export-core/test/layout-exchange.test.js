@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
+import { TRAP_RULES_V1 } from '../../core/src/trap-rules.js';
 import { fileURLToPath } from 'node:url';
 
 import {
@@ -183,7 +184,7 @@ test('layout import round-trips generic geometry and roles deterministically', (
   }
 });
 
-test('full DungeonRunSpec import preserves complete DungeonSpec data', () => {
+test('full DungeonRunSpec import preserves authored data and supplies current trap rules', () => {
   const spec = clone(fixture);
   spec.entities.push({
     id: 'trap-import-test',
@@ -208,7 +209,9 @@ test('full DungeonRunSpec import preserves complete DungeonSpec data', () => {
 
   assert.equal(imported.ok, true);
   assert.equal(imported.format, 'full');
-  assert.deepEqual(imported.dungeons, [spec]);
+  assert.deepEqual(imported.dungeons, [{ ...spec, trapRules: { ...TRAP_RULES_V1 } }]);
+  assert.equal(spec.trapRules, undefined);
+  assert.equal(exported.floors[0].dungeon.trapRules, undefined);
 
   const reexported = createFullDungeonExport(
     imported.dungeons,
@@ -216,7 +219,7 @@ test('full DungeonRunSpec import preserves complete DungeonSpec data', () => {
   );
   assert.equal(
     serializeJsonExport(reexported),
-    serializeJsonExport(exported),
+    serializeJsonExport({ ...exported, floors: exported.floors.map((floor) => ({ ...floor, dungeon: { ...floor.dungeon, trapRules: { ...TRAP_RULES_V1 } } })) }),
   );
 });
 

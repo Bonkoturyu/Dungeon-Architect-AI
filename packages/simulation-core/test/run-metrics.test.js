@@ -56,7 +56,7 @@ test('run metrics expose carry-aware progression and whole-run totals', () => {
   assert.equal(metrics.floors.length, 3);
   assert.equal(metrics.totals.lootCollected, 3);
   assert.equal(metrics.totals.enemiesCleared, 3);
-  assert.equal(metrics.totals.trapsTriggered, 0);
+  assert.equal(metrics.totals.trapsTriggered, 1);
   assert.ok(metrics.totals.damageTaken >= 12);
   assert.ok(metrics.totals.healingReceived > 0);
   assert.ok(metrics.totals.xpEarned > 0);
@@ -92,14 +92,14 @@ test('aggregate run metrics identify reach loss and the first bottleneck floor',
   );
 
   assert.equal(aggregate.runCount, 3);
-  assert.equal(aggregate.successCount, 2);
-  assert.equal(aggregate.failureCount, 1);
-  assert.equal(aggregate.successRate, 0.666667);
-  assert.equal(aggregate.failureRate, 0.333333);
+  assert.equal(aggregate.successCount, 1);
+  assert.equal(aggregate.failureCount, 2);
+  assert.equal(aggregate.successRate, 0.333333);
+  assert.equal(aggregate.failureRate, 0.666667);
   assert.deepEqual(aggregate.failureFloorCounts, {
     '0': 0,
     '1': 0,
-    '2': 1,
+    '2': 2,
   });
 
   assert.equal(aggregate.floors[0].reachedCount, 3);
@@ -110,12 +110,12 @@ test('aggregate run metrics identify reach loss and the first bottleneck floor',
   assert.equal(aggregate.floors[1].clearRateOverall, 1);
 
   assert.equal(aggregate.floors[2].reachedCount, 3);
-  assert.equal(aggregate.floors[2].clearedCount, 2);
+  assert.equal(aggregate.floors[2].clearedCount, 1);
   assert.equal(aggregate.floors[2].reachRate, 1);
-  assert.equal(aggregate.floors[2].clearRateOverall, 0.666667);
+  assert.equal(aggregate.floors[2].clearRateOverall, 0.333333);
 
   assert.equal(aggregate.progressionSignals.bottleneckFloorIndex, 2);
-  assert.equal(aggregate.progressionSignals.bottleneckClearRate, 0.666667);
+  assert.equal(aggregate.progressionSignals.bottleneckClearRate, 0.333333);
   assert.equal(
     aggregate.progressionSignals.authoredHazardDamageBudgetPerRoomDeltaPerFloor,
     1.666667,
@@ -134,6 +134,8 @@ test('aggregate run metrics identify reach loss and the first bottleneck floor',
   const riskMetrics = aggregate.runs.find((run) => run.policyId === 'risk-run');
 
   assert.equal(safeMetrics.totals.lootCollected, 0);
+  assert.equal(safeMetrics.failureFloorIndex, 2);
+  assert.equal(safeMetrics.totals.trapsTriggered, 1);
   assert.equal(treasureMetrics.totals.lootCollected, 3);
   assert.equal(riskMetrics.failureFloorIndex, 2);
   assert.equal(riskMetrics.floorsReached, 3);
