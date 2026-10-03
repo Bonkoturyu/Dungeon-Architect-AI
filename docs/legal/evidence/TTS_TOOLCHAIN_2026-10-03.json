@@ -1,7 +1,7 @@
 {
   "review_date": "2026-10-03",
   "scope": "video-production-only; generated narration in MP4, no tool/model redistribution",
-  "status": "Approved for existing user-authorized offline narration production scope after technical review; external publication/submission and software/model redistribution not authorized",
+  "status": "Pending Evidence: exact installed torch archive identity not verified; 91 package payloads matched. Existing offline production permission remains valid; no new owner permission is required for that same scope. External publication/submission and software/model redistribution remain unapproved.",
   "provenance_caveat": "pip --report install plans identify exact candidate wheels; matching installed name/version and METADATA are checked, but a plan alone is not a retained-wheel byte verification. Installed license-file hashes identify inspected texts. No secrets or private machine paths are included.",
   "installed_package_count": 93,
   "packages": [
@@ -31,7 +31,21 @@
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
       "redistributed_in_browser_or_video": false,
-      "reviewed_license": "MIT (installed LICENSE; metadata UNKNOWN is not used as final determination)"
+      "reviewed_license": "MIT (installed LICENSE; metadata UNKNOWN is not used as final determination)",
+      "official_archive_installed_payload_verification": {
+        "name": "addict",
+        "version": "2.4.0",
+        "source_url": "https://files.pythonhosted.org/packages/6a/00/b08f23b7d7e1e14ce01419a467b583edbb93c6cdb8654e54a9cc579cd61f/addict-2.4.0-py3-none-any.whl",
+        "expected_sha256": "249bb56bbfd3cdc2a004ea0ff4c2b6ddc84d53bc2194761636eb314d5cfa5dfc",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "249bb56bbfd3cdc2a004ea0ff4c2b6ddc84d53bc2194761636eb314d5cfa5dfc",
+        "archive_bytes": 3832,
+        "matched_files": 6,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "annotated-doc",
@@ -56,7 +70,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "annotated-doc",
+        "version": "0.0.5",
+        "source_url": "https://files.pythonhosted.org/packages/3e/30/e900b21425a860e195f32e37657aa1f7c7f2b1bfb26f03ca209b90933c06/annotated_doc-0.0.5-py3-none-any.whl",
+        "expected_sha256": "117bac03a25ede5df5440e855b32d556049ca169ead221505badf432fed4b101",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "117bac03a25ede5df5440e855b32d556049ca169ead221505badf432fed4b101",
+        "archive_bytes": 5302,
+        "matched_files": 7,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "annotated-types",
@@ -83,7 +111,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "annotated-types",
+        "version": "0.8.0",
+        "source_url": "https://files.pythonhosted.org/packages/99/91/8acff4f5e50511b911bbccb72b8628a49c68ce14148cd9f6431094859a90/annotated_types-0.8.0-py3-none-any.whl",
+        "expected_sha256": "f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0",
+        "archive_bytes": 13427,
+        "matched_files": 6,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "anyio",
@@ -108,7 +150,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "anyio",
+        "version": "4.15.1",
+        "source_url": "https://files.pythonhosted.org/packages/12/b8/4bd346e22b28902df4d651910f5242c28d84e4a5c2435ca5c3f797ed7e2e/anyio-4.15.1-py3-none-any.whl",
+        "expected_sha256": "6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101",
+        "archive_bytes": 132079,
+        "matched_files": 52,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "attrs",
@@ -133,7 +189,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "attrs",
+        "version": "26.1.0",
+        "source_url": "https://files.pythonhosted.org/packages/64/b4/17d4b0b2a2dc85a6df63d1157e028ed19f90d4cd97c36717afef2bc2f395/attrs-26.1.0-py3-none-any.whl",
+        "expected_sha256": "c647aa4a12dfbad9333ca4e71fe62ddc36f4e63b2d260a37a8b83d2f043ac309",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "c647aa4a12dfbad9333ca4e71fe62ddc36f4e63b2d260a37a8b83d2f043ac309",
+        "archive_bytes": 67548,
+        "matched_files": 34,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "babel",
@@ -160,7 +230,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "babel",
+        "version": "2.18.0",
+        "source_url": "https://files.pythonhosted.org/packages/77/f5/21d2de20e8b8b0408f0681956ca2c69f1320a3848ac50e6e7f39c6159675/babel-2.18.0-py3-none-any.whl",
+        "expected_sha256": "e2b422b277c2b9a9630c1d7903c2a00d0830c409c59ac8cae9081c92f1aeba35",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "e2b422b277c2b9a9630c1d7903c2a00d0830c409c59ac8cae9081c92f1aeba35",
+        "archive_bytes": 10196845,
+        "matched_files": 1118,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "blis",
@@ -187,7 +271,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "blis",
+        "version": "1.3.3",
+        "source_url": "https://files.pythonhosted.org/packages/d5/ad/58deaa3ad856dd3cc96493e40ffd2ed043d18d4d304f85a65cde1ccbf644/blis-1.3.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+        "expected_sha256": "1ef6d6e2b599a3a2788eb6d9b443533961265aa4ec49d574ed4bb846e548dcdb",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "1ef6d6e2b599a3a2788eb6d9b443533961265aa4ec49d574ed4bb846e548dcdb",
+        "archive_bytes": 11366550,
+        "matched_files": 17,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "catalogue",
@@ -214,7 +312,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "catalogue",
+        "version": "2.0.10",
+        "source_url": "https://files.pythonhosted.org/packages/9e/96/d32b941a501ab566a16358d68b6eb4e4acc373fab3c3c4d7d9e649f7b4bb/catalogue-2.0.10-py3-none-any.whl",
+        "expected_sha256": "58c2de0020aa90f4a2da7dfad161bf7b3b054c86a5f09fcedc0b2b740c109a9f",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "58c2de0020aa90f4a2da7dfad161bf7b3b054c86a5f09fcedc0b2b740c109a9f",
+        "archive_bytes": 17325,
+        "matched_files": 10,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "certifi",
@@ -241,7 +353,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "certifi",
+        "version": "2026.7.22",
+        "source_url": "https://files.pythonhosted.org/packages/0b/a7/71ac2cff56fec219ed242bb11b8efb69fcc4bec75db06fb7bfe35de520e6/certifi-2026.7.22-py3-none-any.whl",
+        "expected_sha256": "62f22742b58a1a33014a2b6b706588a8d7e2a88ae7bd1a6ebe8c992928483775",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "62f22742b58a1a33014a2b6b706588a8d7e2a88ae7bd1a6ebe8c992928483775",
+        "archive_bytes": 136983,
+        "matched_files": 11,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "cffi",
@@ -266,7 +392,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "cffi",
+        "version": "2.1.1",
+        "source_url": "https://files.pythonhosted.org/packages/b1/db/dceb9dd5b231e1da801793f8acc9f3c52a7e1afe40bb1aae37e02b0faad5/cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+        "expected_sha256": "c1453022f490d2459a11819d83ad1d586e9ff65a12ac3e705ffebd46d3685dcf",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "c1453022f490d2459a11819d83ad1d586e9ff65a12ac3e705ffebd46d3685dcf",
+        "archive_bytes": 221822,
+        "matched_files": 30,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "charset-normalizer",
@@ -291,7 +431,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "charset-normalizer",
+        "version": "3.5.2",
+        "source_url": "https://files.pythonhosted.org/packages/7f/c5/38806a25ab5e65fc178f39affeda20858efafede2fce1ffc2556cfc9fe73/charset_normalizer-3.5.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+        "expected_sha256": "3d31298449090ab8d47b7b1b2a555ff73cac7ed438a08b7ac160980c7ebed649",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "3d31298449090ab8d47b7b1b2a555ff73cac7ed438a08b7ac160980c7ebed649",
+        "archive_bytes": 257601,
+        "matched_files": 20,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "click",
@@ -316,7 +470,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "click",
+        "version": "8.5.0",
+        "source_url": "https://files.pythonhosted.org/packages/58/50/6c0d534c5f134586a8e1ba4e330569e32f057e33372ae556463212fb4cd3/click-8.5.0-py3-none-any.whl",
+        "expected_sha256": "255bc9599cf7748b4b1a446ccc735421bd08a2ae529a8b88597d3de5664ee360",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "255bc9599cf7748b4b1a446ccc735421bd08a2ae529a8b88597d3de5664ee360",
+        "archive_bytes": 125251,
+        "matched_files": 21,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "cloudpathlib",
@@ -343,7 +511,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "cloudpathlib",
+        "version": "0.26.0",
+        "source_url": "https://files.pythonhosted.org/packages/97/aa/c333f1be2afab2d033d51a66cb105f4bfc885b0c546e1168fb889a416b9d/cloudpathlib-0.26.0-py3-none-any.whl",
+        "expected_sha256": "abcd7f54bcbb2fbb79c0e96b79241f08866760aee6276586882b3558672d571b",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "abcd7f54bcbb2fbb79c0e96b79241f08866760aee6276586882b3558672d571b",
+        "archive_bytes": 66408,
+        "matched_files": 33,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "cloudpickle",
@@ -370,7 +552,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "cloudpickle",
+        "version": "3.1.2",
+        "source_url": "https://files.pythonhosted.org/packages/88/39/799be3f2f0f38cc727ee3b4f1445fe6d5e4133064ec2e4115069418a5bb6/cloudpickle-3.1.2-py3-none-any.whl",
+        "expected_sha256": "9acb47f6afd73f60dc1df93bb801b472f05ff42fa6c84167d25cb206be1fbf4a",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "9acb47f6afd73f60dc1df93bb801b472f05ff42fa6c84167d25cb206be1fbf4a",
+        "archive_bytes": 22228,
+        "matched_files": 6,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "confection",
@@ -397,7 +593,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "confection",
+        "version": "1.3.3",
+        "source_url": "https://files.pythonhosted.org/packages/8d/e4/d66708bdf0d92fb4d49b22cdff4b10cec38aca5dcd7e81d909bb55c65cd7/confection-1.3.3-py3-none-any.whl",
+        "expected_sha256": "b9fef9ee84b237ef4611ec3eb5797b70e13063e6310ad9f15536373f5e313c82",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "b9fef9ee84b237ef4611ec3eb5797b70e13063e6310ad9f15536373f5e313c82",
+        "archive_bytes": 35902,
+        "matched_files": 15,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "csvw",
@@ -424,7 +634,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "csvw",
+        "version": "4.1.0",
+        "source_url": "https://files.pythonhosted.org/packages/fe/7f/9586327961379fd23362eafddac9fc9ba1d6783686d20154d55e93dd8a61/csvw-4.1.0-py2.py3-none-any.whl",
+        "expected_sha256": "d432d4cccd8dcdf31ccb2272d6d7ad40a9ebde7de3c7d6ced9033afb23bb76dd",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "d432d4cccd8dcdf31ccb2272d6d7ad40a9ebde7de3c7d6ced9033afb23bb76dd",
+        "archive_bytes": 69495,
+        "matched_files": 17,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "curated-tokenizers",
@@ -451,7 +675,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "curated-tokenizers",
+        "version": "0.0.10",
+        "source_url": "https://files.pythonhosted.org/packages/37/fb/20d524a76f8bd226733931b67063c87ecead3b58a7cc3543c27ca46b63c7/curated_tokenizers-0.0.10-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+        "expected_sha256": "841743db1da4a4a1298675584771ed973945c31ea9f6dde9f06e9eb6b3974bf3",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "841743db1da4a4a1298675584771ed973945c31ea9f6dde9f06e9eb6b3974bf3",
+        "archive_bytes": 6309412,
+        "matched_files": 31,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "curated-transformers",
@@ -476,7 +714,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "curated-transformers",
+        "version": "0.1.1",
+        "source_url": "https://files.pythonhosted.org/packages/d6/67/3b72b3fdfcadab61bc8f59c17e63770e526ffabd583ed32f174a7c01af85/curated_transformers-0.1.1-py2.py3-none-any.whl",
+        "expected_sha256": "d716063d73d803c6925d2dab56fde9b9ab8e89e663c2c0587804944ba488ff01",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "d716063d73d803c6925d2dab56fde9b9ab8e89e663c2c0587804944ba488ff01",
+        "archive_bytes": 25972,
+        "matched_files": 40,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "cymem",
@@ -503,7 +755,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "cymem",
+        "version": "2.0.13",
+        "source_url": "https://files.pythonhosted.org/packages/eb/12/678d16f7aa1996f947bf17b8cfb917ea9c9674ef5e2bd3690c04123d5680/cymem-2.0.13-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+        "expected_sha256": "f190a92fe46197ee64d32560eb121c2809bb843341733227f51538ce77b3410d",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "f190a92fe46197ee64d32560eb121c2809bb843341733227f51538ce77b3410d",
+        "archive_bytes": 260843,
+        "matched_files": 12,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "dlinfo",
@@ -528,7 +794,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "dlinfo",
+        "version": "2.0.0",
+        "source_url": "https://files.pythonhosted.org/packages/da/90/022c79d6e5e6f843268c10b84d4a021ee3afba0621d3c176d3ff2024bfc8/dlinfo-2.0.0-py3-none-any.whl",
+        "expected_sha256": "b32cc18e3ea67c0ca9ca409e5b41eed863bd1363dbc9dd3de90fedf11b61e7bc",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "b32cc18e3ea67c0ca9ca409e5b41eed863bd1363dbc9dd3de90fedf11b61e7bc",
+        "archive_bytes": 3654,
+        "matched_files": 7,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "docopt",
@@ -555,7 +835,29 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "docopt",
+        "version": "0.6.2",
+        "source_url": "https://files.pythonhosted.org/packages/a2/55/8f8cab2afd404cf578136ef2cc5dfb50baa1761b68c9da1fb1e4eed343c9/docopt-0.6.2.tar.gz",
+        "expected_sha256": "49b3a825280bd66b3aa83585ef59c4a8c82f2c8a522dbe754a8bc8d08c85c491",
+        "verification": "Official sdist archive SHA-256, installed docopt.py and LICENSE-MIT exact byte match; build-generated dist-info is not claimed identical to sdist",
+        "archive_sha256": "49b3a825280bd66b3aa83585ef59c4a8c82f2c8a522dbe754a8bc8d08c85c491",
+        "archive_bytes": 25901,
+        "status": "source-payload-matched",
+        "source_matches": [
+          {
+            "source": "docopt-0.6.2/docopt.py",
+            "installed": "docopt.py",
+            "sha256": "44c650ebd833d852c8731fa3f0c5759506309622300e4c1954a540d78572cc54"
+          },
+          {
+            "source": "docopt-0.6.2/LICENSE-MIT",
+            "installed": "docopt-0.6.2.dist-info/licenses/LICENSE-MIT",
+            "sha256": "3d5df78f592ff2433c3c6ce4984091b7f497059ddb8c6b08a061ba48e37b67f2"
+          }
+        ]
+      }
     },
     {
       "name": "en_core_web_sm",
@@ -585,7 +887,21 @@
         "url": "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl"
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "en_core_web_sm",
+        "version": "3.8.0",
+        "source_url": "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl",
+        "expected_sha256": "1932429db727d4bff3deed6b34cfc05df17794f4a52eeb26cf8928f7c1a0fb85",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "1932429db727d4bff3deed6b34cfc05df17794f4a52eeb26cf8928f7c1a0fb85",
+        "archive_bytes": 12806118,
+        "matched_files": 34,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "espeakng-loader",
@@ -612,6 +928,20 @@
         "sha256": "3900f0b174feebccb8991fd6f3888f037c7bfa23d9a3bdec480e894f75b03f3f",
         "release_commit": "146599e29be31bf17d99f0bcb7dbb2f92aef3d95",
         "license_only_successor": "0ddc87adf77e5850d7eeb542ac8a87d421b64daa"
+      },
+      "official_archive_installed_payload_verification": {
+        "name": "espeakng-loader",
+        "version": "0.2.4",
+        "source_url": "https://files.pythonhosted.org/packages/de/1e/25ec5ab07528c0fbb215a61800a38eca05c8a99445515a02d7fa5debcb32/espeakng_loader-0.2.4-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+        "expected_sha256": "08721baf27d13d461f6be6eed9a65277e70d68234ff484fd8b9897b222cdcb6d",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "08721baf27d13d461f6be6eed9a65277e70d68234ff484fd8b9897b222cdcb6d",
+        "archive_bytes": 10078484,
+        "matched_files": 370,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
       }
     },
     {
@@ -639,7 +969,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "filelock",
+        "version": "3.32.3",
+        "source_url": "https://files.pythonhosted.org/packages/a7/8e/50f46a9c0ce8d2861a394c1347caae037ea0431d2f67d7feb151cbc4649a/filelock-3.32.3-py3-none-any.whl",
+        "expected_sha256": "7f0ca4bcc0e181c60dbbd8aa9ab5b120ebb99e4e064e83636340056f833a1f09",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "7f0ca4bcc0e181c60dbbd8aa9ab5b120ebb99e4e064e83636340056f833a1f09",
+        "archive_bytes": 98901,
+        "matched_files": 25,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "fsspec",
@@ -664,7 +1008,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "fsspec",
+        "version": "2026.7.0",
+        "source_url": "https://files.pythonhosted.org/packages/fd/3c/6a2bf344106328fd04963664a60b9bb6496fc25df8e962fcdc1367285fb9/fsspec-2026.7.0-py3-none-any.whl",
+        "expected_sha256": "b57ddbafedfaef7018c1ecab32aa200a9d7ca26b77965f64e48b70061249d279",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "b57ddbafedfaef7018c1ecab32aa200a9d7ca26b77965f64e48b70061249d279",
+        "archive_bytes": 206583,
+        "matched_files": 60,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "h11",
@@ -691,7 +1049,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "h11",
+        "version": "0.16.0",
+        "source_url": "https://files.pythonhosted.org/packages/04/4b/29cac41a4d98d144bf5f6d33995617b185d14b22401f75ca86f384e87ff1/h11-0.16.0-py3-none-any.whl",
+        "expected_sha256": "63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86",
+        "archive_bytes": 37515,
+        "matched_files": 16,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "hf-xet",
@@ -718,7 +1090,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "hf-xet",
+        "version": "1.6.0",
+        "source_url": "https://files.pythonhosted.org/packages/67/4e/a28359bf1c1ecf11eba22123168c138698f7cb576ac678f5a2e16cd5da08/hf_xet-1.6.0-cp38-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+        "expected_sha256": "d62671bb130879cef0ee4c9ebe47a14af6c66ec53e6d84dc15936e5ffdfac82f",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "d62671bb130879cef0ee4c9ebe47a14af6c66ec53e6d84dc15936e5ffdfac82f",
+        "archive_bytes": 4464663,
+        "matched_files": 6,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "httpcore",
@@ -745,7 +1131,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "httpcore",
+        "version": "1.0.9",
+        "source_url": "https://files.pythonhosted.org/packages/7e/f5/f66802a942d491edb555dd61e3a9961140fd64c90bce1eafd741609d334d/httpcore-1.0.9-py3-none-any.whl",
+        "expected_sha256": "2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55",
+        "archive_bytes": 78784,
+        "matched_files": 35,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "httpx",
@@ -772,7 +1172,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "httpx",
+        "version": "0.28.1",
+        "source_url": "https://files.pythonhosted.org/packages/2a/39/e50c7c3a983047577ee07d2a9e53faf5a69493943ec3f6a384bdc792deb2/httpx-0.28.1-py3-none-any.whl",
+        "expected_sha256": "d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad",
+        "archive_bytes": 73517,
+        "matched_files": 28,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "huggingface_hub",
@@ -799,7 +1213,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "huggingface_hub",
+        "version": "0.36.2",
+        "source_url": "https://files.pythonhosted.org/packages/a8/af/48ac8483240de756d2438c380746e7130d1c6f75802ef22f3c6d49982787/huggingface_hub-0.36.2-py3-none-any.whl",
+        "expected_sha256": "48f0c8eac16145dfce371e9d2d7772854a4f591bcb56c9cf548accf531d54270",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "48f0c8eac16145dfce371e9d2d7772854a4f591bcb56c9cf548accf531d54270",
+        "archive_bytes": 566395,
+        "matched_files": 169,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "idna",
@@ -824,7 +1252,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "idna",
+        "version": "3.20",
+        "source_url": "https://files.pythonhosted.org/packages/58/a2/bb081bab032533a855d44de1d56f8e8426114ff1ba5d1f07a438a0a654f8/idna-3.20-py3-none-any.whl",
+        "expected_sha256": "ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c",
+        "archive_bytes": 69583,
+        "matched_files": 15,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "isodate",
@@ -851,7 +1293,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "isodate",
+        "version": "0.7.2",
+        "source_url": "https://files.pythonhosted.org/packages/15/aa/0aca39a37d3c7eb941ba736ede56d689e7be91cab5d9ca846bde3999eba6/isodate-0.7.2-py3-none-any.whl",
+        "expected_sha256": "28009937d8031054830160fce6d409ed342816b543597cece116d966c6d99e15",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "28009937d8031054830160fce6d409ed342816b543597cece116d966c6d99e15",
+        "archive_bytes": 22320,
+        "matched_files": 15,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "Jinja2",
@@ -878,7 +1334,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "Jinja2",
+        "version": "3.1.6",
+        "source_url": "https://download.pytorch.org/whl/jinja2-3.1.6-py3-none-any.whl",
+        "expected_sha256": "85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67",
+        "archive_bytes": 134899,
+        "matched_files": 30,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "joblib",
@@ -903,7 +1373,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "joblib",
+        "version": "1.6.0",
+        "source_url": "https://files.pythonhosted.org/packages/18/53/84099323c2ec4be98d935f63c033ac4151ee83836ca1050ede3b3aadf155/joblib-1.6.0-py3-none-any.whl",
+        "expected_sha256": "3dbbf9f6e4b592a2357b854608e980fe6390d131d7a82f011a377ef2ebef7aba",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "3dbbf9f6e4b592a2357b854608e980fe6390d131d7a82f011a377ef2ebef7aba",
+        "archive_bytes": 306115,
+        "matched_files": 140,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "jsonschema",
@@ -928,7 +1412,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "jsonschema",
+        "version": "4.26.0",
+        "source_url": "https://files.pythonhosted.org/packages/69/90/f63fb5873511e014207a475e2bb4e8b2e570d655b00ac19a9a0ca0a385ee/jsonschema-4.26.0-py3-none-any.whl",
+        "expected_sha256": "d489f15263b8d200f8387e64b4c3a75f06629559fb73deb8fdfb525f2dab50ce",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "d489f15263b8d200f8387e64b4c3a75f06629559fb73deb8fdfb525f2dab50ce",
+        "archive_bytes": 90630,
+        "matched_files": 42,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "jsonschema-specifications",
@@ -953,7 +1451,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "jsonschema-specifications",
+        "version": "2025.9.1",
+        "source_url": "https://files.pythonhosted.org/packages/41/45/1a4ed80516f02155c51f51e8cedb3c1902296743db0bbc66608a0db2814f/jsonschema_specifications-2025.9.1-py3-none-any.whl",
+        "expected_sha256": "98802fee3a11ee76ecaca44429fda8a41bff98b00a0f2838151b113f210cc6fe",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "98802fee3a11ee76ecaca44429fda8a41bff98b00a0f2838151b113f210cc6fe",
+        "archive_bytes": 18437,
+        "matched_files": 27,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "kokoro",
@@ -980,7 +1492,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "kokoro",
+        "version": "0.9.4",
+        "source_url": "https://files.pythonhosted.org/packages/ea/cc/75f41633c75224ba820a4533163bc8b070b6bf25416014074c63284c2d4e/kokoro-0.9.4-py3-none-any.whl",
+        "expected_sha256": "a129dc6364a286bd6a92c396e9862459d3d3e45f2c15596ed5a94dcee5789efd",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "a129dc6364a286bd6a92c396e9862459d3d3e45f2c15596ed5a94dcee5789efd",
+        "archive_bytes": 32592,
+        "matched_files": 11,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "language-tags",
@@ -1005,7 +1531,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "language-tags",
+        "version": "1.3.1",
+        "source_url": "https://files.pythonhosted.org/packages/0a/21/b48b9e8408b3faec9fb7cb2f68352c7724add35a980c948eaceb29ac41e4/language_tags-1.3.1-py3-none-any.whl",
+        "expected_sha256": "f7db7ef8879523019603e09644a86d95ba60595ce5e5ea82d46e8971b0f68f7b",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "f7db7ef8879523019603e09644a86d95ba60595ce5e5ea82d46e8971b0f68f7b",
+        "archive_bytes": 216654,
+        "matched_files": 22,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "loguru",
@@ -1026,7 +1566,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "loguru",
+        "version": "0.7.3",
+        "source_url": "https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl",
+        "expected_sha256": "31a33c10c8e1e10422bfd431aeb5d351c7cf7fa671e3c4df004162264b28220c",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "31a33c10c8e1e10422bfd431aeb5d351c7cf7fa671e3c4df004162264b28220c",
+        "archive_bytes": 61595,
+        "matched_files": 23,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "markdown-it-py",
@@ -1058,7 +1612,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "markdown-it-py",
+        "version": "4.2.0",
+        "source_url": "https://files.pythonhosted.org/packages/b3/81/4da04ced5a082363ecfa159c010d200ecbd959ae410c10c0264a38cac0f5/markdown_it_py-4.2.0-py3-none-any.whl",
+        "expected_sha256": "9f7ebbcd14fe59494226453aed97c1070d83f8d24b6fc3a3bcf9a38092641c4a",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "9f7ebbcd14fe59494226453aed97c1070d83f8d24b6fc3a3bcf9a38092641c4a",
+        "archive_bytes": 91687,
+        "matched_files": 73,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "MarkupSafe",
@@ -1083,7 +1651,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "MarkupSafe",
+        "version": "3.0.3",
+        "source_url": "https://download.pytorch.org/whl/markupsafe-3.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+        "expected_sha256": "d6dd0be5b5b189d31db7cda48b91d7e0a9795f31430b7f271219ab30f1d3ac9d",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "d6dd0be5b5b189d31db7cda48b91d7e0a9795f31430b7f271219ab30f1d3ac9d",
+        "archive_bytes": 22947,
+        "matched_files": 10,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "mdurl",
@@ -1110,7 +1692,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "mdurl",
+        "version": "0.1.2",
+        "source_url": "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl",
+        "expected_sha256": "84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8",
+        "archive_bytes": 9979,
+        "matched_files": 10,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "misaki",
@@ -1137,7 +1733,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "misaki",
+        "version": "0.9.4",
+        "source_url": "https://files.pythonhosted.org/packages/82/ec/0ee4110ddb54278b8f21c40a140370ae8f687036c4edf578316602697c56/misaki-0.9.4-py3-none-any.whl",
+        "expected_sha256": "90e2eeb169786c014c429e5058d2ea6bcd02d651f2a24450ba6c9ffc0f8da15a",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "90e2eeb169786c014c429e5058d2ea6bcd02d651f2a24450ba6c9ffc0f8da15a",
+        "archive_bytes": 3617774,
+        "matched_files": 61,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "mpmath",
@@ -1164,7 +1774,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "mpmath",
+        "version": "1.3.0",
+        "source_url": "https://files.pythonhosted.org/packages/43/e3/7d92a15f894aa0c9c4b49b8ee9ac9850d6e63b03c9c32c0367a13ae62209/mpmath-1.3.0-py3-none-any.whl",
+        "expected_sha256": "a0b2b9fe80bbcd81a6647ff13108738cfb482d481d826cc0e02f5b35e5c88d2c",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "a0b2b9fe80bbcd81a6647ff13108738cfb482d481d826cc0e02f5b35e5c88d2c",
+        "archive_bytes": 536198,
+        "matched_files": 91,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "murmurhash",
@@ -1191,7 +1815,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "murmurhash",
+        "version": "1.0.15",
+        "source_url": "https://files.pythonhosted.org/packages/ff/30/ea8f601a9bf44db99468696efd59eb9cff1157cd55cb586d67116697583f/murmurhash-1.0.15-cp312-cp312-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.whl",
+        "expected_sha256": "5a301decfaccfec70fe55cb01dde2a012c3014a874542eaa7cc73477bb749616",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "5a301decfaccfec70fe55cb01dde2a012c3014a874542eaa7cc73477bb749616",
+        "archive_bytes": 134088,
+        "matched_files": 15,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "networkx",
@@ -1216,7 +1854,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "networkx",
+        "version": "3.6.1",
+        "source_url": "https://files.pythonhosted.org/packages/9e/c9/b2622292ea83fbb4ec318f5b9ab867d0a28ab43c5717bb85b0a5f6b3b0a4/networkx-3.6.1-py3-none-any.whl",
+        "expected_sha256": "d47fbf302e7d9cbbb9e2555a0d267983d2aa476bac30e90dfbe5669bd57f3762",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "d47fbf302e7d9cbbb9e2555a0d267983d2aa476bac30e90dfbe5669bd57f3762",
+        "archive_bytes": 2068504,
+        "matched_files": 600,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "num2words",
@@ -1243,7 +1895,29 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "num2words",
+        "version": "0.5.14",
+        "source_url": "https://files.pythonhosted.org/packages/d6/5b/545e9267a1cc080c8a1be2746113a063e34bcdd0f5173fd665a5c13cb234/num2words-0.5.14-py3-none-any.whl",
+        "expected_sha256": "1c8e5b00142fc2966fd8d685001e36c4a9911e070d1b120e1beb721fa1edb33d",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "1c8e5b00142fc2966fd8d685001e36c4a9911e070d1b120e1beb721fa1edb33d",
+        "archive_bytes": 163525,
+        "matched_files": 66,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched",
+        "non_site_comparisons": [
+          {
+            "wheel_path": "num2words-0.5.14.data/scripts/num2words",
+            "installed_relative_to_venv": "bin/num2words",
+            "comparison": "body byte-identical; installer-rewritten shebang excluded",
+            "installed_sha256": "d1b920c211d02a0a01ff589998fd3ab9dbd5181dd7bc7422e21047fb2adf1f58"
+          }
+        ]
+      }
     },
     {
       "name": "numpy",
@@ -1348,7 +2022,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "numpy",
+        "version": "2.5.3",
+        "source_url": "https://files.pythonhosted.org/packages/65/af/aa78d1a88805456e212b65461354cd943197fb9acecc4c90fd12295123a3/numpy-2.5.3-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+        "expected_sha256": "b7e18c623bb5c95acb3b3328861272816ba199fb531921c5d6d0b675f1fde9e3",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "b7e18c623bb5c95acb3b3328861272816ba199fb531921c5d6d0b675f1fde9e3",
+        "archive_bytes": 16717410,
+        "matched_files": 925,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "packaging",
@@ -1383,7 +2071,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "packaging",
+        "version": "26.3",
+        "source_url": "https://files.pythonhosted.org/packages/63/34/ba1c580383c9eada3711951fef0795c80b829a078d72188184bcab9dd527/packaging-26.3-py3-none-any.whl",
+        "expected_sha256": "d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c",
+        "archive_bytes": 129956,
+        "matched_files": 28,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "phonemizer-fork",
@@ -1410,7 +2112,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "phonemizer-fork",
+        "version": "3.3.2",
+        "source_url": "https://files.pythonhosted.org/packages/64/f1/0dcce21b0ae16a82df4b6583f8f3ad8e55b35f7e98b6bf536a4dd225fa08/phonemizer_fork-3.3.2-py3-none-any.whl",
+        "expected_sha256": "97305c76f4183b3825dae8f4c032265fe78c9946ce58c47d4b62161349264b74",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "97305c76f4183b3825dae8f4c032265fe78c9946ce58c47d4b62161349264b74",
+        "archive_bytes": 82700,
+        "matched_files": 34,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "pip",
@@ -1429,7 +2145,15 @@
       ],
       "source_artifact": null,
       "scope": "environment bootstrap / tooling",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "status": "bootstrap-wheel-matched",
+        "archive": "Python 3.12.14 ensurepip/_bundled/pip-25.0.1-py3-none-any.whl",
+        "archive_sha256": "c46efd13b6aa8279f33f2864459c8ce587ea6a1a59ee20de055868d8f7688f7f",
+        "archive_bytes": 1841526,
+        "matched_files": 437,
+        "verification": "Existing Python base-environment bundled wheel payload matches installed pip bytes; RECORD excluded. pyvenv.cfg identifies this Python base. No separate upstream download provenance is claimed."
+      }
     },
     {
       "name": "preshed",
@@ -1456,7 +2180,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "preshed",
+        "version": "3.0.13",
+        "source_url": "https://files.pythonhosted.org/packages/51/94/8c9bc48a6ea4903f53a1a0031ce8e35687526949f25821762ef21493c007/preshed-3.0.13-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+        "expected_sha256": "8b8de3f58043070a354477995acdd98626ce43e4193c708ebd0f694e467f5155",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "8b8de3f58043070a354477995acdd98626ce43e4193c708ebd0f694e467f5155",
+        "archive_bytes": 868988,
+        "matched_files": 22,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "pycparser",
@@ -1481,7 +2219,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "pycparser",
+        "version": "3.0",
+        "source_url": "https://files.pythonhosted.org/packages/0c/c3/44f3fbbfa403ea2a7c779186dc20772604442dde72947e7d01069cbe98e3/pycparser-3.0-py3-none-any.whl",
+        "expected_sha256": "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992",
+        "archive_bytes": 48172,
+        "matched_files": 12,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "pydantic",
@@ -1506,7 +2258,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "pydantic",
+        "version": "2.13.5",
+        "source_url": "https://files.pythonhosted.org/packages/eb/47/c95ffc2009878c7aac0c5e08528022dcb885933252a88b5f170058014464/pydantic-2.13.5-py3-none-any.whl",
+        "expected_sha256": "346a034f080da3755d8e9cb5e00e8b07de1d39e4f6e2c87d8ab7cafa0b269a73",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "346a034f080da3755d8e9cb5e00e8b07de1d39e4f6e2c87d8ab7cafa0b269a73",
+        "archive_bytes": 472589,
+        "matched_files": 110,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "pydantic_core",
@@ -1531,7 +2297,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "pydantic_core",
+        "version": "2.46.5",
+        "source_url": "https://files.pythonhosted.org/packages/c0/a4/eb9409ec0736e50aa70a412f16c204ed149516846912f7e6724d4c73ee53/pydantic_core-2.46.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+        "expected_sha256": "0fc5be0abd4a407e200d844b404e33639a554e7bd0d448e7b9ae181be4789ac2",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "0fc5be0abd4a407e200d844b404e33639a554e7bd0d448e7b9ae181be4789ac2",
+        "archive_bytes": 2066284,
+        "matched_files": 9,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "Pygments",
@@ -1556,7 +2336,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "Pygments",
+        "version": "2.21.0",
+        "source_url": "https://files.pythonhosted.org/packages/71/46/17f022dd3e953bf20a04a028a21ec746d942f8d2af30fa0f124fa0e6a684/pygments-2.21.0-py3-none-any.whl",
+        "expected_sha256": "2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9",
+        "archive_bytes": 1250147,
+        "matched_files": 348,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "pyparsing",
@@ -1581,7 +2375,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "pyparsing",
+        "version": "3.3.3",
+        "source_url": "https://files.pythonhosted.org/packages/38/bb/d215ee7c73b61497b28a5503f9f53523f294fcc936762b7caf90e0c1c2b5/pyparsing-3.3.3-py3-none-any.whl",
+        "expected_sha256": "ece8c00a69cf01b45d0b1dedabb469c90d8caf996d4fda40f147627a122849a4",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "ece8c00a69cf01b45d0b1dedabb469c90d8caf996d4fda40f147627a122849a4",
+        "archive_bytes": 126420,
+        "matched_files": 22,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "python-dateutil",
@@ -1609,7 +2417,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "python-dateutil",
+        "version": "2.9.0.post0",
+        "source_url": "https://files.pythonhosted.org/packages/ec/57/56b9bcc3c9c6a792fcbaf139543cee77261f3651ca9da0c93f5c1221264b/python_dateutil-2.9.0.post0-py2.py3-none-any.whl",
+        "expected_sha256": "a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427",
+        "archive_bytes": 229892,
+        "matched_files": 24,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "PyYAML",
@@ -1636,7 +2458,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "PyYAML",
+        "version": "6.0.3",
+        "source_url": "https://files.pythonhosted.org/packages/8b/9d/b3589d3877982d4f2329302ef98a8026e7f4443c765c46cfecc8858c6b4b/pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+        "expected_sha256": "ba1cc08a7ccde2d2ec775841541641e4548226580ab850948cbfda66a1befcdc",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "ba1cc08a7ccde2d2ec775841541641e4548226580ab850948cbfda66a1befcdc",
+        "archive_bytes": 807870,
+        "matched_files": 23,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "rdflib",
@@ -1663,7 +2499,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "rdflib",
+        "version": "7.6.0",
+        "source_url": "https://files.pythonhosted.org/packages/10/c2/6604a71269e0c1bd75656d5a001432d16f2cc5b8c057140ec797155c295e/rdflib-7.6.0-py3-none-any.whl",
+        "expected_sha256": "30c0a3ebf4c0e09215f066be7246794b6492e054e782d7ac2a34c9f70a15e0dd",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "30c0a3ebf4c0e09215f066be7246794b6492e054e782d7ac2a34c9f70a15e0dd",
+        "archive_bytes": 615416,
+        "matched_files": 141,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "referencing",
@@ -1688,7 +2538,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "referencing",
+        "version": "0.37.0",
+        "source_url": "https://files.pythonhosted.org/packages/2c/58/ca301544e1fa93ed4f80d724bf5b194f6e4b945841c5bfd555878eea9fcb/referencing-0.37.0-py3-none-any.whl",
+        "expected_sha256": "381329a9f99628c9069361716891d34ad94af76e461dcb0335825aecc7692231",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "381329a9f99628c9069361716891d34ad94af76e461dcb0335825aecc7692231",
+        "archive_bytes": 26766,
+        "matched_files": 18,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "regex",
@@ -1713,7 +2577,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "regex",
+        "version": "2026.9.29",
+        "source_url": "https://files.pythonhosted.org/packages/26/83/d2fbd2e4e3afb1167daa825187d196f313cbaa1a4768f311fb041bb0e3d2/regex-2026.9.29-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+        "expected_sha256": "39ab5894d971f9ac68baa6eca5c50387db579cfcacf36ae8df3feceb1815e6d0",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "39ab5894d971f9ac68baa6eca5c50387db579cfcacf36ae8df3feceb1815e6d0",
+        "archive_bytes": 807783,
+        "matched_files": 9,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "requests",
@@ -1745,7 +2623,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "requests",
+        "version": "2.34.2",
+        "source_url": "https://files.pythonhosted.org/packages/a0/f4/c67b0b3f1b9245e8d266f0f112c500d50e5b4e83cb6f3b71b6528104182a/requests-2.34.2-py3-none-any.whl",
+        "expected_sha256": "2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0",
+        "archive_bytes": 73075,
+        "matched_files": 25,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "rfc3986",
@@ -1772,7 +2664,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "rfc3986",
+        "version": "1.5.0",
+        "source_url": "https://files.pythonhosted.org/packages/c4/e5/63ca2c4edf4e00657584608bee1001302bbf8c5f569340b78304f2f446cb/rfc3986-1.5.0-py2.py3-none-any.whl",
+        "expected_sha256": "a86d6e1f5b1dc238b218b012df0aa79409667bb209e58da56d0b94704e712a97",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "a86d6e1f5b1dc238b218b012df0aa79409667bb209e58da56d0b94704e712a97",
+        "archive_bytes": 31976,
+        "matched_files": 18,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "rich",
@@ -1799,7 +2705,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "rich",
+        "version": "15.0.0",
+        "source_url": "https://files.pythonhosted.org/packages/82/3b/64d4899d73f91ba49a8c18a8ff3f0ea8f1c1d75481760df8c68ef5235bf5/rich-15.0.0-py3-none-any.whl",
+        "expected_sha256": "33bd4ef74232fb73fe9279a257718407f169c09b78a87ad3d296f548e27de0bb",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "33bd4ef74232fb73fe9279a257718407f169c09b78a87ad3d296f548e27de0bb",
+        "archive_bytes": 310654,
+        "matched_files": 104,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "rpds-py",
@@ -1824,7 +2744,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "rpds-py",
+        "version": "2026.6.3",
+        "source_url": "https://files.pythonhosted.org/packages/04/8f/d2f3f532616be4d06c316ef119683e832bd3d41e112bf3a88f4151c95b17/rpds_py-2026.6.3-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+        "expected_sha256": "ecabd69db66de867690f9797f2f8fa27ba501bbc24540cbdbdc649cd15888ba6",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "ecabd69db66de867690f9797f2f8fa27ba501bbc24540cbdbdc649cd15888ba6",
+        "archive_bytes": 366189,
+        "matched_files": 8,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "safetensors",
@@ -1851,7 +2785,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "safetensors",
+        "version": "0.8.0",
+        "source_url": "https://files.pythonhosted.org/packages/28/50/f203ff3a3ddfe19308efc83c5a3a29ed02bf786732ec35e68bf9162f3365/safetensors-0.8.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+        "expected_sha256": "fd6f3f93c9a0a7cc2788ee63fb763353d4bd2e89b0751bc78fcf7dda00bea774",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "fd6f3f93c9a0a7cc2788ee63fb763353d4bd2e89b0751bc78fcf7dda00bea774",
+        "archive_bytes": 516040,
+        "matched_files": 14,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "segments",
@@ -1878,7 +2826,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "segments",
+        "version": "2.4.0",
+        "source_url": "https://files.pythonhosted.org/packages/be/60/eef9acce946177f92c9aabf432224d87ab908bafafac516a36ab924199f3/segments-2.4.0-py2.py3-none-any.whl",
+        "expected_sha256": "4021dc67f201cc03c864c74c618bdb163b1af629da3040babbaa37d8813f3db0",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "4021dc67f201cc03c864c74c618bdb163b1af629da3040babbaa37d8813f3db0",
+        "archive_bytes": 16321,
+        "matched_files": 12,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "setuptools",
@@ -1905,7 +2867,21 @@
         }
       },
       "scope": "environment bootstrap / tooling",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "setuptools",
+        "version": "78.1.0",
+        "source_url": "https://download.pytorch.org/whl/setuptools-78.1.0-py3-none-any.whl",
+        "expected_sha256": "3e386e96793c8702ae83d17b853fb93d3e09ef82ec62722e61da5cd22376dcd8",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "3e386e96793c8702ae83d17b853fb93d3e09ef82ec62722e61da5cd22376dcd8",
+        "archive_bytes": 1256108,
+        "matched_files": 497,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "shellingham",
@@ -1932,7 +2908,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "shellingham",
+        "version": "1.5.4",
+        "source_url": "https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl",
+        "expected_sha256": "7ecfff8f2fd72616f7481040475a65b2bf8af90a56c89140852d1120324e8686",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "7ecfff8f2fd72616f7481040475a65b2bf8af90a56c89140852d1120324e8686",
+        "archive_bytes": 9755,
+        "matched_files": 12,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "six",
@@ -1959,7 +2949,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "six",
+        "version": "1.17.0",
+        "source_url": "https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl",
+        "expected_sha256": "4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274",
+        "archive_bytes": 11050,
+        "matched_files": 5,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "smart_open",
@@ -1986,7 +2990,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "smart_open",
+        "version": "8.0.2",
+        "source_url": "https://files.pythonhosted.org/packages/1c/48/d362978544ab08b385c6222ccb048fab1db3e3b820a07ef652c5d75678ae/smart_open-8.0.2-py3-none-any.whl",
+        "expected_sha256": "7ff6e4acf454269905db0c747f5d14fdba6056db572c0f8398043676dc91515c",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "7ff6e4acf454269905db0c747f5d14fdba6056db572c0f8398043676dc91515c",
+        "archive_bytes": 73414,
+        "matched_files": 24,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "soundfile",
@@ -2013,7 +3031,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "soundfile",
+        "version": "0.14.0",
+        "source_url": "https://files.pythonhosted.org/packages/7b/a2/70fd4432b924684c372df8b0a45708c36c057ef3596c9eb53e0a806b980b/soundfile-0.14.0-py2.py3-none-manylinux_2_28_x86_64.whl",
+        "expected_sha256": "1e38bac1853412871318e82a1ba69a8be677619b56025bbfcccdb41b6cafe82d",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "1e38bac1853412871318e82a1ba69a8be677619b56025bbfcccdb41b6cafe82d",
+        "archive_bytes": 1315963,
+        "matched_files": 10,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "spacy",
@@ -2040,7 +3072,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "spacy",
+        "version": "3.8.16",
+        "source_url": "https://files.pythonhosted.org/packages/b9/9c/3b5d64a72ac40cf584134c6639ac67f8f2d504eb081c91da3ad2ffae5c04/spacy-3.8.16-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl",
+        "expected_sha256": "8d0f63c3124d0a34a37e9b519d004cee1269744be07f91f843902e6c9f3e557a",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "8d0f63c3124d0a34a37e9b519d004cee1269744be07f91f843902e6c9f3e557a",
+        "archive_bytes": 35496883,
+        "matched_files": 1037,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "spacy-curated-transformers",
@@ -2065,7 +3111,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "spacy-curated-transformers",
+        "version": "0.3.1",
+        "source_url": "https://files.pythonhosted.org/packages/42/d8/f053d43125ae4ad14f3e2a12a475a656128233f1f40a272c6e09a05c73e8/spacy_curated_transformers-0.3.1-py2.py3-none-any.whl",
+        "expected_sha256": "503559b6a1d6e44ec2c978e18ed871ce5c3d56871dc9216c0e1523428204e610",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "503559b6a1d6e44ec2c978e18ed871ce5c3d56871dc9216c0e1523428204e610",
+        "archive_bytes": 237943,
+        "matched_files": 62,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "spacy-legacy",
@@ -2092,7 +3152,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "spacy-legacy",
+        "version": "3.0.12",
+        "source_url": "https://files.pythonhosted.org/packages/c3/55/12e842c70ff8828e34e543a2c7176dac4da006ca6901c9e8b43efab8bc6b/spacy_legacy-3.0.12-py2.py3-none-any.whl",
+        "expected_sha256": "476e3bd0d05f8c339ed60f40986c07387c0a71479245d6d0f4298dbd52cda55f",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "476e3bd0d05f8c339ed60f40986c07387c0a71479245d6d0f4298dbd52cda55f",
+        "archive_bytes": 29971,
+        "matched_files": 30,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "spacy-loggers",
@@ -2117,7 +3191,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "spacy-loggers",
+        "version": "1.0.5",
+        "source_url": "https://files.pythonhosted.org/packages/33/78/d1a1a026ef3af911159398c939b1509d5c36fe524c7b644f34a5146c4e16/spacy_loggers-1.0.5-py3-none-any.whl",
+        "expected_sha256": "196284c9c446cc0cdb944005384270d775fdeaf4f494d8e269466cfa497ef645",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "196284c9c446cc0cdb944005384270d775fdeaf4f494d8e269466cfa497ef645",
+        "archive_bytes": 22343,
+        "matched_files": 21,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "srsly",
@@ -2144,7 +3232,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "srsly",
+        "version": "2.5.4",
+        "source_url": "https://files.pythonhosted.org/packages/6f/ff/ab344759a04c5ec6238aefc7f23669fdd0069e4c299d05a0799ea9ee7ded/srsly-2.5.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+        "expected_sha256": "bb463e076e5efe61784c439493dc012e27fd05b4ddcf78f3353345c5d7e462c3",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "bb463e076e5efe61784c439493dc012e27fd05b4ddcf78f3353345c5d7e462c3",
+        "archive_bytes": 1245133,
+        "matched_files": 147,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "sympy",
@@ -2171,7 +3273,29 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "sympy",
+        "version": "1.14.0",
+        "source_url": "https://files.pythonhosted.org/packages/a2/09/77d55d46fd61b4a135c444fc97158ef34a095e5681d0a6c10b75bf356191/sympy-1.14.0-py3-none-any.whl",
+        "expected_sha256": "e091cc3e99d2141a0ba2847328f5479b05d94a6635cb96148ccb3f34671bd8f5",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "e091cc3e99d2141a0ba2847328f5479b05d94a6635cb96148ccb3f34671bd8f5",
+        "archive_bytes": 6299353,
+        "matched_files": 1568,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched",
+        "non_site_comparisons": [
+          {
+            "wheel_path": "sympy-1.14.0.data/data/share/man/man1/isympy.1",
+            "installed_relative_to_venv": "share/man/man1/isympy.1",
+            "comparison": "byte-identical",
+            "installed_sha256": "f4365d48e2102e292b0131e56e4743674e0b0508a0643504d3fa025c10ef741b"
+          }
+        ]
+      }
     },
     {
       "name": "termcolor",
@@ -2196,7 +3320,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "termcolor",
+        "version": "3.3.0",
+        "source_url": "https://files.pythonhosted.org/packages/33/d1/8bb87d21e9aeb323cc03034f5eaf2c8f69841e40e4853c2627edf8111ed3/termcolor-3.3.0-py3-none-any.whl",
+        "expected_sha256": "cf642efadaf0a8ebbbf4bc7a31cec2f9b5f21a9f726f4ccbb08192c9c26f43a5",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "cf642efadaf0a8ebbbf4bc7a31cec2f9b5f21a9f726f4ccbb08192c9c26f43a5",
+        "archive_bytes": 7734,
+        "matched_files": 7,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "thinc",
@@ -2223,7 +3361,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "thinc",
+        "version": "8.3.13",
+        "source_url": "https://files.pythonhosted.org/packages/f9/ff/6914bf370bd1d604d89e6dfb46b97d10cd9b00d42ff8c036283e92314a8c/thinc-8.3.13-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+        "expected_sha256": "4b5ec9ff313819e7d8667794a3559463fa89ff45aaa73e3fd8d6273b1e0d7a7f",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "4b5ec9ff313819e7d8667794a3559463fa89ff45aaa73e3fd8d6273b1e0d7a7f",
+        "archive_bytes": 3903307,
+        "matched_files": 197,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "tokenizers",
@@ -2244,7 +3396,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "tokenizers",
+        "version": "0.22.2",
+        "source_url": "https://files.pythonhosted.org/packages/2e/76/932be4b50ef6ccedf9d3c6639b056a967a86258c6d9200643f01269211ca/tokenizers-0.22.2-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+        "expected_sha256": "369cc9fc8cc10cb24143873a0d95438bb8ee257bb80c71989e3ee290e8d72c67",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "369cc9fc8cc10cb24143873a0d95438bb8ee257bb80c71989e3ee290e8d72c67",
+        "archive_bytes": 3274982,
+        "matched_files": 28,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "torch",
@@ -2694,7 +3860,16 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "torch",
+        "version": "2.14.1+cpu",
+        "source_url": "https://download-r2.pytorch.org/whl/cpu/torch-2.14.1%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl",
+        "expected_sha256": "5a6363570c753812540a05eb82380e329469cbe668643e88111414c12627711f",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "status": "error",
+        "error": "HTTPError: HTTP Error 403: Forbidden"
+      }
     },
     {
       "name": "tqdm",
@@ -2713,7 +3888,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "tqdm",
+        "version": "4.70.1",
+        "source_url": "https://files.pythonhosted.org/packages/a7/03/921a3d3c75785aca9ebfbfcabfbc3a1be12e2ab5265deb026d55a5a3f83e/tqdm-4.70.1-py3-none-any.whl",
+        "expected_sha256": "c293e525e6fef9c20e8728fd4612df02a0aa31bb5fe91ecd93e123b1b7bffa73",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "c293e525e6fef9c20e8728fd4612df02a0aa31bb5fe91ecd93e123b1b7bffa73",
+        "archive_bytes": 80199,
+        "matched_files": 38,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "transformers",
@@ -2740,7 +3929,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "transformers",
+        "version": "4.57.6",
+        "source_url": "https://files.pythonhosted.org/packages/03/b8/e484ef633af3887baeeb4b6ad12743363af7cce68ae51e938e00aaa0529d/transformers-4.57.6-py3-none-any.whl",
+        "expected_sha256": "4c9e9de11333ddfe5114bc872c9f370509198acf0b87a832a0ab9458e2bd0550",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "4c9e9de11333ddfe5114bc872c9f370509198acf0b87a832a0ab9458e2bd0550",
+        "archive_bytes": 11993498,
+        "matched_files": 2245,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "typer",
@@ -2765,7 +3968,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "typer",
+        "version": "0.27.2",
+        "source_url": "https://files.pythonhosted.org/packages/dc/bf/205d0004930ede8f542fb58f601526fccf4ae7626075ca1e6c4de5d3d652/typer-0.27.2-py3-none-any.whl",
+        "expected_sha256": "b3a5fc4342d5fc8fda8fc3010b1cf117e9249aab7fae800c2eff62fd3842d97d",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "b3a5fc4342d5fc8fda8fc3010b1cf117e9249aab7fae800c2eff62fd3842d97d",
+        "archive_bytes": 123130,
+        "matched_files": 40,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "typing_extensions",
@@ -2790,7 +4007,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "typing_extensions",
+        "version": "4.16.0",
+        "source_url": "https://files.pythonhosted.org/packages/49/d3/b8441a820a491ddfc024b0b0cf0393375b75ea13866d9c66727e54c2fc80/typing_extensions-4.16.0-py3-none-any.whl",
+        "expected_sha256": "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8",
+        "archive_bytes": 45571,
+        "matched_files": 4,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "typing-inspection",
@@ -2815,7 +4046,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "typing-inspection",
+        "version": "0.4.4",
+        "source_url": "https://files.pythonhosted.org/packages/67/81/4add07e5172b7ac40d8ed5ff580409a7801a4fe26d529bdd915401dabfbe/typing_inspection-0.4.4-py3-none-any.whl",
+        "expected_sha256": "65b8397ba37ccbce054456aaccddfc91e6e3083c92824df348d96ca832f3f147",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "65b8397ba37ccbce054456aaccddfc91e6e3083c92824df348d96ca832f3f147",
+        "archive_bytes": 14750,
+        "matched_files": 8,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "uritemplate",
@@ -2840,7 +4085,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "uritemplate",
+        "version": "4.2.0",
+        "source_url": "https://files.pythonhosted.org/packages/a9/99/3ae339466c9183ea5b8ae87b34c0b897eda475d2aec2307cae60e5cd4f29/uritemplate-4.2.0-py3-none-any.whl",
+        "expected_sha256": "962201ba1c4edcab02e60f9a0d3821e82dfc5d2d6662a21abd533879bdb8a686",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "962201ba1c4edcab02e60f9a0d3821e82dfc5d2d6662a21abd533879bdb8a686",
+        "archive_bytes": 11488,
+        "matched_files": 10,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "urllib3",
@@ -2865,7 +4124,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "urllib3",
+        "version": "2.8.0",
+        "source_url": "https://files.pythonhosted.org/packages/92/9d/c4e665119135114480843e7ab388fa94d8480650450e6f8e26b70d323a4c/urllib3-2.8.0-py3-none-any.whl",
+        "expected_sha256": "0cf3cae568d36aa9576b28dfb35f11328f1cb974ca7647d9475ebb86c75ac6e3",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "0cf3cae568d36aa9576b28dfb35f11328f1cb974ca7647d9475ebb86c75ac6e3",
+        "archive_bytes": 135717,
+        "matched_files": 41,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "wasabi",
@@ -2890,7 +4163,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "wasabi",
+        "version": "1.1.3",
+        "source_url": "https://files.pythonhosted.org/packages/06/7c/34330a89da55610daa5f245ddce5aab81244321101614751e7537f125133/wasabi-1.1.3-py3-none-any.whl",
+        "expected_sha256": "f76e16e8f7e79f8c4c8be49b4024ac725713ab10cd7f19350ad18a8e3f71728c",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "f76e16e8f7e79f8c4c8be49b4024ac725713ab10cd7f19350ad18a8e3f71728c",
+        "archive_bytes": 27880,
+        "matched_files": 21,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "weasel",
@@ -2917,7 +4204,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "weasel",
+        "version": "1.0.0",
+        "source_url": "https://files.pythonhosted.org/packages/0a/07/57ebf7a6798b016c064bd0ca81b4c6a99daa4dc377b898bc7b41eb6b5af0/weasel-1.0.0-py3-none-any.whl",
+        "expected_sha256": "89518acee027f49d743126c3502d35e6dd14f5768be5c37c9af47c171b6005cc",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "89518acee027f49d743126c3502d35e6dd14f5768be5c37c9af47c171b6005cc",
+        "archive_bytes": 50713,
+        "matched_files": 43,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     },
     {
       "name": "wrapt",
@@ -2942,7 +4243,21 @@
         }
       },
       "scope": "offline narration environment; installed presence is not proof of execution",
-      "redistributed_in_browser_or_video": false
+      "redistributed_in_browser_or_video": false,
+      "official_archive_installed_payload_verification": {
+        "name": "wrapt",
+        "version": "2.5.0",
+        "source_url": "https://files.pythonhosted.org/packages/11/0e/3ce67af67525c0068680637c0eba823ce2f0fc6eff2d1779cab656fb8c3d/wrapt-2.5.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl",
+        "expected_sha256": "0cabb9c17ab79b2549d1f23b36f436473ad9253ef53995a817feba26fae69d5b",
+        "verification": "official archive SHA-256 plus all installed wheel payload bytes (RECORD excluded because installer rewrites it)",
+        "archive_sha256": "0cabb9c17ab79b2549d1f23b36f436473ad9253ef53995a817feba26fae69d5b",
+        "archive_bytes": 250177,
+        "matched_files": 21,
+        "missing_files": [],
+        "different_files": [],
+        "non_site_payload": [],
+        "status": "matched"
+      }
     }
   ],
   "model_assets": [
@@ -3005,5 +4320,16 @@
       "binary_sha256": "c872fb84af2afc0e96b603e0000f0f407af86c49ad1126f2785e5722c7bb27d7",
       "redistributed": false
     }
-  ]
+  ],
+  "archive_verification_summary": {
+    "date": "2026-10-03",
+    "counts": {
+      "matched": 90,
+      "source-payload-matched": 1,
+      "bootstrap-wheel-matched": 1,
+      "error": 1
+    },
+    "method": "Download exact recorded official URL, verify archive SHA-256, compare installed payload files byte-for-byte. Wheel RECORD is installer-rewritten; console script shebang is compared separately. docopt is an sdist and installed source/license are compared directly. Archives removed after read-only verification; no packages installed or run from downloaded archives.",
+    "unresolved": "torch official archive fetch returned HTTP 403; no retained install completion log/archive; bootstrap pip matched the existing base Python ensurepip wheel"
+  }
 }

@@ -3,7 +3,7 @@
 ## 結論・承認状態
 
 - 対象は既存の150秒MP4用のオフライン英語ナレーション制作。ブラウザruntime、ホストされたAPI、モデル／ツールの再配布への承認ではない。
-- 本書は技術・来歴のレビュー記録。`PROD-DEP-TTS-001` は既存のユーザー承認済みオフライン動画制作範囲に限り **Approved**。Kokoro導入・音声選択・動画制作・完成動画確認の既存承認に、今回の技術レビューを補完する。過去のインストール／利用前に本レビューが存在したと遡って記録しない。
+- 本書は技術・来歴のレビュー記録。`PROD-DEP-TTS-001` は **Pending Evidence**。用途の許可は既にあるが、実取得したPyTorch archiveとの同一性証拠が未確認のため、技術的な承認ゲートを完了扱いにしない。Kokoro導入・音声選択・動画制作・完成動画確認の既存承認に、今回の技術レビューを補完する。過去のインストール／利用前に本レビューが存在したと遡って記録しない。
 - 公開・提出は延期中。既存動画の差替えを必須とする証拠は見つかっていないが、配布物の来歴上の注意と未承認の公開範囲を下記に明記する。AI_USAGEのRecorded、動画内容への了承、依存関係のApprovedは別の事実。
 - この確認のために新規インストール、再合成、動画変更、有料API利用、外部公開、ソフトウェア／モデルのアップロードは行っていない。
 
@@ -22,8 +22,9 @@
 - インストール済みMETADATAのname/versionとSHA-256、ライセンス宣言・分類、同梱LICENSE/COPYING/NOTICEのパスとSHA-256
 - 既存pip取得計画の公式wheel URLとarchive SHA-256を、インストール済みname/versionへ厳密一致で対応付け
 - `en_core_web_sm` はインストール済みdirect_urlの公式ExplosionリリースURL・SHA-256
-- pip 25.0.1だけは環境作成時のbootstrapで、取得archiveの証拠が残らない。実行時TTSモデルではなく、未観測のURL/hashを推測しない
-- 取得計画のhashは選定archiveの同一性を示す。保存wheelを再ハッシュした記録、またはインストール完了ログと偽らない
+- pip 25.0.1は環境作成時のbootstrap。追加調査で基底Python 3.12.14のensurepip同梱wheelが見つかり、実インストールpayloadと照合した。外部取得URLを推測せず、基底環境由来として区別する
+- 取得計画のhashだけでは実インストール物との一致を証明しない。追加確認として、記録した公式URLからarchiveを再取得してSHA-256を検査し、インストール済みpayloadと直接照合した。90 wheelとdocopt sdistの計91パッケージが一致した。torchの公式archive取得はHTTP 403で未照合。pip bootstrapは基底Pythonの既存ensurepip wheelと一致
+- wheelのRECORDはインストーラが書き換えるため照合対象外。num2wordsの実行スクリプトはshebangだけの置換を区別し、本文一致。docoptは配布sdist内のdocopt.pyとLICENSE-MITを実ファイルに直接照合し、build生成dist-infoとの同一性は主張しない。検査後のarchiveは削除し、再インストールはしていない
 
 Kokoroモデル／voice／configは実ファイルをハッシュしたうえで、公式リポジトリの確認日revision `f3ff3571791e39611d31c381e3a41a3af07b4987` のLFSハッシュ（configは取得した小さい実体）と照合した。これは**確認日に一致した固定revision**であり、保存されていない当初ダウンロード時revisionを復元したとの主張ではない。
 
@@ -56,7 +57,7 @@ Kokoroモデル／voice／configは実ファイルをハッシュしたうえで
 1. espeakng-loader 0.2.4のインストール済みwheelにはlicense declaration／license fileがなく、[release commit](https://github.com/thewh1teagle/espeakng-loader/tree/146599e29be31bf17d99f0bcb7dbb2f92aef3d95)にもroot LICENSEがない。ただしその直接の後続[commit 0ddc87a](https://github.com/thewh1teagle/espeakng-loader/commit/0ddc87adf77e5850d7eeb542ac8a87d421b64daa)はMIT LICENSEの追加だけでコード変更がない。インストール済み `__init__.py` は両revisionとbyte一致し、SHA-256は `3900f0b174feebccb8991fd6f3888f037c7bfa23d9a3bdec480e894f75b03f3f`。
 2. よって「インストール済みloaderソースは、MITで公開されているupstreamソースと同一」と記録できる。[固定MIT本文](https://raw.githubusercontent.com/thewh1teagle/espeakng-loader/0ddc87adf77e5850d7eeb542ac8a87d421b64daa/LICENSE)を根拠にし、元wheel自体にLICENSEが付属していたとは記載しない。付属eSpeak NGは別途GPL-3.0-or-later。releaseの[固定build workflow](https://raw.githubusercontent.com/thewh1teagle/espeakng-loader/146599e29be31bf17d99f0bcb7dbb2f92aef3d95/.github/workflows/build.yml)は1.52.0を取得する。これは版の来歴を裏付けるが、バイナリの再現build一致の検査ではない。
 3. 確認したKokoro package/dist-infoとモデルrepo rootに独立したNOTICEは見つからない。モデルカードには学習データのCC BYへの言及があるが、確認したvoice資料にaf_heart固有のCC BYクレジット指定は見つからない。音声出力を明示的に特定ライセンスへ指定する条項も見つからない。この観察をあらゆる第三者権利・帰属義務が存在しないという保証にはしない。
-4. AGENTSの「Third-party software: explicit production review required before install/use」と「Record exact version, source, license, provenance, NOTICE/attribution duties, and intended usage」は技術レビュー・記録を求める条項であり、既に承認された同一用途について再度ownerの許可を求める条項ではない。既存のオフライン動画制作の許可を維持し、今回の補足によりその限定範囲をApprovedとする。公開・提出の許可は含めない。第三者ライセンスやCC0-onlyポリシーの例外承認は不要であり、行っていない。
+4. AGENTSの「Third-party software: explicit production review required before install/use」と「Record exact version, source, license, provenance, NOTICE/attribution duties, and intended usage」は技術レビュー・記録を求める条項であり、既に承認された同一用途について再度ownerの許可を求める条項ではない。既存のオフライン動画制作の許可を維持し、今回の補足で91件を直接照合した一方、PyTorchのarchive同一性は未確認としてPending Evidenceを維持する。必要なのは実体証拠の補完であり、同一用途のowner再承認ではない。公開・提出の許可は含めない。第三者ライセンスやCC0-onlyポリシーの例外承認は不要であり、行っていない。
 5. ソフトウェア／モデルの再配布、ブラウザへの導入、公開投稿は別途の判断が必要。生成音声を第三者の配布済みcreative assetと同一視しない一方、CC0-onlyポリシーを勝手に変更しない。本書では音声をCC0と表示しない。
 
 追加の版別根拠: [phonemizer-fork 3.3.2](https://pypi.org/project/phonemizer-fork/3.3.2/)、[num2words 0.5.14 header](https://raw.githubusercontent.com/savoirfairelinux/num2words/v0.5.14/num2words/__init__.py)、[SoundFile 0.14.0 LICENSE](https://github.com/bastibe/python-soundfile/blob/0.14.0/LICENSE)、[libsndfile 1.2.2 header](https://raw.githubusercontent.com/libsndfile/libsndfile/1.2.2/src/sndfile.c)、[libsndfile COPYING](https://github.com/libsndfile/libsndfile/blob/1.2.2/COPYING)。GPLv3 §2／LGPLv2.1 §0はいずれもツール出力の内容に基づく扱いを定める。
@@ -67,10 +68,18 @@ DAI-073の14項目が通っても、もとの監査スクリプトはこのPytho
 
 ## この追補で実行した確認
 
-- 93件のname/version重複なし、92件の取得元対応、pip bootstrap 1件の取得元未保存を明示
+- 93件のname/version重複なし、92件の取得元対応、pip bootstrap 1件は基底Pythonの既存ensurepip wheelと照合
 - 同梱LICENSE/COPYING/NOTICE 195ファイルの実SHA-256一致
 - モデル／voice／configの公式固定revisionとの一致、loaderソース同一性、動画hashを確認
 - JSON parse、文書参照、git diff --check、DAI-073 legal 14/14、DAI-074 secret/privacy audit: PASS
 - 追加4資料にローカルマシン絶対パス・credential形式が含まれないことを確認。正確なwheel URLと公開モデルのhashのみ記載
 - 元mainをPR #71の既存commit `fbf5179ac2c2805ca74ee9e2b29a1ed4f5af8b19` へ同一hashを検証して同期。PR #71の本文を重複変更として扱っていない。新規commit／pushは未実施
 - runtime変更なし。全Node test・ブラウザsmoke・再インストールは今回実行していない
+
+## PR #72追加レビューへの対応
+
+取得計画とname/version一致だけでは不十分という指摘を受け、公式archiveと実インストールpayloadの直接照合を実施した。結果は上記とJSONの `archive_verification_summary`／各packageの `official_archive_installed_payload_verification` に保存。未照合のバイナリがあることは、生成音声の権利侵害や動画差替え必須を意味しない。技術的な同一性証拠の限界として扱い、再度の用途承認によって解消したと扱わない。
+
+未照合torchについては、既存の制作記録を再確認しても独立した取得／インストール成功ログや保存wheelは見つからなかった。公式URLの403に対する回避や別配布元からの導入は行わない。PyTorchは利用上重要なため、この不足をbootstrap pipと同列の軽微事項として除外しない。公開・提出を進める前の未完了項目として残す。
+
+bootstrap pip追補: 基底Python 3.12.14に同梱されたpip 25.0.1 wheel（1,841,526 bytes、SHA-256 `c46efd13b6aa8279f33f2864459c8ce587ea6a1a59ee20de055868d8f7688f7f`）と実インストール437ファイルがbyte一致。RECORDの書換部分は除く。91件の公式archive直接照合とは別枠であり、外部からの取得履歴は新たに主張しない。

@@ -41,4 +41,4 @@ Status values used here: `Recorded` for disclosed development or video-productio
 
 ## 動画制作依存関係のレビュー補足
 
-`PROD-AI-VIDEO-001` の `Recorded` はAI利用の開示であり、第三者ソフトウェアの制作用途承認とは別。[TTS toolchain review](TTS_TOOLCHAIN_REVIEW_2026-10-03.md) と [dependency register](THIRD_PARTY_DEPENDENCIES.md) の `PROD-DEP-TTS-001` に、正確なバージョン・取得元・ハッシュ・ライセンス・配布境界を補足した。既存のユーザー承認済みオフライン動画制作範囲について技術レビューを補完した。公開・提出・ソフトウェア／モデルの再配布を本追記で許可しない。
+`PROD-AI-VIDEO-001` の `Recorded` はAI利用の開示であり、第三者ソフトウェアの制作用途承認とは別。[TTS toolchain review](TTS_TOOLCHAIN_REVIEW_2026-10-03.md) と [dependency register](THIRD_PARTY_DEPENDENCIES.md) の `PROD-DEP-TTS-001` に、正確なバージョン・取得元・ハッシュ・ライセンス・配布境界を補足した。既存のユーザー承認済みオフライン動画制作範囲について技術レビューと91件の配布物実体照合を補完した。PyTorchの実取得archiveとの同一性だけは未確認のため、依存台帳はPending Evidenceとする。これは用途の再承認要求や生成音声の違法性認定ではない。公開・提出・ソフトウェア／モデルの再配布を本追記で許可しない。
