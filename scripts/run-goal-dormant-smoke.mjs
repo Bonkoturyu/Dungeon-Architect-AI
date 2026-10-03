@@ -10,7 +10,7 @@ const output = path.resolve(process.env.GOAL_DORMANT_ARTIFACT_DIR || 'artifacts/
 fs.mkdirSync(output, { recursive: true });
 const port = 4198, url = process.env.DAI_SMOKE_URL || `http://127.0.0.1:${port}/apps/editor-slice/index.html`;
 const vite = process.env.DAI_SMOKE_URL ? null : spawn(process.execPath, ['node_modules/vite/bin/vite.js', '--host', '127.0.0.1', '--port', String(port), '--strictPort'], { stdio: 'pipe' });
-const checks = [], errors = []; let browser;
+const checks = [], errors = [], layouts = []; let browser;
 function fixture(activation = 'none') {
   const spec = generateDungeonSpec({ seed: 0, roomCount: 3, routeChoice: 0 });
   spec.entities.push({ id: 'sleeping-enemy', type: 'enemy', roomId: 'room-003', initiallyActive: false });
@@ -31,8 +31,9 @@ try {
   page.on('pageerror', (error) => errors.push(String(error)));
   page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
   if (process.env.EXPECTED_DEPLOY_SHA) {
-    await page.goto(new URL('build-info.json', url).href);
-    const info = JSON.parse(await page.locator('body').innerText());
+    const response = await page.request.get(new URL('/build-info.json', url).href);
+    assert.equal(response.ok(), true, 'build-info request must succeed');
+    const info = await response.json();
     assert.equal(info.commitSha, process.env.EXPECTED_DEPLOY_SHA);
     assert.equal(info.runtimeSourceSha256, JSON.parse(fs.readFileSync('dist/build-info.json', 'utf8')).runtimeSourceSha256);
     fs.writeFileSync(path.join(output, 'build-info.json'), JSON.stringify(info, null, 2));
@@ -60,12 +61,44 @@ try {
     for (let i = 0; i < 5 && await button.getAttribute('data-current-language') !== id; i++) await button.click();
     assert.equal(await button.getAttribute('data-current-language'), id);
   };
+  const assertGoalLayout = async (id, phase) => {
+    for (const viewport of [{ width: 1440, height: 900 }, { width: 1280, height: 720 }, { width: 1024, height: 768 }]) {
+      await page.setViewportSize(viewport);
+      const layout = await page.locator('.room-event[data-kind="goal"]').evaluate((card) => {
+        const button = card.querySelector('[data-action="complete-goal"]');
+        const note = card.querySelector('span');
+        const range = document.createRange(); range.selectNodeContents(button);
+        return {
+          card: card.getBoundingClientRect().toJSON(),
+          button: button.getBoundingClientRect().toJSON(),
+          note: note.getBoundingClientRect().toJSON(),
+          textLines: range.getClientRects().length,
+          cardOverflow: card.scrollWidth - card.clientWidth,
+          noteOverflow: note.scrollWidth - note.clientWidth,
+        };
+      });
+      const label = `${id}-${phase}-${viewport.width}x${viewport.height}`;
+      assert.equal(layout.textLines, 1, `${label}: completion label must stay on one line`);
+      assert.ok(layout.note.right <= layout.button.left, `${label}: note must not overlap button`);
+      assert.ok(layout.button.right <= layout.card.right && layout.button.bottom <= layout.card.bottom, `${label}: button must fit card`);
+      assert.ok(layout.cardOverflow <= 1 && layout.noteOverflow <= 1, `${label}: no horizontal overflow`);
+      layouts.push({ id, phase, viewport, ...layout });
+      if (id === 'ja' && phase === 'blocked') await page.screenshot({ path: path.join(output, `goal-blocked-ja-${viewport.width}.png`) });
+    }
+    await page.setViewportSize({ width: 1440, height: 900 });
+    checks.push(`${id}-${phase}-goal-layout-three-desktop-viewports`);
+  };
   for (const id of ['en', 'ja', 'zh-Hans', 'zh-Hant', 'ko']) {
     await language(id); await start([fixture()]); await enterGoal();
     assert.equal(await page.locator('[data-action="clear-enemy"]').count(), 0);
     assert.equal(await finish.isEnabled(), true);
+    await assertGoalLayout(id, 'ready');
     if (id === 'ja') await page.screenshot({ path: path.join(output, 'dormant-goal-ready-ja.png') });
     await assertFinished(); checks.push(`${id}-old-json-dormant-goal-finishes`);
+    await start([fixture('mixed')]); await enterGoal();
+    assert.equal(await finish.isDisabled(), true);
+    await assertGoalLayout(id, 'blocked');
+    await page.locator('[data-action="clear-enemy"]').click(); await assertFinished();
   }
   await language('ja');
   await start([fixture('false-flag')]); await enterGoal();
@@ -95,6 +128,6 @@ try {
   await page.reload(); await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__?.ready); await page.evaluate(() => window.__DAI_ONBOARDING__?.close());
   await start([fixture()]); await enterGoal(); await assertFinished(); checks.push('reload-and-reimport-clears-again');
   assert.deepEqual(errors, []);
-  fs.writeFileSync(path.join(output, 'smoke.json'), JSON.stringify({ visible: true, checks, errors }, null, 2));
+  fs.writeFileSync(path.join(output, 'smoke.json'), JSON.stringify({ visible: true, checks, errors, layouts }, null, 2));
   console.log(JSON.stringify({ passed: checks.length, errors, output }));
 } finally { if (browser) await browser.close(); if (vite) vite.kill('SIGTERM'); }

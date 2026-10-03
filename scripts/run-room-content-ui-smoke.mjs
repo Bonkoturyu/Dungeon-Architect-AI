@@ -24,7 +24,7 @@ try {
  browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'/usr/bin/chromium',headless:false});
  const page=await browser.newPage({viewport:{width:1440,height:900}});
  if(process.env.EXPECTED_DEPLOY_SHA) {
-  await page.goto(new URL('build-info.json',url).href);
+  await page.goto(new URL('/build-info.json',url).href);
   const info=JSON.parse(await page.locator('body').innerText()); assert.equal(info.commitSha,process.env.EXPECTED_DEPLOY_SHA);
   fs.writeFileSync(path.join(output,'build-info.json'),JSON.stringify(info,null,2));
  }
