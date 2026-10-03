@@ -1436,6 +1436,17 @@
       overflow-wrap: anywhere;
       line-height: 1.45;
     }
+    /* Goalは説明と完了ボタンの2列。翻訳が長くてもボタンを縦に潰さない。 */
+    .room-event[data-kind="goal"] {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+    .room-event[data-kind="goal"] > span {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+    .room-event[data-kind="goal"] [data-action="complete-goal"] {
+      white-space: nowrap;
+    }
     .room-event-actions {
       display: flex;
       gap: 5px;
