@@ -797,7 +797,7 @@ Editor behavior after successful import:
 Round-trip guarantees:
 
 - Layout exporter output can be imported and re-exported byte-stably with the same ID/provenance;
-- Full exporter output can be imported and re-exported byte-stably with the same run ID.
+- Full import preserves all authored fields and adds current `seeded-avoidance-1` rules only where `trapRules` is omitted; subsequent normalized Full round-trips are byte-stable with the same run ID.
 
 Specification:
 
@@ -1330,7 +1330,7 @@ It runs the non-public, non-subjective replacement-candidate regression surface 
 15. Reactive Audio V2 browser regression;
 16. JSON Export;
 17. JSON Import / round-trip;
-18. ten-strategy Generator selector;
+18. eleven-strategy Generator selector;
 19. legal / provenance audit;
 20. secret / privacy audit;
 21. public-doc truthfulness audit;

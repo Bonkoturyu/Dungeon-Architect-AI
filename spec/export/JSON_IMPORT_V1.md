@@ -128,7 +128,7 @@ For valid Full JSON:
 
 `export Full → import Full → export Full`
 
-preserves the complete DungeonSpec data and is byte-stable when the same run export ID is used.
+preserves all authored DungeonSpec fields. If a floor omits `trapRules`, its first import adds the current `{ "version": "seeded-avoidance-1" }` rule. No geometry, counts, IDs, Seed, Events, damage, or equipment values change during that normalization. Once normalized, Full round-trips are byte-stable when the same run export ID is used. Explicit supported rules are preserved; invalid or unknown rules are rejected.
 
 ## Editor-after-import guarantee
 

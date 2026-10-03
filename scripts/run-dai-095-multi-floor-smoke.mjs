@@ -1,26 +1,27 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright-core';
 import { DEFAULT_DESIGN_INTENT } from '../packages/intent/src/design-intent.js';
 
 const chromePath = process.env.CHROME_PATH || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 const port = Number(process.env.DAI_MULTI_FLOOR_PORT || '4195');
-const outputDir = path.resolve('artifacts/dai-095-browser');
+const outputDir = path.resolve(process.env.DAI_MULTI_FLOOR_ARTIFACT_DIR || 'artifacts/dai-095-browser');
 const viteBin = path.resolve('node_modules/vite/bin/vite.js');
 const prompt = 'Create a fair multi-floor dungeon run with combat, treasure, readable traps, and exploration.';
 
 if (!fs.existsSync(chromePath)) throw new Error(`Chrome not found: ${chromePath}`);
-if (!fs.existsSync(viteBin)) throw new Error('Vite is not installed.');
+if (!process.env.DAI_SMOKE_URL && !fs.existsSync(viteBin)) throw new Error('Vite is not installed.');
 fs.mkdirSync(outputDir, { recursive: true });
 
-const vite = spawn(process.execPath, [viteBin, '--host', '127.0.0.1', '--port', String(port), '--strictPort'], {
+const vite = process.env.DAI_SMOKE_URL ? null : spawn(process.execPath, [viteBin, '--host', '127.0.0.1', '--port', String(port), '--strictPort'], {
   cwd: process.cwd(),
   stdio: ['ignore', 'pipe', 'pipe'],
 });
 let viteOutput = '';
-vite.stdout.on('data', (chunk) => { viteOutput += chunk.toString(); });
-vite.stderr.on('data', (chunk) => { viteOutput += chunk.toString(); });
+vite?.stdout.on('data', (chunk) => { viteOutput += chunk.toString(); });
+vite?.stderr.on('data', (chunk) => { viteOutput += chunk.toString(); });
 
 async function waitForServer(url, timeoutMs = 30_000) {
   const deadline = Date.now() + timeoutMs;
@@ -122,9 +123,12 @@ async function resolveBlockingEvents(page) {
 async function moveOne(page, targetRoomId) {
   const before = await state(page);
   const beforeFloor = before.play?.floorIndex ?? -1;
-  const moved = await page.evaluate((target) =>
-    window.__DAI_EDITOR_SLICE__.movePlayToRoom(target), targetRoomId);
-  if (!moved) throw new Error(`movePlayToRoom returned false for ${targetRoomId}`);
+  const currentRoomId = before.play?.currentRoomId;
+  const corridor = before.play?.snapshot.corridors.find((entry) =>
+    (entry.fromRoomId === currentRoomId && entry.toRoomId === targetRoomId) ||
+    (entry.toRoomId === currentRoomId && entry.fromRoomId === targetRoomId));
+  if (!corridor) throw new Error(`No corridor from ${currentRoomId} to ${targetRoomId}`);
+  await page.locator(`.exit-button[data-corridor-id="${corridor.id}"]`).click();
 
   await page.waitForFunction(({ floorIndex, roomId }) => {
     const s = window.__DAI_EDITOR_SLICE__.getState();
@@ -172,13 +176,23 @@ async function finishFloor(page, expectedFloorIndex) {
   await moveAlong(page, route);
 }
 
-const url = `http://127.0.0.1:${port}/apps/editor-slice/index.html`;
+const url = process.env.DAI_SMOKE_URL || `http://127.0.0.1:${port}/apps/editor-slice/index.html`;
 let browser;
 
 try {
-  await waitForServer(url);
+  if (vite) await waitForServer(url);
   browser = await chromium.launch({ executablePath: chromePath, headless: false });
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  if (process.env.EXPECTED_DEPLOY_SHA) {
+    const response = await page.request.get(new URL('/build-info.json', url).href);
+    assert.equal(response.ok(), true, 'build-info request must succeed');
+    const deployed = await response.json();
+    const local = JSON.parse(fs.readFileSync('dist/build-info.json', 'utf8'));
+    assert.equal(deployed.commitSha, process.env.EXPECTED_DEPLOY_SHA);
+    assert.equal(deployed.runtimeSourceSha256, local.runtimeSourceSha256);
+    assert.equal(deployed.runtimeBundleSha256, local.runtimeBundleSha256);
+    fs.writeFileSync(path.join(outputDir, 'build-info.json'), JSON.stringify(deployed, null, 2));
+  }
 
   const consoleErrors = [];
   const pageErrors = [];
@@ -197,6 +211,17 @@ try {
         ok: true,
         selectedProvider: 'cloud',
         intent: intentPayload(),
+        difficulty: 'easy',
+        roomRequests: [
+          ...['monster-house', 'trap-house', 'shop'].map((kind) => ({
+            kind, presence: 'exclude', roomCount: null, entityCount: null,
+            floorNumber: null, roomId: null, offers: [],
+          })),
+          ...['start', 'goal'].map((targetRole) => ({
+            kind: 'normal', targetRole, presence: 'include', roomCount: 1,
+            entityCount: null, floorNumber: null, roomId: null, offers: [],
+          })),
+        ],
         meta: { provider: 'openai', model: 'test-model', usage: null },
       }),
     });
@@ -208,18 +233,21 @@ try {
     window.__DAI_ONBOARDING__?.ready === true,
   null, { timeout: 60_000 });
   await page.evaluate(() => window.__DAI_ONBOARDING__.close());
-  // Legacy regression pins V2; V3 review/random presence has its own smoke.
+  // 階編集・引継ぎの回帰はV2地形と通常端点に固定する。現行内容ルールは維持する。
   await page.evaluate(() => window.__DAI_EDITOR_SLICE__.setGeneratorStrategy('version-2-spatial'));
 
   await page.fill('#generationPrompt', prompt);
   await page.fill('#floorCount', '3');
   await page.click('#generateDungeon');
+  await page.locator('dialog.special-room-review').waitFor({ state: 'visible' });
+  await page.locator('dialog.special-room-review button[type="submit"]').click();
   await page.waitForFunction(() => {
     const s = window.__DAI_EDITOR_SLICE__.getState();
     return s.generationBusy === false && s.floorCount === 3 && s.lastGeneration?.floorCount === 3;
   }, null, { timeout: 30_000 });
 
   const generated = await state(page);
+  const generatedFull = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getFullDungeonExport());
   const floorOneRoomTwoBefore = clone(
     generated.rooms.find((room) => room.id === 'room-002'),
   );
@@ -248,7 +276,8 @@ try {
   const floorTwoRoomTwoRevisited = floorTwoRevisited.rooms.find((room) => room.id === 'room-002');
 
   const authoringBeforePlay = await captureAllAuthoringFloors(page);
-  await page.evaluate(() => window.__DAI_EDITOR_SLICE__.startDungeon());
+  await page.click('[data-workflow-tab="play"]');
+  await page.click('#start');
   await page.waitForFunction(() => {
     const s = window.__DAI_EDITOR_SLICE__.getState();
     return s.mode === 'play' && s.play?.floorIndex === 0 && s.run?.floorCount === 3;
@@ -290,13 +319,20 @@ try {
 
   const result = await state(page);
   const resultText = await page.locator('#resultMetrics').innerText();
+  // 取得済みの文字列だけでなく、結果パネルのreveal終了後に画面を記録する。
+  await page.waitForFunction(() => {
+    const metrics = document.querySelector('#resultMetrics');
+    return metrics && !metrics.hidden && !metrics.classList.contains('is-result-reveal') &&
+      getComputedStyle(metrics).opacity === '1';
+  }, null, { timeout: 10_000 });
   await page.screenshot({ path: path.join(outputDir, 'multi-floor-result.png'), fullPage: true });
 
-  await page.evaluate(() => window.__DAI_EDITOR_SLICE__.returnToEdit());
+  await page.click('#returnEdit');
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().mode === 'edit');
   const authoringAfterPlay = await captureAllAuthoringFloors(page);
 
-  await page.evaluate(() => window.__DAI_EDITOR_SLICE__.startMysteryDungeon());
+  await page.click('[data-workflow-tab="play"]');
+  await page.click('#mysteryPlay');
   await page.waitForFunction(() => {
     const s = window.__DAI_EDITOR_SLICE__.getState();
     return s.mode === 'play' && s.playSource === 'mystery' && s.run?.floorCount === 3;
@@ -304,12 +340,15 @@ try {
   const mysteryPlay = await state(page);
   const mysteryDungeonIds = [...mysteryPlay.run.floorDungeonIds];
 
-  await page.evaluate(() => window.__DAI_EDITOR_SLICE__.returnToEdit());
+  await page.click('#returnEdit');
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().mode === 'edit');
   const mysteryAdopted = await state(page);
   const adoptedDungeonIds = mysteryAdopted.floorSummaries.map((floor) => floor.dungeonId);
 
   const checks = {
+    generationUsesCurrentContentRules:
+      generatedFull.floors.every(({ dungeon }) =>
+        dungeon.trapRules?.version === 'seeded-avoidance-1' && dungeon.difficulty === 'easy'),
     generatedThreeFloors:
       generated.floorCount === 3 &&
       generated.floorSummaries.length === 3 &&
@@ -364,6 +403,7 @@ try {
 
   const evidence = {
     generatedAt: new Date().toISOString(),
+    url,
     node: process.version,
     browserVersion: browser.version(),
     passed: falseChecks.length === 0,
@@ -403,5 +443,5 @@ try {
   }
 } finally {
   if (browser) await browser.close();
-  vite.kill();
+  vite?.kill();
 }
