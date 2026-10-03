@@ -38,3 +38,7 @@ Record AI services/models/tools used to create production code, documentation, a
 - 本更新は利用事実の記録のみ。正式なWindows Chrome受入、全smoke再実行、公開動画URL、最終freezeや提出手続きの完了を意味しない。
 
 Status values used here: `Recorded` for disclosed development or video-production assistance and `Approved` for a reviewed production runtime integration.
+
+## 動画制作依存関係のレビュー補足
+
+`PROD-AI-VIDEO-001` の `Recorded` はAI利用の開示であり、第三者ソフトウェアの制作用途承認とは別。[TTS toolchain review](TTS_TOOLCHAIN_REVIEW_2026-10-03.md) と [dependency register](THIRD_PARTY_DEPENDENCIES.md) の `PROD-DEP-TTS-001` に、正確なバージョン・取得元・ハッシュ・ライセンス・配布境界を補足した。既存のユーザー承認済みオフライン動画制作範囲について技術レビューを補完した。公開・提出・ソフトウェア／モデルの再配布を本追記で許可しない。
