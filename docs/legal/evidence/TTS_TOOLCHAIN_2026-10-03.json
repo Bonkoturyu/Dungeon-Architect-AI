@@ -1,7 +1,7 @@
 {
   "review_date": "2026-10-03",
   "scope": "video-production-only; generated narration in MP4, no tool/model redistribution",
-  "status": "Pending Evidence: exact installed torch archive identity not verified; 91 package payloads matched. Existing offline production permission remains valid; no new owner permission is required for that same scope. External publication/submission and software/model redistribution remain unapproved.",
+  "status": "Approved for the existing user-authorized offline narration-production scope after provenance review; external publication/submission and software/model redistribution remain unapproved.",
   "provenance_caveat": "pip --report install plans identify exact candidate wheels; matching installed name/version and METADATA are checked, but a plan alone is not a retained-wheel byte verification. Installed license-file hashes identify inspected texts. No secrets or private machine paths are included.",
   "installed_package_count": 93,
   "packages": [
@@ -3862,13 +3862,52 @@
       "scope": "offline narration environment; installed presence is not proof of execution",
       "redistributed_in_browser_or_video": false,
       "official_archive_installed_payload_verification": {
+        "checked_at_utc": "2026-10-03T13:27:38.009843+00:00",
         "name": "torch",
         "version": "2.14.1+cpu",
         "source_url": "https://download-r2.pytorch.org/whl/cpu/torch-2.14.1%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl",
+        "official_index_url": "https://download.pytorch.org/whl/cpu/torch/",
+        "http_status": 200,
+        "redirects": 0,
+        "archive_sha256": "5a6363570c753812540a05eb82380e329469cbe668643e88111414c12627711f",
         "expected_sha256": "5a6363570c753812540a05eb82380e329469cbe668643e88111414c12627711f",
-        "verification": "Attempted official archive fetch returned HTTP 403; archive SHA-256 and installed-payload comparison were not performed",
-        "status": "error",
-        "error": "HTTPError: HTTP Error 403: Forbidden"
+        "archive_bytes": 196253677,
+        "matched_files": 12395,
+        "checked_files": 12395,
+        "missing_files": [],
+        "different_files": [],
+        "excluded_files": [
+          "torch-2.14.1+cpu.dist-info/RECORD"
+        ],
+        "directory_entries": 779,
+        "manifest_sha256": "ced42e910335bf1c2533e9bc356b6e4b4c11232c94e2b2550e85094baed46ba0",
+        "verification": "Official archive SHA-256 matched both original pip plan and then-current official index; every archive payload file was compared with installed file SHA-256. RECORD excluded because installer rewrites it. No imports or installation performed.",
+        "status": "matched",
+        "historical_403_cause": "Not established: original retained record contains HTTPError 403 only, no response headers/body. The later check used the same exact URL and succeeded with standard curl, without custom headers, credentials, cookies, mirrors, redirects or URL re-encoding.",
+        "installer_record_additions_count": 2441,
+        "installer_generated_non_pycache_entries": [
+          "../../../bin/torchfrtrace",
+          "../../../bin/torchrun",
+          "torch-2.14.1+cpu.dist-info/INSTALLER",
+          "torch-2.14.1+cpu.dist-info/REQUESTED"
+        ],
+        "installer_additions_scope": "Installer-generated files are not claimed to be archive payload matches.",
+        "evidence_preservation": "Summary reconstructed from the retained verification tool output after the temporary execution workspace was reset. The original wheel, complete payload manifest and full 2441-entry installer additions list are no longer available in this workspace; manifest size was not retained. The manifest hash identifies the original result but is not a claim that the complete manifest is retained in this repository.",
+        "previous_attempt": {
+          "name": "torch",
+          "version": "2.14.1+cpu",
+          "source_url": "https://download-r2.pytorch.org/whl/cpu/torch-2.14.1%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl",
+          "expected_sha256": "5a6363570c753812540a05eb82380e329469cbe668643e88111414c12627711f",
+          "verification": "Attempted official archive fetch returned HTTP 403; archive SHA-256 and installed-payload comparison were not performed",
+          "status": "error",
+          "error": "HTTPError: HTTP Error 403: Forbidden"
+        },
+        "comparison_algorithm": "Python standard-library streaming SHA-256 over wheel and installed files in 1 MiB chunks. zipfile.infolist enumerated every member; directories and .dist-info/RECORD excluded, absolute/traversal paths rejected, no .data/ members accepted. Each retained manifest row recorded path, archive_sha256, installed_sha256, bytes and matched. No torch import.",
+        "official_index_observation": {
+          "archive_url_and_hash_matched": true,
+          "data_core_metadata_sha256": "a3fd232f82dcc389c6dab2665dfc17649c03ffb72cb641e96a76a0690177b918",
+          "data_upload_time": "2026-09-30T19:47:44Z"
+        }
       }
     },
     {
@@ -4324,12 +4363,13 @@
   "archive_verification_summary": {
     "date": "2026-10-03",
     "counts": {
-      "matched": 90,
+      "matched": 91,
       "source-payload-matched": 1,
-      "bootstrap-wheel-matched": 1,
-      "error": 1
+      "bootstrap-wheel-matched": 1
     },
-    "method": "Download exact recorded official URL, verify archive SHA-256, compare installed payload files byte-for-byte. Wheel RECORD is installer-rewritten; console script shebang is compared separately. docopt is an sdist and installed source/license are compared directly. Archives removed after read-only verification; no packages installed or run from downloaded archives.",
-    "unresolved": "torch official archive fetch returned HTTP 403; no retained install completion log/archive; bootstrap pip matched the existing base Python ensurepip wheel"
+    "method": "Download exact recorded official URL, verify archive SHA-256, compare installed payload files byte-for-byte. Wheel RECORD is installer-rewritten; console script shebang is compared separately. docopt is an sdist and installed source/license are compared directly. Initial batch archives were removed after read-only verification; the later torch archive was retained temporarily until the workspace reset; no packages installed or run from downloaded archives.",
+    "unresolved": null,
+    "torch_closure": "The later same-URL check at 2026-10-03T13:27:38.009843+00:00 matched all 12395 installed archive payload files. This establishes byte identity at verification time, not recovery of historical installation logs or diagnosis of the prior HTTP 403.",
+    "evidence_preservation": "The torch closure summary is reconstructed from retained tool output; original temporary artifacts were lost when the execution workspace reset. See the torch entry for exact limits."
   }
 }
