@@ -40,7 +40,7 @@ Kokoroモデル／voice／configは実ファイルをハッシュしたうえで
 |---|---|---|
 | kokoro 0.9.4 / misaki 0.9.4 | インストール済みLICENSEとMETADATAはApache-2.0。公式wheel URL/hashは全件記録 | ソフトウェアを配布する場合はApache本文・該当するNOTICE・変更表示を保持。今回は配布しない |
 | Kokoro-82M v1.0 / af_heart | [固定モデルカード](https://huggingface.co/hexgrad/Kokoro-82M/blob/f3ff3571791e39611d31c381e3a41a3af07b4987/README.md)のApache-2.0表記と公式配布元。voice実体は上記照合 | 重み／埋め込みの再配布は承認対象外。モデルのライセンス名を生成音声のCC0宣言へ読み替えない |
-| torch 2.14.1+cpu | 配布METADATAのApache-2.0、LLVM exception、BSD-2/3-Clause、BSL-1.0、MITの複合表記 | PyTorch公式CPU wheel。単に「BSDのみ」と縮約しない。再配布時は同梱各成分の条件を再評価 |
+| torch 2.14.1+cpu | 配布METADATAのApache-2.0、LLVM exception、BSD-2/3-Clause、BSL-1.0、MITの複合表記 | 取得計画はPyTorch公式CPU wheelを指すが、実インストールarchive同一性は未確認。単に「BSDのみ」と縮約しない。再配布時は同梱各成分の条件を再評価 |
 | transformers 4.57.6 | Apache-2.0、インストール済みライセンス | ソフトウェアの再配布なし |
 | spaCy 3.8.16 / en_core_web_sm 3.8.0 | MIT、インストール済みライセンス。言語モデルは[公式release](https://github.com/explosion/spacy-models/releases/tag/en_core_web_sm-3.8.0) | コード／言語モデルを再配布する場合はcopyright・license保持 |
 | phonemizer-fork 3.3.2 | 同梱LICENSEとMETADATAでGPL-3.0-or-later | 生成結果とソフトウェア配布を区別。ソフトウェア再配布を始める場合は対応ソース等を別途確認 |
@@ -73,7 +73,7 @@ DAI-073の14項目が通っても、もとの監査スクリプトはこのPytho
 - モデル／voice／configの公式固定revisionとの一致、loaderソース同一性、動画hashを確認
 - JSON parse、文書参照、git diff --check、DAI-073 legal 14/14、DAI-074 secret/privacy audit: PASS
 - 追加4資料にローカルマシン絶対パス・credential形式が含まれないことを確認。正確なwheel URLと公開モデルのhashのみ記載
-- 元mainをPR #71の既存commit `fbf5179ac2c2805ca74ee9e2b29a1ed4f5af8b19` へ同一hashを検証して同期。PR #71の本文を重複変更として扱っていない。新規commit／pushは未実施
+- 元mainをPR #71の既存commit `fbf5179ac2c2805ca74ee9e2b29a1ed4f5af8b19` へ同一hashを検証して同期。PR #71の本文を重複変更として扱っていない。この記述は初回ローカルレビュー時点の確認で、後続PR #72のcommit／push履歴とは区別する
 - runtime変更なし。全Node test・ブラウザsmoke・再インストールは今回実行していない
 
 ## PR #72追加レビューへの対応
