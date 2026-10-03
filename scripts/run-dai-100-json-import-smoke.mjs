@@ -137,6 +137,11 @@ try {
   }));
 
   const original = await exportValues(page);
+  // 旧JSONは罠ルールだけ補完する。その他の作者フィールドはFull全体で厳密比較する。
+  const expectedFull = structuredClone(original.full);
+  for (const { dungeon } of expectedFull.floors) {
+    if (dungeon.trapRules === undefined) dungeon.trapRules = { version: 'seeded-avoidance-1' };
+  }
   const originalState = await state(page);
 
   // Mutate the existing Editor before importing so restoration is observable.
@@ -166,7 +171,8 @@ try {
   const editedAfterImport = await state(page);
 
   // Restore Full again, then import the generic Layout form.
-  await importJson(page, original.full, 'fixture-full-again.json');
+  await importJson(page, fullReexport, 'fixture-full-again.json');
+  const fullImportedAgain = (await exportValues(page)).full;
   const layoutImported = await importJson(
     page,
     original.layout,
@@ -240,9 +246,13 @@ try {
       fullImported.floorCount === 1,
 
     fullImportRestoresCompleteDungeon:
-      JSON.stringify(fullReexport) === JSON.stringify(original.full) &&
+      JSON.stringify(fullReexport) === JSON.stringify(expectedFull) &&
       JSON.stringify(afterFullFloor) === JSON.stringify(originalFloor.rooms) &&
       JSON.stringify(afterFull.entities) === JSON.stringify(originalFloor.entities),
+
+    fullImportCurrentRuleNormalizationIsIdempotent:
+      JSON.stringify(fullImportedAgain) === JSON.stringify(fullReexport) &&
+      fullReexport.floors.every(({ dungeon }) => dungeon.trapRules?.version === 'seeded-avoidance-1'),
 
     fullImportResetsEditorHistoryAndRuntime:
       afterFull.mode === 'edit' &&

@@ -6,6 +6,7 @@ import { DEFAULT_DESIGN_INTENT } from '../packages/intent/src/design-intent.js';
 import {
   GENERATOR_STRATEGY_V1_CLASSIC_ID,
   GENERATOR_STRATEGY_V2_RECOMMENDED_ID,
+  GENERATOR_STRATEGY_V3_SPECIAL_ROOMS_ID,
   GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID,
   GENERATOR_STRATEGY_BSP_LAB_ID,
   GENERATOR_STRATEGY_ROOMS_MAZES_LAB_ID,
@@ -67,6 +68,24 @@ function layoutSignature(state) {
   );
 }
 
+// 生成方式の選択と確認を画面で行い、無期限のGenerate待ちを避ける。
+async function generateStrategy(page, strategyId) {
+  await page.click('[data-workflow-tab="create"]');
+  await page.selectOption('#generatorStrategy', strategyId);
+  await page.click('#generateDungeon');
+  await page.locator('dialog.special-room-review').waitFor({ state: 'visible', timeout: 10_000 });
+  await page.locator('dialog.special-room-review button[type="submit"]').click();
+  await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().generationBusy === false,
+    null, { timeout: 30_000 });
+  const state = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
+  if (state.lastGeneration?.generatorStrategyId !== strategyId) {
+    throw new Error(`Generation failed for ${strategyId}: ${await page.locator('#generationStatus').innerText()}`);
+  }
+  const full = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getFullDungeonExport());
+  return { ...state, currentRulesPresent: full.floors.every(({ dungeon }) =>
+    dungeon.trapRules?.version === 'seeded-avoidance-1' && dungeon.difficulty === 'easy') };
+}
+
 const url = `http://127.0.0.1:${port}/apps/editor-slice/index.html`;
 let browser;
 
@@ -117,6 +136,18 @@ try {
       body: JSON.stringify({
         ok: true,
         selectedProvider: 'cloud',
+        difficulty: 'easy',
+        // 地形選択の回帰を固定し、特殊部屋の抽選は専用smokeで検査する。
+        roomRequests: [
+          ...['monster-house', 'trap-house', 'shop'].map((kind) => ({
+            kind, presence: 'exclude', roomCount: null, entityCount: null,
+            floorNumber: null, roomId: null, offers: [],
+          })),
+          ...['start', 'goal'].map((targetRole) => ({
+            kind: 'normal', targetRole, presence: 'include', roomCount: 1,
+            entityCount: null, floorNumber: null, roomId: null, offers: [],
+          })),
+        ],
         intent: {
           ...DEFAULT_DESIGN_INTENT,
           fairness: 0.82,
@@ -180,143 +211,19 @@ try {
 
   await page.fill('#generationPrompt', prompt);
 
-  const selectedClassic = await page.evaluate(
-    (id) => window.__DAI_EDITOR_SLICE__.setGeneratorStrategy(id),
-    GENERATOR_STRATEGY_V1_CLASSIC_ID,
-  );
-  if (!selectedClassic) throw new Error('Could not select Version 1 Classic.');
-  await page.evaluate(
-    () => window.__DAI_EDITOR_SLICE__.generateDungeonFromPrompt(),
-  );
-  const classic = await page.evaluate(
-    () => window.__DAI_EDITOR_SLICE__.getState(),
-  );
-
-  const selectedRecommended = await page.evaluate(
-    (id) => window.__DAI_EDITOR_SLICE__.setGeneratorStrategy(id),
-    GENERATOR_STRATEGY_V2_RECOMMENDED_ID,
-  );
-  if (!selectedRecommended) {
-    throw new Error('Could not select Version 2 Recommended.');
-  }
-  await page.evaluate(
-    () => window.__DAI_EDITOR_SLICE__.generateDungeonFromPrompt(),
-  );
-  const recommended = await page.evaluate(
-    () => window.__DAI_EDITOR_SLICE__.getState(),
-  );
-
-  const selectedDelaunay = await page.evaluate(
-    (id) => window.__DAI_EDITOR_SLICE__.setGeneratorStrategy(id),
-    GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID,
-  );
-  if (!selectedDelaunay) {
-    throw new Error('Could not select Algorithm Lab Delaunay + MST + Loops.');
-  }
-  await page.evaluate(
-    () => window.__DAI_EDITOR_SLICE__.generateDungeonFromPrompt(),
-  );
-  const delaunay = await page.evaluate(
-    () => window.__DAI_EDITOR_SLICE__.getState(),
-  );
-
-  const selectedBsp = await page.evaluate(
-    (id) => window.__DAI_EDITOR_SLICE__.setGeneratorStrategy(id),
-    GENERATOR_STRATEGY_BSP_LAB_ID,
-  );
-  if (!selectedBsp) {
-    throw new Error('Could not select Algorithm Lab BSP.');
-  }
-  await page.evaluate(
-    () => window.__DAI_EDITOR_SLICE__.generateDungeonFromPrompt(),
-  );
-  const bsp = await page.evaluate(
-    () => window.__DAI_EDITOR_SLICE__.getState(),
-  );
-
-  const selectedRoomsMazes = await page.evaluate(
-    (id) => window.__DAI_EDITOR_SLICE__.setGeneratorStrategy(id),
-    GENERATOR_STRATEGY_ROOMS_MAZES_LAB_ID,
-  );
-  if (!selectedRoomsMazes) {
-    throw new Error('Could not select Algorithm Lab Rooms + Mazes.');
-  }
-  await page.evaluate(
-    () => window.__DAI_EDITOR_SLICE__.generateDungeonFromPrompt(),
-  );
-  const roomsMazes = await page.evaluate(
-    () => window.__DAI_EDITOR_SLICE__.getState(),
-  );
-
-  const selectedRandomWalk = await page.evaluate(
-    (id) => window.__DAI_EDITOR_SLICE__.setGeneratorStrategy(id),
-    GENERATOR_STRATEGY_RANDOM_WALK_LAB_ID,
-  );
-  if (!selectedRandomWalk) {
-    throw new Error('Could not select Algorithm Lab Random Walk.');
-  }
-  await page.evaluate(
-    () => window.__DAI_EDITOR_SLICE__.generateDungeonFromPrompt(),
-  );
-  const randomWalk = await page.evaluate(
-    () => window.__DAI_EDITOR_SLICE__.getState(),
-  );
-
-  const selectedCellularAutomata = await page.evaluate(
-    (id) => window.__DAI_EDITOR_SLICE__.setGeneratorStrategy(id),
-    GENERATOR_STRATEGY_CELLULAR_AUTOMATA_LAB_ID,
-  );
-  if (!selectedCellularAutomata) {
-    throw new Error('Could not select Algorithm Lab Cellular Automata.');
-  }
-  await page.evaluate(
-    () => window.__DAI_EDITOR_SLICE__.generateDungeonFromPrompt(),
-  );
-  const cellularAutomata = await page.evaluate(
-    () => window.__DAI_EDITOR_SLICE__.getState(),
-  );
-
-  const selectedMazeCarving = await page.evaluate(
-    (id) => window.__DAI_EDITOR_SLICE__.setGeneratorStrategy(id),
-    GENERATOR_STRATEGY_MAZE_CARVING_LAB_ID,
-  );
-  if (!selectedMazeCarving) {
-    throw new Error('Could not select Algorithm Lab Maze Carving.');
-  }
-  await page.evaluate(
-    () => window.__DAI_EDITOR_SLICE__.generateDungeonFromPrompt(),
-  );
-  const mazeCarving = await page.evaluate(
-    () => window.__DAI_EDITOR_SLICE__.getState(),
-  );
-
-  const selectedGameplayGrammar = await page.evaluate(
-    (id) => window.__DAI_EDITOR_SLICE__.setGeneratorStrategy(id),
-    GENERATOR_STRATEGY_GAMEPLAY_GRAMMAR_LAB_ID,
-  );
-  if (!selectedGameplayGrammar) {
-    throw new Error('Could not select Algorithm Lab Gameplay Graph / Grammar.');
-  }
-  await page.evaluate(
-    () => window.__DAI_EDITOR_SLICE__.generateDungeonFromPrompt(),
-  );
-  const gameplayGrammar = await page.evaluate(
-    () => window.__DAI_EDITOR_SLICE__.getState(),
-  );
-
-  const selectedWfc = await page.evaluate(
-    (id) => window.__DAI_EDITOR_SLICE__.setGeneratorStrategy(id),
-    GENERATOR_STRATEGY_WFC_LAB_ID,
-  );
-  if (!selectedWfc) {
-    throw new Error('Could not select Algorithm Lab WFC.');
-  }
-  await page.evaluate(
-    () => window.__DAI_EDITOR_SLICE__.generateDungeonFromPrompt(),
-  );
-  const wfc = await page.evaluate(
-    () => window.__DAI_EDITOR_SLICE__.getState(),
-  );
+  const specialRooms = await generateStrategy(page, GENERATOR_STRATEGY_V3_SPECIAL_ROOMS_ID);
+  const classic = await generateStrategy(page, GENERATOR_STRATEGY_V1_CLASSIC_ID);
+  const recommended = await generateStrategy(page, GENERATOR_STRATEGY_V2_RECOMMENDED_ID);
+  const delaunay = await generateStrategy(page, GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID);
+  const bsp = await generateStrategy(page, GENERATOR_STRATEGY_BSP_LAB_ID);
+  const roomsMazes = await generateStrategy(page, GENERATOR_STRATEGY_ROOMS_MAZES_LAB_ID);
+  const randomWalk = await generateStrategy(page, GENERATOR_STRATEGY_RANDOM_WALK_LAB_ID);
+  const cellularAutomata = await generateStrategy(page, GENERATOR_STRATEGY_CELLULAR_AUTOMATA_LAB_ID);
+  const mazeCarving = await generateStrategy(page, GENERATOR_STRATEGY_MAZE_CARVING_LAB_ID);
+  const gameplayGrammar = await generateStrategy(page, GENERATOR_STRATEGY_GAMEPLAY_GRAMMAR_LAB_ID);
+  const wfc = await generateStrategy(page, GENERATOR_STRATEGY_WFC_LAB_ID);
+  const generatedStates = [specialRooms, classic, recommended, delaunay, bsp, roomsMazes, randomWalk, cellularAutomata, mazeCarving, gameplayGrammar, wfc];
+  await page.click('[data-workflow-tab="create"]');
 
   await page.screenshot({
     path: path.join(outputDir, 'generator-strategy-selector.png'),
@@ -336,7 +243,13 @@ try {
 
   const checks = {
     strategySelectorVisible: initial.selectorVisible === true,
+    allElevenOutputsUseCurrentContentRules:
+      generatedStates.length === 11 && generatedStates.every((entry) => entry.currentRulesPresent),
+    recommendedSelectionGeneratesV3:
+      specialRooms.lastGeneration?.generatorVersion === '3' &&
+      specialRooms.lastGeneration?.generatorStrategyId === GENERATOR_STRATEGY_V3_SPECIAL_ROOMS_ID,
     registryListsAllAcceptedStrategies:
+      initial.strategies.some((entry) => entry.id === GENERATOR_STRATEGY_V3_SPECIAL_ROOMS_ID) &&
       initial.strategies.some(
         (entry) => entry.id === GENERATOR_STRATEGY_V1_CLASSIC_ID,
       ) &&
@@ -368,6 +281,7 @@ try {
         (entry) => entry.id === GENERATOR_STRATEGY_WFC_LAB_ID,
       ),
     selectorListsAllAcceptedStrategies:
+      initial.optionValues.includes(GENERATOR_STRATEGY_V3_SPECIAL_ROOMS_ID) &&
       initial.optionValues.includes(GENERATOR_STRATEGY_V1_CLASSIC_ID) &&
       initial.optionValues.includes(GENERATOR_STRATEGY_V2_RECOMMENDED_ID) &&
       initial.optionValues.includes(GENERATOR_STRATEGY_DELAUNAY_MST_LAB_ID) &&
@@ -431,6 +345,7 @@ try {
         GENERATOR_STRATEGY_WFC_LAB_ID &&
       wfc.lastGeneration?.algorithmVersion === '1',
     samePromptKeepsSameSeedAcrossStrategies:
+      specialRooms.lastGeneration?.seed === classic.lastGeneration?.seed &&
       classic.lastGeneration?.seed === recommended.lastGeneration?.seed &&
       recommended.lastGeneration?.seed === delaunay.lastGeneration?.seed &&
       delaunay.lastGeneration?.seed === bsp.lastGeneration?.seed &&
@@ -454,6 +369,7 @@ try {
         wfcLayout,
       ]).size === 10,
     allOutputsRemainStartEligible:
+      specialRooms.startAllowed === true &&
       classic.startAllowed === true &&
       recommended.startAllowed === true &&
       delaunay.startAllowed === true &&
@@ -464,9 +380,10 @@ try {
       mazeCarving.startAllowed === true &&
       gameplayGrammar.startAllowed === true &&
       wfc.startAllowed === true,
-    designIntentRequestedTenTimes:
-      designIntentRequests.length === 10 &&
-      designIntentRequests.every((entry) => entry.promptMatches),
+    designIntentRequestedElevenTimes:
+      designIntentRequests.length === 11 &&
+      designIntentRequests.every((entry) => entry.promptMatches &&
+        JSON.stringify(entry.keys) === JSON.stringify(['includeRoomRequests', 'prompt'])),
     browserErrorsAbsent:
       consoleErrors.length === 0 &&
       pageErrors.length === 0 &&
@@ -490,6 +407,12 @@ try {
       strategies: initial.strategies,
       optionValues: initial.optionValues,
       selectorVisible: initial.selectorVisible,
+    },
+    specialRooms: {
+      generatorVersion: specialRooms.lastGeneration?.generatorVersion ?? null,
+      generatorStrategyId: specialRooms.lastGeneration?.generatorStrategyId ?? null,
+      seed: specialRooms.lastGeneration?.seed ?? null,
+      roomCount: specialRooms.rooms.length,
     },
     classic: {
       generatorVersion: classic.lastGeneration?.generatorVersion ?? null,

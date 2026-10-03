@@ -99,6 +99,18 @@ try {
       body: JSON.stringify({
         ok: true,
         selectedProvider: 'cloud',
+        difficulty: 'easy',
+        // Export契約の検査が特殊部屋の抽選に依存しないよう固定する。
+        roomRequests: [
+          ...['monster-house', 'trap-house', 'shop'].map((kind) => ({
+            kind, presence: 'exclude', roomCount: null, entityCount: null,
+            floorNumber: null, roomId: null, offers: [],
+          })),
+          ...['start', 'goal'].map((targetRole) => ({
+            kind: 'normal', targetRole, presence: 'include', roomCount: 1,
+            entityCount: null, floorNumber: null, roomId: null, offers: [],
+          })),
+        ],
         intent: {
           ...DEFAULT_DESIGN_INTENT,
           fairness: 0.82,
@@ -145,13 +157,14 @@ try {
   await page.fill('#generationPrompt', prompt);
   await page.fill('#floorCount', '2');
 
-  const generated = await page.evaluate(
-    () =>
-      window.__DAI_EDITOR_SLICE__
-        .generateDungeonFromPrompt(),
-  );
-  if (!generated) {
-    throw new Error('Generation failed during JSON export smoke.');
+  await page.click('#generateDungeon');
+  await page.locator('dialog.special-room-review').waitFor({ state: 'visible', timeout: 10_000 });
+  await page.locator('dialog.special-room-review button[type="submit"]').click();
+  await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().generationBusy === false,
+    null, { timeout: 30_000 });
+  const generated = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
+  if (generated.lastGeneration?.floorCount !== 2 || generated.floorCount !== 2) {
+    throw new Error(`Generation failed during JSON export smoke: ${await page.locator('#generationStatus').innerText()}`);
   }
 
   await page.click('[data-workflow-tab="create"]');
@@ -206,6 +219,9 @@ try {
     layoutRooms.filter((room) => room.roles.includes('goal'));
 
   const checks = {
+    exportUsesCurrentContentRules:
+      fullDownloaded.floors.every(({ dungeon }) =>
+        dungeon.trapRules?.version === 'seeded-avoidance-1' && dungeon.difficulty === 'easy'),
     exportButtonsEnabled:
       before.layoutDisabled === false &&
       before.fullDisabled === false,
