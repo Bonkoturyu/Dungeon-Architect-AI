@@ -1,0 +1,432 @@
+{
+  "recordType": "final-local-regression-observation",
+  "repository": "Bonkoturyu/Dungeon-Architect-AI",
+  "sourceCommit": "8bcce65246663bc16625a0f915ec2f202c63b5e4",
+  "sourceTree": "3ec19b979d79897916e7f72f9acbedfb9315faf5",
+  "startedAt": "2026-10-04T07:39:08.196234+00:00",
+  "finishedAt": "2026-10-04T07:39:20.546742+00:00",
+  "command": [
+    "npm",
+    "run",
+    "validate:dai-100-final-local"
+  ],
+  "suitePath": "scripts/run-dai-100-final-local-regression.mjs",
+  "suiteInvocationCount": 1,
+  "rerunCount": 0,
+  "result": "FAIL",
+  "exitCode": 1,
+  "stageCounts": {
+    "passed": 1,
+    "failed": 1,
+    "notRun": 22,
+    "total": 24
+  },
+  "environment": {
+    "os": "Linux-6.18.44-x86_64-with-glibc2.41",
+    "node": "v24.19.0",
+    "npm": "11.9.0",
+    "installedBrowser": "Chromium 154.0.8037.57 built on Debian GNU/Linux 13 (trixie)",
+    "CHROME_PATH": "/usr/bin/chromium",
+    "displayPresent": false,
+    "browserStarted": false,
+    "npmCache": "workspace-local",
+    "recommendedAcceptanceEnvironment": "Windows desktop Chrome / Node.js 24.15.0"
+  },
+  "nodeTests": {
+    "passed": 556,
+    "failed": 0,
+    "skipped": 0
+  },
+  "simulation": {
+    "fixture": "spec/simulation/fixtures/dai-098-run-balance-v1.json",
+    "checkCount": 15,
+    "passedCount": 11,
+    "failedCount": 4,
+    "checks": {
+      "safeRunClearsAllFloors": false,
+      "treasureRunClearsAllFloors": true,
+      "riskRunFailsOnFinalFloor": true,
+      "playerStateCarryIsExact": true,
+      "hpAttritionIsObserved": false,
+      "progressionCarriesAcrossFloors": true,
+      "equipmentCarryIsObservable": true,
+      "aggregateCapturesPolicyOutcomes": false,
+      "finalFloorIsBottleneck": false,
+      "authoredPressureIncreasesByFloor": true,
+      "observedPressureSignalsAreAvailable": true,
+      "runIntentFitCoversEveryFloor": true,
+      "difficultyProxyRemainsDescriptive": true,
+      "repeatedRunIsDeterministic": true,
+      "authoringRunSpecUnchanged": true
+    },
+    "failedCheckDetails": [
+      {
+        "name": "safeRunClearsAllFloors",
+        "expected": {
+          "status": "cleared",
+          "floorsCleared": 3,
+          "floorsReached": 3
+        },
+        "actual": {
+          "status": "failed",
+          "failureReason": "player-defeated",
+          "floorsCleared": 2,
+          "floorsReached": 3
+        }
+      },
+      {
+        "name": "hpAttritionIsObserved",
+        "expected": "risk.damageTaken > safe.damageTaken; safe.damageTaken > 0; risk.finalHp == 0",
+        "actual": {
+          "safeDamageTaken": 22,
+          "riskDamageTaken": 22,
+          "riskFinalHp": 0
+        }
+      },
+      {
+        "name": "aggregateCapturesPolicyOutcomes",
+        "expected": {
+          "runCount": 3,
+          "successCount": 2,
+          "failureCount": 1,
+          "successRate": 0.666667
+        },
+        "actual": {
+          "runCount": 3,
+          "successCount": 1,
+          "failureCount": 2,
+          "successRate": 0.333333
+        }
+      },
+      {
+        "name": "finalFloorIsBottleneck",
+        "expected": {
+          "bottleneckFloorIndex": 2,
+          "bottleneckClearRate": 0.666667
+        },
+        "actual": {
+          "bottleneckFloorIndex": 2,
+          "bottleneckClearRate": 0.333333
+        }
+      }
+    ],
+    "safeFinalTrap": {
+      "floorIndex": 2,
+      "floorSeed": 98002,
+      "trapId": "f3-trap",
+      "action": "avoid-trap",
+      "version": "seeded-avoidance-1",
+      "successChance": 0.7,
+      "roll": 0.7279483226593584,
+      "outcome": "triggered",
+      "hpBefore": 10,
+      "hpAfter": 0
+    }
+  },
+  "stages": [
+    {
+      "index": 1,
+      "label": "Full Node regression suite",
+      "status": "PASS",
+      "reason": null,
+      "command": [
+        "npm",
+        "test"
+      ]
+    },
+    {
+      "index": 2,
+      "label": "Multi-floor simulation regression",
+      "status": "FAIL",
+      "reason": null,
+      "command": [
+        "npm",
+        "run",
+        "validate:run-simulation"
+      ]
+    },
+    {
+      "index": 3,
+      "label": "Production hosting build",
+      "status": "NOT_RUN",
+      "reason": "Existing suite stopped on failure at stage 2",
+      "command": [
+        "npm",
+        "run",
+        "build:hosting"
+      ]
+    },
+    {
+      "index": 4,
+      "label": "Browser performance regression",
+      "status": "NOT_RUN",
+      "reason": "Existing suite stopped on failure at stage 2",
+      "command": [
+        "npm",
+        "run",
+        "smoke:browser-performance"
+      ]
+    },
+    {
+      "index": 5,
+      "label": "Owner UI regression smoke",
+      "status": "NOT_RUN",
+      "reason": "Existing suite stopped on failure at stage 2",
+      "command": [
+        "npm",
+        "run",
+        "smoke:owner-ui-review"
+      ]
+    },
+    {
+      "index": 6,
+      "label": "Room Event gameplay regression",
+      "status": "NOT_RUN",
+      "reason": "Existing suite stopped on failure at stage 2",
+      "command": [
+        "npm",
+        "run",
+        "smoke:room-events"
+      ]
+    },
+    {
+      "index": 7,
+      "label": "Multi-floor browser regression",
+      "status": "NOT_RUN",
+      "reason": "Existing suite stopped on failure at stage 2",
+      "command": [
+        "npm",
+        "run",
+        "smoke:multi-floor-run"
+      ]
+    },
+    {
+      "index": 8,
+      "label": "Programmatic character regression",
+      "status": "NOT_RUN",
+      "reason": "Existing suite stopped on failure at stage 2",
+      "command": [
+        "npm",
+        "run",
+        "smoke:programmatic-characters"
+      ]
+    },
+    {
+      "index": 9,
+      "label": "Programmatic Audio V2 regression",
+      "status": "NOT_RUN",
+      "reason": "Existing suite stopped on failure at stage 2",
+      "command": [
+        "npm",
+        "run",
+        "smoke:audio-presentation"
+      ]
+    },
+    {
+      "index": 10,
+      "label": "Motion feedback regression",
+      "status": "NOT_RUN",
+      "reason": "Existing suite stopped on failure at stage 2",
+      "command": [
+        "npm",
+        "run",
+        "smoke:dai-100-motion-feedback"
+      ]
+    },
+    {
+      "index": 11,
+      "label": "Event feedback regression",
+      "status": "NOT_RUN",
+      "reason": "Existing suite stopped on failure at stage 2",
+      "command": [
+        "npm",
+        "run",
+        "smoke:dai-100-event-feedback"
+      ]
+    },
+    {
+      "index": 12,
+      "label": "Result / camera-focus regression",
+      "status": "NOT_RUN",
+      "reason": "Existing suite stopped on failure at stage 2",
+      "command": [
+        "npm",
+        "run",
+        "smoke:dai-100-result-focus"
+      ]
+    },
+    {
+      "index": 13,
+      "label": "DesignIntent atmosphere regression",
+      "status": "NOT_RUN",
+      "reason": "Existing suite stopped on failure at stage 2",
+      "command": [
+        "npm",
+        "run",
+        "smoke:dai-100-atmosphere"
+      ]
+    },
+    {
+      "index": 14,
+      "label": "AI Edit V3 structural regression",
+      "status": "NOT_RUN",
+      "reason": "Existing suite stopped on failure at stage 2",
+      "command": [
+        "npm",
+        "run",
+        "smoke:dai-100-ai-edit-structural"
+      ]
+    },
+    {
+      "index": 15,
+      "label": "Reactive Audio V2 regression",
+      "status": "NOT_RUN",
+      "reason": "Existing suite stopped on failure at stage 2",
+      "command": [
+        "npm",
+        "run",
+        "smoke:dai-100-reactive-audio"
+      ]
+    },
+    {
+      "index": 16,
+      "label": "JSON Export regression",
+      "status": "NOT_RUN",
+      "reason": "Existing suite stopped on failure at stage 2",
+      "command": [
+        "npm",
+        "run",
+        "smoke:dai-100-json-export"
+      ]
+    },
+    {
+      "index": 17,
+      "label": "JSON Import / round-trip regression",
+      "status": "NOT_RUN",
+      "reason": "Existing suite stopped on failure at stage 2",
+      "command": [
+        "npm",
+        "run",
+        "smoke:dai-100-json-import"
+      ]
+    },
+    {
+      "index": 18,
+      "label": "Ten-strategy Generator selector regression",
+      "status": "NOT_RUN",
+      "reason": "Existing suite stopped on failure at stage 2",
+      "command": [
+        "npm",
+        "run",
+        "smoke:dai-100-generator-strategy-selector"
+      ]
+    },
+    {
+      "index": 19,
+      "label": "Legal / provenance audit",
+      "status": "NOT_RUN",
+      "reason": "Existing suite stopped on failure at stage 2",
+      "command": [
+        "npm",
+        "run",
+        "validate:legal-registers"
+      ]
+    },
+    {
+      "index": 20,
+      "label": "Secret / privacy audit",
+      "status": "NOT_RUN",
+      "reason": "Existing suite stopped on failure at stage 2",
+      "command": [
+        "npm",
+        "run",
+        "validate:secret-privacy"
+      ]
+    },
+    {
+      "index": 21,
+      "label": "Public docs truthfulness audit",
+      "status": "NOT_RUN",
+      "reason": "Existing suite stopped on failure at stage 2",
+      "command": [
+        "npm",
+        "run",
+        "validate:public-docs"
+      ]
+    },
+    {
+      "index": 22,
+      "label": "Submission metadata audit",
+      "status": "NOT_RUN",
+      "reason": "Existing suite stopped on failure at stage 2",
+      "command": [
+        "npm",
+        "run",
+        "validate:submission-metadata"
+      ]
+    },
+    {
+      "index": 23,
+      "label": "Syntax validation",
+      "status": "NOT_RUN",
+      "reason": "Existing suite stopped on failure at stage 2",
+      "command": [
+        "npm",
+        "run",
+        "validate:syntax"
+      ]
+    },
+    {
+      "index": 24,
+      "label": "Git whitespace / error-marker check",
+      "status": "NOT_RUN",
+      "reason": "Existing suite stopped on failure at stage 2",
+      "command": [
+        "git",
+        "diff",
+        "--check",
+        "origin/main...HEAD"
+      ]
+    }
+  ],
+  "verification": {
+    "sourceAcquisition": "Pinned GitHub tree/blob reads; all blobs, trees and original signed commit hash verified in a shallow detached snapshot",
+    "verifiedTrackedBlobCountBefore": 582,
+    "verifiedTrackedBlobCountAfter": 582,
+    "changedTrackedFiles": [],
+    "mainAfterTest": "8bcce65246663bc16625a0f915ec2f202c63b5e4",
+    "inference": "The safe-policy success assumption may be stale relative to current 70% seeded trap avoidance. This run alone does not classify a runtime defect."
+  },
+  "scope": {
+    "applicationCodeChanges": false,
+    "testChanges": false,
+    "liveProviderCalls": 0,
+    "deploymentChanges": false,
+    "excluded": [
+      "owner audio listening review",
+      "public deployment smoke",
+      "live-provider semantic verification",
+      "DAI-090 Final",
+      "final video capture/review",
+      "freeze/rollback creation"
+    ]
+  },
+  "inputSha256": {
+    "package.json": "645a99385ae2714e901bc78c0f294a36fb2318eeef43e2f87849ff33f861c238",
+    "package-lock.json": "ce94a9ee4241ee798c0c32c0fda55f00cb4462fb6ba6244acdd3d53589d261cc",
+    "scripts/run-dai-100-final-local-regression.mjs": "75ab00ca9096ccb0dd2e928843be7e54fe28d398978abbda16919395d1393e3f",
+    "scripts/run-dai-098-multi-floor-simulation.mjs": "552e77f6241d779c5ea02d7f8017e1b45fb9bf33f2980c95530292dd93e715e0",
+    "spec/simulation/fixtures/dai-098-run-balance-v1.json": "c18724f51c255e99acdd1f420725d04591dfcc451919b8e27b759464a79eda73"
+  },
+  "retainedEvidence": {
+    "archive": {
+      "filename": "Dungeon-Architect-AI_main_8bcce65_final-integration_2026-10-04.zip",
+      "sha256": "1f5d39276ce312648f95237fbb6e1fc7c5450dfd21e98c36420b787163c5848a",
+      "storage": "Delivered privately to the owner in Library; full logs are not committed"
+    },
+    "files": {
+      "final-local.log": "df51b1e576e5c9d3d12706e4c3e3e11d9dbb6a4a75f8d8fcd1bc0fc90c955586",
+      "dai-098-multi-floor-simulation.json": "3637f144938e87c1abdeb8ec5d6b5361c3dac623b628a8ec304c2f3cd40a7bad"
+    }
+  }
+}
