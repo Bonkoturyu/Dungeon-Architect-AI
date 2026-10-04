@@ -1,0 +1,262 @@
+{
+  "result": "INCOMPLETE_ENVIRONMENT_BLOCKED",
+  "baseMainSha": "8bcce65246663bc16625a0f915ec2f202c63b5e4",
+  "docsEvidenceHead": "3196f2bb942bbdfbcddc2481416f24d7196c5ead",
+  "aggregateInvocationCount": 1,
+  "aggregateResult": {
+    "exitCode": 1,
+    "passedStages": 3,
+    "failedStage": 4,
+    "notRunStages": 20
+  },
+  "combinedResult": {
+    "passedStages": 9,
+    "blockedStages": 1,
+    "notRunStages": 14,
+    "totalStages": 24
+  },
+  "startedAt": "2026-10-04T08:37:34.401121+00:00",
+  "finishedAt": "2026-10-04T08:37:49.603118+00:00",
+  "sourceManifest": {
+    "tested": "source-snapshot.json",
+    "testedSha256": "7bc379ea3cfc333c0220dde84316aecfef730a06fd5e0dc811cc7a2ad9c9c26f",
+    "final": "source-snapshot-final.json",
+    "finalSha256": "26032ed57364325a91455b38d156d4a4ce2c42d8b714b9c12e84b09d2bc34b66",
+    "fileCount": 591,
+    "postRunContentChange": "none; one EOF newline removed from docs only"
+  },
+  "nodeTests": {
+    "passed": 606,
+    "failed": 0,
+    "skipped": 0
+  },
+  "simulation": {
+    "passed": 18,
+    "failed": 0
+  },
+  "audits": {
+    "legal": {
+      "passed": 14,
+      "failed": 0
+    },
+    "privacy": {
+      "passed": 18,
+      "failed": 0,
+      "trackedFiles": 591,
+      "gitHistoryScope": "shallow repository; 1 reachable commit; not a replacement for prior full-history exposure audit"
+    },
+    "publicDocs": {
+      "passed": 20,
+      "failed": 0
+    },
+    "submissionMetadata": {
+      "passed": 8,
+      "failed": 0
+    },
+    "syntax": {
+      "files": 334,
+      "failed": 0
+    },
+    "stagedDiff": {
+      "initial": "one new blank line at EOF in PR74 status document",
+      "fixed": "only redundant final newline removed; checked again, exit0"
+    }
+  },
+  "browserBlock": {
+    "stage": 4,
+    "actual": "Chromium launch terminated with socket() failed: Operation not permitted (1), crashpad --database required, SIGTRAP",
+    "displayPresent": false,
+    "applicationPageStarted": false,
+    "browserRetry": false,
+    "securitySettingsChanged": false
+  },
+  "runtimeSourceChanges": [],
+  "buildInfo": {
+    "schemaVersion": "1.0",
+    "commitSha": "8bcce65246663bc16625a0f915ec2f202c63b5e4",
+    "commitSource": "git",
+    "runtimeSourceSha256": "a2097e3c943aeb5899d0e901ae78ede86705ce80321b33152c7ccec6b08c0b5e",
+    "runtimeBundleSha256": "bf3611d6a8e92c5a27962b4892fe3146d9495a60bdd8a715839e49a61c20c123",
+    "generatedAt": "2026-10-04T08:37:48.547Z"
+  },
+  "stages": [
+    {
+      "stage": 1,
+      "label": "Full Node regression suite",
+      "aggregateRun": "PASS",
+      "combinedStatus": "PASS",
+      "evidenceMode": "aggregate suite"
+    },
+    {
+      "stage": 2,
+      "label": "Multi-floor simulation regression",
+      "aggregateRun": "PASS",
+      "combinedStatus": "PASS",
+      "evidenceMode": "aggregate suite"
+    },
+    {
+      "stage": 3,
+      "label": "Production hosting build",
+      "aggregateRun": "PASS",
+      "combinedStatus": "PASS",
+      "evidenceMode": "aggregate suite"
+    },
+    {
+      "stage": 4,
+      "label": "Browser performance regression",
+      "aggregateRun": "FAILED_TO_LAUNCH",
+      "combinedStatus": "BLOCKED",
+      "evidenceMode": "aggregate suite"
+    },
+    {
+      "stage": 5,
+      "label": "Owner UI regression smoke",
+      "aggregateRun": "NOT_RUN",
+      "combinedStatus": "NOT_RUN",
+      "evidenceMode": "not attempted after environment block"
+    },
+    {
+      "stage": 6,
+      "label": "Room Event gameplay regression",
+      "aggregateRun": "NOT_RUN",
+      "combinedStatus": "NOT_RUN",
+      "evidenceMode": "not attempted after environment block"
+    },
+    {
+      "stage": 7,
+      "label": "Multi-floor browser regression",
+      "aggregateRun": "NOT_RUN",
+      "combinedStatus": "NOT_RUN",
+      "evidenceMode": "not attempted after environment block"
+    },
+    {
+      "stage": 8,
+      "label": "Programmatic character regression",
+      "aggregateRun": "NOT_RUN",
+      "combinedStatus": "NOT_RUN",
+      "evidenceMode": "not attempted after environment block"
+    },
+    {
+      "stage": 9,
+      "label": "Programmatic Audio V2 regression",
+      "aggregateRun": "NOT_RUN",
+      "combinedStatus": "NOT_RUN",
+      "evidenceMode": "not attempted after environment block"
+    },
+    {
+      "stage": 10,
+      "label": "Motion feedback regression",
+      "aggregateRun": "NOT_RUN",
+      "combinedStatus": "NOT_RUN",
+      "evidenceMode": "not attempted after environment block"
+    },
+    {
+      "stage": 11,
+      "label": "Event feedback regression",
+      "aggregateRun": "NOT_RUN",
+      "combinedStatus": "NOT_RUN",
+      "evidenceMode": "not attempted after environment block"
+    },
+    {
+      "stage": 12,
+      "label": "Result / camera-focus regression",
+      "aggregateRun": "NOT_RUN",
+      "combinedStatus": "NOT_RUN",
+      "evidenceMode": "not attempted after environment block"
+    },
+    {
+      "stage": 13,
+      "label": "DesignIntent atmosphere regression",
+      "aggregateRun": "NOT_RUN",
+      "combinedStatus": "NOT_RUN",
+      "evidenceMode": "not attempted after environment block"
+    },
+    {
+      "stage": 14,
+      "label": "AI Edit V3 structural regression",
+      "aggregateRun": "NOT_RUN",
+      "combinedStatus": "NOT_RUN",
+      "evidenceMode": "not attempted after environment block"
+    },
+    {
+      "stage": 15,
+      "label": "Reactive Audio V2 regression",
+      "aggregateRun": "NOT_RUN",
+      "combinedStatus": "NOT_RUN",
+      "evidenceMode": "not attempted after environment block"
+    },
+    {
+      "stage": 16,
+      "label": "JSON Export regression",
+      "aggregateRun": "NOT_RUN",
+      "combinedStatus": "NOT_RUN",
+      "evidenceMode": "not attempted after environment block"
+    },
+    {
+      "stage": 17,
+      "label": "JSON Import / round-trip regression",
+      "aggregateRun": "NOT_RUN",
+      "combinedStatus": "NOT_RUN",
+      "evidenceMode": "not attempted after environment block"
+    },
+    {
+      "stage": 18,
+      "label": "Ten-strategy Generator selector regression",
+      "aggregateRun": "NOT_RUN",
+      "combinedStatus": "NOT_RUN",
+      "evidenceMode": "not attempted after environment block"
+    },
+    {
+      "stage": 19,
+      "label": "Legal / provenance audit",
+      "aggregateRun": "NOT_RUN",
+      "combinedStatus": "PASS",
+      "evidenceMode": "supplemental command after aggregate stopped"
+    },
+    {
+      "stage": 20,
+      "label": "Secret / privacy audit",
+      "aggregateRun": "NOT_RUN",
+      "combinedStatus": "PASS",
+      "evidenceMode": "supplemental command after aggregate stopped"
+    },
+    {
+      "stage": 21,
+      "label": "Public docs truthfulness audit",
+      "aggregateRun": "NOT_RUN",
+      "combinedStatus": "PASS",
+      "evidenceMode": "supplemental command after aggregate stopped"
+    },
+    {
+      "stage": 22,
+      "label": "Submission metadata audit",
+      "aggregateRun": "NOT_RUN",
+      "combinedStatus": "PASS",
+      "evidenceMode": "supplemental command after aggregate stopped"
+    },
+    {
+      "stage": 23,
+      "label": "Syntax validation",
+      "aggregateRun": "NOT_RUN",
+      "combinedStatus": "PASS",
+      "evidenceMode": "supplemental command after aggregate stopped"
+    },
+    {
+      "stage": 24,
+      "label": "Git whitespace / error-marker check",
+      "aggregateRun": "NOT_RUN",
+      "combinedStatus": "PASS",
+      "evidenceMode": "supplemental command after aggregate stopped"
+    }
+  ],
+  "billableApiCalls": 0,
+  "additionalScope": "supplemental non-browser checks completed; no full aggregate rerun",
+  "excludes": [
+    "Windows Chrome acceptance",
+    "remaining 14 browser stages",
+    "public build fingerprint readback",
+    "new live-provider checks",
+    "new video capture",
+    "deployment or final submission"
+  ]
+}

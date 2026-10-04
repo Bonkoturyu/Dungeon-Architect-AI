@@ -234,7 +234,7 @@
             "type": "trap",
             "roomId": "f3-middle",
             "warning": "pressure plate",
-            "damage": 12
+            "damage": 9
           },
           {
             "id": "f3-recovery",

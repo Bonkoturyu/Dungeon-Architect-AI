@@ -122,4 +122,3 @@ mainにはDAI-073 legal、DAI-074 current tree／history-secret／privacy、DAI-
 5. repository公開、動画公開、正式提出などの提出手続き。今回のrollback作成やPR closeはこれらの完了を意味しない
 
 上記は残状況の記録であり、追加開発、全suite再実行、動画再撮影、公開操作の一括承認や実行指示ではない。主観的音声レビュー、Windows Chromeの正式受け入れなどについても、別の既存証拠がある部分と今回未実行の部分を分けて判断する。
-

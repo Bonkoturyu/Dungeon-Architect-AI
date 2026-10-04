@@ -60,97 +60,106 @@ for (const [file, text] of Object.entries(texts)) {
   if (/\b(?:TODO|TBD)\b/i.test(text)) placeholderFindings.push(file);
 }
 
+const candidateRecordUrl = 'https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/74';
+const liveRecordName = 'LIVE_PROVIDER_OWNER_EVIDENCE_2026-10-04.md';
+const supportedCommands = [
+  'move-entity', 'move-room', 'resize-room', 'add-entity', 'remove-entity',
+  'add-room', 'remove-room', 'add-corridor', 'remove-corridor',
+  'reconnect-corridor', 'set-corridor-doors',
+];
+const currentStoryboard = storyboard.split('## 歴史的DAI-099撮影計画')[0];
+const currentChecklist = checklist.split('## Historical September DAI-099 checklist')[0];
+const obsoleteCurrentClaims = [
+  ['README.md', 'The current production generator is frozen as **Generator Version 1**'],
+  ['README.md', 'spatial variability is a future Generator Version concern'],
+  ['README.md', 'is constrained to entity relocation'],
+  ['docs/submission/JUDGE_QUICKSTART.md', '**AVOID / RISK**'],
+  ['docs/submission/KNOWN_LIMITATIONS.md', 'currently supports entity relocation (`move-entity`)'],
+  ['docs/submission/KNOWN_LIMITATIONS.md', 'room/corridor generation, or event editing from natural language'],
+];
+const obsoleteClaimFindings = obsoleteCurrentClaims
+  .filter(([file, claim]) => texts[file].includes(claim))
+  .map(([file, claim]) => ({ file, claim }));
+
 const checks = {
   requiredPublicDocsExist: publicDocs.every((file) => fs.existsSync(file)),
-  readmeSeparatesCurrentLocalFlowFromHistoricalPublicEvidence:
-    readme.includes('https://dungeon-architect-ai.pages.dev/') &&
-    readme.includes('DESCRIBE') &&
-    readme.includes('GENERATE') &&
-    readme.includes('EDIT') &&
-    readme.includes('VALIDATE') &&
-    readme.includes('TEST / MYSTERY') &&
-    readme.includes('EXPLORE + ROOM EVENTS') &&
-    readme.includes('RESULT') &&
-    readme.includes('locally regression-tested') &&
-    readme.includes('historical production public-E2E evidence') &&
-    readme.includes('DAI-099'),
+  readmeCurrentFlowAndEvidenceBoundary:
+    allIncludes(readme, [
+      'https://dungeon-architect-ai.pages.dev/', 'DESCRIBE', 'GENERATE',
+      'EDIT', 'VALIDATE', 'TEST / MYSTERY', 'EXPLORE + ROOM EVENTS', 'RESULT',
+      'ACCEPTANCE_GAP_2026-10-03.md', 'Historical M8 / DAI-099', candidateRecordUrl,
+    ]),
   readmeLinksRequiredPublicDocs:
     allIncludes(readme, [
-      'docs/submission/JUDGE_QUICKSTART.md',
-      'docs/submission/KNOWN_LIMITATIONS.md',
-      'docs/submission/SAMPLE_PROMPTS.md',
-      'docs/privacy/PRIVACY_DATA_FLOW.md',
-      'docs/legal/THIRD_PARTY_DEPENDENCIES.md',
-      'docs/legal/AI_USAGE.md',
+      'docs/submission/JUDGE_QUICKSTART.md', 'docs/submission/KNOWN_LIMITATIONS.md',
+      'docs/submission/SAMPLE_PROMPTS.md', 'docs/privacy/PRIVACY_DATA_FLOW.md',
+      'docs/legal/THIRD_PARTY_DEPENDENCIES.md', 'docs/legal/AI_USAGE.md',
       'docs/architecture/adr/ADR-001-PRODUCTION-RENDERER-THREEJS.md',
       'docs/architecture/adr/ADR-002-HOSTING-CLOUDFLARE-PAGES.md',
       'docs/architecture/adr/ADR-003-MOBILE-SCOPE-DESKTOP-ONLY.md',
       'docs/architecture/adr/ADR-004-FOCUS-CATEGORY-AI-3D-SCENE-GENERATION.md',
-      'docs/submission/DAI-083_DESCRIPTION_CATEGORY.md',
-      'docs/submission/CHECKLIST.md',
+      'docs/submission/DAI-083_DESCRIPTION_CATEGORY.md', 'docs/submission/CHECKLIST.md',
     ]),
-  readmeDesktopScopeExplicit:
+  desktopScopeExplicit:
     readme.includes('desktop Google Chrome on Windows') &&
-    readme.includes('mobile/narrow layouts are best-effort only'),
-  readmeCandidateGenerationExplicit:
-    readme.includes('Focus category: **AI 3D Scene Generation**') &&
-    readme.includes('Historical DAI-084 rollback point') &&
-    readme.includes('historical evidence') &&
-    readme.includes('DAI-099') &&
-    readme.includes('refreshed'),
-  judgeGuideCurrentFlowTruthful:
-    quick.includes('https://dungeon-architect-ai.pages.dev/') &&
-    quick.includes('Create a fair but tense two-floor dungeon with exploration, combat, readable traps, and dangerous rewards.') &&
-    quick.includes('Floors') &&
-    quick.includes('2') &&
-    quick.includes('LV / HP / EXP / G') &&
-    quick.includes('Floor 2/2') &&
-    quick.includes('Move the treasure to the room that contains the goal.') &&
+    readme.includes('mobile/narrow layouts are best-effort only') &&
     quick.includes('desktop Google Chrome on Windows'),
+  currentGeneratorScopeExplicit:
+    allIncludes(readme, ['Recommended alias selects **V3**', '**11 generator strategies**',
+      'V1/V2 and BSP remain selectable', 'not a claim of eleven independent terrain algorithms']),
+  quickstartCurrentGenerationFlow:
+    allIncludes(quick, ['Auto', 'Manual', '**Generate**', '**Cancel**', 'difficulty',
+      '2', 'bounded fallback', 'Unspecified random choices']),
+  quickstartCurrentPlayRules:
+    allIncludes(quick, ['**TRY TO AVOID**', '**70%**', 'floor Seed and trap ID',
+      '**Finish floor**', 'active enemies/traps', 'Shop purchases are optional',
+      'LV / HP / EXP / G', 'Floor 2/2']),
+  currentSingleCommandVocabulary:
+    allIncludes(limits, supportedCommands) &&
+    allIncludes(limits, ['exactly one', '11 supported command types', 'Batch transactions',
+      'Event editing', 'arbitrary runtime code', 'corridor-width editing', 'doorway-offset editing']) &&
+    quick.includes('11 single-command types'),
+  boundedContextDocumented:
+    allIncludes(quick, ['includeRoomRequests: true', '`x`', '`z`', '`width`', '`depth`',
+      '`fromRoomId`', '`toRoomId`', '`kind`', '`fromSide`', '`toSide`',
+      'Events, renderer objects, Play/Run state, files and credentials are excluded',
+      'PRIVACY_DATA_FLOW.md']),
+  limitedLiveEvidenceNotFullAcceptance:
+    [readme, quick, prompts].every((text) =>
+      text.includes(liveRecordName) && text.includes('全公開E2E') && text.includes('公開build-info')),
   knownLimitationsComplete:
     allIncludes(limits, [
       'DesignIntent → DungeonSpec mapping is deliberately bounded',
-      'Natural-language edit vocabulary is narrow',
-      'Perspective and combat selection are Pending Evidence',
-      'Player locomotion is room-graph based',
-      'Mobile is outside the supported submission scope',
-      'No persistence/accounts',
-      'Submission packaging requires a refreshed candidate',
-      'DAI-099',
+      'Natural-language edit vocabulary is narrow', 'Perspective and combat selection are Pending Evidence',
+      'Player locomotion is room-graph based', 'Mobile is outside the supported submission scope',
+      'No persistence/accounts', 'Submission packaging requires a refreshed candidate',
+      'Fixture coverage', candidateRecordUrl,
     ]),
-  samplePromptsSeparateHistoricalAndRefreshedE2E:
-    prompts.includes('Verified public generation prompt — historical M8') &&
-    prompts.includes('Create a fair but tense 5-minute dungeon with exploration and a few dangerous rewards.') &&
-    prompts.includes('DAI-099 refreshed public validation prompt') &&
-    prompts.includes('Create a fair but tense two-floor dungeon with exploration, combat, readable traps, and dangerous rewards.') &&
-    prompts.includes('matching build fingerprint') &&
-    prompts.includes('Verified public natural-language edit') &&
-    prompts.includes('Move the treasure to the room that contains the goal.'),
-  checklistSeparatesHistoricalAndRefreshed:
-    checklist.includes('## Historical M8 evidence retained') &&
-    checklist.includes('## Refreshed final candidate — pending') &&
-    checklist.includes('- [x] Historical fresh-browser public E2E passed') &&
-    checklist.includes('- [x] Historical demo video under 3 minutes recorded and reviewed') &&
-    checklist.includes('- [x] Complete DAI-097 Audio presentation') &&
-    checklist.includes('- [x] Complete DAI-098 multi-floor simulation / balance') &&
-    checklist.includes('- [ ] DAI-099 predeploy validation passes on the refreshed branch') &&
-    checklist.includes('- [ ] DAI-099 public commit/runtime fingerprint matches the local candidate') &&
-    checklist.includes('- [ ] DAI-099 refreshed public E2E against the current 2-floor runtime passes') &&
-    checklist.includes('- [ ] DAI-099 refreshed demo video under 3 minutes is captured') &&
-    checklist.includes('- [ ] DAI-099 freeze-prep evidence passes') &&
-    checklist.includes('- [ ] DAI-099 new candidate hash / tree / runtime fingerprint / rollback point recorded') &&
-    checklist.includes('- [ ] DAI-092 submission completed before 2026-11-11 23:30 JST'),
-  storyboardRefreshPendingTruthful:
-    storyboard.includes('DAI-099 REFRESH IN PROGRESS') &&
-    storyboard.includes('49.5-second capture remains historical evidence') &&
-    storyboard.includes('DAI-099 has deployed the refreshed runtime') &&
-    storyboard.includes('matching build fingerprint'),
+  samplePromptsPreserveHistoricalScope:
+    allIncludes(prompts, ['Verified public generation prompt — historical M8',
+      'Historical September DAI-099', 'matching build fingerprint',
+      'Move the treasure to the room that contains the goal.', candidateRecordUrl]),
+  checklistSeparatesHistoricalAndCurrent:
+    allIncludes(checklist, ['## Historical M8 evidence retained',
+      '## 現候補（2026-10-04）', '## Historical September DAI-099 checklist — retained snapshot',
+      '- [x] Short description', '- [x] Focus category', candidateRecordUrl]) &&
+    currentChecklist.includes('全ゲートPASSの宣言ではありません'),
+  rollbackIsRecoveryPointNotFinalAcceptance:
+    [readme, limits, currentChecklist].every((text) =>
+      text.includes('rollback/pre-submission-2026-10-04') &&
+      text.includes('8bcce65246663bc16625a0f915ec2f202c63b5e4')) &&
+    limits.includes('recovery point, not final acceptance'),
+  currentVideoIdentityAndBoundary:
+    allIncludes(currentStoryboard, ['150-second v2', '新規撮影は行いません',
+      '3e3516090cea0c58c9d3da02ee9b1e888a515fd0bfcb5543cafc745ff89418f8',
+      '公開アップロード・最終提出の完了は主張しません', candidateRecordUrl]),
+  historicalStoryboardRetained:
+    storyboard.includes('## 歴史的DAI-099撮影計画') &&
+    storyboard.includes('49.5-second capture remains historical evidence'),
+  noObsoleteCurrentClaims: obsoleteClaimFindings.length === 0,
   submissionMetadataFinalized:
-    submissionMetadata.includes('**AI 3D Scene Generation**') &&
-    submissionMetadata.includes('513 characters') &&
-    submissionMetadata.includes('70 whitespace-delimited words') &&
-    submissionMetadata.includes('215 characters') &&
-    submissionMetadata.includes('27 whitespace-delimited words'),
+    allIncludes(submissionMetadata, ['**AI 3D Scene Generation**', '513 characters',
+      '70 whitespace-delimited words', '215 characters', '27 whitespace-delimited words']),
   localMarkdownLinksResolve: missingLocalLinks.length === 0,
   noTodoOrTbdPlaceholders: placeholderFindings.length === 0,
 };
@@ -164,11 +173,15 @@ const evidence = {
   publicDocs,
   missingLocalLinks,
   placeholderFindings,
+  obsoleteClaimFindings,
   boundaries: {
     repositoryVisibilityChangedByDAI080: false,
     historicalHostedEvidencePreserved: true,
-    refreshedHostedAcceptanceStillPending: true,
-    generationUiClaimedCompleteLocally: true,
+    candidateAcceptanceInferredFromDocs: false,
+    actualVideoValidatedByThisAudit: false,
+    liveProviderCalledByThisAudit: false,
+    currentEvidenceRecord: candidateRecordUrl,
+
   },
 };
 

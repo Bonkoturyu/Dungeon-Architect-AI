@@ -19,9 +19,11 @@ This is not a claim that every nuanced intent is perfectly realized.
 
 ## 2. Natural-language edit vocabulary is narrow
 
-The integrated AI edit path returns exactly one safe `EditCommand` and currently supports entity relocation (`move-entity`).
+The integrated AI Edit V3 path returns exactly one safe `EditCommand` from 11 supported command types:
 
-It does not expose arbitrary multi-command editing, free-form runtime code, room/corridor generation, or event editing from natural language.
+`move-entity`, `move-room`, `resize-room`, `add-entity`, `remove-entity`, `add-room`, `remove-room`, `add-corridor`, `remove-corridor`, `reconnect-corridor`, `set-corridor-doors`.
+
+Batch transactions, Event editing, arbitrary runtime code, corridor-width editing and doorway-offset editing remain unsupported. Independent validation and editor preflight can reject an unsafe or unrouteable command. Fixture coverage of the command set is distinct from live-provider semantic coverage; see [AI Edit V3](../../spec/edit-command/NATURAL_EDIT_V3.md) and [the acceptance record](../testing/ACCEPTANCE_GAP_2026-10-03.md).
 
 ## 3. Perspective and combat selection are Pending Evidence
 
@@ -57,16 +59,9 @@ Authoring/play state is in memory for the active page session.
 
 The historical hosted demo, under-three-minute demo video, short description, focus category, and DAI-084 rollback point were completed for the earlier M8 candidate.
 
-Judge-facing/runtime work has changed since that freeze: DAI-085 through DAI-098 plus the 2026-09-23 Play UI follow-up are complete. DAI-099 refreshed build/deployment/public-E2E/video/docs/audits/freeze is now in progress.
+The browser Recommended selection is V3 with 11 selectable strategies, the current content layer and fixed-Seed 70% trap avoidance. These changes supersede the older M8 / September DAI-099 runtime. The 150-second v2 video is retained as the current video candidate; the older videos and rollback points remain historical.
 
-DAI-099 therefore still needs to:
-
-- rebuild and redeploy the refreshed candidate;
-- rerun public E2E on the refreshed runtime;
-- update submission/public docs;
-- record a new under-three-minute demo video showing the current UI;
-- rerun legal/privacy/security checks;
-- create a new candidate freeze and rollback point that includes the tracked audited lockfile.
+The current baseline is saved at `rollback/pre-submission-2026-10-04` (`8bcce65246663bc16625a0f915ec2f202c63b5e4`). This is a recovery point, not final acceptance. Remaining checks and their latest results are recorded in [PR #74](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/74): the integrated suite, public Generate/Edit abnormal-input coverage, candidate/video/evidence consistency, repository visibility and submission. A missing old audit script alone is not evidence that prior security/provenance audits were never performed.
 
 Final compliance/submission remains DAI-091/DAI-092.
 

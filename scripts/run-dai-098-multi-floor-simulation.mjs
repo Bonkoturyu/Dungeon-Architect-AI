@@ -146,6 +146,11 @@ const safeMetrics = projectDungeonRunSimulationMetrics(runSpec, safe);
 const treasureMetrics = projectDungeonRunSimulationMetrics(runSpec, treasure);
 const riskMetrics = projectDungeonRunSimulationMetrics(runSpec, risk);
 
+// 現行70%判定の失敗を残したまま、safeはHP1で生存するfixture。
+// Seed/罠IDや回避確率は変更せず、riskとの差をHP被害・回復選択で検証する。
+const safeFinalTrapAvoidance = safe.floorSimulations[2]
+  ?.gameplayState.entityStates['f3-trap']?.avoidance;
+
 const intentFit = scoreDungeonRunIntentFit(
   runSpec,
   DEFAULT_DESIGN_INTENT,
@@ -193,6 +198,24 @@ const checks = {
     safeMetrics.totals.damageTaken > 0 &&
     riskMetrics.totals.damageTaken > safeMetrics.totals.damageTaken &&
     riskMetrics.final.hp === 0,
+  safeSurvivesASeededAvoidanceFailure:
+    safeFinalTrapAvoidance?.version === 'seeded-avoidance-1' &&
+    safeFinalTrapAvoidance.successChance === 0.7 &&
+    safeFinalTrapAvoidance.roll === 0.7279483226593584 &&
+    safeFinalTrapAvoidance.outcome === 'triggered' &&
+    safeMetrics.totals.trapsTriggered === 1 &&
+    safeMetrics.totals.damageTaken === 21 &&
+    safeMetrics.final.hp === 1,
+  riskAndSafePreserveTheirPolicyChoices:
+    safeMetrics.totals.lootCollected === 0 &&
+    safeMetrics.totals.recoveryUsed === 0 &&
+    riskMetrics.totals.trapsTriggered === 2 &&
+    riskMetrics.totals.recoveryUsed === 0 &&
+    risk.floorSimulations[2]?.trace.at(-1)?.action.type === 'combat-enemy',
+  treasureRecoveryGivesSurvivalMargin:
+    treasureMetrics.totals.healingReceived > 0 &&
+    treasureMetrics.totals.recoveryUsed === 3 &&
+    treasureMetrics.final.hp > safeMetrics.final.hp,
   progressionCarriesAcrossFloors:
     treasureMetrics.totals.xpEarned > 0 &&
     treasureMetrics.totals.goldEarned > 0 &&
@@ -251,7 +274,10 @@ const evidence = {
     runId: runSpec.id,
     floorCount: runSpec.floors.length,
     authoredDamagePerRoom,
+    trapDamageByFloor: runSpec.floors.map((floor) =>
+      floor.dungeon.entities.find((entity) => entity.type === 'trap')?.damage),
   },
+  safeFinalTrapAvoidance,
   carryPairs,
   safe: {
     simulation: safe,
