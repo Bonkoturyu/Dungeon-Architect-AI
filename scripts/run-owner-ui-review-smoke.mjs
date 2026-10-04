@@ -3,6 +3,7 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright-core';
 import { DEFAULT_DESIGN_INTENT } from '../packages/intent/src/design-intent.js';
+import { confirmManualGeneration, normalRoomRequests, captureBrowserFailure } from './browser-smoke-support.mjs';
 
 const chromePath = process.env.CHROME_PATH || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 const port = Number(process.env.DAI_OWNER_UI_PORT || '4194');
@@ -40,11 +41,12 @@ function distance3(a, b) {
 
 const url = `http://127.0.0.1:${port}/apps/editor-slice/index.html`;
 let browser;
+let page;
 
 try {
   await waitForServer(url);
   browser = await chromium.launch({ executablePath: chromePath, headless: false });
-  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 
   const consoleErrors = [];
   const pageErrors = [];
@@ -62,6 +64,7 @@ try {
       body: JSON.stringify({
         ok: true,
         selectedProvider: 'cloud',
+        roomRequests: normalRoomRequests(),
         intent: {
           ...DEFAULT_DESIGN_INTENT,
           fairness: 0.82,
@@ -99,7 +102,10 @@ try {
     title: document.querySelector('#onboardingTitle')?.textContent ?? '',
     createTab: document.querySelector('.workflow-tab[data-workflow-tab="create"]')?.textContent ?? '',
     generatorStrategyLabel: document.querySelector('[data-i18n="create.generatorStrategy"]')?.textContent ?? '',
-    generatorRecommendedText: document.querySelector('#generatorStrategy option[value="version-2-spatial"]')?.textContent ?? '',
+    generatorRecommendedText: document.querySelector('#generatorStrategy option[value="version-3-special-rooms"]')?.textContent ?? '',
+    generatorPreviousText: document.querySelector('#generatorStrategy option[value="version-2-spatial"]')?.textContent ?? '',
+    generatorClassicPresent: Boolean(document.querySelector('#generatorStrategy option[value="version-1-classic"]')),
+    selectedGeneratorStrategy: document.querySelector('#generatorStrategy')?.value ?? null,
     generatorDelaunayText: document.querySelector('#generatorStrategy option[value="algorithm-lab.delaunay-mst-loops"]')?.textContent ?? '',
     generatorBspText: document.querySelector('#generatorStrategy option[value="algorithm-lab.bsp"]')?.textContent ?? '',
     headerCurrentLanguage: document.querySelector('#languageCycle')?.dataset.currentLanguage ?? null,
@@ -122,10 +128,10 @@ try {
     expectedGeneratorStrategy,
     expectedRecommended,
   ] of [
-    ['ja', 'Dungeon Architect AIへようこそ', '✨ 作成', '生成方式', 'Version 2 — 推奨'],
-    ['zh-Hans', '欢迎使用 Dungeon Architect AI', '✨ 创建', '生成方式', 'Version 2 — 推荐'],
-    ['zh-Hant', '歡迎使用 Dungeon Architect AI', '✨ 建立', '生成方式', 'Version 2 — 推薦'],
-    ['ko', 'Dungeon Architect AI에 오신 것을 환영합니다', '✨ 생성', '생성 방식', 'Version 2 — 권장'],
+    ['ja', 'Dungeon Architect AIへようこそ', '✨ 作成', '生成方式', 'Version 3 — 推奨（特殊部屋）'],
+    ['zh-Hans', '欢迎使用 Dungeon Architect AI', '✨ 创建', '生成方式', 'Version 3 — 推荐（特殊房间）'],
+    ['zh-Hant', '歡迎使用 Dungeon Architect AI', '✨ 建立', '生成方式', 'Version 3 — 推薦（特殊房間）'],
+    ['ko', 'Dungeon Architect AI에 오신 것을 환영합니다', '✨ 생성', '생성 방식', 'Version 3 — 추천 (특수 방)'],
   ]) {
     await page.locator('#onboardingLanguageCycle').click();
     await page.waitForTimeout(30);
@@ -135,9 +141,12 @@ try {
         title: document.querySelector('#onboardingTitle')?.textContent ?? '',
         createTab: document.querySelector('.workflow-tab[data-workflow-tab="create"]')?.textContent ?? '',
         generatorStrategyLabel: document.querySelector('[data-i18n="create.generatorStrategy"]')?.textContent ?? '',
-        generatorRecommendedText: document.querySelector('#generatorStrategy option[value="version-2-spatial"]')?.textContent ?? '',
-    generatorDelaunayText: document.querySelector('#generatorStrategy option[value="algorithm-lab.delaunay-mst-loops"]')?.textContent ?? '',
-    generatorBspText: document.querySelector('#generatorStrategy option[value="algorithm-lab.bsp"]')?.textContent ?? '',
+        generatorRecommendedText: document.querySelector('#generatorStrategy option[value="version-3-special-rooms"]')?.textContent ?? '',
+        generatorPreviousText: document.querySelector('#generatorStrategy option[value="version-2-spatial"]')?.textContent ?? '',
+        generatorClassicPresent: Boolean(document.querySelector('#generatorStrategy option[value="version-1-classic"]')),
+        selectedGeneratorStrategy: document.querySelector('#generatorStrategy')?.value ?? null,
+        generatorDelaunayText: document.querySelector('#generatorStrategy option[value="algorithm-lab.delaunay-mst-loops"]')?.textContent ?? '',
+        generatorBspText: document.querySelector('#generatorStrategy option[value="algorithm-lab.bsp"]')?.textContent ?? '',
         headerCurrentLanguage: document.querySelector('#languageCycle')?.dataset.currentLanguage ?? null,
         headerNextLanguage: document.querySelector('#languageCycle')?.dataset.nextLanguage ?? null,
         dialogCurrentLanguage: document.querySelector('#onboardingLanguageCycle')?.dataset.currentLanguage ?? null,
@@ -166,7 +175,10 @@ try {
     title: document.querySelector('#onboardingTitle')?.textContent ?? '',
     createTab: document.querySelector('.workflow-tab[data-workflow-tab="create"]')?.textContent ?? '',
     generatorStrategyLabel: document.querySelector('[data-i18n="create.generatorStrategy"]')?.textContent ?? '',
-    generatorRecommendedText: document.querySelector('#generatorStrategy option[value="version-2-spatial"]')?.textContent ?? '',
+    generatorRecommendedText: document.querySelector('#generatorStrategy option[value="version-3-special-rooms"]')?.textContent ?? '',
+    generatorPreviousText: document.querySelector('#generatorStrategy option[value="version-2-spatial"]')?.textContent ?? '',
+    generatorClassicPresent: Boolean(document.querySelector('#generatorStrategy option[value="version-1-classic"]')),
+    selectedGeneratorStrategy: document.querySelector('#generatorStrategy')?.value ?? null,
     generatorDelaunayText: document.querySelector('#generatorStrategy option[value="algorithm-lab.delaunay-mst-loops"]')?.textContent ?? '',
     generatorBspText: document.querySelector('#generatorStrategy option[value="algorithm-lab.bsp"]')?.textContent ?? '',
     headerCurrentLanguage: document.querySelector('#languageCycle')?.dataset.currentLanguage ?? null,
@@ -281,6 +293,7 @@ try {
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().workflowTab === 'create');
   await page.fill('#generationPrompt', prompt);
   await page.click('#generateDungeon');
+  const manualConfirmation = await confirmManualGeneration(page);
   await page.waitForFunction(() => {
     const state = window.__DAI_EDITOR_SLICE__.getState();
     return state.generationBusy === false && state.lastGeneration?.roomCount === 5;
@@ -1021,6 +1034,13 @@ try {
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().mode === 'edit');
 
   const checks = {
+    manualGenerationConfirmed:
+      manualConfirmation.mode === 'manual' && manualConfirmation.dialogObserved && manualConfirmation.planSubmitted,
+    recommendedV3AndLegacyVersionsRemain:
+      [...Object.values(languageSamples), englishRestored].every((sample) =>
+        sample.selectedGeneratorStrategy === 'version-3-special-rooms' &&
+        sample.generatorClassicPresent && sample.generatorPreviousText.trim().length > 0) &&
+      englishRestored.generatorPreviousText.trim() === 'Version 2 — Previous spatial version',
     englishIsDefaultLanguage:
       languageSamples.en.htmlLang === 'en' &&
       languageSamples.en.stateLanguage === 'en',
@@ -1045,7 +1065,7 @@ try {
       englishRestored.dialogCurrentLanguage === 'en' &&
       englishRestored.headerCycleText === englishRestored.dialogCycleText &&
       englishRestored.generatorStrategyLabel.trim() === 'Generator' &&
-      englishRestored.generatorRecommendedText.trim() === 'Version 2 — Recommended' &&
+      englishRestored.generatorRecommendedText.trim() === 'Version 3 — Recommended (Special rooms)' &&
       englishRestored.generatorDelaunayText.trim() === 'Algorithm Lab — Delaunay + MST + Loops' &&
       englishRestored.generatorBspText.trim() === 'Algorithm Lab — BSP',
     compactLanguageCycleControls:
@@ -1333,6 +1353,7 @@ try {
     browserVersion: browser.version(),
     passed: falseChecks.length === 0,
     checks,
+    manualConfirmation,
     languageSamples,
     roomDirectionLabels,
     englishRestored,
@@ -1415,6 +1436,9 @@ try {
   if (!evidence.passed) {
     throw new Error(`Owner UI review invariant failed: ${falseChecks.join(', ')}`);
   }
+} catch (error) {
+  await captureBrowserFailure({ page, error, outputDir });
+  throw error;
 } finally {
   if (browser) await browser.close();
   vite.kill();

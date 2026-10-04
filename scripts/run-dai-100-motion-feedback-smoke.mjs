@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { chromium } from 'playwright-core';
 import { DEFAULT_DESIGN_INTENT } from '../packages/intent/src/design-intent.js';
+import { confirmManualGeneration, normalRoomRequests, captureBrowserFailure } from './browser-smoke-support.mjs';
 
 const chromePath =
   process.env.CHROME_PATH ||
@@ -59,6 +60,7 @@ function distance3(a, b) {
 const url =
   `http://127.0.0.1:${port}/apps/editor-slice/index.html`;
 let browser;
+let page;
 
 try {
   await waitForServer(url);
@@ -67,7 +69,7 @@ try {
     executablePath: chromePath,
     headless: false,
   });
-  const page = await browser.newPage({
+  page = await browser.newPage({
     viewport: { width: 1440, height: 900 },
   });
 
@@ -106,6 +108,7 @@ try {
       body: JSON.stringify({
         ok: true,
         selectedProvider: 'cloud',
+        roomRequests: normalRoomRequests(),
         intent: {
           ...DEFAULT_DESIGN_INTENT,
           fairness: 0.82,
@@ -150,10 +153,15 @@ try {
   }
 
   await page.fill('#generationPrompt', prompt);
+  await page.click('#generateDungeon');
+  await confirmManualGeneration(page);
+  await page.waitForFunction(
+    () => window.__DAI_EDITOR_SLICE__.getState().generationBusy === false,
+    null,
+    { timeout: 30_000 },
+  );
   const generatedOk = await page.evaluate(
-    () =>
-      window.__DAI_EDITOR_SLICE__
-        .generateDungeonFromPrompt(),
+    () => window.__DAI_EDITOR_SLICE__.getState().lastGeneration !== null,
   );
   if (!generatedOk) {
     throw new Error('Generation failed during motion smoke.');
@@ -373,6 +381,9 @@ try {
       `Motion / feedback invariant failed: ${falseChecks.join(', ')}`,
     );
   }
+} catch (error) {
+  await captureBrowserFailure({ page, error, outputDir });
+  throw error;
 } finally {
   if (browser) await browser.close();
   vite.kill();

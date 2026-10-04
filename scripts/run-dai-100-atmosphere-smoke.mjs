@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { chromium } from 'playwright-core';
 import { DEFAULT_DESIGN_INTENT } from '../packages/intent/src/design-intent.js';
+import { confirmManualGeneration, normalRoomRequests, captureBrowserFailure } from './browser-smoke-support.mjs';
 
 const chromePath =
   process.env.CHROME_PATH ||
@@ -97,6 +98,7 @@ function sameMarkerPalette(actual) {
 
 const url = `http://127.0.0.1:${port}/apps/editor-slice/index.html`;
 let browser;
+let page;
 
 try {
   await waitForServer(url);
@@ -104,7 +106,7 @@ try {
     executablePath: chromePath,
     headless: false,
   });
-  const page = await browser.newPage({
+  page = await browser.newPage({
     viewport: { width: 1440, height: 900 },
   });
 
@@ -135,6 +137,7 @@ try {
         ok: true,
         selectedProvider: 'cloud',
         intent: tenseIntent,
+        roomRequests: normalRoomRequests(),
       }),
     });
   });
@@ -159,6 +162,7 @@ try {
     'Create a tense dungeon with dangerous traps and limited visibility.',
   );
   await page.click('#generateDungeon');
+  await confirmManualGeneration(page);
   await page.waitForFunction(
     () => window.__DAI_EDITOR_SLICE__.getState().generationBusy === false,
     null,
@@ -295,6 +299,9 @@ try {
       `Atmosphere invariant failed: ${falseChecks.join(', ')}`,
     );
   }
+} catch (error) {
+  await captureBrowserFailure({ page, error, outputDir });
+  throw error;
 } finally {
   if (browser) await browser.close();
   vite.kill();
