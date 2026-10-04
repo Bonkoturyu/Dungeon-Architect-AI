@@ -4,6 +4,7 @@ import { spawn } from 'node:child_process';
 import { chromium } from 'playwright-core';
 import { DEFAULT_DESIGN_INTENT } from '../packages/intent/src/design-intent.js';
 import { confirmManualGeneration, normalRoomRequests, captureBrowserFailure } from './browser-smoke-support.mjs';
+import { readRoomEventLayout, evaluateRoomEventLayout } from './room-event-layout-checks.mjs';
 
 const chromePath = process.env.CHROME_PATH || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 const port = Number(process.env.DAI_OWNER_UI_PORT || '4194');
@@ -976,6 +977,15 @@ try {
     };
   });
 
+  if (eventLayout.eventVisible) {
+    await page.waitForFunction(() => {
+      const events = document.querySelector('#roomEventBar');
+      return events && !events.hidden && Number(getComputedStyle(events).opacity) > 0;
+    }, null, { timeout: 2_000 });
+  }
+  const eventPlacementSample = await readRoomEventLayout(page);
+  const eventPlacement = evaluateRoomEventLayout(eventPlacementSample);
+
   const playResultCentering = await page.evaluate(() => {
     const modeBadge = document.querySelector('#modeBadge');
     const playSummary = document.querySelector('.play-summary');
@@ -1032,6 +1042,25 @@ try {
 
   await page.click('#returnEdit');
   await page.waitForFunction(() => window.__DAI_EDITOR_SLICE__.getState().mode === 'edit');
+
+  // ブロック中は出口が非表示になるため、重なりをその状態で合格扱いにしない。
+  // 既存の最小fixtureを再読込し、敵を倒して宝箱と出口が同時に見える状態を測る。
+  await page.reload({ waitUntil: 'networkidle', timeout: 60_000 });
+  await page.waitForFunction(() =>
+    window.__DAI_EDITOR_SLICE__?.ready === true && window.__DAI_ONBOARDING__?.ready === true,
+  null, { timeout: 60_000 });
+  await page.evaluate(() => window.__DAI_ONBOARDING__.close());
+  await page.click('[data-workflow-tab="play"]');
+  await page.click('#start');
+  await page.locator('.exit-button[data-corridor-id="corridor-1"]').click();
+  await page.locator('.room-event.is-blocking [data-action="clear-enemy"]').click();
+  await page.locator('.room-event [data-action="open-treasure"]').waitFor({ state: 'visible' });
+  await page.locator('#playExitBar').waitFor({ state: 'visible' });
+  await page.waitForFunction(() =>
+    !document.querySelector('#roomEventBar').classList.contains('is-event-intro') &&
+    !document.querySelector('.viewport-shell').classList.contains('is-mode-transition'));
+  const exitClearanceSample = await readRoomEventLayout(page);
+  const exitClearance = evaluateRoomEventLayout(exitClearanceSample);
 
   const checks = {
     manualGenerationConfirmed:
@@ -1327,14 +1356,12 @@ try {
       playResultCentering.modeLampTextGap >= 8,
     returnEditUsesSolidTriangle:
       playResultCentering.returnEditText.startsWith('◀'),
-    roomEventStackCentered:
+    roomEventStackUsesCurrentPlacement:
       eventLayout.eventVisible === false ||
-      (Number.isFinite(eventLayout.eventCenterX) &&
-       Number.isFinite(eventLayout.eventCenterY) &&
-       Number.isFinite(eventLayout.viewportCenterX) &&
-       Number.isFinite(eventLayout.viewportCenterY) &&
-       Math.abs(eventLayout.eventCenterX - eventLayout.viewportCenterX) <= 3 &&
-       Math.abs(eventLayout.eventCenterY - eventLayout.viewportCenterY) <= 3),
+      (eventPlacement.checks.horizontalCentered &&
+       eventPlacement.checks.offsetAboveViewportCenter &&
+       eventPlacement.checks.insideViewport),
+    roomEventsLeaveVisibleExitPadClear: exitClearance.passed,
     goalRoomDisabledForStartEntity: goalOptionDisabledForStart === true,
     sameRoomStartGoalFailsValidation:
       sameRoomGate.allowed === false &&
@@ -1419,6 +1446,10 @@ try {
     playBeforeKeyboard,
     playAfterKeyboard,
     eventLayout,
+    eventPlacementSample,
+    eventPlacement,
+    exitClearanceSample,
+    exitClearance,
     playResultCentering,
     sameRoomGateErrors: sameRoomGate.errors,
     consoleErrors,

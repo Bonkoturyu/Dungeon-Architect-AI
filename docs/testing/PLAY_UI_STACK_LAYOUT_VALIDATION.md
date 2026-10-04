@@ -3,6 +3,10 @@
 Date: 2026-09-23 JST  
 Branch: `feat/play-ui-stack-layout`
 
+## 2026-10-04 現行版への適用範囲
+
+以下は2026-09-23の対象版に対する過去の合格記録であり、現行版の全検査PASSを意味しない。現行desktop UIのRoom Eventsは水平中央・viewport中央から104px上で、出口パッドとの非重複を優先する。[現在の判定条件](ROOM_EVENT_PLACEMENT_CHECKS_2026-10-04.md)は別記録へ分離した。本書の歴史的結果は書き換えない。
+
 ## Owner-requested scope
 
 This follow-up refines Play-mode UI hierarchy after DAI-096:
