@@ -1,0 +1,715 @@
+{
+  "schemaVersion": "1.0",
+  "recordDate": "2026-10-04",
+  "title": "Windows PR75 r2 最終ローカル統合テスト記録",
+  "repository": "Bonkoturyu/Dungeon-Architect-AI",
+  "testedSource": {
+    "pullRequest": 75,
+    "commitSha": "1d9cbb426408e080568a04ea9e44870309339d07",
+    "treeSha": "2dde5e7513c4191c31b566d2eca8287ae2d36be8",
+    "commitUrl": "https://github.com/Bonkoturyu/Dungeon-Architect-AI/commit/1d9cbb426408e080568a04ea9e44870309339d07",
+    "runMetadataHeadMatches": true,
+    "gitHeadFileMatches": true,
+    "buildInfoCommitMatches": true,
+    "repositoryTreeVerification": "GitHub commit の tree 識別子は別途照合済み。Windows 実行前の working tree 全体を証明するものではない。",
+    "sourceFiles": [
+      {
+        "path": "scripts/run-dai-100-final-local-regression.mjs",
+        "gitBlob": "546c96b386e8b098f4a64ca7bf300e064fd8628a",
+        "sha256": "75ab00ca9096ccb0dd2e928843be7e54fe28d398978abbda16919395d1393e3f"
+      },
+      {
+        "path": "scripts/run-owner-ui-review-smoke.mjs",
+        "gitBlob": "7d716c48299f10ec9af869f17a365aba0e04410c",
+        "sha256": "20b47cf1a4c7bd2b59e9bf97f8ff4edf1315a17a917ebe369ca716c7bf8b3bbd"
+      },
+      {
+        "path": "scripts/run-dai-100-event-feedback-smoke.mjs",
+        "gitBlob": "e57bb9a34dbfda3670198a621d8dce6eb73e803f",
+        "sha256": "98354a17ca45c26c6a954e857b1320fdadf62ad370e634ab0e2a2f43d6b9176f"
+      },
+      {
+        "path": "scripts/browser-smoke-support.mjs",
+        "gitBlob": "55a682833e145508fa41f5c2a508d74fc4e44f10",
+        "sha256": "fa582fe7b80ea03d7bb7cf4bcfb73d1b39321a369b5285cc00623220ed0b74bc"
+      },
+      {
+        "path": "apps/editor-slice/index.html",
+        "gitBlob": "22e0484ca4f612eca570ef348685101f9b3e30bd",
+        "sha256": "7d50a5bbf30b91bf5693aef4f12c688f4043c0abd1bb406388fa66482944b32f"
+      },
+      {
+        "path": "scripts/run-dai-095-multi-floor-smoke.mjs",
+        "gitBlob": "ae66f64fdc363d1fb2adbdf18abf777a9c246761",
+        "sha256": "ff890954f90d315f7d8580005217f5525cbc6be44a3c61b8ac9defb372487711"
+      }
+    ]
+  },
+  "run": {
+    "label": "dai-100-final-local-pr75-r2",
+    "command": "npm run validate:dai-100-final-local",
+    "startedAt": "2026-10-04T20:35:08.6034495+09:00",
+    "finishedAt": "2026-10-04T20:36:18.6723901+09:00",
+    "timeZone": "Asia/Tokyo",
+    "durationSeconds": 70.069,
+    "exitCode": 1,
+    "passed": false,
+    "recordedRunCount": 1,
+    "rerunForThisRecord": false
+  },
+  "environment": {
+    "os": "Windows",
+    "osVersionEvidence": "Windows NT 10.0; Win64; x64（browser user agent）。正確な edition/build は未収録。",
+    "node": "v24.15.0",
+    "npm": "11.12.1",
+    "browser": "Google Chrome",
+    "browserVersion": "153.0.8010.55",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "environmentVariableDumpPresent": false,
+    "preRunGitStatusPresent": false,
+    "postRunGitStatus": "?? artifacts/",
+    "trackedChangesReportedAfterRun": false,
+    "cleanPreRunWorkingTreeProven": false
+  },
+  "summary": {
+    "totalStages": 24,
+    "PASS": 4,
+    "FAIL": 1,
+    "NOT_RUN": 19,
+    "failedStage": 5,
+    "failedStep": "Owner UI regression smoke",
+    "all24Passed": false
+  },
+  "stages": [
+    {
+      "stage": 1,
+      "label": "Full Node regression suite",
+      "status": "PASS",
+      "exitCode": 0,
+      "evidence": "console.log",
+      "reason": null
+    },
+    {
+      "stage": 2,
+      "label": "Multi-floor simulation regression",
+      "status": "PASS",
+      "exitCode": 0,
+      "evidence": "console.log",
+      "reason": null
+    },
+    {
+      "stage": 3,
+      "label": "Production hosting build",
+      "status": "PASS",
+      "exitCode": 0,
+      "evidence": "console.log",
+      "reason": null
+    },
+    {
+      "stage": 4,
+      "label": "Browser performance regression",
+      "status": "PASS",
+      "exitCode": 0,
+      "evidence": "console.log",
+      "reason": null
+    },
+    {
+      "stage": 5,
+      "label": "Owner UI regression smoke",
+      "status": "FAIL",
+      "exitCode": 1,
+      "evidence": "console.log",
+      "reason": "roomEventStackCentered が false"
+    },
+    {
+      "stage": 6,
+      "label": "Room Event gameplay regression",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "第5段階の fail-fast により未実行"
+    },
+    {
+      "stage": 7,
+      "label": "Multi-floor browser regression",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "第5段階の fail-fast により未実行"
+    },
+    {
+      "stage": 8,
+      "label": "Programmatic character regression",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "第5段階の fail-fast により未実行"
+    },
+    {
+      "stage": 9,
+      "label": "Programmatic Audio V2 regression",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "第5段階の fail-fast により未実行"
+    },
+    {
+      "stage": 10,
+      "label": "Motion feedback regression",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "第5段階の fail-fast により未実行"
+    },
+    {
+      "stage": 11,
+      "label": "Event feedback regression",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "第5段階の fail-fast により未実行"
+    },
+    {
+      "stage": 12,
+      "label": "Result / camera-focus regression",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "第5段階の fail-fast により未実行"
+    },
+    {
+      "stage": 13,
+      "label": "DesignIntent atmosphere regression",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "第5段階の fail-fast により未実行"
+    },
+    {
+      "stage": 14,
+      "label": "AI Edit V3 structural regression",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "第5段階の fail-fast により未実行"
+    },
+    {
+      "stage": 15,
+      "label": "Reactive Audio V2 regression",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "第5段階の fail-fast により未実行"
+    },
+    {
+      "stage": 16,
+      "label": "JSON Export regression",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "第5段階の fail-fast により未実行"
+    },
+    {
+      "stage": 17,
+      "label": "JSON Import / round-trip regression",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "第5段階の fail-fast により未実行"
+    },
+    {
+      "stage": 18,
+      "label": "Ten-strategy Generator selector regression",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "第5段階の fail-fast により未実行"
+    },
+    {
+      "stage": 19,
+      "label": "Legal / provenance audit",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "第5段階の fail-fast により未実行"
+    },
+    {
+      "stage": 20,
+      "label": "Secret / privacy audit",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "第5段階の fail-fast により未実行"
+    },
+    {
+      "stage": 21,
+      "label": "Public docs truthfulness audit",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "第5段階の fail-fast により未実行"
+    },
+    {
+      "stage": 22,
+      "label": "Submission metadata audit",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "第5段階の fail-fast により未実行"
+    },
+    {
+      "stage": 23,
+      "label": "Syntax validation",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "第5段階の fail-fast により未実行"
+    },
+    {
+      "stage": 24,
+      "label": "Git whitespace / error-marker check",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "第5段階の fail-fast により未実行"
+    }
+  ],
+  "nodeTests": {
+    "tests": 615,
+    "pass": 615,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "groups": 24,
+    "source": "console.log",
+    "note": "24 test group は final-local の24段階とは別の集計。"
+  },
+  "simulation": {
+    "generatedAt": "2026-10-04T11:35:34.291Z",
+    "passed": true,
+    "pass": 18,
+    "fail": 0,
+    "checks": {
+      "safeRunClearsAllFloors": true,
+      "treasureRunClearsAllFloors": true,
+      "riskRunFailsOnFinalFloor": true,
+      "playerStateCarryIsExact": true,
+      "hpAttritionIsObserved": true,
+      "safeSurvivesASeededAvoidanceFailure": true,
+      "riskAndSafePreserveTheirPolicyChoices": true,
+      "treasureRecoveryGivesSurvivalMargin": true,
+      "progressionCarriesAcrossFloors": true,
+      "equipmentCarryIsObservable": true,
+      "aggregateCapturesPolicyOutcomes": true,
+      "finalFloorIsBottleneck": true,
+      "authoredPressureIncreasesByFloor": true,
+      "observedPressureSignalsAreAvailable": true,
+      "runIntentFitCoversEveryFloor": true,
+      "difficultyProxyRemainsDescriptive": true,
+      "repeatedRunIsDeterministic": true,
+      "authoringRunSpecUnchanged": true
+    },
+    "falseChecks": [],
+    "source": "evidence/artifacts/dai-098/dai-098-multi-floor-simulation.json"
+  },
+  "browserPerformance": {
+    "generatedAt": "2026-10-04T11:35:55.342Z",
+    "passed": true,
+    "pass": 12,
+    "fail": 0,
+    "checks": {
+      "editorClientReadyWithinBudget": true,
+      "onboardingClientReadyWithinBudget": true,
+      "editorValidAndStartEligible": true,
+      "cadenceFrameCountExpected": true,
+      "cadenceCompletesWithinBudget": true,
+      "cadenceP95WithinBudget": true,
+      "localInteractionsWithinBudget": true,
+      "reachesExpectedResult": true,
+      "returnsToValidEditMode": true,
+      "domBounded": true,
+      "canvasBackingBounded": true,
+      "browserErrorsAbsent": true
+    },
+    "url": "http://127.0.0.1:4184/apps/editor-slice/index.html",
+    "maxInteractionMs": 60.5,
+    "startup": {
+      "measurementBoundary": "cold local Vite navigation is recorded but not gated; client-ready gate starts after the last observed resource responseEnd",
+      "clientReadyBudgetMs": 2000,
+      "editor": {
+        "navigationElapsedMs": 990.5,
+        "lastResourceResponseEndMs": 791.1,
+        "clientReadyAfterLastResourceMs": 199.4,
+        "resourceCount": 93
+      },
+      "onboarding": {
+        "navigationElapsedMs": 1002.1,
+        "lastResourceResponseEndMs": 791.1,
+        "clientReadyAfterLastResourceMs": 211,
+        "resourceCount": 93
+      }
+    },
+    "cadence": {
+      "frameCount": 120,
+      "durationMs": 3775.1,
+      "medianMs": 31.2,
+      "p95Ms": 31.7,
+      "p99Ms": 31.8,
+      "maxMs": 31.9
+    },
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "httpErrors": [],
+    "source": "evidence/artifacts/browser-performance/dai-071-browser-performance.json"
+  },
+  "ownerUi": {
+    "generatedAt": "2026-10-04T11:36:06.623Z",
+    "passed": false,
+    "checkCount": 61,
+    "pass": 60,
+    "fail": 1,
+    "checks": {
+      "manualGenerationConfirmed": true,
+      "recommendedV3AndLegacyVersionsRemain": true,
+      "englishIsDefaultLanguage": true,
+      "allFiveLanguagesSwitchLive": true,
+      "compactLanguageCycleControls": true,
+      "roomDirectionSymbolsConsistent": true,
+      "sidebarHierarchyMatchesAiFirstWorkflow": true,
+      "controlsAndTypographyUseReadableScale": true,
+      "editorSidebarHasNoHorizontalOverflow": true,
+      "rightMouseDragOrbitsCamera": true,
+      "leftMouseDragPansCamera": true,
+      "mouseWheelZoomChangesDistance": true,
+      "roomSelectionDoesNotRecenterCamera": true,
+      "touchingConnectedRoomsUseOuterShell": true,
+      "promptRemainsVisibleAfterGenerate": true,
+      "promptHistoryRetainsFullPrompt": true,
+      "generatedLayoutConcealed": true,
+      "concealedGoalCheckDoesNotRevealRoute": true,
+      "mysteryStartsDirectlyWithoutEditReveal": true,
+      "mysteryReturnAdoptsPlayedSnapshot": true,
+      "roomListMarksStartAndGoal": true,
+      "goalCheckIsTopLevelCard": true,
+      "ownerGoalUpwardMoveIsRenderable": true,
+      "roomSelectionAutoSwitchesInspector": true,
+      "anyRoomCanBeResized": true,
+      "roomResizeStepperWorks": true,
+      "unsafeRoomResizeRejected": true,
+      "leftwardRoomMoveNotBlockedByCorridorRouting": true,
+      "downwardRoomMoveNotBlockedByCorridorRouting": true,
+      "wasdMovesSelectedRoom": true,
+      "roomAddRemoveWorks": true,
+      "noSelectionShowsCenteredRoomAdd": true,
+      "centeredRoomAddCreatesAndSelectsIsolatedRoom": true,
+      "unconnectedRoomCanBeDraggedFreely": true,
+      "directCorridorDragPreviewMatchesFinalRouting": true,
+      "directCorridorDragAddRemoveWorks": true,
+      "corridorSourceSideAndAutoTargetWork": true,
+      "corridorDraftReleaseWithoutRoomCancels": true,
+      "generatedRoomSelectionDoesNotRecenterCamera": true,
+      "blockedRoomMoveShowsReason": true,
+      "viewportNoticeUsesLowerCenterPlacement": true,
+      "editGoalCheckShowsReachableRoute": true,
+      "rightEntityCardWallRemoved": true,
+      "editLegendVisibleAndComplete": true,
+      "editLegendPaletteSeparated": true,
+      "roomSelectionShowsCurrentRoomEntities": true,
+      "groupedDetailsPanelIsReadable": true,
+      "editHudMatchesRequestedPlacement": true,
+      "clicking3dEntitySelectsAndHighlights": true,
+      "entitySelectionMovesSummaryIntoViewport": true,
+      "entitySelectionShowsContainingRoom": true,
+      "entityCreateControlsHaveBalancedVerticalRhythm": true,
+      "playKeyboardMovesOrReachesRoomEvent": true,
+      "playReticleVisible": true,
+      "playAndResultSummaryAreCentered": true,
+      "modeLampDoesNotOverlapLabel": true,
+      "returnEditUsesSolidTriangle": true,
+      "roomEventStackCentered": false,
+      "goalRoomDisabledForStartEntity": true,
+      "sameRoomStartGoalFailsValidation": true,
+      "browserErrorsAbsent": true
+    },
+    "falseChecks": [
+      "roomEventStackCentered"
+    ],
+    "manualConfirmation": {
+      "mode": "manual",
+      "dialogObserved": true,
+      "planSubmitted": true
+    },
+    "languageSamples": {
+      "en": {
+        "htmlLang": "en",
+        "generatorRecommendedText": "Version 3 — Recommended (Special rooms)",
+        "generatorPreviousText": "Version 2 — Previous spatial version",
+        "generatorClassicPresent": true,
+        "selectedGeneratorStrategy": "version-3-special-rooms",
+        "stateLanguage": "en"
+      },
+      "ja": {
+        "htmlLang": "ja",
+        "generatorRecommendedText": "Version 3 — 推奨（特殊部屋）",
+        "generatorPreviousText": "Version 2 — 以前の方式",
+        "generatorClassicPresent": true,
+        "selectedGeneratorStrategy": "version-3-special-rooms",
+        "stateLanguage": "ja"
+      },
+      "zh-Hans": {
+        "htmlLang": "zh-Hans",
+        "generatorRecommendedText": "Version 3 — 推荐（特殊房间）",
+        "generatorPreviousText": "Version 2 — 旧版空间生成",
+        "generatorClassicPresent": true,
+        "selectedGeneratorStrategy": "version-3-special-rooms",
+        "stateLanguage": "zh-Hans"
+      },
+      "zh-Hant": {
+        "htmlLang": "zh-Hant",
+        "generatorRecommendedText": "Version 3 — 推薦（特殊房間）",
+        "generatorPreviousText": "Version 2 — 舊版空間生成",
+        "generatorClassicPresent": true,
+        "selectedGeneratorStrategy": "version-3-special-rooms",
+        "stateLanguage": "zh-Hant"
+      },
+      "ko": {
+        "htmlLang": "ko",
+        "generatorRecommendedText": "Version 3 — 추천 (특수 방)",
+        "generatorPreviousText": "Version 2 — 이전 공간 생성",
+        "generatorClassicPresent": true,
+        "selectedGeneratorStrategy": "version-3-special-rooms",
+        "stateLanguage": "ko"
+      }
+    },
+    "englishRestored": {
+      "htmlLang": "en",
+      "stateLanguage": "en",
+      "generatorRecommendedText": "Version 3 — Recommended (Special rooms)",
+      "generatorPreviousText": "Version 2 — Previous spatial version",
+      "generatorClassicPresent": true,
+      "selectedGeneratorStrategy": "version-3-special-rooms"
+    },
+    "eventLayout": {
+      "reticleVisible": true,
+      "eventVisible": true,
+      "reticleCenterY": 484,
+      "eventTop": 276.31610107421875,
+      "eventCenterX": 720,
+      "eventCenterY": 380,
+      "viewportCenterX": 720,
+      "viewportCenterY": 484
+    },
+    "geometryDifferencePx": {
+      "eventMinusViewportX": 0,
+      "eventMinusViewportY": -104,
+      "reticleMinusViewportY": 0
+    },
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "httpErrors": [],
+    "source": "evidence/artifacts/owner-ui-review/owner-ui-review.json"
+  },
+  "failure": {
+    "generatedAt": "2026-10-04T11:36:17.583Z",
+    "node": "v24.15.0",
+    "passed": false,
+    "error": {
+      "name": "Error",
+      "message": "Owner UI review invariant failed: roomEventStackCentered"
+    },
+    "url": "http://127.0.0.1:4194/apps/editor-slice/index.html",
+    "state": {
+      "ready": true,
+      "mode": "edit",
+      "generationBusy": false,
+      "generationStatus": "✓ Generated · 5 rooms · layout hidden",
+      "generationManual": true,
+      "generationAuto": false,
+      "generatorStrategyId": "version-3-special-rooms",
+      "roomCount": 5,
+      "lastGeneration": {
+        "seed": 3907886119,
+        "roomCount": 5,
+        "floorCount": 1
+      },
+      "reviewDialog": null
+    },
+    "captureErrors": [],
+    "source": "evidence/artifacts/owner-ui-review/browser-smoke-failure.json",
+    "snapshotBoundary": "browser-smoke-failure.json は最終 catch 時点の edit state。Owner UI eventLayout はそれ以前の Play 中の測定で、同時点のsnapshotとして扱わない。",
+    "screenshotIncluded": false
+  },
+  "staticAnalysis": {
+    "classification": "実測座標と tested source の比較に基づく診断。修正後再試験ではない。",
+    "css": {
+      "path": "apps/editor-slice/index.html",
+      "lines": [
+        1367,
+        1368,
+        1369,
+        1370
+      ],
+      "selector": ".room-events",
+      "top": "calc(50% - 104px)",
+      "maxHeight": "min(42vh, calc(100% - 354px))",
+      "intent": "出口パッドを覆わず一覧内でスクロールする。"
+    },
+    "ownerAssertion": {
+      "path": "scripts/run-owner-ui-review-smoke.mjs",
+      "lines": [
+        1330,
+        1337
+      ],
+      "check": "roomEventStackCentered",
+      "expectedOffsetX": 0,
+      "expectedOffsetY": 0,
+      "tolerancePx": 3
+    },
+    "conclusion": "実測のY差 -104px は CSS の意図的な上方配置と一致する。旧harnessの中央±3px期待値と現在のlayout契約の不整合を示し、意図した位置からのruntime逸脱は観測されていない。",
+    "nonOverlapGeometryCaptured": false,
+    "exitPadNonOverlapProven": false,
+    "unreachedRelatedAssertion": {
+      "stage": 11,
+      "path": "scripts/run-dai-100-event-feedback-smoke.mjs",
+      "lines": [
+        384,
+        394
+      ],
+      "check": "roomEventIntroPreservesCenter",
+      "status": "NOT_RUN",
+      "note": "同じY中央±3px期待値が残るが、今回観測した追加FAILとして数えない。"
+    },
+    "daiSmokeUrl": {
+      "firstRelevantLaterStage": 7,
+      "sourceFile": "scripts/run-dai-095-multi-floor-smoke.mjs",
+      "sourceLines": [
+        18,
+        179
+      ],
+      "reached": false,
+      "environmentValueKnown": false
+    }
+  },
+  "build": {
+    "schemaVersion": "1.0",
+    "commitSha": "1d9cbb426408e080568a04ea9e44870309339d07",
+    "commitSource": "git",
+    "runtimeSourceSha256": "a2097e3c943aeb5899d0e901ae78ede86705ce80321b33152c7ccec6b08c0b5e",
+    "runtimeBundleSha256": "9aaa00edfb68cb378f9f0e44d948c4de48341b6486ef42668db91330032331c8",
+    "generatedAt": "2026-10-04T11:35:47.602Z",
+    "passed": true,
+    "source": "console.log",
+    "distManifestOrBundleIncluded": false,
+    "comparison": {
+      "windowsR1Record": "docs/testing/WINDOWS_PR75_FINAL_LOCAL_2026-10-04.json",
+      "windowsR1RuntimeSourceMatches": true,
+      "windowsR1RuntimeBundleMatches": true,
+      "cloudRecord": "docs/testing/REMEDIATION_FINAL_LOCAL_2026-10-04.json",
+      "cloudRuntimeSourceSha256": "a2097e3c943aeb5899d0e901ae78ede86705ce80321b33152c7ccec6b08c0b5e",
+      "cloudRuntimeBundleSha256": "bf3611d6a8e92c5a27962b4892fe3146d9495a60bdd8a715839e49a61c20c123",
+      "cloudRuntimeSourceMatches": true,
+      "cloudRuntimeBundleMatches": false,
+      "reasonForBundleDifference": "UNKNOWN",
+      "publicDeploymentIdentityProven": false
+    }
+  },
+  "providerEvidence": {
+    "nodeProviderTests": "mock / fixture",
+    "ownerGenerate": "page.route / route.fulfill による固定 DesignIntent 応答",
+    "sourceFile": "scripts/run-owner-ui-review-smoke.mjs",
+    "sourceLines": [
+      60,
+      88
+    ],
+    "liveProviderCallProven": false,
+    "note": "fixture 内の provider: openai、model: test-model、selectedProvider: cloud は live 呼出しを証明しない。全通信や請求の監査も行っていない。"
+  },
+  "suiteExcludes": [
+    "owner audio listening review",
+    "public deployment smoke",
+    "live-provider semantic verification",
+    "DAI-090 Final",
+    "final video capture/review",
+    "freeze/rollback creation"
+  ],
+  "evidence": {
+    "archive": {
+      "name": "dai-100-final-local-pr75-r2-20261004-203508.zip",
+      "bytes": 68506,
+      "sha256": "a826bf7e8aa7e95f0769e08baffe57b47a8c8355103c24eefccd986b6b48df7d",
+      "libraryFileId": "libfile_d38966ae6bc48191afd778026ecf9ad0v0"
+    },
+    "standaloneConsoleLog": {
+      "name": "console(1).log",
+      "bytes": 370632,
+      "sha256": "2fa869bc7f31483f5ba833ab91f4b896c5b6ea1f1086f598e49fc102f02e4e9c",
+      "libraryFileId": "libfile_d4a1faf87dac81919a2b0ca5f7f3cb29v0",
+      "bytesEqualToArchiveEntry": true
+    },
+    "archiveFiles": [
+      {
+        "path": "console.log",
+        "bytes": 370632,
+        "sha256": "2fa869bc7f31483f5ba833ab91f4b896c5b6ea1f1086f598e49fc102f02e4e9c"
+      },
+      {
+        "path": "evidence/artifacts/browser-performance/dai-071-browser-performance.json",
+        "bytes": 9753,
+        "sha256": "7a41057b40155bb381e2b84321e722e756c83accd208fae3b793f6900ec4ef66"
+      },
+      {
+        "path": "evidence/artifacts/dai-098/dai-098-multi-floor-simulation.json",
+        "bytes": 170459,
+        "sha256": "6d344ae1cc02be6e7fbe9bda65a59d1541cfefa853bd73e639d3ea7ed2179c07"
+      },
+      {
+        "path": "evidence/artifacts/owner-ui-review/browser-smoke-failure.json",
+        "bytes": 702,
+        "sha256": "1710df3c83d81c1ff6da942e3ca40d05241f29276ea868794cc418000a55296f"
+      },
+      {
+        "path": "evidence/artifacts/owner-ui-review/owner-ui-review.json",
+        "bytes": 115513,
+        "sha256": "5bb49792411175732ec180db8f1c71a010faac0f58e414c4a177e1c3e1248b30"
+      },
+      {
+        "path": "git-head.txt",
+        "bytes": 82,
+        "sha256": "eeeae17072ad03ba374b38ba12c412b5bd1be185f21261aa0149f333c1f8d574"
+      },
+      {
+        "path": "git-status.txt",
+        "bytes": 18,
+        "sha256": "bf15871b62a49ff4caa14ae893ca0c567a352b0a48f621127b0d6b06c1577c4c"
+      },
+      {
+        "path": "run-metadata.json",
+        "bytes": 733,
+        "sha256": "6614b09c81b948dddb6d987d0a330d06431b268d08517bb5e3c0814925f168e7"
+      }
+    ],
+    "individualResultJsonCount": 4,
+    "structuredResultAuthority": "console 末尾ではstdout/stderrが混在しているため、check値・座標・失敗stateは個別結果JSONを優先する。",
+    "missing": [
+      "pre-run git status",
+      "environment variable dump",
+      "failure screenshots",
+      "exit-pad rectangle and event/exit non-overlap measurement",
+      "dist manifest and built bundle"
+    ]
+  },
+  "recordingScope": {
+    "testsRerun": false,
+    "newExternalApiCalls": false,
+    "deliverable": "この記録の成果物は Markdown と JSON の2文書。後続のharness変更や再試験は別の記録として扱う。",
+    "historicalResultImmutable": true,
+    "commitScopeClaimed": false,
+    "note": "記録を含むcommit全体がdocs-onlyかどうかは主張しない。これらの記録準備に関する記述は、元のWindows process全体を監査したという意味ではない。"
+  }
+}

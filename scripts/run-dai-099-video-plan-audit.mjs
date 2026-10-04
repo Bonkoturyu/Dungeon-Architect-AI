@@ -6,11 +6,19 @@ const storyboard = fs.readFileSync('docs/submission/DEMO_STORYBOARD.md', 'utf8')
 const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 const runner = fs.readFileSync('scripts/run-dai-099-recording-demo.mjs', 'utf8');
 
+const currentVideoDoc = videoDoc.split('## 歴史的DAI-099撮影計画')[0];
+const currentStoryboard = storyboard.split('## 歴史的DAI-099撮影計画')[0];
+const expectedVideoSha256 = '3e3516090cea0c58c9d3da02ee9b1e888a515fd0bfcb5543cafc745ff89418f8';
+const aiUsage = fs.readFileSync('docs/legal/AI_USAGE.md', 'utf8');
 const checks = {
-  finalCaptureStillPending:
-    videoDoc.includes('PENDING FINAL CAPTURE / VISUAL REVIEW') &&
-    videoDoc.includes('final MP4 SHA-256') &&
-    videoDoc.includes('PENDING'),
+  retainedVideoCandidateRecorded:
+    [currentVideoDoc, currentStoryboard].every((text) =>
+      text.includes('150-second v2') && text.includes(expectedVideoSha256) &&
+      text.includes('新規撮影は行いません')) && aiUsage.includes(expectedVideoSha256),
+  historicalPlanAndAcceptanceLimitsExplicit:
+    videoDoc.includes('## 歴史的DAI-099撮影計画') &&
+    currentVideoDoc.includes('公開アップロード・最終提出の完了は主張しません') &&
+    currentVideoDoc.includes('現在の150秒v2を作成・再検証した証拠ではありません'),
 
   hardLimitUnder180:
     videoDoc.includes('strictly under 180 seconds') &&
@@ -21,7 +29,7 @@ const checks = {
     videoDoc.includes('matching build fingerprint') &&
     storyboard.includes('matching build fingerprint'),
 
-  currentFlowCovered:
+  historicalFlowCoveragePreserved:
     [
       '2-floor',
       'manual room edit',
@@ -36,7 +44,7 @@ const checks = {
       'Return to Edit',
     ].every((term) => videoDoc.includes(term)),
 
-  storyboardCurrentFlowCovered:
+  historicalStoryboardFlowPreserved:
     [
       '2-floor',
       '▶ Test',
@@ -52,7 +60,7 @@ const checks = {
     packageJson.scripts?.['demo:refreshed-video'] ===
       'node scripts/run-dai-099-recording-demo.mjs',
 
-  runnerUsesCurrentUi:
+  historicalRunnerFlowPreserved:
     runner.includes("await page.fill('#floorCount', '2')") &&
     runner.includes("await page.click('#start')") &&
     runner.includes('clear-enemy') &&
@@ -98,6 +106,10 @@ const evidence = {
   scriptedMaximumSeconds: 165,
   hardLimitSeconds: 180,
   actualVideoValidated: false,
+  runtimeUiValidated: false,
+  recordedVideoSha256: expectedVideoSha256,
+  retainedCandidateDurationSeconds: 150,
+  historicalRunnerCompatibilityWithCurrentUiVerified: false,
 };
 
 fs.mkdirSync(path.resolve('artifacts/dai-099-video'), { recursive: true });

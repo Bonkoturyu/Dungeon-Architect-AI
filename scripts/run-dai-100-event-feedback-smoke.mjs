@@ -3,6 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { chromium } from 'playwright-core';
 import { DEFAULT_DESIGN_INTENT } from '../packages/intent/src/design-intent.js';
+import { confirmManualGeneration, normalRoomRequests, captureBrowserFailure } from './browser-smoke-support.mjs';
+import { readRoomEventLayout, evaluateRoomEventLayout } from './room-event-layout-checks.mjs';
 
 const chromePath =
   process.env.CHROME_PATH ||
@@ -208,8 +210,13 @@ async function visitTreasure(page, snapshot) {
 
   const button = page.locator('.room-event [data-action="open-treasure"]').first();
   if (!(await button.count())) return null;
+  // 宝箱の任意操作と実際の出口が同時に表示される時だけ非重複を検査する。
+  await page.locator('#playExitBar').waitFor({ state: 'visible' });
+  await page.waitForFunction(() => !document.querySelector('#roomEventBar').classList.contains('is-event-intro'));
+  const layout = await readRoomEventLayout(page);
+  const exitClearance = evaluateRoomEventLayout(layout);
   await button.click();
-  return waitFeedback(page, 'treasure');
+  return { feedback: await waitFeedback(page, 'treasure'), layout, exitClearance };
 }
 
 async function finishFloor(page) {
@@ -238,6 +245,7 @@ async function finishFloor(page) {
 
 const url = `http://127.0.0.1:${port}/apps/editor-slice/index.html`;
 let browser;
+let page;
 
 try {
   await waitForServer(url);
@@ -245,7 +253,7 @@ try {
     executablePath: chromePath,
     headless: false,
   });
-  const page = await browser.newPage({
+  page = await browser.newPage({
     viewport: { width: 1440, height: 900 },
   });
 
@@ -276,6 +284,7 @@ try {
         ok: true,
         selectedProvider: 'cloud',
         intent: intentPayload(),
+        roomRequests: normalRoomRequests(),
       }),
     });
   });
@@ -296,6 +305,7 @@ try {
   await page.fill('#generationPrompt', prompt);
   await page.fill('#floorCount', '2');
   await page.click('#generateDungeon');
+  await confirmManualGeneration(page);
   await page.waitForFunction(() => {
     const s = window.__DAI_EDITOR_SLICE__.getState();
     return s.generationBusy === false && s.floorCount === 2;
@@ -342,10 +352,19 @@ try {
     };
   });
 
+  await page.waitForFunction(() => {
+    const events = document.querySelector('#roomEventBar');
+    return events?.classList.contains('is-event-intro') &&
+      !events.hidden && Number(getComputedStyle(events).opacity) > 0;
+  }, null, { timeout: 2_000 });
+  const introPlacementSample = await readRoomEventLayout(page);
+  const introPlacement = evaluateRoomEventLayout(introPlacementSample);
+
   const blockingFeedback = await resolveBlockingEvents(page, {
     captureFirst: true,
   });
-  const treasureFeedback = await visitTreasure(page, firstSnapshot);
+  const treasureVisit = await visitTreasure(page, firstSnapshot);
+  const treasureFeedback = treasureVisit?.feedback ?? null;
 
   await finishFloor(page);
   await page.waitForFunction(
@@ -377,17 +396,11 @@ try {
     roomEventIntroEmphasized:
       roomEventIntro.className.includes('is-event-intro') &&
       roomEventIntro.blockingCount > 0,
-    roomEventIntroPreservesCenter:
-      Number.isFinite(roomEventIntro.eventCenterX) &&
-      Number.isFinite(roomEventIntro.eventCenterY) &&
-      Number.isFinite(roomEventIntro.viewportCenterX) &&
-      Number.isFinite(roomEventIntro.viewportCenterY) &&
-      Math.abs(
-        roomEventIntro.eventCenterX - roomEventIntro.viewportCenterX,
-      ) <= 3 &&
-      Math.abs(
-        roomEventIntro.eventCenterY - roomEventIntro.viewportCenterY,
-      ) <= 3,
+    roomEventIntroPreservesCurrentPlacement:
+      introPlacement.checks.horizontalCentered &&
+      introPlacement.checks.offsetAboveViewportCenter &&
+      introPlacement.checks.insideViewport,
+    treasureStackLeavesVisibleExitPadClear: treasureVisit?.exitClearance?.passed === true,
     blockingResolutionFeedbackVisible:
       Boolean(blockingFeedback) &&
       ['combat', 'trap'].includes(blockingFeedback.kind) &&
@@ -428,6 +441,10 @@ try {
     falseChecks,
     blockerPath,
     roomEventIntro,
+    introPlacementSample,
+    introPlacement,
+    treasureLayout: treasureVisit?.layout ?? null,
+    treasureExitClearance: treasureVisit?.exitClearance ?? null,
     blockingFeedback,
     treasureFeedback,
     floorFeedback,
@@ -449,6 +466,9 @@ try {
       `Event feedback invariant failed: ${falseChecks.join(', ')}`,
     );
   }
+} catch (error) {
+  await captureBrowserFailure({ page, error, outputDir });
+  throw error;
 } finally {
   if (browser) await browser.close();
   vite.kill();

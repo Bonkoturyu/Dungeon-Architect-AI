@@ -1,5 +1,12 @@
 # Sample Prompts
 
+## 現仕様の例と証拠の範囲（2026-10-04）
+
+以下の英語例は引き続き入力例として使用できます。Generator RecommendedはV3、Auto／Manual確認と生成直前の難易度設定が現仕様です。AI Editは11種類のうち1コマンドだけを適用します。現在の実provider確認と異常入力検証の範囲は [PR #74](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/74) に記録し、旧候補の成功を現候補全体の成功へ引き継ぎません。
+
+
+所有者のWindows Brave/Chromiumによる限定live確認で、Generateのcloud Response、AI Editの `move-entity` Responseと画面適用を確認済みです。公開build-infoと対象mainのcommit/source/bundle一致、全公開E2E、全異常入力への合格はこの確認に含みません。根拠は [限定live確認記録](https://github.com/Bonkoturyu/Dungeon-Architect-AI/blob/3196f2bb942bbdfbcddc2481416f24d7196c5ead/docs/testing/LIVE_PROVIDER_OWNER_EVIDENCE_2026-10-04.md) を参照してください。
+
 ## Verified public generation prompt — historical M8
 
 The historical M8 public candidate has end-to-end evidence for:
@@ -14,7 +21,7 @@ Historical verified path:
 
 That historical public run generated a valid five-room dungeon and completed it in four moves.
 
-## DAI-099 refreshed public validation prompt
+## Historical September DAI-099 refreshed public validation prompt
 
 The refreshed candidate uses:
 
@@ -26,7 +33,7 @@ Expected refreshed path:
 
 `DESCRIBE → cloud DesignIntent → deterministic 2-floor DungeonRunSpec → ▶ Test → Room Events / CHOOSE EXIT → Floor 2 → Result`
 
-This prompt becomes **refreshed verified public evidence only after the DAI-099 postdeploy public smoke passes with a matching build fingerprint**.
+当時の受入は matching build fingerprint を必要とする計画でした。旧候補027b0f3の実行記録は [PR #55](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/55) と [PR #56](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/56) に保存されています。現候補の合否はPR #74で別途扱います。
 
 ## Verified public natural-language edit
 
@@ -41,7 +48,7 @@ Historical M8 verified behavior:
 - START remained valid;
 - public `/api/natural-edit` returned HTTP 200.
 
-DAI-099 reuses this same constrained request and requires a fresh HTTP 200 plus the current 2-floor runtime result before final freeze.
+このrequestは現在も対応する例ですが、下記の歴史的move-entity成功だけで現在の11コマンドすべての実provider検証済みとはしません。
 
 ## DesignIntent regression corpus
 

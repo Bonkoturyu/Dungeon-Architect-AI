@@ -2,6 +2,10 @@
 
 Date: 2026-09-23 JST
 
+## 2026-10-04 現行配置に関する注記
+
+以下の中央配置仕様は2026-09-23時点の記録として保持する。現行desktop UIでは、Room Eventsは水平方向の中央を維持し、viewport中央から104px上へ配置する。多数Entityや店の商品一覧が出口パッドを覆わないための現行CSSと非重複検査に合わせるもので、reticleは引き続きviewport中央である。[現在の検査条件と確認範囲](../testing/ROOM_EVENT_PLACEMENT_CHECKS_2026-10-04.md)を参照。今回runtimeの配置変更は行っていない。
+
 ## Purpose
 
 Refine the Play-mode UI hierarchy after DAI-096 owner visual review.

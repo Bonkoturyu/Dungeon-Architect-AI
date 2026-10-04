@@ -2,17 +2,17 @@
 
 ## 結論
 
-現mainの退避点と旧PR整理を記録する。**現状を復元できる状態にした記録であり、最終受け入れPASSや提出完了の宣言ではない。**
+初回mainの退避点と旧PR整理、および後続のWindows r3ローカル統合結果を記録する。**現状を復元できる状態にした記録であり、最終受け入れPASSや提出完了の宣言ではない。**
 
 - 現状退避点: `rollback/pre-submission-2026-10-04` → `8bcce65246663bc16625a0f915ec2f202c63b5e4`
 - 旧候補向けPR #55〜#58: mergeせずclose、元branch・commitは保持
-- 現mainの一回限り最終統合: **FAIL（1 PASS / 1 FAIL / 22 未実行）**
+- 最新のローカル統合: [Windows r3](../testing/WINDOWS_PR75_R3_FINAL_LOCAL_2026-10-04.md)で **24/24段階PASS**。初回main・Windows r1／r2のFAILは対象SHAごとの歴史的実測として保持
 - 公開backendのlive生成＋AI Edit: **所有者Windowsで両方の正常Responseとゲーム画面への適用を確認**（先行生成を含む回数・費用の限界は後述）
 - デモ動画: 確認済み範囲で撮り直しを必要とする実質的差分は見つからず、承認済み150秒版v2を暫定維持
 
 本追記はdocs-onlyの状態記録。application code、fixture、期待値を変更せず、追加の試験・課金API・動画再撮影・公開作業を行うものではない。
 
-## 固定した対象
+## 初回退避時に固定した対象
 
 | 項目 | 値 |
 |---|---|
@@ -53,17 +53,31 @@
 
 DAI-090にも対象の違いが残る。現mainの20件はGenerate中心のcorpusであり、旧 #56のGenerate＋Edit API異常入力20件と同等ではない。旧PRのcloseをもってどちらかを実行済み／不要とせず、現候補に必要な範囲と保存済み証拠を照合する。ここで自動的に移植や再試験を開始する指示にはしない。
 
-## 提出資料・検証定義に残る整合性
+## 初回記録時の提出資料・検証定義
 
 mainにはDAI-073 legal、DAI-074 current tree／history-secret／privacy、DAI-083 metadata、DAI-099 freeze-prepの既存検証があるため、旧PRのscript一式を移植することは前提にしない。
 
 旧 #56 runnerは旧候補と `move-entity` 成功を前提にしているが、現AI Editの契約はより広い許可command、Room geometry／Corridor topologyを扱い、Generateには `includeRoomRequests: true` の経路がある。現候補向けに必要なGenerate＋Edit API境界／異常入力の証拠が不足する場合は、現契約に沿う必要最小限の検証を別途判断する。古いrunnerをそのまま持ち込んだだけで同等性を主張しない。
 
-提出資料と監査定義にも古い状態が残る。[DAI-080監査script](../../scripts/run-dai-080-public-docs-audit.mjs)を読んだところ、`Refreshed final candidate — pending`、未チェックのDAI-099項目、`DAI-099 REFRESH IN PROGRESS`、`49.5-second capture remains historical evidence` などの固定文字列を条件としている。現在の150秒動画や今回の退避点を反映して提出資料を整理する際は、履歴を残しながら実態と監査条件を一緒に整合させる判断が必要になる。
+初回記録時は提出資料と監査定義にも古い状態が残っていた。[当時のDAI-080監査script](https://github.com/Bonkoturyu/Dungeon-Architect-AI/blob/8bcce65246663bc16625a0f915ec2f202c63b5e4/scripts/run-dai-080-public-docs-audit.mjs)は、`Refreshed final candidate — pending`、未チェックのDAI-099項目、`DAI-099 REFRESH IN PROGRESS`、`49.5-second capture remains historical evidence` などの固定文字列を条件としていた。150秒動画や退避点を反映して提出資料を整理する際は、履歴を残しながら実態と監査条件を一緒に整合させる必要があった。
 
-これは静的読取りで確認した文書／検証定義の追従残件であり、今回DAI-080を実行して失敗したという記録ではない。今回の一回限りsuiteではその段階まで到達しておらず、本追記で資料本文や監査scriptを変更していない。
+これは初回の静的読取りで確認した文書／検証定義の追従残件であり、当時DAI-080を実行して失敗したという記録ではない。初回の一回限りsuiteではその段階まで到達していなかった。後続のPR #75では提出資料と監査条件が整合され、下記r3の第21段階は20/20 checks PASS。本docs-only追記後の監査を新たに実行したという意味ではない。
 
-## 現mainの最終統合結果
+Generate / Editの現契約に対するローカルAPI境界検査は、後続の[39-case handler統合検証](../testing/API_BOUNDARY_INTEGRATION_2026-10-04.md)で補完した。r3のNode suiteにも含まれ、hosting 53/53 testsがPASS。これは実handlerとmock transportによる証拠で、公開candidateへの異常入力送信やDAI-090 Finalを実施した証拠には置き換えない。
+
+## 最新のローカル統合結果 — Windows r3
+
+詳細は [Windows r3実測記録](../testing/WINDOWS_PR75_R3_FINAL_LOCAL_2026-10-04.md) と [機械可読結果](../testing/WINDOWS_PR75_R3_FINAL_LOCAL_2026-10-04.json) を参照。
+
+- 実測対象: PR #75 commit `8df3aeb9aeeaf31a228efbec8e901bbc2c7aa531`、tree `53c5490510d9746761e4685d8abcf19b3223fea6`
+- 実行日時: 2026-10-04 20:58:44〜21:02:12 JST。Windows / Google Chrome `153.0.8010.55`
+- 既存24段階runner: **24 PASS / 0 FAIL / 0 NOT_RUN**、終了コード0
+- Node **628/628**、simulation **18/18**、browser **15段階・253 checks**、production build、各監査、syntax／diff checkがPASS
+- metadata／git-head／build commitは対象SHAに一致。実行後statusは `?? artifacts/` のみ。実行前statusは未収録のため、実行前cleanの独立証明はしない
+
+この実測対象SHAと後続のdocs-only記録commitは区別する。公開buildのcommit／source／bundle一致、全公開E2E、主観的音声レビュー、DAI-090 Final、動画capture/review、freeze／rollback作成はr3対象外のまま。既存の限定live成功は後述の別証拠として保持し、r3から推論しない。
+
+## 初回mainの最終統合結果 — 歴史的記録
 
 詳細は[2026-10-04最終統合記録](../testing/FINAL_LOCAL_REGRESSION_2026-10-04.md)と[機械可読結果](../testing/FINAL_LOCAL_REGRESSION_2026-10-04.json)を参照。
 
@@ -115,11 +129,10 @@ mainにはDAI-073 legal、DAI-074 current tree／history-secret／privacy、DAI-
 
 ## 残る判断と作業境界
 
-1. 統合FAILのfixture／現行ルール不整合をどう扱うか。現状のまま最終統合PASSにはしない
+1. 最新ローカル統合はr3の24/24段階PASS。初回main／r1／r2のFAILは保持し、公開E2Eや最終受入全体へPASSを拡張しない
 2. 限定live生成＋AI Editは確認済み。現公開build fingerprintの厳密な照合と、最終受け入れ範囲との対応付けは残る
 3. 保存済み監査・DAI-090証拠が現候補を覆う範囲の突合。旧PR／runner不在を理由に監査全体を未実施扱いにしない
-4. 提出資料とDAI-080の古い状態表記の整合。履歴を残し、今回未実行の監査をPASS扱いにしない
+4. r3のDAI-080は20/20 checks PASS。本docs-only追記は静的整合のみで、後続commitに対する監査の新たな実行PASSを主張しない
 5. repository公開、動画公開、正式提出などの提出手続き。今回のrollback作成やPR closeはこれらの完了を意味しない
 
-上記は残状況の記録であり、追加開発、全suite再実行、動画再撮影、公開操作の一括承認や実行指示ではない。主観的音声レビュー、Windows Chromeの正式受け入れなどについても、別の既存証拠がある部分と今回未実行の部分を分けて判断する。
-
+上記は残状況の記録であり、追加開発、全suite再実行、動画再撮影、公開操作の一括承認や実行指示ではない。主観的音声レビューなどのsuite対象外は、別の既存証拠がある部分とr3で未検証の部分を分けて判断する。Windows Chromeの確認範囲は上記r3のローカル回帰に限定する。

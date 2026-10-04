@@ -24,7 +24,17 @@ EXPLORE + ROOM EVENTS
 RESULT
 ```
 
-The current repository flow above is locally regression-tested. The existing Cloudflare Pages deployment has historical production public-E2E evidence from the earlier M8 candidate; DAI-099 must redeploy and rerun public E2E after the later DAI-085–098 / Play-UI changes before final submission.
+The repository flow has focused local and hosted regression evidence. See [the 2026-10-03 acceptance record](docs/testing/ACCEPTANCE_GAP_2026-10-03.md) for its exact commit and fixture-based scope. Historical M8 / DAI-099 public-E2E evidence is retained separately; it is not a full acceptance claim for the current candidate.
+
+## 提出前の確認状況（2026-10-04）
+
+初回退避点の確認基準は `8bcce65246663bc16625a0f915ec2f202c63b5e4`。`rollback/pre-submission-2026-10-04` はこのcommitを保存する現状退避点であり、最終受入の全項目PASSを意味しません。初回退避と限定live確認の記録は [提出前検証記録 PR #74](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/74)、最新のローカル統合結果は次のr3記録を参照してください。
+
+最新のローカル統合は [Windows r3記録](docs/testing/WINDOWS_PR75_R3_FINAL_LOCAL_2026-10-04.md) の **24/24段階PASS** です。実測対象はPR #75の `8df3aeb9aeeaf31a228efbec8e901bbc2c7aa531`。Node 628/628、browser 15段階・253 checksが成功しました。この実測SHAと後続のdocs-only記録commitは区別します。
+
+所有者のWindows Brave/Chromiumによる限定live確認で、Generateのcloud Response、AI Editの `move-entity` Responseと画面適用を確認済みです。公開build-infoと対象mainのcommit/source/bundle一致、全公開E2E、全異常入力への合格はこの確認に含みません。根拠は [限定live確認記録](https://github.com/Bonkoturyu/Dungeon-Architect-AI/blob/3196f2bb942bbdfbcddc2481416f24d7196c5ead/docs/testing/LIVE_PROVIDER_OWNER_EVIDENCE_2026-10-04.md) を参照してください。
+
+10月3日の受入smokeと過去の公開E2Eは、それぞれの対象commit・fixture／実providerの区別を保持します。公開API異常入力、最終動画・証拠の整合、repository公開と提出は、個別の証拠が揃うまで完了扱いにしません。r3対象外の主観的音声レビュー、公開deployment／全公開E2E、DAI-090 Final、freeze／rollback作成も、このローカルPASSで完了扱いにしません。
 
 ## Judge quick start
 
@@ -48,19 +58,19 @@ Suggested natural-language edit:
 Move the treasure to the room that contains the goal.
 ```
 
-Then confirm `✓ Valid`, open **Play**, choose **▶ Test** (current authored dungeon) or **🎲 Mystery** (fresh Seed that rerolls routes/content without revealing the authored map), resolve any blocking Room Events, navigate with the directional **CHOOSE EXIT** pad until Goal, inspect `✓ CLEARED`, and use **← Edit**. Generator V1 may still produce a similar room layout because its spatial embedding is fixed for a given room count.
+Then confirm `✓ Valid`, open **Play**, choose **▶ Test** (current authored dungeon) or **🎲 Mystery** (fresh Seed that rerolls routes/content without revealing the authored map), resolve any blocking Room Events, navigate with the directional **CHOOSE EXIT** pad until Goal, inspect `✓ CLEARED`, and use **← Edit**. The browser Recommended selection is V3; 11 generator strategies remain selectable, including V1/V2 and BSP.
 
 ## What is production-backed today
 
 | Area | Current status |
 |---|---|
-| Public demo | Historical Cloudflare Pages HTTPS candidate exists; refreshed deployment + public E2E for the current runtime is pending DAI-099 |
+| Public demo | Hosted Cloudflare Pages demo; candidate-specific evidence and remaining acceptance gates are tracked in PR #74 |
 | Renderer | Three.js `0.185.1`, retained by ADR-001; historical benchmark limitations are documented and later production evidence validates the current stack |
 | DungeonSpec | Renderer-independent schema, parser, validation, deterministic generation |
 | Procedural core | Deterministic graph/layout, corridors, Start/Goal, route-choice controls, Seed reproducibility |
 | Natural-language generation | OpenAI Responses cloud path + deterministic fallback → validated DesignIntent → bounded DungeonSpec mapping |
 | Play core | Session snapshot, Fog of War / auto-map, directional exits, Room Events, HP/Level/XP/Gold/equipment, 1–10 floor runs with PlayerState carry, Test/Mystery play, clear/failure Result |
-| Natural-language edit | Live-tested constrained `move-entity` translation through server-side OpenAI path |
+| Natural-language edit | AI Edit V3 supports one validated command per request across 11 Room/Entity/Corridor command types; live and fixture evidence remain distinct |
 | Edit mode | Room select/move/resize/add/remove; corridor add/remove + N/E/S/W endpoint-side editing; entity add/move/remove; Undo/Redo; Start→Goal route check |
 | UI languages | English (default), Japanese, Simplified Chinese, Traditional Chinese, Korean; live switching also available in onboarding |
 | Validation | Critical Play gate with structural/reachability checks |
@@ -76,18 +86,18 @@ See **[Known Limitations](docs/submission/KNOWN_LIMITATIONS.md)**.
 Key boundaries:
 
 - DesignIntent → DungeonSpec generation is intentionally bounded; not every intent axis has a dedicated semantic generation mechanic;
-- the natural-language edit surface currently supports one safe command per request and is constrained to entity relocation;
+- the natural-language edit surface supports one safe command per request across 11 allowed command types; batch transactions, Event editing and arbitrary runtime code remain unsupported;
 - Play perspective and combat-model selection remain pending the frozen PCE-1.0 evaluation;
 - mobile is outside the supported submission acceptance scope;
 - no Safari/Firefox acceptance claim has been made;
 - there are no accounts, persistent project storage, analytics or telemetry;
-- the historical public candidate/video/freeze predate later DAI-085–098 work. DAI-099 refreshed build/deployment/public-E2E/video/audits/freeze is now the active final-candidate task before final compliance/submission.
+- historical public candidates, videos and freezes remain evidence for their recorded commits; the current submission candidate and remaining gates are tracked in PR #74.
 
 ## Sample prompts
 
 See **[Sample Prompts](docs/submission/SAMPLE_PROMPTS.md)**.
 
-The historical M8 public candidate has live E2E evidence for its original one-floor generation prompt and the natural-language edit prompt. The two-floor prompt shown above is the DAI-099 refreshed-candidate validation prompt and is not claimed as refreshed public evidence until the postdeploy fingerprint-matched smoke passes.
+The original one-floor M8 prompt and the September DAI-099 two-floor prompt retain their historical evidence. Current examples and their verification scope are listed in [Sample Prompts](docs/submission/SAMPLE_PROMPTS.md); one successful prompt does not establish all-prompt acceptance.
 
 The repository also retains the frozen ten-case DesignIntent regression corpus at:
 
@@ -99,7 +109,7 @@ The repository also retains the frozen ten-case DesignIntent regression corpus a
 
 例：`標準のダンジョン。room-003に敵3体のモンスターハウス。room-004に罠4個のトラップハウス。room-002に店。`
 
-追加敵・罠は1階合計100体が標準上限。実測に基づく高度設定は250まで。相対位置指定など解釈できない表現は確認が必要です。ブラウザのRecommendedはV3です。V1/V2の明示選択とライブラリ既定V1は維持しています。Start/Goalも通常・ランダム・各特殊種類から選択できます。特殊Goalは敵・罠を全処理した後に「この階をクリア」で進み、店の購入はどの場所でも任意です。現時点の共通レイヤー変更はローカル候補で、公開デモ反映とは別です。
+追加敵・罠は1階合計100体が標準上限。実測に基づく高度設定は250まで。相対位置指定など解釈できない表現は確認が必要です。ブラウザのRecommendedはV3です。V1/V2の明示選択とライブラリ既定V1は維持しています。Start/Goalも通常・ランダム・各特殊種類から選択できます。特殊Goalは敵・罠を全処理した後に「この階をクリア」で進み、店の購入はどの場所でも任意です。共通レイヤーの公開検証範囲は、対象commitを記録した [受入smoke記録](docs/testing/ACCEPTANCE_GAP_2026-10-03.md) とPR #74を参照してください。
 
 難易度は生成ボタンの直前で選択します。「文章に合わせる」は自然文の指定を使い、未指定なら標準です。やさしい／標準／難しいを選ぶと文章より優先し、自動・手動の両方に適用します。確認画面ではランダムの抽選結果を表示せず、明示した種類・Start/Goalだけを編集できます。抽選結果は生成後に確認できます。[難易度・ランダム表示の検証](docs/testing/GENERATION_SETTINGS_2026-10-02.md)を参照してください。
 
@@ -107,11 +117,11 @@ UI・数量差別化は [ユーザーフィードバック対応](docs/testing/U
 
 ## 罠の回避判定
 
-罠は「回避を試みる」1操作で、成功率70%（全難易度共通の暫定値）と失敗時の被害を表示します。成功は無傷、失敗は罠が発動し、どちらも1回で解決済みになります。同じ階Seed・罠IDでは再PlayやFull JSON再Importでも判定が変わりません。内容レイヤーは失敗分の被害を含む攻略経路を実Playで検査し、指定を守って確認できない場合は生成を拒否します。ルール未指定のJSONも現行70%へ正規化し、地形・個数・Seed・IDは保持します。旧内容レイヤー1/2と100%回避の互換分岐は廃止しました。BSPやGenerator V1/V2を含む11の地形生成方式は引き続き利用できます。詳細は[現行ルールへの統一](docs/testing/CURRENT_CONTENT_RULES_2026-10-02.md)と[罠回避検証](docs/testing/TRAP_AVOIDANCE_2026-10-02.md)を参照してください。
+罠は「回避を試みる」1操作で、成功率70%（全難易度共通の暫定値）と失敗時の被害を表示します。成功は無傷、失敗は罠が発動し、どちらも1回で解決済みになります。同じ階Seed・罠IDでは再PlayやFull JSON再Importでも判定が変わりません。内容レイヤーは失敗分の被害を含む攻略経路を実Playで検査し、指定を守って確認できない場合は生成を拒否します。ルール未指定のJSONも現行70%へ正規化し、地形・個数・Seed・IDは保持します。旧内容レイヤー1/2と100%回避の互換分岐は廃止しました。BSPやGenerator V1/V2を含む11の選択可能な生成方式は引き続き利用できます。詳細は[現行ルールへの統一](docs/testing/CURRENT_CONTENT_RULES_2026-10-02.md)と[罠回避検証](docs/testing/TRAP_AVOIDANCE_2026-10-02.md)を参照してください。
 
 ## Generator versions and research
 
-The current production generator is frozen as **Generator Version 1**. Future generation methods are added as Version 2, Version 3, and so on without deleting or silently replacing earlier implementations.
+**Generator Version 1** is retained as a reproducibility baseline. The browser Recommended alias selects **V3**, with **11 generator strategies** available; V1/V2 and BSP remain selectable. V3 shares V2 terrain and adds the common content layer, so eleven selectable strategies are not a claim of eleven independent terrain algorithms.
 
 - [Generator version registry / Version 1 specification](docs/architecture/GENERATOR_VERSIONS.md)
 - [Dungeon generation algorithm research](docs/research/DUNGEON_GENERATION_ALGORITHMS.md)
@@ -124,7 +134,7 @@ The current production generator is frozen as **Generator Version 1**. Future ge
 - `DungeonSpec` is renderer-independent serialized dungeon data.
 - Generator/Core produces deterministic structure and bounded intent-driven entities.
 - Editor mutations go through explicit `EditCommand` operations.
-- `▶ Test` creates a fixed execution snapshot of the current authored dungeon; `🎲 Mystery` uses a fresh Seed so route/content choices can change without exposing the authoring map. Generator V1 can still keep a similar room layout; spatial variability is a future Generator Version concern.
+- `▶ Test` creates a fixed execution snapshot of the current authored dungeon; `🎲 Mystery` uses a fresh Seed so route/content choices can change without exposing the authoring map. The selected generator strategy and its version determine spatial variability; V1 remains available as the fixed-layout baseline.
 - Play Core does not directly mutate authoring state.
 - Three.js consumes the spec/snapshot through a disposable renderer adapter.
 - Cloudflare Pages Functions hold provider credentials server-side.
@@ -218,9 +228,9 @@ Historical DAI-084 rollback point:
 - rollback branch: `rollback/submission-candidate-m8-2026-09-19`;
 - dist manifest SHA-256: `387287bfba2aaad91a7ef4c9d98ebb522e8ce8e1e0768825d39d33d949d8ea6d`.
 
-See [DAI-084 Candidate Freeze / Rollback Point](docs/submission/DAI-084_CANDIDATE_FREEZE.md). A new final freeze will be created after the refreshed public-demo and video gates.
+See [DAI-084 Candidate Freeze / Rollback Point](docs/submission/DAI-084_CANDIDATE_FREEZE.md). The September DAI-099 rollback remains preserved separately. The 2026-10-04 rollback records the current baseline without promoting it to final acceptance.
 
-The previous DAI-082 capture remains historical evidence for the earlier M8 candidate. A refreshed demo video is required under DAI-099 after the current DAI-085–098 runtime is finalized, redeployed, and public-E2E revalidated.
+The M8 49.5-second and September DAI-099 59.9-second videos remain historical evidence. The retained current video candidate is the **150-second v2** described in [the video record](docs/testing/DAI-099_REFRESHED_VIDEO.md). Its existence does not establish public upload or final submission.
 
 The GitHub repository is still private and must be switched to Public before submission.
 

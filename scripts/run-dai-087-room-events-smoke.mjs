@@ -3,6 +3,7 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright-core';
 import { DEFAULT_DESIGN_INTENT } from '../packages/intent/src/design-intent.js';
+import { confirmManualGeneration, normalRoomRequests, captureBrowserFailure } from './browser-smoke-support.mjs';
 
 const chromePath = process.env.CHROME_PATH || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 const port = Number(process.env.DAI_ROOM_EVENTS_PORT || '4193');
@@ -130,11 +131,12 @@ async function moveAlong(page, path) {
 
 const url = `http://127.0.0.1:${port}/apps/editor-slice/index.html`;
 let browser;
+let page;
 
 try {
   await waitForServer(url);
   browser = await chromium.launch({ executablePath: chromePath, headless: false });
-  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 
   const consoleErrors = [];
   const pageErrors = [];
@@ -153,6 +155,7 @@ try {
         ok: true,
         selectedProvider: 'cloud',
         intent: intentPayload(),
+        roomRequests: normalRoomRequests(),
         meta: { provider: 'openai', model: 'test-model', usage: null },
       }),
     });
@@ -166,6 +169,7 @@ try {
 
   await page.fill('#generationPrompt', prompt);
   await page.click('#generateDungeon');
+  await confirmManualGeneration(page);
   await page.waitForFunction(() => {
     const s = window.__DAI_EDITOR_SLICE__.getState();
     return s.generationBusy === false && s.lastGeneration?.roomCount === 7;
@@ -351,6 +355,9 @@ try {
     console.error('DAI-087 failed checks:', falseChecks.join(', '));
     throw new Error(`DAI-087 room-event invariant failed: ${falseChecks.join(', ')}`);
   }
+} catch (error) {
+  await captureBrowserFailure({ page, error, outputDir });
+  throw error;
 } finally {
   if (browser) await browser.close();
   vite.kill();

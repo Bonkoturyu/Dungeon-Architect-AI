@@ -415,7 +415,9 @@ The 7-step gate passed end-to-end:
 - git diff / whitespace check: PASS;
 - final result: `passed: true`, `falseChecks: []`.
 
-Accepted presentation invariants include:
+Accepted presentation invariants include (the following list records the 2026-09-28 candidate):
+
+2026-10-04 note: the current desktop Room Events stack is horizontally centered and offset 104 px above the viewport center to avoid the exit pad. The updated local gates check that offset and measured non-overlap; the historical acceptance below is preserved. See [current placement checks](../testing/ROOM_EVENT_PLACEMENT_CHECKS_2026-10-04.md).
 
 - Room-event intro emphasis without shifting the panel away from the viewport center;
 - blocking Combat/Trap resolution feedback;

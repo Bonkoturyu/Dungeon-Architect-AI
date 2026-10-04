@@ -3,6 +3,8 @@
 Date: 2026-09-23 JST
 Branch: `feat/dai-098-multi-floor-simulation-balance`
 
+2026-10-04追記: 以下は2026-09-23の歴史的受け入れ記録。現行70%罠回避へ移行した後、同じfixtureの3階damage12でsafe方針も死亡し、最終統合の期待値と不整合になった。現在はSeed/ID/失敗rollを維持し、最後の罠だけdamage9へ調整した検証fixtureを使う。runtimeは変更していない。修正理由・生死境界の回帰・今回の検証範囲は[現行ルールへのfixture整合](SIMULATION_FIXTURE_CURRENT_RULES_2026-10-04.md)を参照。
+
 ## Scope
 
 DAI-098 extends the deterministic simulation stack from one DungeonSpec to a complete DungeonRunSpec.

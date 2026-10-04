@@ -1,0 +1,462 @@
+{
+  "schemaVersion": "1.0",
+  "recordDate": "2026-10-04",
+  "title": "Windows PR75 最終ローカル統合テスト記録",
+  "repository": "Bonkoturyu/Dungeon-Architect-AI",
+  "testedSource": {
+    "pullRequest": 75,
+    "commitSha": "169518e62015e9f56e7fccd94835ea6e439a728d",
+    "treeSha": "2e565e7caa07cce501d945b49a61e38492e603b6",
+    "runMetadataHeadMatches": true,
+    "gitHeadFileMatches": true,
+    "buildInfoCommitMatches": true,
+    "repositoryTreeVerification": "PR75 commit/tree and all 593 tracked-file Git blobs verified separately; not a pre-run Windows working-tree snapshot",
+    "sourceFiles": [
+      {
+        "path": "scripts/run-dai-100-final-local-regression.mjs",
+        "gitBlob": "546c96b386e8b098f4a64ca7bf300e064fd8628a",
+        "sha256": "75ab00ca9096ccb0dd2e928843be7e54fe28d398978abbda16919395d1393e3f"
+      },
+      {
+        "path": "scripts/run-owner-ui-review-smoke.mjs",
+        "gitBlob": "97109352a03826d875928391bca692c411f3d8ed",
+        "sha256": "4352d0e00c6682320b58b62c6a522c1666b6ecc990b3a9d0f70f70fab06c2d65"
+      },
+      {
+        "path": "apps/editor-slice/index.html",
+        "gitBlob": "22e0484ca4f612eca570ef348685101f9b3e30bd",
+        "sha256": "7d50a5bbf30b91bf5693aef4f12c688f4043c0abd1bb406388fa66482944b32f"
+      },
+      {
+        "path": "apps/editor-slice/main.js",
+        "gitBlob": "da73d934e4f198a989018fe32afec8f1edd3330d",
+        "sha256": "a2f029108885d00ddf5532ae4ab53684aec7878379fad58e8b0322cd5f90ac35"
+      },
+      {
+        "path": "scripts/run-dai-095-multi-floor-smoke.mjs",
+        "gitBlob": "ae66f64fdc363d1fb2adbdf18abf777a9c246761",
+        "sha256": "ff890954f90d315f7d8580005217f5525cbc6be44a3c61b8ac9defb372487711"
+      }
+    ]
+  },
+  "run": {
+    "label": "dai-100-final-local-pr75",
+    "command": "npm run validate:dai-100-final-local",
+    "startedAt": "2026-10-04T19:59:51.2501193+09:00",
+    "finishedAt": "2026-10-04T20:01:17.8059636+09:00",
+    "timeZone": "Asia/Tokyo",
+    "durationSeconds": 86.556,
+    "exitCode": 1,
+    "passed": false,
+    "recordedRunCount": 1,
+    "rerunForThisRecord": false
+  },
+  "environment": {
+    "os": "Windows",
+    "osVersionEvidence": "Windows NT 10.0; Win64; x64 (browser user agent); exact OS edition/build not captured",
+    "node": "v24.15.0",
+    "npm": "11.12.1",
+    "browser": "Google Chrome",
+    "browserVersion": "153.0.8010.55",
+    "environmentVariableDumpPresent": false,
+    "preRunGitStatusPresent": false,
+    "postRunGitStatus": "?? artifacts/",
+    "trackedChangesReportedAfterRun": false,
+    "cleanPreRunWorkingTreeProven": false
+  },
+  "summary": {
+    "totalStages": 24,
+    "PASS": 4,
+    "FAIL": 1,
+    "NOT_RUN": 19,
+    "failedStage": 5,
+    "failedStep": "Owner UI regression smoke",
+    "all24Passed": false
+  },
+  "stages": [
+    {
+      "stage": 1,
+      "label": "Full Node regression suite",
+      "status": "PASS",
+      "exitCode": 0,
+      "evidence": "console.log",
+      "reason": null
+    },
+    {
+      "stage": 2,
+      "label": "Multi-floor simulation regression",
+      "status": "PASS",
+      "exitCode": 0,
+      "evidence": "console.log",
+      "reason": null
+    },
+    {
+      "stage": 3,
+      "label": "Production hosting build",
+      "status": "PASS",
+      "exitCode": 0,
+      "evidence": "console.log",
+      "reason": null
+    },
+    {
+      "stage": 4,
+      "label": "Browser performance regression",
+      "status": "PASS",
+      "exitCode": 0,
+      "evidence": "console.log",
+      "reason": null
+    },
+    {
+      "stage": 5,
+      "label": "Owner UI regression smoke",
+      "status": "FAIL",
+      "exitCode": 1,
+      "evidence": "console.log",
+      "reason": "page.waitForFunction timeout after 30000 ms"
+    },
+    {
+      "stage": 6,
+      "label": "Room Event gameplay regression",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "fail-fast after stage 5"
+    },
+    {
+      "stage": 7,
+      "label": "Multi-floor browser regression",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "fail-fast after stage 5"
+    },
+    {
+      "stage": 8,
+      "label": "Programmatic character regression",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "fail-fast after stage 5"
+    },
+    {
+      "stage": 9,
+      "label": "Programmatic Audio V2 regression",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "fail-fast after stage 5"
+    },
+    {
+      "stage": 10,
+      "label": "Motion feedback regression",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "fail-fast after stage 5"
+    },
+    {
+      "stage": 11,
+      "label": "Event feedback regression",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "fail-fast after stage 5"
+    },
+    {
+      "stage": 12,
+      "label": "Result / camera-focus regression",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "fail-fast after stage 5"
+    },
+    {
+      "stage": 13,
+      "label": "DesignIntent atmosphere regression",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "fail-fast after stage 5"
+    },
+    {
+      "stage": 14,
+      "label": "AI Edit V3 structural regression",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "fail-fast after stage 5"
+    },
+    {
+      "stage": 15,
+      "label": "Reactive Audio V2 regression",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "fail-fast after stage 5"
+    },
+    {
+      "stage": 16,
+      "label": "JSON Export regression",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "fail-fast after stage 5"
+    },
+    {
+      "stage": 17,
+      "label": "JSON Import / round-trip regression",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "fail-fast after stage 5"
+    },
+    {
+      "stage": 18,
+      "label": "Ten-strategy Generator selector regression",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "fail-fast after stage 5"
+    },
+    {
+      "stage": 19,
+      "label": "Legal / provenance audit",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "fail-fast after stage 5"
+    },
+    {
+      "stage": 20,
+      "label": "Secret / privacy audit",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "fail-fast after stage 5"
+    },
+    {
+      "stage": 21,
+      "label": "Public docs truthfulness audit",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "fail-fast after stage 5"
+    },
+    {
+      "stage": 22,
+      "label": "Submission metadata audit",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "fail-fast after stage 5"
+    },
+    {
+      "stage": 23,
+      "label": "Syntax validation",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "fail-fast after stage 5"
+    },
+    {
+      "stage": 24,
+      "label": "Git whitespace / error-marker check",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "evidence": null,
+      "reason": "fail-fast after stage 5"
+    }
+  ],
+  "nodeTests": {
+    "groups": 24,
+    "tests": 606,
+    "pass": 606,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "source": "console.log",
+    "note": "24 npm test groups are distinct from the 24 final-local stages"
+  },
+  "simulation": {
+    "passed": true,
+    "pass": 18,
+    "fail": 0,
+    "checks": {
+      "safeRunClearsAllFloors": true,
+      "treasureRunClearsAllFloors": true,
+      "riskRunFailsOnFinalFloor": true,
+      "playerStateCarryIsExact": true,
+      "hpAttritionIsObserved": true,
+      "safeSurvivesASeededAvoidanceFailure": true,
+      "riskAndSafePreserveTheirPolicyChoices": true,
+      "treasureRecoveryGivesSurvivalMargin": true,
+      "progressionCarriesAcrossFloors": true,
+      "equipmentCarryIsObservable": true,
+      "aggregateCapturesPolicyOutcomes": true,
+      "finalFloorIsBottleneck": true,
+      "authoredPressureIncreasesByFloor": true,
+      "observedPressureSignalsAreAvailable": true,
+      "runIntentFitCoversEveryFloor": true,
+      "difficultyProxyRemainsDescriptive": true,
+      "repeatedRunIsDeterministic": true,
+      "authoringRunSpecUnchanged": true
+    },
+    "source": "evidence/artifacts/dai-098/dai-098-multi-floor-simulation.json"
+  },
+  "browserPerformance": {
+    "passed": true,
+    "pass": 12,
+    "fail": 0,
+    "checks": {
+      "editorClientReadyWithinBudget": true,
+      "onboardingClientReadyWithinBudget": true,
+      "editorValidAndStartEligible": true,
+      "cadenceFrameCountExpected": true,
+      "cadenceCompletesWithinBudget": true,
+      "cadenceP95WithinBudget": true,
+      "localInteractionsWithinBudget": true,
+      "reachesExpectedResult": true,
+      "returnsToValidEditMode": true,
+      "domBounded": true,
+      "canvasBackingBounded": true,
+      "browserErrorsAbsent": true
+    },
+    "url": "http://127.0.0.1:4184/apps/editor-slice/index.html",
+    "generatedAt": "2026-10-04T11:00:40.338Z",
+    "maxInteractionMs": 59.9,
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "httpErrors": [],
+    "source": "evidence/artifacts/browser-performance/dai-071-browser-performance.json"
+  },
+  "failure": {
+    "stage": 5,
+    "type": "TimeoutError",
+    "message": "page.waitForFunction: Timeout 30000ms exceeded.",
+    "sourceFile": "scripts/run-owner-ui-review-smoke.mjs",
+    "line": 284,
+    "timeoutMs": 30000,
+    "waitPredicate": "state.generationBusy === false && state.lastGeneration?.roomCount === 5",
+    "ownerUiResultJsonPresent": false,
+    "ownerUiScreenshotsPresentInBundle": false,
+    "sourceDefaultLocalUrl": "http://127.0.0.1:4194/apps/editor-slice/index.html",
+    "portOverrideVariable": "DAI_OWNER_UI_PORT",
+    "actualUrlIndependentlyRecorded": false
+  },
+  "staticAnalysis": {
+    "classification": "source-based likely explanation; not a reproduced run or observed failed screenshot",
+    "manualDefault": {
+      "path": "apps/editor-slice/index.html",
+      "line": 2379
+    },
+    "awaitsRoomReview": {
+      "path": "apps/editor-slice/main.js",
+      "line": 3119
+    },
+    "harnessClicksGenerateWithoutSubmittingReview": {
+      "path": "scripts/run-owner-ui-review-smoke.mjs",
+      "clickLine": 283,
+      "waitLine": 284
+    },
+    "conclusion": "Manual mode awaits room-plan review, but the old harness immediately waits for generation completion without submitting that review. This is consistent with the recorded timeout; the actual failed UI state is not available.",
+    "additionalUnreachedIssue": "Old localization checks expect Version 2 — Recommended and its translations. Final evaluation at lines 1039/1048 was not reached; do not count this as an observed second failure.",
+    "daiSmokeUrl": {
+      "firstRelevantLaterStage": 7,
+      "sourceFile": "scripts/run-dai-095-multi-floor-smoke.mjs",
+      "sourceLines": [
+        18,
+        179
+      ],
+      "reached": false,
+      "environmentValueKnown": false,
+      "note": "Stage 7 supports DAI_SMOKE_URL. Its configured value cannot be established without an environment dump; this run stopped at stage 5."
+    }
+  },
+  "build": {
+    "passed": true,
+    "commitSha": "169518e62015e9f56e7fccd94835ea6e439a728d",
+    "commitSource": "git",
+    "runtimeSourceSha256": "a2097e3c943aeb5899d0e901ae78ede86705ce80321b33152c7ccec6b08c0b5e",
+    "runtimeBundleSha256": "9aaa00edfb68cb378f9f0e44d948c4de48341b6486ef42668db91330032331c8",
+    "generatedAt": "2026-10-04T11:00:31.270Z",
+    "source": "console.log",
+    "distManifestOrBundleIncluded": false,
+    "comparison": {
+      "priorRecord": "docs/testing/REMEDIATION_FINAL_LOCAL_2026-10-04.json",
+      "priorRuntimeSourceSha256": "a2097e3c943aeb5899d0e901ae78ede86705ce80321b33152c7ccec6b08c0b5e",
+      "priorRuntimeBundleSha256": "bf3611d6a8e92c5a27962b4892fe3146d9495a60bdd8a715839e49a61c20c123",
+      "runtimeSourceMatches": true,
+      "runtimeBundleMatches": false,
+      "reasonForBundleDifference": "UNKNOWN",
+      "publicDeploymentIdentityProven": false
+    }
+  },
+  "suiteExcludes": [
+    "owner audio listening review",
+    "public deployment smoke",
+    "live-provider semantic verification",
+    "DAI-090 Final",
+    "final video capture/review",
+    "freeze/rollback creation"
+  ],
+  "evidence": {
+    "archive": {
+      "name": "dai-100-final-local-pr75-20261004-195951.zip",
+      "sha256": "232173371d17b5193f0d13c846af2cc0dad126ef257538fea98bb0fd814786ec",
+      "libraryFileId": "libfile_8794290d4f148191af25015e8df5fc93v0"
+    },
+    "standaloneConsoleLog": {
+      "name": "console.log",
+      "sha256": "66bc3b2742b5f644ec141b487d49304088ffcd4711cfab7388f5ba2fccd53028",
+      "libraryFileId": "libfile_50823d43062c819181a59dca5c430556v0",
+      "bytesEqualToArchiveEntry": true
+    },
+    "archiveFiles": [
+      {
+        "path": "console.log",
+        "bytes": 248528,
+        "sha256": "66bc3b2742b5f644ec141b487d49304088ffcd4711cfab7388f5ba2fccd53028"
+      },
+      {
+        "path": "evidence/artifacts/browser-performance/dai-071-browser-performance.json",
+        "bytes": 9761,
+        "sha256": "f48cd09c6c3796792ec60d056b355b1c6d441957d0352330b2643fe3da0a6d76"
+      },
+      {
+        "path": "evidence/artifacts/dai-098/dai-098-multi-floor-simulation.json",
+        "bytes": 170459,
+        "sha256": "01803bee06a613b7e6442d045f1edf94b24ff439547c79144122aeef2cd9461b"
+      },
+      {
+        "path": "git-head.txt",
+        "bytes": 82,
+        "sha256": "8535d1ff5b6a76a984c5b66dcb9589b5f6643b8a48fc504d468949de87537619"
+      },
+      {
+        "path": "git-status.txt",
+        "bytes": 18,
+        "sha256": "bf15871b62a49ff4caa14ae893ca0c567a352b0a48f621127b0d6b06c1577c4c"
+      },
+      {
+        "path": "run-metadata.json",
+        "bytes": 730,
+        "sha256": "78990093f6ee70ad22df9e35bc9a569026b48bcd25bc5cea4c868c217ce22a4c"
+      }
+    ],
+    "missing": [
+      "pre-run git status",
+      "environment variable dump",
+      "Owner UI result JSON",
+      "Owner UI failure screenshot",
+      "dist manifest and built bundle"
+    ]
+  },
+  "recordingScope": {
+    "repositoryCodeChanged": false,
+    "testsRerun": false,
+    "newExternalApiCalls": false,
+    "note": "This is a docs-only record of supplied Windows evidence. These flags describe preparation of this record, not independently audited activity in the Windows process."
+  }
+}

@@ -92,3 +92,12 @@ GitHub Issues are not created unless explicitly authorized.
 
 ## M9 — Final submission
 DAI-090 unexpected prompts; DAI-091 final compliance; DAI-092 submit.
+
+
+## 提出前の現状固定・残件（2026-10-04）
+
+- 基準: `8bcce65246663bc16625a0f915ec2f202c63b5e4`、退避点 `rollback/pre-submission-2026-10-04`。最終受入PASSとは区別する
+- 旧Draft #55–58は旧候補用としてcloseし、元branch・SHA・過去証拠を保持。未mergeを「全内容移植済み」とは扱わない
+- 統合回帰、現仕様の提出資料／資料監査、Generate・Edit異常入力の残件を確認中。最新版の合否と限界は [PR #74](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/74) に集約
+- 150秒v2の動画候補を維持。実際のrepository Public化、最終compliance／追加提出物／DAI-092提出は別途の完了証拠を要する
+- 上記以前のDAI-080/082/090/091/099等の記述は、その時点の計画・受入の履歴。現candidateの全ゲートを上書きして合格扱いにしない

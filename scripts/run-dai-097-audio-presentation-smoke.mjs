@@ -3,6 +3,7 @@ import path from "node:path";
 import { spawn } from "node:child_process";
 import { chromium } from "playwright-core";
 import { DEFAULT_DESIGN_INTENT } from "../packages/intent/src/design-intent.js";
+import { confirmManualGeneration, normalRoomRequests, captureBrowserFailure } from "./browser-smoke-support.mjs";
 
 const chromePath = process.env.CHROME_PATH || "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
 const port = Number(process.env.DAI_AUDIO_PORT || "4198");
@@ -149,11 +150,12 @@ function generatedIntent() {
 }
 
 let browser;
+let page;
 
 try {
   await waitForServer();
   browser = await chromium.launch({ executablePath: chromePath, headless: false });
-  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 
   const consoleErrors = [];
   const pageErrors = [];
@@ -184,6 +186,7 @@ try {
         ok: true,
         selectedProvider: "cloud",
         intent: generatedIntent(),
+        roomRequests: normalRoomRequests(),
         meta: { provider: "openai", model: "test-model", usage: null },
       }),
     });
@@ -264,6 +267,7 @@ try {
   await page.fill("#generationPrompt", "Create a two-floor audio acceptance dungeon.");
   await page.fill("#floorCount", "2");
   await page.click("#generateDungeon");
+  await confirmManualGeneration(page);
   await page.waitForFunction(() => {
     const s = window.__DAI_EDITOR_SLICE__.getState();
     return s.generationBusy === false && s.floorCount === 2 && s.lastGeneration?.floorCount === 2;
@@ -427,6 +431,9 @@ try {
   if (!evidence.passed) {
     throw new Error(`DAI-097 audio invariant failed: ${falseChecks.join(", ")}`);
   }
+} catch (error) {
+  await captureBrowserFailure({ page, error, outputDir });
+  throw error;
 } finally {
   if (browser) await browser.close();
   vite.kill();

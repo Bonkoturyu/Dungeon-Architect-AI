@@ -64,8 +64,8 @@ test('run metrics expose carry-aware progression and whole-run totals', () => {
   assert.ok(metrics.final.level >= 2);
   assert.ok(metrics.final.gold > 0);
 
-  const expectedDamageBudgets = [7, 12, 17];
-  const expectedDamagePerRoom = [2.333333, 4, 5.666667];
+  const expectedDamageBudgets = [7, 12, 14];
+  const expectedDamagePerRoom = [2.333333, 4, 4.666667];
 
   for (const [index, floor] of metrics.floors.entries()) {
     assert.equal(floor.authored.roomCount, 3);
@@ -92,14 +92,14 @@ test('aggregate run metrics identify reach loss and the first bottleneck floor',
   );
 
   assert.equal(aggregate.runCount, 3);
-  assert.equal(aggregate.successCount, 1);
-  assert.equal(aggregate.failureCount, 2);
-  assert.equal(aggregate.successRate, 0.333333);
-  assert.equal(aggregate.failureRate, 0.666667);
+  assert.equal(aggregate.successCount, 2);
+  assert.equal(aggregate.failureCount, 1);
+  assert.equal(aggregate.successRate, 0.666667);
+  assert.equal(aggregate.failureRate, 0.333333);
   assert.deepEqual(aggregate.failureFloorCounts, {
     '0': 0,
     '1': 0,
-    '2': 2,
+    '2': 1,
   });
 
   assert.equal(aggregate.floors[0].reachedCount, 3);
@@ -110,15 +110,15 @@ test('aggregate run metrics identify reach loss and the first bottleneck floor',
   assert.equal(aggregate.floors[1].clearRateOverall, 1);
 
   assert.equal(aggregate.floors[2].reachedCount, 3);
-  assert.equal(aggregate.floors[2].clearedCount, 1);
+  assert.equal(aggregate.floors[2].clearedCount, 2);
   assert.equal(aggregate.floors[2].reachRate, 1);
-  assert.equal(aggregate.floors[2].clearRateOverall, 0.333333);
+  assert.equal(aggregate.floors[2].clearRateOverall, 0.666667);
 
   assert.equal(aggregate.progressionSignals.bottleneckFloorIndex, 2);
-  assert.equal(aggregate.progressionSignals.bottleneckClearRate, 0.333333);
+  assert.equal(aggregate.progressionSignals.bottleneckClearRate, 0.666667);
   assert.equal(
     aggregate.progressionSignals.authoredHazardDamageBudgetPerRoomDeltaPerFloor,
-    1.666667,
+    1.166667,
   );
   assert.ok(
     Number.isFinite(
@@ -134,11 +134,18 @@ test('aggregate run metrics identify reach loss and the first bottleneck floor',
   const riskMetrics = aggregate.runs.find((run) => run.policyId === 'risk-run');
 
   assert.equal(safeMetrics.totals.lootCollected, 0);
-  assert.equal(safeMetrics.failureFloorIndex, 2);
+  assert.equal(safeMetrics.success, true);
+  assert.equal(safeMetrics.failureFloorIndex, null);
   assert.equal(safeMetrics.totals.trapsTriggered, 1);
+  assert.equal(safeMetrics.totals.damageTaken, 21);
+  assert.equal(safeMetrics.final.hp, 1);
   assert.equal(treasureMetrics.totals.lootCollected, 3);
+  assert.ok(treasureMetrics.totals.healingReceived > 0);
+  assert.ok(treasureMetrics.final.hp > safeMetrics.final.hp);
   assert.equal(riskMetrics.failureFloorIndex, 2);
   assert.equal(riskMetrics.floorsReached, 3);
+  assert.equal(riskMetrics.totals.damageTaken, 22);
+  assert.equal(riskMetrics.final.hp, 0);
 });
 
 test('run-level DesignIntent fit reuses floor evidence without scoring duration or difficulty proxy', () => {
