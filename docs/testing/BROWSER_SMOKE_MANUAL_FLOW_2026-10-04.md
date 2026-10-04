@@ -4,7 +4,7 @@
 
 基準はPR #75の `169518e62015e9f56e7fccd94835ea6e439a728d`、tree `2e565e7caa07cce501d945b49a61e38492e603b6`。593 tracked filesのGit blob/treeを照合した作業コピーで、**harness・fixture応答・回帰テスト・文書だけ**を更新した。runtime、依存関係、罠の確率やダメージ、生成方式本体は変更していない。
 
-[Windowsでの最終統合](WINDOWS_PR75_FINAL_LOCAL_2026-10-04.md)は4 PASS / 1 FAIL / 19 NOT_RUNのまま保持する。本変更のfocused検証は成功したが、変更後のWindows browser smokeや24段階全体のPASSはまだ成立していない。
+[Windowsでの最終統合](WINDOWS_PR75_FINAL_LOCAL_2026-10-04.md)は4 PASS / 1 FAIL / 19 NOT_RUNのまま保持する。本変更時点ではfocused検証のみだった。後続の [Windows r3](WINDOWS_PR75_R3_FINAL_LOCAL_2026-10-04.md) では `8df3aeb9aeeaf31a228efbec8e901bbc2c7aa531` に対し、browser 15段階・253 checksを含む24/24段階がPASSした。過去の実測結果とr3は別記録として区別する。
 
 ## 変更理由と範囲
 
@@ -79,8 +79,8 @@ Room Eventsでは罠の回避失敗も観測し、その実ダメージを含め
 
 証拠ファイル `fixture-generation-replay.json` SHA-256: `37a65eed922cd8e2cae1f757ce958201846a9cfe1757d927b5bd9726efcb77c5`。実行時刻は `2026-10-04T11:18:00.229Z`。完全な入力値・各階のwitness・再生actionを保存している。
 
-## 未検証・次の確認
+## 当時の未検証範囲と後続確認
 
 クラウド環境では前回Chromium起動がsandbox制約で停止したため、ブラウザの再試行や制限回避を行っていない。今回のNode focused成功は、実DOM、レイアウト、animationの時間条件、Mysteryのランダム地形を実ブラウザで確認したことを意味しない。
 
-修正を含むcommitを固定したWindows Google Chromeで、既存の24段階runnerを1回実行し、ログとZIPで結果を確認する必要がある。公開deployment、live-provider、動画や最終提出の完了をこの修正から推定しない。
+後続のWindows Google Chromeによる既存24段階runnerの実測は [r3記録](WINDOWS_PR75_R3_FINAL_LOCAL_2026-10-04.md) に分離した。公開deployment、live-provider、動画や最終提出の完了は、修正やr3のローカルPASSから推定しない。

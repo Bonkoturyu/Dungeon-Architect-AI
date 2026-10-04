@@ -28,11 +28,13 @@ The repository flow has focused local and hosted regression evidence. See [the 2
 
 ## 提出前の確認状況（2026-10-04）
 
-確認基準は `8bcce65246663bc16625a0f915ec2f202c63b5e4`。`rollback/pre-submission-2026-10-04` はこのcommitを保存する現状退避点であり、最終受入の全項目PASSを意味しません。最新の確認結果・未完了項目は [提出前検証記録 PR #74](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/74) を参照してください。
+初回退避点の確認基準は `8bcce65246663bc16625a0f915ec2f202c63b5e4`。`rollback/pre-submission-2026-10-04` はこのcommitを保存する現状退避点であり、最終受入の全項目PASSを意味しません。初回退避と限定live確認の記録は [提出前検証記録 PR #74](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/74)、最新のローカル統合結果は次のr3記録を参照してください。
+
+最新のローカル統合は [Windows r3記録](docs/testing/WINDOWS_PR75_R3_FINAL_LOCAL_2026-10-04.md) の **24/24段階PASS** です。実測対象はPR #75の `8df3aeb9aeeaf31a228efbec8e901bbc2c7aa531`。Node 628/628、browser 15段階・253 checksが成功しました。この実測SHAと後続のdocs-only記録commitは区別します。
 
 所有者のWindows Brave/Chromiumによる限定live確認で、Generateのcloud Response、AI Editの `move-entity` Responseと画面適用を確認済みです。公開build-infoと対象mainのcommit/source/bundle一致、全公開E2E、全異常入力への合格はこの確認に含みません。根拠は [限定live確認記録](https://github.com/Bonkoturyu/Dungeon-Architect-AI/blob/3196f2bb942bbdfbcddc2481416f24d7196c5ead/docs/testing/LIVE_PROVIDER_OWNER_EVIDENCE_2026-10-04.md) を参照してください。
 
-10月3日の受入smokeと過去の公開E2Eは、それぞれの対象commit・fixture／実providerの区別を保持します。全体suite、公開API異常入力、最終動画・証拠の整合、repository公開と提出は、個別の証拠が揃うまで完了扱いにしません。
+10月3日の受入smokeと過去の公開E2Eは、それぞれの対象commit・fixture／実providerの区別を保持します。公開API異常入力、最終動画・証拠の整合、repository公開と提出は、個別の証拠が揃うまで完了扱いにしません。r3対象外の主観的音声レビュー、公開deployment／全公開E2E、DAI-090 Final、freeze／rollback作成も、このローカルPASSで完了扱いにしません。
 
 ## Judge quick start
 

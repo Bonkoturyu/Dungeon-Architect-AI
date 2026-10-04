@@ -1,0 +1,1008 @@
+{
+  "schemaVersion": "1.0",
+  "recordDate": "2026-10-04",
+  "title": "Windows PR75 r3 最終ローカル統合テスト記録",
+  "repository": "Bonkoturyu/Dungeon-Architect-AI",
+  "testedSource": {
+    "pullRequest": 75,
+    "commitSha": "8df3aeb9aeeaf31a228efbec8e901bbc2c7aa531",
+    "treeSha": "53c5490510d9746761e4685d8abcf19b3223fea6",
+    "commitUrl": "https://github.com/Bonkoturyu/Dungeon-Architect-AI/commit/8df3aeb9aeeaf31a228efbec8e901bbc2c7aa531",
+    "headMatchesRunMetadataGitHeadAndBuild": true,
+    "sourceSnapshotFilesVerified": 603,
+    "sourceSnapshotMismatchCount": 0,
+    "sourceFiles": [
+      {
+        "path": "scripts/run-logged.ps1",
+        "sha256": "0ed32b656948c0a2691cadf3934aeee7fc7ce7b915c6128fe72303cdcab644e9",
+        "gitBlob": "a03d7077418b8ad0f744ba22f9abe7031149a4bd"
+      },
+      {
+        "path": "scripts/run-dai-100-final-local-regression.mjs",
+        "sha256": "75ab00ca9096ccb0dd2e928843be7e54fe28d398978abbda16919395d1393e3f",
+        "gitBlob": "546c96b386e8b098f4a64ca7bf300e064fd8628a"
+      },
+      {
+        "path": "scripts/run-owner-ui-review-smoke.mjs",
+        "sha256": "4534edf690291ea225ed1be684f6d295a84382db036d383f94b6e7fa5574756f",
+        "gitBlob": "8c1741ae4924eff7c6ba2c9b66d2a044dafe23f8"
+      },
+      {
+        "path": "scripts/run-dai-100-event-feedback-smoke.mjs",
+        "sha256": "53540d062cfd505b62c9665eabcd63ff6efa2f4d1b30da7aa6da77f1f0d693f7",
+        "gitBlob": "e7dad445a96fe1ad4d35ba18df351456dead6979"
+      },
+      {
+        "path": "scripts/room-event-layout-checks.mjs",
+        "sha256": "bc167c2a1ed1d3582a5675b83fa1b9827a172a34f97eb528d7e0396e8856990e",
+        "gitBlob": "cf33299ff2e53da081a272f8117887876d419111"
+      },
+      {
+        "path": "scripts/browser-smoke-support.mjs",
+        "sha256": "fa582fe7b80ea03d7bb7cf4bcfb73d1b39321a369b5285cc00623220ed0b74bc",
+        "gitBlob": "55a682833e145508fa41f5c2a508d74fc4e44f10"
+      },
+      {
+        "path": "scripts/run-dai-095-multi-floor-smoke.mjs",
+        "sha256": "ff890954f90d315f7d8580005217f5525cbc6be44a3c61b8ac9defb372487711",
+        "gitBlob": "ae66f64fdc363d1fb2adbdf18abf777a9c246761"
+      },
+      {
+        "path": "scripts/run-dai-074-secret-privacy-audit.mjs",
+        "sha256": "69e48c3ca75a306470bfeabbda50844b30ddb4824a6dab32d3101e8f7ef84d6d",
+        "gitBlob": "f77ba09a652163beeb605110f72ffdfb82642962"
+      },
+      {
+        "path": "apps/editor-slice/index.html",
+        "sha256": "7d50a5bbf30b91bf5693aef4f12c688f4043c0abd1bb406388fa66482944b32f",
+        "gitBlob": "22e0484ca4f612eca570ef348685101f9b3e30bd"
+      }
+    ],
+    "windowsPreRunSourceBytesIndependentlyVerified": false
+  },
+  "run": {
+    "schemaVersion": "1.0",
+    "label": "dai-100-final-local-pr75-r3",
+    "npmScript": "validate:dai-100-final-local",
+    "startedAt": "2026-10-04T20:58:44.5778340+09:00",
+    "finishedAt": "2026-10-04T21:02:12.1168907+09:00",
+    "durationSeconds": 207.539,
+    "exitCode": 0,
+    "passed": true,
+    "branch": "HEAD",
+    "head": "8df3aeb9aeeaf31a228efbec8e901bbc2c7aa531",
+    "shortHead": "8df3aeb",
+    "node": "v24.15.0",
+    "npm": "11.12.1",
+    "consoleLog": "console.log",
+    "evidenceFileCount": 20,
+    "evidenceExtensions": [
+      ".json",
+      ".log",
+      ".txt"
+    ],
+    "command": "npm run validate:dai-100-final-local",
+    "recordedRunCount": 1,
+    "rerunForThisRecord": false,
+    "timeZone": "Asia/Tokyo"
+  },
+  "environment": {
+    "os": "Windows",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+    "osExactEditionBuildRecorded": false,
+    "browser": "Google Chrome",
+    "browserVersion": "153.0.8010.55",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "postRunGitStatus": "?? artifacts/",
+    "trackedChangesReportedAfterRun": false,
+    "preRunGitStatusPresent": false,
+    "environmentVariableDumpPresent": false,
+    "cleanPreRunWorkingTreeProven": false
+  },
+  "summary": {
+    "totalStages": 24,
+    "PASS": 24,
+    "FAIL": 0,
+    "NOT_RUN": 0,
+    "all24Passed": true,
+    "artifactTopLevelChecksPassed": 331,
+    "browserStages": 15,
+    "browserChecksPassed": 253,
+    "browserErrorArraysAllEmpty": true
+  },
+  "stages": [
+    {
+      "stage": 1,
+      "label": "Full Node regression suite",
+      "status": "PASS",
+      "exitCode": 0,
+      "error": null,
+      "evidence": "console.log"
+    },
+    {
+      "stage": 2,
+      "label": "Multi-floor simulation regression",
+      "status": "PASS",
+      "exitCode": 0,
+      "error": null,
+      "evidence": "evidence/artifacts/dai-098/dai-098-multi-floor-simulation.json",
+      "checks": {
+        "safeRunClearsAllFloors": true,
+        "treasureRunClearsAllFloors": true,
+        "riskRunFailsOnFinalFloor": true,
+        "playerStateCarryIsExact": true,
+        "hpAttritionIsObserved": true,
+        "safeSurvivesASeededAvoidanceFailure": true,
+        "riskAndSafePreserveTheirPolicyChoices": true,
+        "treasureRecoveryGivesSurvivalMargin": true,
+        "progressionCarriesAcrossFloors": true,
+        "equipmentCarryIsObservable": true,
+        "aggregateCapturesPolicyOutcomes": true,
+        "finalFloorIsBottleneck": true,
+        "authoredPressureIncreasesByFloor": true,
+        "observedPressureSignalsAreAvailable": true,
+        "runIntentFitCoversEveryFloor": true,
+        "difficultyProxyRemainsDescriptive": true,
+        "repeatedRunIsDeterministic": true,
+        "authoringRunSpecUnchanged": true
+      },
+      "checkCount": 18,
+      "generatedAt": "2026-10-04T11:59:10.422Z"
+    },
+    {
+      "stage": 3,
+      "label": "Production hosting build",
+      "status": "PASS",
+      "exitCode": 0,
+      "error": null,
+      "evidence": "console.log"
+    },
+    {
+      "stage": 4,
+      "label": "Browser performance regression",
+      "status": "PASS",
+      "exitCode": 0,
+      "error": null,
+      "evidence": "evidence/artifacts/browser-performance/dai-071-browser-performance.json",
+      "checks": {
+        "editorClientReadyWithinBudget": true,
+        "onboardingClientReadyWithinBudget": true,
+        "editorValidAndStartEligible": true,
+        "cadenceFrameCountExpected": true,
+        "cadenceCompletesWithinBudget": true,
+        "cadenceP95WithinBudget": true,
+        "localInteractionsWithinBudget": true,
+        "reachesExpectedResult": true,
+        "returnsToValidEditMode": true,
+        "domBounded": true,
+        "canvasBackingBounded": true,
+        "browserErrorsAbsent": true
+      },
+      "checkCount": 12,
+      "generatedAt": "2026-10-04T11:59:32.937Z"
+    },
+    {
+      "stage": 5,
+      "label": "Owner UI regression smoke",
+      "status": "PASS",
+      "exitCode": 0,
+      "error": null,
+      "evidence": "evidence/artifacts/owner-ui-review/owner-ui-review.json",
+      "checks": {
+        "manualGenerationConfirmed": true,
+        "recommendedV3AndLegacyVersionsRemain": true,
+        "englishIsDefaultLanguage": true,
+        "allFiveLanguagesSwitchLive": true,
+        "compactLanguageCycleControls": true,
+        "roomDirectionSymbolsConsistent": true,
+        "sidebarHierarchyMatchesAiFirstWorkflow": true,
+        "controlsAndTypographyUseReadableScale": true,
+        "editorSidebarHasNoHorizontalOverflow": true,
+        "rightMouseDragOrbitsCamera": true,
+        "leftMouseDragPansCamera": true,
+        "mouseWheelZoomChangesDistance": true,
+        "roomSelectionDoesNotRecenterCamera": true,
+        "touchingConnectedRoomsUseOuterShell": true,
+        "promptRemainsVisibleAfterGenerate": true,
+        "promptHistoryRetainsFullPrompt": true,
+        "generatedLayoutConcealed": true,
+        "concealedGoalCheckDoesNotRevealRoute": true,
+        "mysteryStartsDirectlyWithoutEditReveal": true,
+        "mysteryReturnAdoptsPlayedSnapshot": true,
+        "roomListMarksStartAndGoal": true,
+        "goalCheckIsTopLevelCard": true,
+        "ownerGoalUpwardMoveIsRenderable": true,
+        "roomSelectionAutoSwitchesInspector": true,
+        "anyRoomCanBeResized": true,
+        "roomResizeStepperWorks": true,
+        "unsafeRoomResizeRejected": true,
+        "leftwardRoomMoveNotBlockedByCorridorRouting": true,
+        "downwardRoomMoveNotBlockedByCorridorRouting": true,
+        "wasdMovesSelectedRoom": true,
+        "roomAddRemoveWorks": true,
+        "noSelectionShowsCenteredRoomAdd": true,
+        "centeredRoomAddCreatesAndSelectsIsolatedRoom": true,
+        "unconnectedRoomCanBeDraggedFreely": true,
+        "directCorridorDragPreviewMatchesFinalRouting": true,
+        "directCorridorDragAddRemoveWorks": true,
+        "corridorSourceSideAndAutoTargetWork": true,
+        "corridorDraftReleaseWithoutRoomCancels": true,
+        "generatedRoomSelectionDoesNotRecenterCamera": true,
+        "blockedRoomMoveShowsReason": true,
+        "viewportNoticeUsesLowerCenterPlacement": true,
+        "editGoalCheckShowsReachableRoute": true,
+        "rightEntityCardWallRemoved": true,
+        "editLegendVisibleAndComplete": true,
+        "editLegendPaletteSeparated": true,
+        "roomSelectionShowsCurrentRoomEntities": true,
+        "groupedDetailsPanelIsReadable": true,
+        "editHudMatchesRequestedPlacement": true,
+        "clicking3dEntitySelectsAndHighlights": true,
+        "entitySelectionMovesSummaryIntoViewport": true,
+        "entitySelectionShowsContainingRoom": true,
+        "entityCreateControlsHaveBalancedVerticalRhythm": true,
+        "playKeyboardMovesOrReachesRoomEvent": true,
+        "playReticleVisible": true,
+        "playAndResultSummaryAreCentered": true,
+        "modeLampDoesNotOverlapLabel": true,
+        "returnEditUsesSolidTriangle": true,
+        "roomEventStackUsesCurrentPlacement": true,
+        "roomEventsLeaveVisibleExitPadClear": true,
+        "goalRoomDisabledForStartEntity": true,
+        "sameRoomStartGoalFailsValidation": true,
+        "browserErrorsAbsent": true
+      },
+      "checkCount": 62,
+      "generatedAt": "2026-10-04T11:59:47.071Z"
+    },
+    {
+      "stage": 6,
+      "label": "Room Event gameplay regression",
+      "status": "PASS",
+      "exitCode": 0,
+      "error": null,
+      "evidence": "evidence/artifacts/room-events/dai-087-room-events.json",
+      "checks": {
+        "generatedWorkingEntities": true,
+        "blockingRoomEventVisible": true,
+        "unresolvedThreatLocksExits": true,
+        "mandatoryEncounterCanBeResolved": true,
+        "mandatoryRuntimeRecorded": true,
+        "optionalTreasureActionAvailable": true,
+        "treasureOpenRecorded": true,
+        "resultShowsInteractionMetrics": true,
+        "playerStatsVisible": true,
+        "progressionMetricsVisible": true,
+        "progressionRewardsRecorded": true,
+        "runClears": true,
+        "playEventTimesMonotonic": true,
+        "resultTimeNotBeforeEvents": true,
+        "authoringDungeonUnchanged": true,
+        "browserErrorsAbsent": true
+      },
+      "checkCount": 16,
+      "generatedAt": "2026-10-04T12:00:07.433Z"
+    },
+    {
+      "stage": 7,
+      "label": "Multi-floor browser regression",
+      "status": "PASS",
+      "exitCode": 0,
+      "error": null,
+      "evidence": "evidence/artifacts/dai-095-browser/dai-095-multi-floor-browser.json",
+      "checks": {
+        "generationUsesCurrentContentRules": true,
+        "generatedThreeFloors": true,
+        "generatedFloorIdsUnique": true,
+        "generatedFloorSeedsUnique": true,
+        "floorSelectorSwitchesCurrentFloor": true,
+        "floorEditsAreIsolated": true,
+        "testRunAlwaysStartsFloorOne": true,
+        "playerStateCarriesExactlyToFloorTwo": true,
+        "progressionActuallyCarried": true,
+        "threeFloorRunClears": true,
+        "resultShowsFloorCompletion": true,
+        "testPlayDoesNotMutateAuthoring": true,
+        "mysteryKeepsThreeFloors": true,
+        "mysteryReturnAdoptsAllFloors": true,
+        "browserErrorsAbsent": true
+      },
+      "checkCount": 15,
+      "generatedAt": "2026-10-04T12:00:20.595Z"
+    },
+    {
+      "stage": 8,
+      "label": "Programmatic character regression",
+      "status": "PASS",
+      "exitCode": 0,
+      "error": null,
+      "evidence": "evidence/artifacts/dai-096/dai-096-programmatic-characters.json",
+      "checks": {
+        "playerVisibleAtStart": true,
+        "playerIdleMotionChangesOverTime": true,
+        "playerTracksCurrentRoom": true,
+        "enemyUsesProgrammaticBody": true,
+        "enemyEncounterMotionChangesOverTime": true,
+        "defeatPresentationStartsImmediately": true,
+        "defeatedEnemyDisappears": true,
+        "lootUpdatesPlayerPresentation": true,
+        "playerPresentationMatchesEquipment": true,
+        "reducedMotionStopsAnimationLoop": true,
+        "browserErrorsAbsent": true
+      },
+      "checkCount": 11,
+      "generatedAt": "2026-10-04T12:00:28.701Z"
+    },
+    {
+      "stage": 9,
+      "label": "Programmatic Audio V2 regression",
+      "status": "PASS",
+      "exitCode": 0,
+      "error": null,
+      "evidence": "evidence/artifacts/dai-097-audio/dai-097-audio-presentation.json",
+      "checks": {
+        "startsLockedWithoutCreatingAudioContext": true,
+        "userGestureUnlocksProgrammaticAudio": true,
+        "audioToggleMutesAndRestores": true,
+        "musicalProgramAndMixerAreActive": true,
+        "playSwitchesBgmAndSchedulesStartCue": true,
+        "movementCueWired": true,
+        "combatCueWired": true,
+        "treasureCueWired": true,
+        "clearResultBgmAndCueWired": true,
+        "returnEditRestoresEditBgm": true,
+        "generationCueWired": true,
+        "floorAdvanceCueWired": true,
+        "finalRunClearWired": true,
+        "expectedGameplayCuesObserved": true,
+        "expectedGameplayCuesActuallyScheduled": true,
+        "noExternalAudioAssetElementsOrRequests": true,
+        "audioButtonReturnsToUnmutedReadyState": true,
+        "browserErrorsAbsent": true
+      },
+      "checkCount": 18,
+      "generatedAt": "2026-10-04T12:00:36.522Z"
+    },
+    {
+      "stage": 10,
+      "label": "Motion feedback regression",
+      "status": "PASS",
+      "exitCode": 0,
+      "error": null,
+      "evidence": "evidence/artifacts/motion-feedback/motion-feedback.json",
+      "checks": {
+        "generationRevealClassActive": true,
+        "generationCoverRemainsConcealed": true,
+        "generationCardUsesRevealAnimation": true,
+        "roomSelectionDoesNotTriggerTransition": true,
+        "roomSelectionPreservesCamera": true,
+        "testStartUsesModeTransition": true,
+        "returnEditUsesModeTransition": true,
+        "browserErrorsAbsent": true
+      },
+      "checkCount": 8,
+      "generatedAt": "2026-10-04T12:00:44.356Z"
+    },
+    {
+      "stage": 11,
+      "label": "Event feedback regression",
+      "status": "PASS",
+      "exitCode": 0,
+      "error": null,
+      "evidence": "evidence/artifacts/event-feedback/event-feedback.json",
+      "checks": {
+        "roomEventIntroEmphasized": true,
+        "roomEventIntroPreservesCurrentPlacement": true,
+        "treasureStackLeavesVisibleExitPadClear": true,
+        "blockingResolutionFeedbackVisible": true,
+        "treasureFeedbackVisible": true,
+        "floorAdvanceFeedbackVisible": true,
+        "finalResultFeedbackVisible": true,
+        "twoFloorRunCompletes": true,
+        "browserErrorsAbsent": true
+      },
+      "checkCount": 9,
+      "generatedAt": "2026-10-04T12:00:57.031Z"
+    },
+    {
+      "stage": 12,
+      "label": "Result / camera-focus regression",
+      "status": "PASS",
+      "exitCode": 0,
+      "error": null,
+      "evidence": "evidence/artifacts/result-focus/result-focus.json",
+      "checks": {
+        "resultMetricsReadableAcrossLanguagesAndSizes": true,
+        "enlargedResultTextRemainsReachable": true,
+        "eventFocusTriggered": true,
+        "eventFocusTargetsCurrentRoom": true,
+        "floorTransitionTriggered": true,
+        "floorTransitionTargetsNewStartRoom": true,
+        "resultTransitionTriggered": true,
+        "resultTargetsFinalRoom": true,
+        "resultBannerRevealTriggered": true,
+        "resultMetricsRevealTriggered": true,
+        "resultSettlesWithoutHidingContent": true,
+        "twoFloorRunClears": true,
+        "reducedMotionDisablesNewAnimations": true,
+        "browserErrorsAbsent": true,
+        "returnToEditHidesResult": true
+      },
+      "checkCount": 15,
+      "generatedAt": "2026-10-04T12:01:10.838Z"
+    },
+    {
+      "stage": 13,
+      "label": "DesignIntent atmosphere regression",
+      "status": "PASS",
+      "exitCode": 0,
+      "error": null,
+      "evidence": "evidence/artifacts/atmosphere/atmosphere.json",
+      "checks": {
+        "legacyPresentationPreservedWithoutIntent": true,
+        "generatedIntentEnablesAtmosphere": true,
+        "tensePlayHasStrongerFog": true,
+        "readablePlayUsesBrighterAmbient": true,
+        "editModeAttenuatesAtmosphere": true,
+        "actualRendererMatchesProfiles": true,
+        "semanticMarkerPaletteUnchanged": true,
+        "atmosphereDoesNotMutateDungeonState": true,
+        "normalPlayWiringUsesFullIntentProfile": true,
+        "returnEditRestoresAttenuatedProfile": true,
+        "readabilityBoundsRemainSafe": true,
+        "browserErrorsAbsent": true
+      },
+      "checkCount": 12,
+      "generatedAt": "2026-10-04T12:01:16.749Z"
+    },
+    {
+      "stage": 14,
+      "label": "AI Edit V3 structural regression",
+      "status": "PASS",
+      "exitCode": 0,
+      "error": null,
+      "evidence": "evidence/artifacts/dai-100-ai-edit-structural/dai-100-ai-edit-structural.json",
+      "checks": {
+        "initialFixtureExpected": true,
+        "sixStructuralRequestsObserved": true,
+        "boundedStructuralContext": true,
+        "laterRequestsObservePriorStructuralState": true,
+        "addRoomAppliedUndoRedo": true,
+        "addCorridorAppliedUndoRedo": true,
+        "setDoorSidesAppliedUndoRedo": true,
+        "reconnectAppliedUndoRedo": true,
+        "removeCorridorAppliedUndoRedo": true,
+        "removeRoomAppliedUndoRedo": true,
+        "finalStateMatchesOriginalStructuralCounts": true,
+        "browserErrorsAbsent": true
+      },
+      "checkCount": 12,
+      "generatedAt": "2026-10-04T12:01:23.844Z"
+    },
+    {
+      "stage": 15,
+      "label": "Reactive Audio V2 regression",
+      "status": "PASS",
+      "exitCode": 0,
+      "error": null,
+      "evidence": "evidence/artifacts/dai-100-reactive-audio/reactive-audio.json",
+      "checks": {
+        "lockedEditHasLowReactiveProfile": true,
+        "unlockPreservesEditProfile": true,
+        "userMixIsIndependent": true,
+        "playStartsAtExplorationIntensity": true,
+        "enemyRoomRaisesIntensity": true,
+        "eventResolutionReturnsToExploration": true,
+        "optionalTreasureDoesNotReenterDanger": true,
+        "userMixRemainsUnchangedThroughDanger": true,
+        "reactiveMultipliersRemainBounded": true,
+        "resultContinuityUsesResultProfile": true,
+        "returnEditRestoresEditIntensity": true,
+        "rampIsBoundedAndStable": true,
+        "noExternalAudioAssets": true,
+        "browserErrorsAbsent": true
+      },
+      "checkCount": 14,
+      "generatedAt": "2026-10-04T12:01:28.769Z"
+    },
+    {
+      "stage": 16,
+      "label": "JSON Export regression",
+      "status": "PASS",
+      "exitCode": 0,
+      "error": null,
+      "evidence": "evidence/artifacts/json-export/json-export.json",
+      "checks": {
+        "exportUsesCurrentContentRules": true,
+        "exportButtonsEnabled": true,
+        "exportLabelsVisible": true,
+        "layoutFilenameVersioned": true,
+        "fullFilenameVersioned": true,
+        "genericLayoutContract": true,
+        "genericCoordinateContract": true,
+        "genericProvenancePresent": true,
+        "genericOmitsGameSpecificCollections": true,
+        "genericKeepsStartGoalRoles": true,
+        "fullUsesDungeonRunSpec": true,
+        "downloadedLayoutMatchesApi": true,
+        "downloadedFullMatchesApi": true,
+        "browserErrorsAbsent": true
+      },
+      "checkCount": 14,
+      "generatedAt": "2026-10-04T12:01:34.257Z"
+    },
+    {
+      "stage": 17,
+      "label": "JSON Import / round-trip regression",
+      "status": "PASS",
+      "exitCode": 0,
+      "error": null,
+      "evidence": "evidence/artifacts/dai-100-json-import/json-import.json",
+      "checks": {
+        "importUiPresent": true,
+        "editorWasActuallyMutatedBeforeImport": true,
+        "fullImportSucceeds": true,
+        "fullImportRestoresCompleteDungeon": true,
+        "fullImportCurrentRuleNormalizationIsIdempotent": true,
+        "fullImportResetsEditorHistoryAndRuntime": true,
+        "importedDungeonRemainsEditable": true,
+        "layoutImportSucceeds": true,
+        "layoutImportKeepsGenericGeometryOnly": true,
+        "layoutRoundTripIsStable": true,
+        "invalidImportFailsClosed": true,
+        "malformedFileCollectionsFailClosed": true,
+        "importDoesNotExecuteJsonText": true,
+        "browserErrorsAbsent": true
+      },
+      "checkCount": 14,
+      "generatedAt": "2026-10-04T12:01:39.246Z"
+    },
+    {
+      "stage": 18,
+      "label": "Ten-strategy Generator selector regression",
+      "status": "PASS",
+      "exitCode": 0,
+      "error": null,
+      "evidence": "evidence/artifacts/generator-strategy-selector/generator-strategy-selector.json",
+      "checks": {
+        "strategySelectorVisible": true,
+        "allElevenOutputsUseCurrentContentRules": true,
+        "recommendedSelectionGeneratesV3": true,
+        "registryListsAllAcceptedStrategies": true,
+        "selectorListsAllAcceptedStrategies": true,
+        "recommendedSelectedByDefault": true,
+        "classicSelectionGeneratesV1": true,
+        "recommendedSelectionGeneratesV2": true,
+        "delaunaySelectionUsesAlgorithmLabStrategy": true,
+        "bspSelectionUsesAlgorithmLabStrategy": true,
+        "roomsMazesSelectionUsesAlgorithmLabStrategy": true,
+        "randomWalkSelectionUsesAlgorithmLabStrategy": true,
+        "cellularAutomataSelectionUsesAlgorithmLabStrategy": true,
+        "mazeCarvingSelectionUsesAlgorithmLabStrategy": true,
+        "gameplayGrammarSelectionUsesAlgorithmLabStrategy": true,
+        "wfcSelectionUsesAlgorithmLabStrategy": true,
+        "samePromptKeepsSameSeedAcrossStrategies": true,
+        "strategyLayoutsAreDistinct": true,
+        "allOutputsRemainStartEligible": true,
+        "designIntentRequestedElevenTimes": true,
+        "browserErrorsAbsent": true
+      },
+      "checkCount": 21,
+      "generatedAt": "2026-10-04T12:01:47.143Z"
+    },
+    {
+      "stage": 19,
+      "label": "Legal / provenance audit",
+      "status": "PASS",
+      "exitCode": 0,
+      "error": null,
+      "evidence": "evidence/artifacts/legal/dai-073-legal-registers.json",
+      "checks": {
+        "auditedLockfileUnchanged": true,
+        "dependencyVersionsExact": true,
+        "importParserRejectsStringContent": true,
+        "productionRuntimeExternalImportsOnlyThree": true,
+        "noCreativeAssetFilesDetected": true,
+        "aiDevelopmentUsageRecorded": true,
+        "aiRuntimeUsageRecorded": true,
+        "runtimeDependencyRecorded": true,
+        "buildAndBenchmarkDependencyScopesRecorded": true,
+        "zeroExternalCreativeAssetsRecorded": true,
+        "productionServicesRecorded": true,
+        "noticeReferencesDistributionNotices": true,
+        "threeMitNoticePresent": true,
+        "distributionNoticeCopied": true
+      },
+      "checkCount": 14,
+      "generatedAt": "2026-10-04T12:01:48.198Z"
+    },
+    {
+      "stage": 20,
+      "label": "Secret / privacy audit",
+      "status": "PASS",
+      "exitCode": 0,
+      "error": null,
+      "evidence": "evidence/artifacts/privacy/dai-074-secret-privacy.json",
+      "checks": {
+        "noForbiddenTrackedSecretPaths": true,
+        "noHighConfidenceCurrentSecrets": true,
+        "noHighConfidenceSecretsInGitPatchHistory": true,
+        "expectedSecretPathsIgnored": true,
+        "browserDistContainsNoProviderSecretBoundary": true,
+        "designIntentStoreFalse": true,
+        "naturalEditStoreFalse": true,
+        "naturalEditInputShapeBounded": true,
+        "functionResponseDoesNotEchoPrompt": true,
+        "functionResponseDoesNotEchoSecret": true,
+        "functionResponseNoStore": true,
+        "designIntentFunctionResponseDoesNotEchoPrompt": true,
+        "designIntentFunctionResponseDoesNotEchoSecret": true,
+        "designIntentFunctionResponseNoStore": true,
+        "functionSourceHasNoConsoleLogging": true,
+        "browserHasNoPersistentStorageUse": true,
+        "browserGenerationUsesPromptAndFixedSchemaFlag": true,
+        "browserNaturalEditUsesBoundedContext": true
+      },
+      "checkCount": 18,
+      "generatedAt": "2026-10-04T12:01:49.604Z"
+    },
+    {
+      "stage": 21,
+      "label": "Public docs truthfulness audit",
+      "status": "PASS",
+      "exitCode": 0,
+      "error": null,
+      "evidence": "evidence/artifacts/public-docs/dai-080-public-docs.json",
+      "checks": {
+        "requiredPublicDocsExist": true,
+        "readmeCurrentFlowAndEvidenceBoundary": true,
+        "readmeLinksRequiredPublicDocs": true,
+        "desktopScopeExplicit": true,
+        "currentGeneratorScopeExplicit": true,
+        "quickstartCurrentGenerationFlow": true,
+        "quickstartCurrentPlayRules": true,
+        "currentSingleCommandVocabulary": true,
+        "boundedContextDocumented": true,
+        "limitedLiveEvidenceNotFullAcceptance": true,
+        "knownLimitationsComplete": true,
+        "samplePromptsPreserveHistoricalScope": true,
+        "checklistSeparatesHistoricalAndCurrent": true,
+        "rollbackIsRecoveryPointNotFinalAcceptance": true,
+        "currentVideoIdentityAndBoundary": true,
+        "historicalStoryboardRetained": true,
+        "noObsoleteCurrentClaims": true,
+        "submissionMetadataFinalized": true,
+        "localMarkdownLinksResolve": true,
+        "noTodoOrTbdPlaceholders": true
+      },
+      "checkCount": 20,
+      "generatedAt": "2026-10-04T12:01:49.974Z"
+    },
+    {
+      "stage": 22,
+      "label": "Submission metadata audit",
+      "status": "PASS",
+      "exitCode": 0,
+      "error": null,
+      "evidence": "evidence/artifacts/submission-metadata/dai-083-submission-metadata.json",
+      "checks": {
+        "categoryExact": true,
+        "publicCategorySourcesRecorded": true,
+        "primaryTextExact": true,
+        "compactFallbackExact": true,
+        "descriptionCoversRequiredContent": true,
+        "claimBoundariesPresent": true,
+        "decisionClosed": true,
+        "checklistClosed": true
+      },
+      "checkCount": 8,
+      "generatedAt": "2026-10-04T12:01:50.318Z"
+    },
+    {
+      "stage": 23,
+      "label": "Syntax validation",
+      "status": "PASS",
+      "exitCode": 0,
+      "error": null,
+      "evidence": "console.log"
+    },
+    {
+      "stage": 24,
+      "label": "Git whitespace / error-marker check",
+      "status": "PASS",
+      "exitCode": 0,
+      "error": null,
+      "evidence": "console.log"
+    }
+  ],
+  "nodeTests": {
+    "groupCount": 24,
+    "perGroupTests": [
+      23,
+      3,
+      8,
+      8,
+      9,
+      10,
+      10,
+      10,
+      10,
+      10,
+      107,
+      31,
+      46,
+      30,
+      75,
+      6,
+      13,
+      38,
+      4,
+      53,
+      2,
+      46,
+      14,
+      62
+    ],
+    "tests": 628,
+    "pass": 628,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "syntax": {
+    "checkedFiles": 338,
+    "passed": true,
+    "failures": []
+  },
+  "manualGeneration": {
+    "mode": "manual",
+    "dialogObserved": true,
+    "planSubmitted": true
+  },
+  "layoutEvidence": {
+    "ownerEventPlacement": {
+      "expectedOffsetPx": 104,
+      "actualOffsetPx": 104.00001525878906,
+      "tolerancePx": 3,
+      "gapPx": null,
+      "checks": {
+        "horizontalCentered": true,
+        "offsetAboveViewportCenter": true,
+        "insideViewport": true,
+        "clearOfExitPad": false
+      },
+      "passed": false
+    },
+    "ownerExitClearance": {
+      "expectedOffsetPx": 104,
+      "actualOffsetPx": 104,
+      "tolerancePx": 3,
+      "gapPx": 155.5,
+      "checks": {
+        "horizontalCentered": true,
+        "offsetAboveViewportCenter": true,
+        "insideViewport": true,
+        "clearOfExitPad": true
+      },
+      "passed": true
+    },
+    "eventFeedbackIntroPlacement": {
+      "expectedOffsetPx": 104,
+      "actualOffsetPx": 103.99998474121094,
+      "tolerancePx": 3,
+      "gapPx": null,
+      "checks": {
+        "horizontalCentered": true,
+        "offsetAboveViewportCenter": true,
+        "insideViewport": true,
+        "clearOfExitPad": false
+      },
+      "passed": false
+    },
+    "eventFeedbackTreasureExitClearance": {
+      "expectedOffsetPx": 104,
+      "actualOffsetPx": 104,
+      "tolerancePx": 3,
+      "gapPx": 127.5,
+      "checks": {
+        "horizontalCentered": true,
+        "offsetAboveViewportCenter": true,
+        "insideViewport": true,
+        "clearOfExitPad": true
+      },
+      "passed": true
+    },
+    "nestedFalseExplanation": "blocking中はexit padが非表示のためclearOfExitPad=false、passed=false。初期sampleの必須判定は水平中央・104px上方・viewport内の3項目。出口との非重複は、別のvisible-exit sampleで4項目すべてPASS。"
+  },
+  "localNetwork": {
+    "recordedPerformanceUrl": "http://127.0.0.1:4184/apps/editor-slice/index.html",
+    "recordedMultiFloorUrl": "http://127.0.0.1:4195/apps/editor-slice/index.html",
+    "multiFloorExternalOverrideObserved": false,
+    "allEnvironmentVariablesProvenUnset": false,
+    "providerBoundary": "該当APIは固定route.fulfill応答、Node provider/handler検査はmock/fixture。provider/model名は実API呼出しの証拠ではない。",
+    "fullNetworkCapturePresent": false,
+    "providerBillingIndependentlyAudited": false
+  },
+  "buildInfo": {
+    "schemaVersion": "1.0",
+    "commitSha": "8df3aeb9aeeaf31a228efbec8e901bbc2c7aa531",
+    "commitSource": "git",
+    "runtimeSourceSha256": "a2097e3c943aeb5899d0e901ae78ede86705ce80321b33152c7ccec6b08c0b5e",
+    "runtimeBundleSha256": "9aaa00edfb68cb378f9f0e44d948c4de48341b6486ef42668db91330032331c8",
+    "generatedAt": "2026-10-04T11:59:24.986Z"
+  },
+  "fingerprintComparison": {
+    "runtimeSourceMatchesPriorWindowsAndCloud": true,
+    "runtimeBundleMatchesWindowsR1R2": true,
+    "cloudRuntimeBundleSha256": "bf3611d6a8e92c5a27962b4892fe3146d9495a60bdd8a715839e49a61c20c123",
+    "windowsCloudBundleDifferenceCause": "未確定。dist manifest/bundle未同梱。",
+    "publicDeploymentIdentityProven": false
+  },
+  "privacyAuditBoundary": {
+    "currentTrackedFileCount": 603,
+    "distFileCount": 7,
+    "reportedChecksPassed": 18,
+    "historyCommitCountRecorded": false,
+    "historyTraversalSuccessIndependentlyProven": false,
+    "note": "scriptはgit log失敗時に空文字へフォールバックする。今回JSONだけでは履歴走査完了・対象commit数を立証しない。過去1805 commits監査の代替ではない。"
+  },
+  "suiteExcludes": [
+    "owner audio listening review",
+    "public deployment smoke",
+    "live-provider semantic verification",
+    "DAI-090 Final",
+    "final video capture/review",
+    "freeze/rollback creation"
+  ],
+  "limitations": [
+    "実行前git statusと全環境変数のdumpなし",
+    "ZIPには画像、dist manifest、bundle本体なし",
+    "ローカルVite browser回帰とproduction buildの成功であり、公開deploymentの同一性・全フロー確認ではない",
+    "主観的音声確認、live-provider意味検証、DAI-090 Final、動画capture/review、freeze/rollback作成はsuite対象外",
+    "通常部屋fixtureではmonster-house/trap-house/shopを除外。特殊部屋全組合せの網羅ではない",
+    "Resultの800×600・5言語sampleはmetrics bottomが943〜962px。width<=800で縦方向viewport内条件を免除する既存検査のため、全サイズ内包の証拠ではない",
+    "原FAIL記録は維持し、このr3を別実行として保存"
+  ],
+  "evidenceIdentity": {
+    "libraryFileId": "libfile_001be61c6a30819197ed6234fcb18414",
+    "version": 0,
+    "zipFilename": "dai-100-final-local-pr75-r3-20261004-205844.zip",
+    "zipSizeBytes": 113298,
+    "zipSha256": "f867657c66df2be977993260b4e0b84b4a872983f9c5ae99ea35ae3ab76aad25",
+    "consoleSha256": "39096fde4b8282298e54897a4b83ef7e4ed96e9b4a7d7d29ee9174ae1b0dc972",
+    "zipEntryCount": 25,
+    "evidenceFileCount": 24,
+    "excludedEmptyDirectoryMarker": "evidence/artifacts/（元entryはWindows区切り、0 bytes）",
+    "files": [
+      {
+        "path": "console.log",
+        "sizeBytes": 538822,
+        "sha256": "39096fde4b8282298e54897a4b83ef7e4ed96e9b4a7d7d29ee9174ae1b0dc972"
+      },
+      {
+        "path": "evidence/artifacts/atmosphere/atmosphere.json",
+        "sizeBytes": 7015,
+        "sha256": "f63d55bb71a8cb841e83fe3c5c4fc0b60a01275a1633517fea8cee4a3fbfd6c3"
+      },
+      {
+        "path": "evidence/artifacts/browser-performance/dai-071-browser-performance.json",
+        "sizeBytes": 9757,
+        "sha256": "4b8fd1c7d566fc316e757afeb775a149ef0666e3bf40a0c2717f8d36b3c641f0"
+      },
+      {
+        "path": "evidence/artifacts/dai-095-browser/dai-095-multi-floor-browser.json",
+        "sizeBytes": 28004,
+        "sha256": "951556876b79b06bec0f5c725968809fb20f80d61c0afbd705c78fdbec27c94c"
+      },
+      {
+        "path": "evidence/artifacts/dai-096/dai-096-programmatic-characters.json",
+        "sizeBytes": 9349,
+        "sha256": "f1363b8ce1e47b40184496ac17299ce83caf970097fb4afda40c846ed2e969b4"
+      },
+      {
+        "path": "evidence/artifacts/dai-097-audio/dai-097-audio-presentation.json",
+        "sizeBytes": 19281,
+        "sha256": "71b02728a48cadc3827a048b5dc8eadee2fc7f31335963d7499bcf8b12ec760e"
+      },
+      {
+        "path": "evidence/artifacts/dai-098/dai-098-multi-floor-simulation.json",
+        "sizeBytes": 170459,
+        "sha256": "7c920bc2dfc4b3e854f09325b97fef667354ef2e4ce3eb5cca4719c3199e3679"
+      },
+      {
+        "path": "evidence/artifacts/dai-100-ai-edit-structural/dai-100-ai-edit-structural.json",
+        "sizeBytes": 1379,
+        "sha256": "a4a6499a48e9aa6f25fede5a2614690b15e70bee36117ddbe7e6f6c9b6d4e579"
+      },
+      {
+        "path": "evidence/artifacts/dai-100-json-import/json-import.json",
+        "sizeBytes": 2530,
+        "sha256": "e6b4db8bd737738ad0bc9f03fb58ce05dcc1359907b9320d362023e50ec77ba2"
+      },
+      {
+        "path": "evidence/artifacts/dai-100-reactive-audio/reactive-audio.json",
+        "sizeBytes": 12041,
+        "sha256": "87db6838f67f290fac6345f772a285320c3f9b4149c5f62a3a0f200386e95638"
+      },
+      {
+        "path": "evidence/artifacts/event-feedback/event-feedback.json",
+        "sizeBytes": 4047,
+        "sha256": "184af3d33bfb0d60a82aca66852b5a2af47ac3598cfbb6f8539cd1b17557a7f4"
+      },
+      {
+        "path": "evidence/artifacts/generator-strategy-selector/generator-strategy-selector.json",
+        "sizeBytes": 13274,
+        "sha256": "cbb6942d963b709a27d585fae827fff8056c851cef4cd5c10f0cd350620994f6"
+      },
+      {
+        "path": "evidence/artifacts/json-export/json-export.json",
+        "sizeBytes": 1546,
+        "sha256": "8dae90b569a60c5e5f1db6dc0e051e62272a326794e55a3351d0b542ffeccad0"
+      },
+      {
+        "path": "evidence/artifacts/legal/dai-073-legal-registers.json",
+        "sizeBytes": 6173,
+        "sha256": "e1fb36011d27d92ffe7ba324b980e42a177e2731da1864ce0c5cff9bc16794dc"
+      },
+      {
+        "path": "evidence/artifacts/motion-feedback/motion-feedback.json",
+        "sizeBytes": 25872,
+        "sha256": "f6f3f21423f340df4ca1cdf80d00dc83f52ebbb4077ad73f698d93472689cbb6"
+      },
+      {
+        "path": "evidence/artifacts/owner-ui-review/owner-ui-review.json",
+        "sizeBytes": 118366,
+        "sha256": "96197ed844cfa5ccc2e580d7fcc2e68e0f1d1d78479170ad57704ae8ced14fd8"
+      },
+      {
+        "path": "evidence/artifacts/privacy/dai-074-secret-privacy.json",
+        "sizeBytes": 1915,
+        "sha256": "089dd425e6bc79f35bbe8cce8a18b98f270f8a3163ceeea42c1035f879133b5b"
+      },
+      {
+        "path": "evidence/artifacts/public-docs/dai-080-public-docs.json",
+        "sizeBytes": 1703,
+        "sha256": "b31b9245c8c5e28bd22eb310aa3cb478f3771d6eb9a28d952de4b41d0c63f986"
+      },
+      {
+        "path": "evidence/artifacts/result-focus/result-focus.json",
+        "sizeBytes": 15238,
+        "sha256": "186539cf971939b1a2a8b1fcf83e23ba5e6adff9ad278c0e439af7e63f0212f5"
+      },
+      {
+        "path": "evidence/artifacts/room-events/dai-087-room-events.json",
+        "sizeBytes": 2004,
+        "sha256": "dc94c4a1b851afe132cf2043d756d5362e17ce8fb7bdfac4016d3749465130d6"
+      },
+      {
+        "path": "evidence/artifacts/submission-metadata/dai-083-submission-metadata.json",
+        "sizeBytes": 653,
+        "sha256": "4e4ca467a2bd7ef2554526d4becd3f3f3505135afd10c05cc0c387a78f484ff6"
+      },
+      {
+        "path": "git-head.txt",
+        "sizeBytes": 82,
+        "sha256": "37f63587aa4b0dcfcba0d8206a56e4f485e18a025dffb12021d1f4b99c8e8e11"
+      },
+      {
+        "path": "git-status.txt",
+        "sizeBytes": 18,
+        "sha256": "bf15871b62a49ff4caa14ae893ca0c567a352b0a48f621127b0d6b06c1577c4c"
+      },
+      {
+        "path": "run-metadata.json",
+        "sizeBytes": 734,
+        "sha256": "f2c0878df40ed778aea6ea43611929ffb4bff3e6a7082bf136ba008f7d3860b0"
+      }
+    ]
+  },
+  "recordPreparation": {
+    "additionalTestsRun": false,
+    "codeChangesMade": false,
+    "newLiveApiCallsMade": false
+  }
+}

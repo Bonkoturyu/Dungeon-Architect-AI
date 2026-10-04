@@ -23,13 +23,14 @@ These checks describe the earlier M8 candidate and must not be interpreted as ac
 - [x] 旧Draft #55–58を未mergeでcloseし、元branch・SHA・過去証拠を保存
 - [x] 150-second v2動画候補を保持（新規撮影なし）
 - [x] 所有者Windowsで限定live Generate／AI Edit Responseと画面適用を確認（公開build-info同一性や全E2Eとは別）
-- [ ] 統合suiteの最新結果・失敗・未実行項目を確認し、最終受入を判断
+- [x] [Windows r3ローカル統合](../testing/WINDOWS_PR75_R3_FINAL_LOCAL_2026-10-04.md): 24/24段階、Node 628/628、browser 15段階・253 checks PASS
+- [ ] ローカルsuite対象外の公開deployment／全公開E2E、主観的音声レビュー、DAI-090 Final等を含め、最終受入を判断
 - [ ] 現公開candidateのGenerate / Edit異常入力確認を完了
 - [ ] 現candidate・公開fingerprint・動画・監査証拠を整合させて最終freezeを確定
 - [ ] RepositoryのPublic化を承認された手順で完了
 - [ ] 最終compliance、追加提出物、実際の提出を完了
 
-最新の結果は [PR #74](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/74)。この一覧は全ゲートPASSの宣言ではありません。既存の包括的な公開前監査とPR #71–73のAI/TTS来歴補完を保持し、旧scriptの不在を理由に未監査とは扱いません。
+r3の実測対象はPR #75の `8df3aeb9aeeaf31a228efbec8e901bbc2c7aa531` であり、後続のdocs-only記録commitとは区別します。提出前の記録は [PR #74](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/74) と上記r3を参照してください。この一覧は全ゲートPASSの宣言ではありません。既存の包括的な公開前監査とPR #71–73のAI/TTS来歴補完を保持し、旧scriptの不在を理由に未監査とは扱いません。
 
 以下は過去の計画時点のチェック状態です。現在の合否は上記とリンク先の対象commit付き証拠から判断してください。
 

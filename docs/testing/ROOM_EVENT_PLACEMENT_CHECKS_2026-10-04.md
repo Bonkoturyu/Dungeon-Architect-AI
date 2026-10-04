@@ -46,6 +46,6 @@
 
 ## 未検証・歴史的runnerの境界
 
-変更後の実ブラウザと24段階全体は未実行。クラウドの既知のChromium起動制約を迂回せず、Windowsで修正commitを固定した再確認を待つ。Nodeのgeometry検査成功は実DOM・タイミングの合格を代用しない。
+本変更のfocused確認時点では、変更後の実ブラウザと24段階全体は未実行だった。後続の [Windows r3](WINDOWS_PR75_R3_FINAL_LOCAL_2026-10-04.md) で `8df3aeb9aeeaf31a228efbec8e901bbc2c7aa531` の24/24段階がPASSし、Owner UI／Event feedbackの104px上方配置と可視出口との非重複も実DOMで確認された。当時のNode geometry検査と後続のbrowser実測は別の証拠として保持する。
 
 同類の旧中心条件は、24段階外の `run-play-ui-stack-layout-smoke.mjs` と歴史的 `run-dai-099-public-smoke.mjs` にも残っている。本変更ではそれらを現行版へ再認定せず、過去の対象版に関する記録として区別する。公開deployment、実provider、動画、最終提出を合格へ変更するものではない。
