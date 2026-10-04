@@ -7,7 +7,7 @@
 - 現状退避点: `rollback/pre-submission-2026-10-04` → `8bcce65246663bc16625a0f915ec2f202c63b5e4`
 - 旧候補向けPR #55〜#58: mergeせずclose、元branch・commitは保持
 - 現mainの一回限り最終統合: **FAIL（1 PASS / 1 FAIL / 22 未実行）**
-- 公開backendのlive生成1回＋AI Edit1回: **実行前に環境制約で停止、生成0回・Edit0回**
+- 公開backendのlive生成＋AI Edit: **所有者Windowsで両方の正常Responseとゲーム画面への適用を確認**（先行生成を含む回数・費用の限界は後述）
 - デモ動画: 確認済み範囲で撮り直しを必要とする実質的差分は見つからず、承認済み150秒版v2を暫定維持
 
 本追記はdocs-onlyの状態記録。application code、fixture、期待値を変更せず、追加の試験・課金API・動画再撮影・公開作業を行うものではない。
@@ -20,8 +20,9 @@
 | 同tree | `3ec19b979d79897916e7f72f9acbedfb9315faf5` |
 | 退避branch | [`rollback/pre-submission-2026-10-04`](https://github.com/Bonkoturyu/Dungeon-Architect-AI/tree/rollback/pre-submission-2026-10-04) |
 | 状態記録のPR | [#74](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/74)（この記録の確認時点ではDraft / 未merge） |
-| 本追記直前のdocs-only head | `249762b4b0dc901acccf35a5ee116a2a5faddcf2` |
+| 初回状態記録直前のdocs-only head | `249762b4b0dc901acccf35a5ee116a2a5faddcf2` |
 | 同tree | `02d1a7b8f1894e0d396c463aff122a7bd3115486` |
+| live確認追記の基準docs-only head | `2b3c648cdab48996febc2fdbcf99bbfd05d17f39` |
 
 退避refの読戻しで対象SHAとの一致を確認した。退避branchは今後の作業branchに使わず、commit／merge／移動をしない運用とする。調査や復元作業が必要な場合は別branchを作る。`main` のforce-resetや履歴書換えは行わない。
 
@@ -78,17 +79,23 @@ mainにはDAI-073 legal、DAI-074 current tree／history-secret／privacy、DAI-
 
 ## 公開backendのlive確認
 
-依頼された最小確認は「生成1回＋AI Edit1回」だったが、実APIを呼ぶ前に停止した。
+**所有者がWindowsのBrave/Chromium 154で実施し、live生成、live AI Edit、ゲーム画面へのcommand適用を確認した。** 詳細は[2026-10-04公開live確認](../testing/LIVE_PROVIDER_OWNER_EVIDENCE_2026-10-04.md)を参照。
 
-- クラウドブラウザ: WebGL context作成失敗、rendererがDisabledとなり3D初期化に失敗
-- 通常HTTP: 非課金GETがCloudflare `403 / 1010` で拒否
-- 生成0回、AI Edit0回、provider呼出し0回。この確認によるAPI利用料見積りは0円。実請求画面は未確認
-- 制限迂回、追加課金試行、コード変更、deployはしていない
-- 公開 `build-info.json` の今回の読取りによるSHA／source／bundle照合は未完了
+- 生成: 正規 `/api/design-intent` へのPOST 200、`ok: true`、`selectedProvider: cloud`、`provider: openai`、`model: gpt-5.6-luna`。DesignIntent／roomRequestsの独立validatorもvalid
+- AI Edit: `/api/natural-edit` の `ok: true`、`move-entity` / `treasure-1` / `room-005`、同じprovider/modelをResponse本文で確認
+- 最終画面: `Applied: move-entity`、Chest `treasure-1` のRoomが `room-005`、同室にGoal `goal-1`、Undo有効、`✓ Valid`。Responseと適用先が一致
+- 採用した両成功Responseのusage: input 2,758 / output 560 / total 3,318 tokens。標準単価試算 `$0.0012236`、計画換算200円/USDで約0.24円。実請求額ではない
+- 先行に2つの生成履歴があり、その後に今回の1生成＋1Editを行った。全体を生成1回だけとは扱わない。把握した3生成＋1Editと内部retry上限を含む保守的予約見積りは約50円で、承認予算100円内（追加の別呼出しがない前提）
 
-これはlive provider成功や公開E2Eの証拠ではない。ownerへ渡した `Dungeon-Architect-AI_live-provider_blocked_2026-10-04.zip` に環境エラー、JSON台帳、Windows Chromeでの最小手順を保持している。
+初回のクラウド確認はWebGL disabledと通常HTTPのCloudflare `403 / 1010` により課金呼出し前に停止していた。初回の生成0／Edit0／provider0と見積0円はその試行に限る歴史的記録として保持し、後続の所有者Windows操作へ拡張しない。初回の環境エラーと手順は `Dungeon-Architect-AI_live-provider_blocked_2026-10-04.zip` に保持している。制限迂回はしていない。
 
-現公開APIは内部retry回数を返さないため、UI操作の回数とprovider試行回数は別である。後日確認する場合も、正確な試行回数／失敗分usageの断定にはserver側記録またはprovider利用明細が必要になる。本記録では未実行の操作を使用料実測や成功件数へ加算しない。
+今回の資料解析で新しい課金呼出し、コード変更、deploy、最終統合suite再実行は行っていない。以下は未確認のまま残す。
+
+- 公開 `build-info.json` のcommit／runtime source／bundle fingerprintと現mainとの一致
+- 最新成功セッションの生の前後Full JSON差分。先行の5部屋／10部屋JSONは異なる生成状態であり、宝箱移動のみの前後ペアではない
+- 実際の内部provider retry回数、先行生成や失敗試行のusage、実請求額。公開生成APIがattemptsを返さないため、正確な値はserver-sideログまたはprovider利用明細が必要
+
+これは限定live経路の成功であり、全体の公開E2E、Play完走、最終統合PASS、Windows Chromeブランド固有の正式受け入れを新たに主張するものではない。
 
 ## 動画と現UIの整合性
 
@@ -109,9 +116,10 @@ mainにはDAI-073 legal、DAI-074 current tree／history-secret／privacy、DAI-
 ## 残る判断と作業境界
 
 1. 統合FAILのfixture／現行ルール不整合をどう扱うか。現状のまま最終統合PASSにはしない
-2. 実行できていないlive生成＋AI Edit、および現公開build fingerprintの確認
+2. 限定live生成＋AI Editは確認済み。現公開build fingerprintの厳密な照合と、最終受け入れ範囲との対応付けは残る
 3. 保存済み監査・DAI-090証拠が現候補を覆う範囲の突合。旧PR／runner不在を理由に監査全体を未実施扱いにしない
 4. 提出資料とDAI-080の古い状態表記の整合。履歴を残し、今回未実行の監査をPASS扱いにしない
 5. repository公開、動画公開、正式提出などの提出手続き。今回のrollback作成やPR closeはこれらの完了を意味しない
 
 上記は残状況の記録であり、追加開発、全suite再実行、動画再撮影、公開操作の一括承認や実行指示ではない。主観的音声レビュー、Windows Chromeの正式受け入れなどについても、別の既存証拠がある部分と今回未実行の部分を分けて判断する。
+
