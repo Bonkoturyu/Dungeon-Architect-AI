@@ -185,7 +185,7 @@ The freeze-prep script requires:
 - actual MP4 exists and ffprobe proves duration <180 seconds;
 - legal audit passed;
 - privacy audit passed;
-- public-doc audit passed;
+- public-doc audit is rerun against the current checkout during freeze and passes; a stored PASS alone is insufficient;
 - metadata audit passed.
 
 It writes:
