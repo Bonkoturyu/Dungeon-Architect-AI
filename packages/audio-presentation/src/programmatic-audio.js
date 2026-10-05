@@ -314,6 +314,8 @@ export function createProgrammaticAudio({
   let reactiveSeGain = null;
   let muted = false;
   let unlocked = false;
+  let unlockPromise = null;
+  let pendingCues = [];
   let desiredMode = "edit";
   let activeMode = null;
   let modeVoices = [];
@@ -326,7 +328,7 @@ export function createProgrammaticAudio({
   let bgmLoopExtensionCount = 0;
   let reactiveIntensity = deriveReactiveAudioIntensity({ mode: "edit" });
 
-  const available = typeof AudioContextCtor === "function";
+  let available = typeof AudioContextCtor === "function";
 
   function ensureGraph() {
     if (!available || context) return context;
@@ -501,15 +503,34 @@ export function createProgrammaticAudio({
     return true;
   }
 
-  async function unlock() {
-    if (!available) return false;
-    ensureGraph();
-    if (context.state === "suspended" && typeof context.resume === "function") {
-      await context.resume();
-    }
-    unlocked = context.state === "running" || context.state === "interrupted";
-    if (unlocked) startModeVoices(desiredMode);
-    return unlocked;
+  function unlock() {
+    if (!available) return Promise.resolve(false);
+    if (unlockPromise) return unlockPromise;
+
+    unlockPromise = (async () => {
+      try {
+        const unlockingContext = ensureGraph();
+        if (unlockingContext.state === "suspended" && typeof unlockingContext.resume === "function") {
+          await unlockingContext.resume();
+        }
+        if (context !== unlockingContext) return false;
+        unlocked = context.state === "running" || context.state === "interrupted";
+        if (unlocked) {
+          startModeVoices(desiredMode);
+          for (const event of pendingCues.splice(0)) {
+            event.scheduled = scheduleCue(event.cue);
+          }
+        } else {
+          pendingCues = [];
+        }
+        return unlocked;
+      } catch {
+        available = false;
+        dispose();
+        return false;
+      }
+    })().finally(() => { unlockPromise = null; });
+    return unlockPromise;
   }
 
   function setMode(mode) {
@@ -616,12 +637,20 @@ export function createProgrammaticAudio({
     const event = {
       cue,
       at: clock(),
-      scheduled: Boolean(unlocked && context),
+      scheduled: false,
     };
     cueHistory = [...cueHistory, event].slice(-48);
 
-    if (!unlocked || !context) return false;
+    if (!unlocked || !context) {
+      if (unlockPromise && available) pendingCues = [...pendingCues, event].slice(-48);
+      return false;
+    }
+    event.scheduled = scheduleCue(cue);
+    return event.scheduled;
+  }
 
+  function scheduleCue(cue) {
+    const notes = AUDIO_CUES[cue];
     const base = context.currentTime;
     for (const note of notes) {
       const oscillator = context.createOscillator();
@@ -691,9 +720,10 @@ export function createProgrammaticAudio({
   }
 
   function dispose() {
+    pendingCues = [];
     stopModeVoices();
     try {
-      context?.close?.();
+      context?.close?.()?.catch?.(() => {});
     } catch {
       // Best-effort teardown.
     }

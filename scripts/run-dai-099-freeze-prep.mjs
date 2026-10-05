@@ -2,6 +2,8 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
+import { runtimeSourceFingerprint, collectBundleManifest, manifestSha256 } from './runtime-fingerprint.mjs';
+import { captureFileState, validateFreezeEvidence } from './recording-evidence.mjs';
 
 const EXPECTED_LOCK_SHA256 =
   'ce94a9ee4241ee798c0c32c0fda55f00cb4462fb6ba6244acdd3d53589d261cc';
@@ -17,9 +19,7 @@ const evidenceFiles = {
   legal: 'artifacts/legal/dai-073-legal-registers.json',
   privacy: 'artifacts/privacy/dai-074-secret-privacy.json',
   metadata: 'artifacts/submission-metadata/dai-083-submission-metadata.json',
-};
-const optionalEvidenceFiles = {
-  predeployPublicDocs: 'artifacts/public-docs/dai-080-public-docs.json',
+  publicDocs: 'artifacts/public-docs/dai-080-public-docs.json',
 };
 const videoPath = 'artifacts/dai-099-video/dai-099-refreshed-demo.mp4';
 const buildInfoPath = 'dist/build-info.json';
@@ -81,6 +81,10 @@ const legal = readJson(evidenceFiles.legal);
 const privacy = readJson(evidenceFiles.privacy);
 const metadata = readJson(evidenceFiles.metadata);
 const buildFingerprint = readJson(evidenceFiles.buildFingerprint);
+const publicDocs = readJson(evidenceFiles.publicDocs);
+const videoState = captureFileState(videoPath);
+const currentRuntimeSourceSha256 = runtimeSourceFingerprint(process.cwd());
+const currentRuntimeBundleSha256 = manifestSha256(collectBundleManifest(distDir));
 
 const ffprobe = spawnSync('ffprobe', [
   '-v', 'error',
@@ -117,14 +121,11 @@ const distManifestSha256 = crypto
 const evidenceSha256 = Object.fromEntries(
   Object.entries(evidenceFiles).map(([name, file]) => [name, sha256File(file)]),
 );
-const optionalEvidenceSha256 = Object.fromEntries(
-  Object.entries(optionalEvidenceFiles)
-    .filter(([, file]) => fs.existsSync(file))
-    .map(([name, file]) => [name, sha256File(file)]),
-);
-
 const remoteBuild = publicEvidence.buildFingerprint?.remote ?? null;
 const checks = {
+  ...validateFreezeEvidence({ buildInfo, runtimeBundleSha256: currentRuntimeBundleSha256,
+    runtimeSourceSha256: currentRuntimeSourceSha256,
+    videoRun, videoState, publicDocs, publicEvidence }),
   runningFromMain: branch === 'main',
   localMainMatchesOrigin: head === originMain,
   trackedWorkingTreeClean: trackedStatus === '',
@@ -143,8 +144,6 @@ const checks = {
   videoPlanPassed:
     videoPlan.passed === true &&
     videoPlan.actualVideoValidated === false,
-  videoRunPassed:
-    videoRun.passed === true,
   finalVideoExists:
     fs.statSync(videoPath).size > 0,
   finalVideoUnder180Seconds:
@@ -184,7 +183,9 @@ const evidence = {
     publicUrl: EXPECTED_PUBLIC_URL,
     buildInfo,
     runtimeSourceSha256: buildInfo.runtimeSourceSha256,
+    recomputedRuntimeSourceSha256: currentRuntimeSourceSha256,
     runtimeBundleSha256: buildInfo.runtimeBundleSha256,
+    recomputedRuntimeBundleSha256: currentRuntimeBundleSha256,
     publicBuildInfo: remoteBuild,
     publicBundleDiagnosticMatches:
       remoteBuild?.runtimeBundleSha256 === buildInfo.runtimeBundleSha256,
@@ -196,9 +197,8 @@ const evidence = {
     sizeBytes: fs.statSync(videoPath).size,
   },
   evidenceSha256,
-  optionalEvidenceSha256,
   finalPublicDocsBoundary:
-    'Final public-doc truthfulness is re-audited after public/video acceptance during freeze bookkeeping.',
+    'The public-doc audit must pass before freeze; final bookkeeping is audited again after acceptance.',
   build: {
     fileCount: distManifest.length,
     manifestSha256: distManifestSha256,

@@ -6,6 +6,8 @@ const storyboard = fs.readFileSync('docs/submission/DEMO_STORYBOARD.md', 'utf8')
 const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 const runner = fs.readFileSync('scripts/run-dai-099-recording-demo.mjs', 'utf8');
 
+const recordingEvidence = fs.readFileSync('scripts/recording-evidence.mjs', 'utf8');
+
 const currentVideoDoc = videoDoc.split('## 歴史的DAI-099撮影計画')[0];
 const currentStoryboard = storyboard.split('## 歴史的DAI-099撮影計画')[0];
 const expectedVideoSha256 = '3e3516090cea0c58c9d3da02ee9b1e888a515fd0bfcb5543cafc745ff89418f8';
@@ -87,7 +89,10 @@ const checks = {
 
   runnerGuardsDurationAndResolution:
     runner.includes('scriptedDemoUnder165Seconds') &&
-    runner.includes('actualCaptureUnder180Seconds') &&
+    runner.includes('validateCapture({') &&
+    runner.includes('Object.assign(evidence.checks, captureValidation.checks)') &&
+    recordingEvidence.includes('actualCaptureUnder180Seconds') &&
+    recordingEvidence.includes('probe.durationSeconds < 180') &&
     runner.includes('viewportCaptureRegion.innerWidth >= 1280') &&
     runner.includes('viewportCaptureRegion.innerHeight >= 720'),
 };

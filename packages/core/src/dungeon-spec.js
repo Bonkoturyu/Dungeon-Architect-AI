@@ -108,31 +108,50 @@ function validateJsonSafeValue(value, path, errors, ancestors = new WeakSet()) {
     return;
   }
 
-  if (Array.isArray(value)) {
-    ancestors.add(value);
-    for (let index = 0; index < value.length; index += 1) {
-      if (!Object.prototype.hasOwnProperty.call(value, index)) {
-        pushError(errors, "JSON_ARRAY_HOLE", `${path}[${index}]`, "JSON arrays must not contain holes.");
-        continue;
-      }
-      validateJsonSafeValue(value[index], `${path}[${index}]`, errors, ancestors);
-    }
-    ancestors.delete(value);
-    return;
-  }
-
   let prototype;
   let descriptors;
+  let toJSONDescriptor;
   try {
     prototype = Object.getPrototypeOf(value);
     descriptors = Object.getOwnPropertyDescriptors(value);
+    toJSONDescriptor = descriptors.toJSON;
+    for (let ancestor = prototype; !toJSONDescriptor && ancestor !== null; ancestor = Object.getPrototypeOf(ancestor)) {
+      toJSONDescriptor = Object.getOwnPropertyDescriptor(ancestor, "toJSON");
+    }
   } catch {
     pushError(errors, "JSON_OBJECT_UNREADABLE", path, "DungeonSpec objects must be ordinary readable JSON objects.");
     return;
   }
 
-  if (prototype !== Object.prototype && prototype !== null) {
+  if (!Array.isArray(value) && prototype !== Object.prototype && prototype !== null) {
     pushError(errors, "JSON_OBJECT_UNSUPPORTED", path, "DungeonSpec must not contain class/runtime object instances.");
+    return;
+  }
+
+  if (toJSONDescriptor && (
+    !Object.prototype.hasOwnProperty.call(toJSONDescriptor, "value") ||
+    typeof toJSONDescriptor.value === "function"
+  )) {
+    pushError(errors, "JSON_TOJSON_UNSUPPORTED", `${path}.toJSON`, "DungeonSpec must not contain toJSON serialization hooks.");
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    ancestors.add(value);
+    for (let index = 0; index < descriptors.length.value; index += 1) {
+      const descriptor = descriptors[index];
+      const childPath = `${path}[${index}]`;
+      if (!descriptor) {
+        pushError(errors, "JSON_ARRAY_HOLE", childPath, "JSON arrays must not contain holes.");
+        continue;
+      }
+      if (!Object.prototype.hasOwnProperty.call(descriptor, "value")) {
+        pushError(errors, "JSON_ACCESSOR_UNSUPPORTED", childPath, "DungeonSpec must not contain accessor properties.");
+        continue;
+      }
+      validateJsonSafeValue(descriptor.value, childPath, errors, ancestors);
+    }
+    ancestors.delete(value);
     return;
   }
 
@@ -651,6 +670,7 @@ export function validateDungeonSpec(spec) {
   }
 
   validateJsonSafeValue(spec, "$", errors);
+  if (errors.length > 0) return { valid: false, errors };
 
   if (spec.schemaVersion !== DUNGEON_SPEC_VERSION) {
     pushError(errors, "SCHEMA_VERSION_UNSUPPORTED", "schemaVersion", `Expected schemaVersion ${DUNGEON_SPEC_VERSION}.`);

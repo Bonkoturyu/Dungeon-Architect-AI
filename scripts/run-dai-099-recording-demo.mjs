@@ -4,6 +4,7 @@ import readline from 'node:readline/promises';
 import { spawn, spawnSync } from 'node:child_process';
 import { stdin as input, stdout as output } from 'node:process';
 import { chromium } from 'playwright-core';
+import { sameBuildFingerprint, validateRecordingCandidate, fetchRecordingBuild, captureFileState, validateCapture } from './recording-evidence.mjs';
 
 const chromePath = process.env.CHROME_PATH || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 const baseUrl = String(
@@ -35,11 +36,19 @@ const useFfmpeg =
   process.env.DAI_RECORD_WITH_FFMPEG !== '0' &&
   ffmpegAvailable;
 
-const rl = readline.createInterface({ input, output });
 const marks = [];
 let startedAt = null;
 let ffmpegProcess = null;
 let ffmpegStderr = '';
+const captureBefore = captureFileState(capturePath);
+let captureStartedAtMs = null;
+const candidateBuild = JSON.parse(fs.readFileSync('dist/build-info.json', 'utf8'));
+const publicEvidence = JSON.parse(fs.readFileSync('artifacts/dai-099-public/dai-099-refreshed-public.json', 'utf8'));
+if (!validateRecordingCandidate({ baseUrl, candidateBuild, publicEvidence })) {
+  throw new Error('Recording requires passing public evidence for this URL and candidate fingerprint.');
+}
+const expectedPublicBuild = publicEvidence.buildFingerprint.remote;
+const rl = readline.createInterface({ input, output });
 
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -284,7 +293,7 @@ function probeCapture(filePath) {
 
   const result = spawnSync(ffprobePath, [
     '-v', 'error',
-    '-show_entries', 'format=duration,size',
+    '-show_entries', 'format=duration,size,format_name',
     '-show_entries', 'stream=codec_type,width,height,r_frame_rate',
     '-of', 'json',
     filePath,
@@ -299,6 +308,7 @@ function probeCapture(filePath) {
     const parsed = JSON.parse(result.stdout);
     return {
       durationSeconds: Number(parsed.format?.duration ?? 0),
+      formatName: parsed.format?.format_name ?? null,
       sizeBytes: Number(parsed.format?.size ?? 0),
       streams: parsed.streams ?? [],
     };
@@ -309,6 +319,7 @@ function probeCapture(filePath) {
 
 let browser;
 try {
+  const recordingBuildStart = await fetchRecordingBuild(baseUrl, expectedPublicBuild);
   browser = await chromium.launch({
     executablePath: chromePath,
     headless: false,
@@ -376,6 +387,7 @@ try {
   await wait(700);
   const viewportCaptureRegion = await getViewportCaptureRegion(page);
 
+  captureStartedAtMs = Date.now();
   if (useFfmpeg) {
     startFfmpegCapture(viewportCaptureRegion);
     await wait(1200);
@@ -544,7 +556,10 @@ try {
   const finished = await state(page);
   const demoDurationMs = elapsedMs();
 
+  const recordingBuildEnd = await fetchRecordingBuild(baseUrl, expectedPublicBuild);
   const checks = {
+    recordingBuildMatchesCandidate: sameBuildFingerprint(recordingBuildStart, expectedPublicBuild)
+      && sameBuildFingerprint(recordingBuildEnd, expectedPublicBuild),
     publicHttps: baseUrl.startsWith('https://'),
     liveGenerationUsedCloud:
       generated.lastGeneration?.selectedProvider === 'cloud',
@@ -579,6 +594,7 @@ try {
     generatedAt: new Date().toISOString(),
     node: process.version,
     publicUrl: baseUrl,
+    buildFingerprint: { candidate: candidateBuild, public: expectedPublicBuild, start: recordingBuildStart, end: recordingBuildEnd },
     browserVersion: browser.version(),
     passed: Object.values(checks).every(Boolean),
     scriptedDemoDurationMs: demoDurationMs,
@@ -598,30 +614,25 @@ try {
     },
   };
 
+  if (useFfmpeg) await stopFfmpegCapture();
+  else if (!auto) await rl.question(`Stop and save the recording to ${capturePath}, then press Enter... `);
+  const captureProbe = probeCapture(capturePath);
+  const captureFile = captureFileState(capturePath);
+  const captureValidation = validateCapture({ before: captureBefore, after: captureFile,
+    startedAtMs: captureStartedAtMs, probe: captureProbe });
+  Object.assign(evidence.recordingBoundary, {
+    capturePath, captureStartedAtMs, captureBefore, captureFile, captureProbe, ffprobeAvailable,
+    actualVideoFileCreated: captureFile !== null,
+    actualVideoFileValidated: captureValidation.passed,
+  });
+  Object.assign(evidence.checks, captureValidation.checks);
   if (useFfmpeg) {
-    await stopFfmpegCapture();
-    const captureProbe = probeCapture(capturePath);
-    evidence.recordingBoundary.actualVideoFileCreated = fs.existsSync(capturePath);
-    evidence.recordingBoundary.capturePath = capturePath;
-    evidence.recordingBoundary.ffprobeAvailable = ffprobeAvailable;
-    evidence.recordingBoundary.captureProbe = captureProbe;
-
-    evidence.checks.actualCaptureCreated =
-      evidence.recordingBoundary.actualVideoFileCreated === true;
-    evidence.checks.captureViewportNotNarrow =
-      viewportCaptureRegion.innerWidth >= 1280 &&
-      viewportCaptureRegion.innerHeight >= 720;
+    evidence.checks.captureViewportNotNarrow = viewportCaptureRegion.innerWidth >= 1280
+      && viewportCaptureRegion.innerHeight >= 720;
     evidence.checks.captureIsBrowserViewportOnly =
       evidence.recordingBoundary.captureMode === 'browser-viewport-region';
-    evidence.checks.actualCaptureUnder180Seconds =
-      captureProbe === null ||
-      (
-        Number.isFinite(captureProbe.durationSeconds) &&
-        captureProbe.durationSeconds > 0 &&
-        captureProbe.durationSeconds < 180
-      );
-    evidence.passed = Object.values(evidence.checks).every(Boolean);
   }
+  evidence.passed = Object.values(evidence.checks).every((value) => value === true);
 
   fs.writeFileSync(
     path.join(outputDir, 'dai-099-recording-run.json'),

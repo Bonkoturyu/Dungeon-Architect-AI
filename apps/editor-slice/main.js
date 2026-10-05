@@ -295,7 +295,7 @@ async function unlockAudioFromGesture() {
   syncReactiveAudioIntensity();
   renderAudioToggle();
 
-  if (unlocked) {
+  if (unlocked || !audioPresentation.getState().available) {
     document.removeEventListener('pointerdown', unlockAudioFromGesture, true);
     window.removeEventListener('keydown', unlockAudioFromGesture, true);
   }
