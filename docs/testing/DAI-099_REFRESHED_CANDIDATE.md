@@ -88,7 +88,11 @@ It records:
 - local runtime-bundle SHA-256 diagnostic;
 - build timestamp.
 
-The runtime-source hash is derived from the tracked production source/dependency boundary using Git blob identities, so it is stable across Windows and Cloudflare Linux checkouts. The runtime-bundle hash is still computed from the locally built static output as a diagnostic, but compiled bundle bytes are not required to be identical across operating systems.
+2026-10-05レビュー修正: runtime-source hashは `worktree-text-lf-sha256-v1` として実際のworktree file内容から計算します。Git indexのblob identityは利用しません。対象はeditor、Functions、`packages/**/src/**`（cloud-intentを含む）、fixture、NOTICE、package/lock、build/fingerprint scriptです。未追跡・非ignoreの対象fileも含め、build前後の入力一致を検査します。
+
+WindowsとCloudflare Linuxの改行差を吸収するため、source text（JS/MJS/CJS/JSON/HTML/CSS/TXT）のCRLF/CRだけをLFへ正規化してhashします。改行以外のbyteはそのまま保持し、監査済み`package-lock.json`は既存`.gitattributes`の`-text`指定に従ってraw bytesを維持します。binaryも変換しません。Git indexとは独立に実worktreeの未stage変更を検出し、OSのcheckout改行だけでは不一致になりません。checkout設定や属性を変更する必要はありません。
+
+旧Git-blob方式の保存hashとは混用せず、修正を含む候補の通常buildで新hashを生成します。local/publicのcompiled bundle hashは引き続きOS間の診断値ですが、各build自身のdist再計算と録画開始/終了の公開bundle同一性は必須です。
 
 `build-info.json` is served with `Cache-Control: no-store`.
 
@@ -173,9 +177,11 @@ The freeze-prep script requires:
 - tracked working tree is clean;
 - audited lock hash matches;
 - local build fingerprint matches current candidate commit;
+- current worktree source and dist bundle hashes recompute to the accepted build;
 - refreshed public evidence passed;
 - public commit and runtime-source fingerprint match the candidate;
-- refreshed video evidence passed;
+- refreshed video evidence passed for the same public-E2E URL and start/end build fingerprint;
+- the MP4 hash/size matches the fresh capture and probe recorded by that run;
 - actual MP4 exists and ffprobe proves duration <180 seconds;
 - legal audit passed;
 - privacy audit passed;

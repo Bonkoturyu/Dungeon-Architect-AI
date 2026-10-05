@@ -36,6 +36,8 @@ The repository flow has focused local and hosted regression evidence. See [the 2
 
 10月3日の受入smokeと過去の公開E2Eは、それぞれの対象commit・fixture／実providerの区別を保持します。公開API異常入力、最終動画・証拠の整合、repository公開と提出は、個別の証拠が揃うまで完了扱いにしません。r3対象外の主観的音声レビュー、公開deployment／全公開E2E、DAI-090 Final、freeze／rollback作成も、このローカルPASSで完了扱いにしません。
 
+2026-10-05のレビュー対応ではDungeonSpec検証・audio unlock・simulation policyと証拠検査を変更しました。[追加修正の検証記録](docs/testing/REVIEW_THREAD_REMEDIATION_2026-10-05.md)を参照してください。上記Windows r3の24/24 PASSは記録済みSHAに対する履歴であり、この追加runtime差分のbrowser受入を意味しません。
+
 ## Judge quick start
 
 See **[Judge Quick Start](docs/submission/JUDGE_QUICKSTART.md)**.

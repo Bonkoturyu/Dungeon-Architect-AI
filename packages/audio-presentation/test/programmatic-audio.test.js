@@ -1,5 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import { runInNewContext } from "node:vm";
 import {
   AUDIO_CUES,
   AUDIO_MODES,
@@ -503,4 +505,136 @@ test("audio presentation reports unavailable cleanly without Web Audio", async (
   assert.equal(state.desiredMode, "play");
   assert.equal(state.lastCue, "play-start");
   assert.equal(state.cueHistory.at(-1).scheduled, false);
+});
+
+test('constructor and resume failures disable audio without rejecting or retrying', async () => {
+  for (const failure of ['constructor', 'resume']) {
+    let constructions = 0;
+    class UnavailableAudioContext extends FakeAudioContext {
+      constructor() {
+        super();
+        constructions += 1;
+        if (failure === 'constructor') throw new Error('No output device');
+      }
+      async resume() { throw new Error('No output device'); }
+    }
+    const audio = createProgrammaticAudio({ AudioContextCtor: UnavailableAudioContext });
+    assert.equal(await audio.unlock(), false, failure);
+    assert.equal(audio.getState().available, false, failure);
+    assert.equal(audio.getState().unlocked, false, failure);
+    assert.equal(audio.getState().activeBgmVoices, 0, failure);
+    assert.equal(await audio.unlock(), false, failure);
+    assert.equal(constructions, 1, failure);
+    assert.equal(audio.playCue('play-start'), false, failure);
+  }
+});
+
+test('first-gesture cues wait for a shared unlock and are scheduled exactly once', async () => {
+  let resume;
+  let resumes = 0;
+  class DeferredAudioContext extends FakeAudioContext {
+    resume() {
+      resumes += 1;
+      return new Promise((resolve) => {
+        resume = () => { this.state = 'running'; resolve(); };
+      });
+    }
+  }
+  const audio = createProgrammaticAudio({ AudioContextCtor: DeferredAudioContext, clock: () => 42 });
+  audio.playCue('generated'); // ジェスチャーより前の音は再生しない
+  const first = audio.unlock();
+  const concurrent = audio.unlock();
+  audio.setMode('play');
+  assert.equal(audio.playCue('play-start'), false);
+  assert.equal(audio.playCue('move'), false);
+  assert.equal(resumes, 1);
+  assert.equal(FakeAudioContext.lastInstance.startedOscillators, 0);
+  resume();
+  assert.deepEqual(await Promise.all([first, concurrent]), [true, true]);
+  assert.equal(audio.getState().activeMode, 'play');
+  assert.deepEqual(audio.getState().cueHistory, [
+    { cue: 'generated', at: 42, scheduled: false },
+    { cue: 'play-start', at: 42, scheduled: true },
+    { cue: 'move', at: 42, scheduled: true },
+  ]);
+  const expectedVoices = 3 + AUDIO_CUES['play-start'].length + AUDIO_CUES.move.length;
+  assert.equal(FakeAudioContext.lastInstance.startedOscillators, expectedVoices);
+  await audio.unlock();
+  assert.equal(FakeAudioContext.lastInstance.startedOscillators, expectedVoices);
+  audio.dispose();
+});
+
+test('disposing during unlock discards queued cues and prevents late audio startup', async () => {
+  let resume;
+  class DeferredAudioContext extends FakeAudioContext {
+    resume() {
+      return new Promise((resolve) => {
+        resume = () => { this.state = 'running'; resolve(); };
+      });
+    }
+  }
+  const audio = createProgrammaticAudio({ AudioContextCtor: DeferredAudioContext });
+  const pending = audio.unlock();
+  audio.playCue('play-start');
+  audio.dispose();
+  resume();
+  assert.equal(await pending, false);
+  assert.equal(audio.getState().unlocked, false);
+  assert.equal(audio.getState().activeBgmVoices, 0);
+  assert.equal(audio.getState().cueHistory[0].scheduled, false);
+});
+
+test('failed editor gesture unlock disables audio controls and removes both listeners', async () => {
+  const source = await readFile(new URL('../../../apps/editor-slice/main.js', import.meta.url), 'utf8');
+  const renderSource = source.match(/^function renderAudioToggle\(\) \{[\s\S]*?^\}/m)?.[0];
+  const unlockSource = source.match(/^async function unlockAudioFromGesture\(\) \{[\s\S]*?^\}/m)?.[0];
+  assert.ok(renderSource);
+  assert.ok(unlockSource);
+  class UnavailableAudioContext extends FakeAudioContext {
+    async resume() { throw new Error('No output device'); }
+  }
+  const audio = createProgrammaticAudio({ AudioContextCtor: UnavailableAudioContext });
+  const removed = [];
+  const audioToggle = { dataset: {}, setAttribute() {} };
+  const bgmVolumeInput = {};
+  const seVolumeInput = {};
+  const unlockFromGesture = runInNewContext(`${renderSource}\n${unlockSource}\nunlockAudioFromGesture;`, {
+    audioPresentation: audio,
+    audioToggle,
+    bgmVolumeInput,
+    seVolumeInput,
+    bgmVolumeValue: null,
+    seVolumeValue: null,
+    t: (key) => key,
+    syncAudioMode() {},
+    syncReactiveAudioIntensity() {},
+    document: { removeEventListener: (...args) => removed.push(args) },
+    window: { removeEventListener: (...args) => removed.push(args) },
+  });
+  assert.equal(await unlockFromGesture(), false);
+  assert.equal(audioToggle.dataset.audioState, 'unavailable');
+  for (const control of [audioToggle, bgmVolumeInput, seVolumeInput]) {
+    assert.equal(control.disabled, true);
+  }
+  assert.deepEqual(removed, [
+    ['pointerdown', unlockFromGesture, true],
+    ['keydown', unlockFromGesture, true],
+  ]);
+});
+
+test('failed pending unlock discards cues and handles rejected context cleanup', async () => {
+  let rejectResume;
+  class UnavailableAudioContext extends FakeAudioContext {
+    resume() { return new Promise((resolve, reject) => { rejectResume = reject; }); }
+    async close() { throw new Error('Already unavailable'); }
+  }
+  const audio = createProgrammaticAudio({ AudioContextCtor: UnavailableAudioContext });
+  const pending = audio.unlock();
+  audio.playCue('play-start');
+  rejectResume(new Error('No output device'));
+  assert.equal(await pending, false);
+  assert.equal(audio.getState().available, false);
+  assert.equal(audio.getState().cueHistory[0].scheduled, false);
+  assert.equal(FakeAudioContext.lastInstance.startedOscillators, 0);
+  assert.equal(await audio.unlock(), false);
 });

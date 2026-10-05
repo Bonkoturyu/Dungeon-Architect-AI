@@ -1,106 +1,15 @@
-import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { runtimeSourceFingerprint, collectBundleManifest, manifestSha256 } from './runtime-fingerprint.mjs';
 
 const distDir = path.resolve('dist');
 const buildInfoPath = path.join(distDir, 'build-info.json');
 const outputDir = path.resolve('artifacts/dai-099-predeploy');
 fs.mkdirSync(outputDir, { recursive: true });
 
-function sha256(buffer) {
-  return crypto.createHash('sha256').update(buffer).digest('hex');
-}
-
-const runtimeSourcePathspecs = [
-  'apps/editor-slice',
-  'functions',
-  'packages/audio-presentation/src',
-  'packages/core/src',
-  'packages/editor-core/src',
-  'packages/generator/src',
-  'packages/intent/src',
-  'packages/onboarding/src',
-  'packages/play-core/src',
-  'packages/renderer-three/src',
-  'packages/run-core/src',
-  'spec/dungeon/fixtures/minimal-valid-v1.json',
-  'THIRD_PARTY_NOTICES.txt',
-  'package.json',
-  'package-lock.json',
-  'scripts/build-hosting.mjs',
-];
-
-function runtimeSourceFingerprint() {
-  const manifest = execFileSync(
-    'git',
-    ['ls-files', '-s', '--', ...runtimeSourcePathspecs],
-    { encoding: 'utf8' },
-  )
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .sort((a, b) => a.localeCompare(b))
-    .join('\n') + '\n';
-
-  return sha256(Buffer.from(manifest, 'utf8'));
-}
-
-function canonicalFingerprintPath(relativePath) {
-  return relativePath.replace(
-    /^assets\/index-[^/]+\.(js|css)$/i,
-    (_match, extension) => `assets/index.${extension.toLowerCase()}`,
-  );
-}
-
-function canonicalFingerprintBytes(relativePath, bytes) {
-  const textLike =
-    relativePath === '_headers' ||
-    relativePath === '_routes.json' ||
-    /\.(?:html|css|js|json|txt)$/i.test(relativePath);
-
-  if (!textLike) return bytes;
-
-  let text = bytes.toString('utf8').replace(/\r\n?/g, '\n');
-  if (relativePath === 'index.html') {
-    text = text.replace(
-      /\/assets\/index-[^"'\s>]+\.(js|css)/gi,
-      (_match, extension) => `/assets/index.${extension.toLowerCase()}`,
-    );
-  }
-  return Buffer.from(text, 'utf8');
-}
-
 function git(args) {
   return execFileSync('git', args, { encoding: 'utf8' }).trim();
-}
-
-function collect(dir) {
-  const entries = [];
-
-  function walk(current) {
-    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
-      const full = path.join(current, entry.name);
-      if (entry.isDirectory()) {
-        walk(full);
-        continue;
-      }
-      if (!entry.isFile()) continue;
-      const relative = path.relative(dir, full).replaceAll('\\', '/');
-      if (relative === 'build-info.json') continue;
-      const bytes = fs.readFileSync(full);
-      const fingerprintBytes = canonicalFingerprintBytes(relative, bytes);
-      entries.push({
-        path: canonicalFingerprintPath(relative),
-        bytes: fingerprintBytes.length,
-        sha256: sha256(fingerprintBytes),
-      });
-    }
-  }
-
-  walk(dir);
-  entries.sort((a, b) => a.path.localeCompare(b.path));
-  return entries;
 }
 
 if (!fs.existsSync(buildInfoPath)) {
@@ -109,12 +18,9 @@ if (!fs.existsSync(buildInfoPath)) {
 
 const buildInfo = JSON.parse(fs.readFileSync(buildInfoPath, 'utf8'));
 const head = git(['rev-parse', 'HEAD']).toLowerCase();
-const recomputedRuntimeSourceSha256 = runtimeSourceFingerprint();
-const manifest = collect(distDir);
-const manifestText = manifest
-  .map((entry) => `${entry.path}\t${entry.bytes}\t${entry.sha256}\n`)
-  .join('');
-const recomputedBundleSha256 = sha256(Buffer.from(manifestText, 'utf8'));
+const recomputedRuntimeSourceSha256 = runtimeSourceFingerprint(process.cwd());
+const manifest = collectBundleManifest(distDir);
+const recomputedBundleSha256 = manifestSha256(manifest);
 const headers = fs.readFileSync(path.join(distDir, '_headers'), 'utf8');
 
 const checks = {

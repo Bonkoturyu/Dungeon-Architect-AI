@@ -195,9 +195,26 @@ function simulateCurrentFloor(
       );
     }
 
+    try {
+      action = clone(action);
+    } catch {
+      return fail(
+        'RUN_SIM_POLICY_INVALID_ACTION',
+        'Floor policy action must be JSON-serializable.',
+        { floorIndex, localStep },
+      );
+    }
+    if (!action || typeof action !== 'object' || Array.isArray(action)) {
+      return fail(
+        'RUN_SIM_POLICY_INVALID_ACTION',
+        'Serialized floor policy action must be an object.',
+        { floorIndex, localStep },
+      );
+    }
+
     const beforeRoomId = current.currentRoomId;
     clock += 1;
-    const applied = applySimulationAction(current, clone(action), { at: clock });
+    const applied = applySimulationAction(current, action, { at: clock });
     if (!applied.ok) {
       return fail(
         'RUN_SIM_ACTION_FAILED',

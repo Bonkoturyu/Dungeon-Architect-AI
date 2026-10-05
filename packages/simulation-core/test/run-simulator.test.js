@@ -104,3 +104,35 @@ test('run simulation normalizes invalid policy factories and step limits', () =>
   assert.equal(invalidFactory.ok, false);
   assert.equal(invalidFactory.error.code, 'RUN_SIM_POLICY_REQUIRED');
 });
+
+test('run simulation normalizes action serialization failures from floor policies', () => {
+  const cyclic = { type: 'stop' };
+  cyclic.debug = cyclic;
+  const actions = [
+    cyclic,
+    { type: 'stop', debug: 1n },
+    { type: 'stop', toJSON() { throw new Error('serialization failed'); } },
+    { type: 'stop', toJSON() { return null; } },
+  ];
+
+  for (const action of actions) {
+    const result = simulateDungeonRun(runFixture(), () => () => action);
+    assert.equal(result.ok, false);
+    assert.equal(result.error.code, 'RUN_SIM_POLICY_INVALID_ACTION');
+    assert.deepEqual(result.error.details, { floorIndex: 0, localStep: 0 });
+  }
+});
+
+test('run simulation snapshots each policy action once for execution and tracing', () => {
+  let serializations = 0;
+  const result = simulateDungeonRun(runFixture(), () => () => ({
+    toJSON() {
+      serializations += 1;
+      if (serializations > 1) throw new Error('serialized twice');
+      return { type: 'stop' };
+    },
+  }));
+  assert.equal(result.ok, true, JSON.stringify(result.error));
+  assert.equal(serializations, 1);
+  assert.deepEqual(result.simulation.floorSimulations[0].trace[0].action, { type: 'stop' });
+});

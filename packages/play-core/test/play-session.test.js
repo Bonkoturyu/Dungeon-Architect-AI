@@ -380,3 +380,21 @@ test("cleared session produces a deterministic basic Result", () => {
   assert.equal(result.result.moves, 4);
   assert.equal(result.result.finalRoomId, "room-005");
 });
+
+test('START blocks array accessors and hidden serialization hooks without executing them', () => {
+  for (const invalidKind of ['array-accessor', 'toJSON']) {
+    const spec = fixture();
+    let calls = 0;
+    const invalid = () => { calls += 1; throw new Error('invalid value executed'); };
+    if (invalidKind === 'array-accessor') {
+      Object.defineProperty(spec.rooms, '0', { get: invalid });
+    } else {
+      Object.defineProperty(spec, 'toJSON', { value: invalid });
+    }
+
+    const result = startPlaySession(spec);
+    assert.equal(result.ok, false, invalidKind);
+    assert.equal(result.blocked, true, invalidKind);
+    assert.equal(calls, 0, invalidKind);
+  }
+});

@@ -12,6 +12,13 @@
 
 旧M8の49.5秒動画、旧DAI-099の59.9秒動画は歴史的証拠として保持します。以下の旧撮影計画／runnerは現在の150秒v2を作成・再検証した証拠ではありません。候補の確認では matching build fingerprint と動画identityを区別します。
 
+## 2026-10-05 runner検査の補強
+
+- 以下のrunnerを今後使う場合、候補local buildとpassedのpublic-E2Eのcommit/sourceが一致し、録画前後の公開build-infoがそのpublic-E2Eで検証したcommit/source/bundleと一致することを必須とします
+- 自動captureを無効にした場合も、今回のrun開始後に新規作成・更新されたMP4、以前と異なるSHA-256、正のfile size、ffprobeのvideo stream/MP4形式/180秒未満のdurationが必要です。interactionのみの実行や残存MP4をPASSにしません
+- freeze時はrecording evidenceのcapture SHA-256/sizeと実fileを再照合します。public-doc auditの成功とsource/distの再計算も必要です
+- これは検証scriptの修正であり、保持中の150秒v2の再撮影、公開、再probe、現runtimeとの一致確認を実施した記録ではありません
+
 ## 歴史的DAI-099撮影計画・自動runner（2026-09）
 
 ### Historical status

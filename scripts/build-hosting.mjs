@@ -1,9 +1,9 @@
-import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { build } from 'vite';
+import { runtimeSourceFingerprint, collectBundleManifest, manifestSha256 } from './runtime-fingerprint.mjs';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const appRoot = path.join(repoRoot, 'apps', 'editor-slice');
@@ -38,100 +38,7 @@ function gitHead() {
   return { commitSha: null, source: 'unavailable' };
 }
 
-const runtimeSourcePathspecs = [
-  'apps/editor-slice',
-  'functions',
-  'packages/audio-presentation/src',
-  'packages/core/src',
-  'packages/editor-core/src',
-  'packages/generator/src',
-  'packages/intent/src',
-  'packages/onboarding/src',
-  'packages/play-core/src',
-  'packages/renderer-three/src',
-  'packages/run-core/src',
-  'spec/dungeon/fixtures/minimal-valid-v1.json',
-  'THIRD_PARTY_NOTICES.txt',
-  'package.json',
-  'package-lock.json',
-  'scripts/build-hosting.mjs',
-];
-
-function runtimeSourceFingerprint() {
-  const manifest = execFileSync(
-    'git',
-    ['ls-files', '-s', '--', ...runtimeSourcePathspecs],
-    { cwd: repoRoot, encoding: 'utf8' },
-  )
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .sort((a, b) => a.localeCompare(b))
-    .join('\n') + '\n';
-
-  return crypto.createHash('sha256').update(manifest, 'utf8').digest('hex');
-}
-
-function canonicalFingerprintPath(relativePath) {
-  return relativePath.replace(
-    /^assets\/index-[^/]+\.(js|css)$/i,
-    (_match, extension) => `assets/index.${extension.toLowerCase()}`,
-  );
-}
-
-function canonicalFingerprintBytes(relativePath, bytes) {
-  const textLike =
-    relativePath === '_headers' ||
-    relativePath === '_routes.json' ||
-    /\.(?:html|css|js|json|txt)$/i.test(relativePath);
-
-  if (!textLike) return bytes;
-
-  let text = bytes.toString('utf8').replace(/\r\n?/g, '\n');
-  if (relativePath === 'index.html') {
-    text = text.replace(
-      /\/assets\/index-[^"'\s>]+\.(js|css)/gi,
-      (_match, extension) => `/assets/index.${extension.toLowerCase()}`,
-    );
-  }
-  return Buffer.from(text, 'utf8');
-}
-
-async function collectDistManifest(dir, { exclude = new Set() } = {}) {
-  const entries = [];
-
-  async function walk(current) {
-    for (const entry of await fs.readdir(current, { withFileTypes: true })) {
-      const full = path.join(current, entry.name);
-      if (entry.isDirectory()) {
-        await walk(full);
-        continue;
-      }
-      if (!entry.isFile()) continue;
-
-      const relative = path.relative(dir, full).replaceAll('\\', '/');
-      if (exclude.has(relative)) continue;
-      const bytes = await fs.readFile(full);
-      const fingerprintBytes = canonicalFingerprintBytes(relative, bytes);
-      entries.push({
-        path: canonicalFingerprintPath(relative),
-        bytes: fingerprintBytes.length,
-        sha256: crypto.createHash('sha256').update(fingerprintBytes).digest('hex'),
-      });
-    }
-  }
-
-  await walk(dir);
-  entries.sort((a, b) => a.path.localeCompare(b.path));
-  return entries;
-}
-
-function manifestSha256(entries) {
-  const text = entries
-    .map((entry) => `${entry.path}\t${entry.bytes}\t${entry.sha256}\n`)
-    .join('');
-  return crypto.createHash('sha256').update(text).digest('hex');
-}
+const runtimeSourceSha256 = runtimeSourceFingerprint(repoRoot);
 
 await build({
   root: appRoot,
@@ -175,14 +82,15 @@ const routes = {
 };
 await fs.writeFile(path.join(distDir, '_routes.json'), `${JSON.stringify(routes, null, 2)}\n`, 'utf8');
 
-const distManifestWithoutBuildInfo = await collectDistManifest(distDir, {
-  exclude: new Set(['build-info.json']),
-});
+const distManifestWithoutBuildInfo = collectBundleManifest(distDir);
 const runtimeBundleSha256 = manifestSha256(distManifestWithoutBuildInfo);
-const runtimeSourceSha256 = runtimeSourceFingerprint();
+if (runtimeSourceFingerprint(repoRoot) !== runtimeSourceSha256) {
+  throw new Error('Runtime source changed during build. Rebuild from stable inputs.');
+}
 const source = gitHead();
 const buildInfo = {
   schemaVersion: '1.0',
+  runtimeSourceAlgorithm: 'worktree-text-lf-sha256-v1',
   commitSha: source.commitSha,
   commitSource: source.source,
   runtimeSourceSha256,

@@ -123,3 +123,69 @@ test("cyclic and runtime-only values are rejected before START snapshotting", as
   assert.equal(runtimeObjectResult.valid, false);
   assert.ok(runtimeObjectResult.errors.some((error) => error.code === "JSON_OBJECT_UNSUPPORTED"));
 });
+
+for (const location of ['extension', 'rooms']) {
+  test(`array-index accessors in ${location} are rejected without executing getters`, async () => {
+    const spec = await loadFixture();
+    const array = location === 'rooms' ? spec.rooms : (spec.extension = [null]);
+    let reads = 0;
+    Object.defineProperty(array, '0', {
+      enumerable: true,
+      get() { reads += 1; throw new Error('array accessor ran'); },
+    });
+
+    const result = validateDungeonSpec(spec);
+    assert.equal(result.valid, false);
+    assert.ok(result.errors.some((error) => error.code === 'JSON_ACCESSOR_UNSUPPORTED'));
+    assert.equal(reads, 0);
+  });
+}
+
+for (const location of ['root', 'room', 'array']) {
+  test(`hidden toJSON hooks on ${location} are rejected without calling them`, async () => {
+    const spec = await loadFixture();
+    const target = location === 'root' ? spec : location === 'room' ? spec.rooms[0] : spec.rooms;
+    let calls = 0;
+    Object.defineProperty(target, 'toJSON', {
+      value() { calls += 1; throw new Error('serialization hook ran'); },
+    });
+
+    const result = validateDungeonSpec(spec);
+    assert.equal(result.valid, false);
+    assert.ok(result.errors.some((error) => error.code === 'JSON_TOJSON_UNSUPPORTED'));
+    assert.equal(calls, 0);
+  });
+}
+
+test('hidden toJSON accessors are rejected without reading them', async () => {
+  const spec = await loadFixture();
+  let reads = 0;
+  Object.defineProperty(spec, 'toJSON', {
+    get() { reads += 1; throw new Error('toJSON getter ran'); },
+  });
+  const result = validateDungeonSpec(spec);
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((error) => error.code === 'JSON_TOJSON_UNSUPPORTED'));
+  assert.equal(reads, 0);
+});
+
+test('inherited array toJSON hooks are rejected without running them', async () => {
+  const spec = await loadFixture();
+  let calls = 0;
+  const prototype = Object.create(Array.prototype);
+  Object.defineProperty(prototype, 'toJSON', {
+    value() { calls += 1; throw new Error('inherited serialization hook ran'); },
+  });
+  Object.setPrototypeOf(spec.rooms, prototype);
+  const result = validateDungeonSpec(spec);
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((error) => error.code === 'JSON_TOJSON_UNSUPPORTED'));
+  assert.equal(calls, 0);
+});
+
+test('non-callable hidden toJSON values remain valid JSON data', async () => {
+  const spec = await loadFixture();
+  Object.defineProperty(spec, 'toJSON', { value: 'ordinary metadata' });
+  assert.equal(validateDungeonSpec(spec).valid, true);
+  assert.deepEqual(JSON.parse(JSON.stringify(spec)), await loadFixture());
+});
