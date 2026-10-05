@@ -72,6 +72,17 @@ for (const file of [lockPath, buildInfoPath, videoPath, ...Object.values(evidenc
 }
 if (!fs.existsSync(distDir)) throw new Error('dist/ missing.');
 
+// 過去のpassedだけでは現候補のdocsを証明できないため、このcheckoutで必ず再監査する。
+const publicDocsAudit = spawnSync(process.execPath, ['scripts/run-dai-080-public-docs-audit.mjs'], {
+  cwd: process.cwd(),
+  windowsHide: true,
+  encoding: 'utf8',
+});
+if (publicDocsAudit.error || publicDocsAudit.status !== 0) {
+  throw new Error('DAI-099 freeze prep requires a fresh passing public-doc audit.\n'
+    + (publicDocsAudit.error?.message || publicDocsAudit.stderr || publicDocsAudit.stdout || 'Audit did not exit successfully.'));
+}
+
 const lockSha256 = sha256File(lockPath);
 const buildInfo = readJson(buildInfoPath);
 const publicEvidence = readJson(evidenceFiles.publicE2E);
@@ -198,7 +209,7 @@ const evidence = {
   },
   evidenceSha256,
   finalPublicDocsBoundary:
-    'The public-doc audit must pass before freeze; final bookkeeping is audited again after acceptance.',
+    'The public-doc audit is rerun against this checkout during freeze; final bookkeeping is audited again after acceptance.',
   build: {
     fileCount: distManifest.length,
     manifestSha256: distManifestSha256,

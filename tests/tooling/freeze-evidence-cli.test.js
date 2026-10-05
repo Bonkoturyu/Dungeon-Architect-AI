@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -31,8 +32,12 @@ function fixture(t) {
   };
   const json = (file, value) => write(file, JSON.stringify(value));
   for (const script of ['runtime-fingerprint.mjs', 'recording-evidence.mjs',
-    'run-dai-099-freeze-prep.mjs', 'run-dai-099-build-fingerprint-audit.mjs']) {
+    'run-dai-099-freeze-prep.mjs', 'run-dai-099-build-fingerprint-audit.mjs',
+    'run-dai-080-public-docs-audit.mjs']) {
     write(`scripts/${script}`, fs.readFileSync(path.join(repoRoot, 'scripts', script)));
+  }
+  for (const entry of ['README.md', 'docs', 'spec', 'THIRD_PARTY_NOTICES.txt']) {
+    fs.cpSync(path.join(repoRoot, entry), path.join(root, entry), { recursive: true });
   }
   write('package-lock.json', fs.readFileSync(path.join(repoRoot, 'package-lock.json')));
   write('apps/editor-slice/main.js', 'export const fixture = true;\n');
@@ -53,7 +58,11 @@ function fixture(t) {
       if (args.includes('--format=%s')) return 'Synthetic fixture';
       throw new Error('Unexpected fixture git args: ' + args);
     };
-    childProcess.spawnSync = (command) => {
+    const actualSpawnSync = childProcess.spawnSync;
+    childProcess.spawnSync = (command, args, options) => {
+      if (command === process.execPath && args[0] === 'scripts/run-dai-080-public-docs-audit.mjs') {
+        return actualSpawnSync(command, args, options);
+      }
       if (command !== 'ffprobe') throw new Error('Unexpected fixture process: ' + command);
       return { status: 0, stdout: JSON.stringify({ format: { duration: '120', size: '27' } }) };
     };
@@ -116,12 +125,49 @@ test('freeze CLI rejects missing public-doc evidence before producing a freeze',
   assert.equal(result.evidence, null);
 });
 
-test('freeze CLI rejects failed public-doc evidence', (t) => {
-  const { run, json } = fixture(t);
-  json(paths.publicDocs, { passed: false });
+test('freeze CLI replaces an old failed public-doc artifact with a fresh current passing audit', (t) => {
+  const { root, run, json } = fixture(t);
+  json(paths.publicDocs, { passed: false, generatedAt: '2000-01-01T00:00:00Z' });
+  const result = run();
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.evidence.checks.publicDocsAuditPassed, true);
+  const fresh = JSON.parse(fs.readFileSync(path.join(root, paths.publicDocs), 'utf8'));
+  assert.equal(fresh.passed, true);
+  assert.notEqual(fresh.generatedAt, '2000-01-01T00:00:00Z');
+  assert.equal(fresh.checks.noObsoleteCurrentClaims, true);
+  const freshHash = crypto.createHash('sha256').update(fs.readFileSync(path.join(root, paths.publicDocs))).digest('hex');
+  assert.equal(result.evidence.evidenceSha256.publicDocs, freshHash);
+});
+
+test('freeze CLI rejects committed public-doc changes despite stale passing evidence and clean git status', (t) => {
+  const { root, run, buildInfo } = fixture(t);
+  const audited = spawnSync(process.execPath, ['scripts/run-dai-080-public-docs-audit.mjs'], {
+    cwd: root, encoding: 'utf8', windowsHide: true,
+  });
+  assert.equal(audited.status, 0, audited.stderr);
+  const old = JSON.parse(fs.readFileSync(path.join(root, paths.publicDocs), 'utf8'));
+  assert.equal(old.passed, true);
+  // git status/HEADはcleanな候補をstubしたまま。docsはruntime hash対象外。
+  fs.appendFileSync(path.join(root, 'README.md'), '\nThe current production generator is frozen as **Generator Version 1**.\n');
+  assert.equal(runtimeSourceFingerprint(root), buildInfo.runtimeSourceSha256);
+  const result = run();
+  assert.notEqual(result.status, 0, 'stale passed artifact must not authorize a changed candidate');
+  assert.match(result.stderr, /fresh passing public-doc audit/);
+  assert.equal(result.evidence, null);
+  const fresh = JSON.parse(fs.readFileSync(path.join(root, paths.publicDocs), 'utf8'));
+  assert.equal(fresh.passed, false);
+  assert.equal(fresh.checks.noObsoleteCurrentClaims, false);
+});
+
+test('freeze CLI rejects an unreadable current document even if the old audit remains passed', (t) => {
+  const { root, run, json } = fixture(t);
+  json(paths.publicDocs, { passed: true, generatedAt: '2000-01-01T00:00:00Z' });
+  fs.unlinkSync(path.join(root, 'docs/submission/JUDGE_QUICKSTART.md'));
   const result = run();
   assert.notEqual(result.status, 0);
-  assert.equal(result.evidence.checks.publicDocsAuditPassed, false);
+  assert.match(result.stderr, /fresh passing public-doc audit/);
+  assert.equal(result.evidence, null);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(root, paths.publicDocs), 'utf8')).passed, true);
 });
 
 test('freeze CLI rejects modified dist bytes even when prior fingerprint audit passed', (t) => {
