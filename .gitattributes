@@ -1,3 +1,3 @@
-# The audited package-lock.json is preserved byte-for-byte with CRLF.
+# Preserve the current reviewed package-lock.json byte-for-byte (including its audited EOLs).
 # Do not normalize its EOLs, and treat CR as part of the line terminator for whitespace checks.
 package-lock.json -text whitespace=cr-at-eol

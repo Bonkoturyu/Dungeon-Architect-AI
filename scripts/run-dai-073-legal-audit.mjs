@@ -1,10 +1,11 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { readReviewedLockfileSha256 } from './reviewed-lockfile.mjs';
 
 const repoRoot = process.cwd();
 const outputDir = path.join(repoRoot, 'artifacts', 'legal');
-const expectedLockSha256 = 'ce94a9ee4241ee798c0c32c0fda55f00cb4462fb6ba6244acdd3d53589d261cc';
+const expectedLockSha256 = readReviewedLockfileSha256(repoRoot);
 
 const creativeExtensions = new Set([
   '.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg',

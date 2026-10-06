@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 
 $ExpectedVersion = '6000.3.23f1'
-$ExpectedLockSha256 = 'ce94a9ee4241ee798c0c32c0fda55f00cb4462fb6ba6244acdd3d53589d261cc'
+$ExpectedLockSha256 = & (Join-Path $PSScriptRoot 'get-reviewed-lockfile-sha.ps1')
 $ProjectPath = Join-Path $PSScriptRoot '..\benchmarks\unity-webgl'
 $ProjectPath = [System.IO.Path]::GetFullPath($ProjectPath)
 $BuildDir = Join-Path $PSScriptRoot '..\.tmp\unity-webgl-build'

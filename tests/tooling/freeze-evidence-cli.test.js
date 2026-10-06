@@ -31,7 +31,7 @@ function fixture(t) {
     fs.writeFileSync(path.join(root, file), content);
   };
   const json = (file, value) => write(file, JSON.stringify(value));
-  for (const script of ['runtime-fingerprint.mjs', 'recording-evidence.mjs',
+  for (const script of ['runtime-fingerprint.mjs', 'recording-evidence.mjs', 'reviewed-lockfile.mjs',
     'run-dai-099-freeze-prep.mjs', 'run-dai-099-build-fingerprint-audit.mjs',
     'run-dai-080-public-docs-audit.mjs']) {
     write(`scripts/${script}`, fs.readFileSync(path.join(repoRoot, 'scripts', script)));
@@ -123,6 +123,28 @@ test('freeze CLI rejects missing public-doc evidence before producing a freeze',
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /missing required evidence: artifacts\/public-docs/);
   assert.equal(result.evidence, null);
+});
+
+test('freeze CLI rejects a changed lockfile despite a valid current reviewed manifest', (t) => {
+  const { root, write, run } = fixture(t);
+  write('package-lock.json', `${fs.readFileSync(path.join(root, 'package-lock.json'), 'utf8')} `);
+  const result = run();
+  assert.notEqual(result.status, 0);
+  assert.equal(result.evidence.checks.auditedLockfileExact, false);
+});
+
+test('freeze CLI fails closed when the current reviewed identity is missing or malformed', (t) => {
+  const { root, write, run } = fixture(t);
+  const manifest = 'docs/legal/evidence/REVIEWED_PACKAGE_LOCK.json';
+  fs.unlinkSync(path.join(root, manifest));
+  let result = run();
+  assert.notEqual(result.status, 0);
+  assert.equal(result.evidence, null);
+  write(manifest, JSON.stringify({ schemaVersion: 1, lockfile: 'package-lock.json', sha256: 'invalid' }));
+  result = run();
+  assert.notEqual(result.status, 0);
+  assert.equal(result.evidence, null);
+  assert.match(result.stderr, /Invalid reviewed package-lock identity/);
 });
 
 test('freeze CLI replaces an old failed public-doc artifact with a fresh current passing audit', (t) => {
