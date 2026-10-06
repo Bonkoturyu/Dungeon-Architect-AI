@@ -121,6 +121,16 @@ UI・数量差別化は [ユーザーフィードバック対応](docs/testing/U
 
 罠は「回避を試みる」1操作で、成功率70%（全難易度共通の暫定値）と失敗時の被害を表示します。成功は無傷、失敗は罠が発動し、どちらも1回で解決済みになります。同じ階Seed・罠IDでは再PlayやFull JSON再Importでも判定が変わりません。内容レイヤーは失敗分の被害を含む攻略経路を実Playで検査し、指定を守って確認できない場合は生成を拒否します。ルール未指定のJSONも現行70%へ正規化し、地形・個数・Seed・IDは保持します。旧内容レイヤー1/2と100%回避の互換分岐は廃止しました。BSPやGenerator V1/V2を含む11の選択可能な生成方式は引き続き利用できます。詳細は[現行ルールへの統一](docs/testing/CURRENT_CONTENT_RULES_2026-10-02.md)と[罠回避検証](docs/testing/TRAP_AVOIDANCE_2026-10-02.md)を参照してください。
 
+## JSONで再編集 / GLBで3D外観を共有
+
+Createの「インポート / エクスポート」から用途に合わせて保存できます。
+
+- **完全JSON（Full JSON）**：全階のDungeonSpec、Entity、Eventを保存し、JSONインポートでDungeon内の編集を再開します。プレイ途中のHP・進行状況やUndo履歴の保存ではありません。
+- **レイアウトJSON（Layout JSON）**：全階の部屋・通路・Start/Goal役割を交換します。敵・宝・罠などの内容やEventは含みません。
+- **GLB · 表示中の階（3D外観）**：選択中の1階の確定済み形状・材質を、他の3Dツール向けに保存します。全階を自動積層しません。他の階は切り替えて個別に保存します。
+
+GLBは床・壁・通路・配置物の静的な外観用です。ゲーム機能、進行状態、編集ハンドル、カメラ、照明・霧・音声・アニメーションは含まず、Dungeonへ再インポートできません。元の表示と照明の見え方は変わります。再編集用には完全JSONも保存してください。[範囲・座標・検証方法](docs/architecture/GLB_EXPORT.md)
+
 ## Generator versions and research
 
 **Generator Version 1** is retained as a reproducibility baseline. The browser Recommended alias selects **V3**, with **11 generator strategies** available; V1/V2 and BSP remain selectable. V3 shares V2 terrain and adds the common content layer, so eleven selectable strategies are not a claim of eleven independent terrain algorithms.
