@@ -1,4 +1,5 @@
 import { resolveRoomConfigurationPresence } from '../../packages/intent/src/endpoint-room-plans.js';
+import { downloadBlob } from './download-blob.js';
 import { measurePerformance, measurePerformanceAsync, startPerformanceProbe, stopPerformanceProbe } from '../../packages/renderer-three/src/performance-probe.js';
 import { reviewRoomPlan, createRoomPlanConfig, resolveGenerationDifficulty } from './room-plan-review.js';
 import { TRAP_RULES_V1 } from '../../packages/core/src/trap-rules.js';
@@ -159,6 +160,8 @@ const generateDungeonButton = document.querySelector('#generateDungeon');
 const generationStatus = document.querySelector('#generationStatus');
 const exportLayoutJsonButton = document.querySelector('#exportLayoutJson');
 const exportFullJsonButton = document.querySelector('#exportFullJson');
+const exportGlbButton = document.querySelector('#exportGlb');
+const glbExportStatus = document.querySelector('#glbExportStatus');
 const importJsonButton = document.querySelector('#importJson');
 const importJsonInput = document.querySelector('#importJsonInput');
 const generationHistory = document.querySelector('#generationHistory');
@@ -186,6 +189,7 @@ let selectedRoomId = null;
 let selectedEntityId = null;
 let selectedCorridorId = null;
 let generationBusy = false;
+let glbExportBusy = false;
 let lastDesignIntent = null;
 let lastSpecialRoomConfig = null;
 let lastGeneration = null;
@@ -425,6 +429,34 @@ function exportFullJson() {
     currentFullDungeonExport(),
     `${base}.dungeon-run.v1.json`,
   );
+}
+
+async function exportGlb() {
+  if (glbExportBusy) return { ok: false, code: 'EXPORT_BUSY' };
+  if (mode !== 'edit' || generationBusy || naturalEditBusy || !session) {
+    return { ok: false, code: 'EXPORT_EDITOR_BUSY' };
+  }
+  if (!authoringRunSpec().ok) return { ok: false, code: 'EXPORT_INVALID_DUNGEON' };
+  // export開始時の階と確定済みspecを固定し、非同期処理中の階変更と区別する。
+  const floor = currentFloorIndex + 1;
+  const filename = `${exportBaseName()}.floor-${floor}.glb`;
+  const spec = session.spec;
+  glbExportBusy = true;
+  updateUi();
+  if (glbExportStatus) glbExportStatus.textContent = t('export.glbBusy', { floor });
+  try {
+    const data = await adapter.exportDungeonGlb(spec);
+    downloadBlob(new Blob([data], { type: 'model/gltf-binary' }), filename);
+    if (glbExportStatus) glbExportStatus.textContent = t('export.saved', { name: filename });
+    return { ok: true, filename, byteLength: data.byteLength };
+  } catch {
+    if (glbExportStatus) glbExportStatus.textContent = t('export.glbFailed');
+    showViewportNotice(t('export.glbFailed'), { timeoutMs: 5200 });
+    return { ok: false, code: 'EXPORT_GLB_FAILED' };
+  } finally {
+    glbExportBusy = false;
+    updateUi();
+  }
 }
 
 function applyImportedDungeonJson(...args) { return measurePerformance('ui.applyImportedDungeonJson', () => applyImportedDungeonJsonImplementation(...args)); }
@@ -886,6 +918,7 @@ function snapshotState() {
     validationCriticalCount: gate.criticalCount,
     validationErrors: gate.errors.map((entry) => ({ ...entry })),
     generationBusy,
+    glbExportBusy,
     generatorStrategyId: selectedGeneratorStrategyId(),
     availableGeneratorStrategies: generatorStrategyRegistry.list().map((entry) => ({
       id: entry.id,
@@ -1992,6 +2025,10 @@ function updateUiImplementation() {
   const exportBlocked = !editing || authoringBusy || !runValidation.ok;
   if (exportLayoutJsonButton) exportLayoutJsonButton.disabled = exportBlocked;
   if (exportFullJsonButton) exportFullJsonButton.disabled = exportBlocked;
+  if (exportGlbButton) {
+    exportGlbButton.disabled = exportBlocked || glbExportBusy;
+    exportGlbButton.setAttribute('aria-busy', String(glbExportBusy));
+  }
   if (importJsonButton) importJsonButton.disabled = !editing || authoringBusy;
   if (importJsonInput) importJsonInput.disabled = !editing || authoringBusy;
   generateDungeonButton.disabled = !editing || authoringBusy || !generationPrompt.value.trim();
@@ -4451,6 +4488,7 @@ async function run() {
     generateDungeonButton.addEventListener('click', generateDungeonFromPrompt);
     exportLayoutJsonButton?.addEventListener('click', exportLayoutJson);
     exportFullJsonButton?.addEventListener('click', exportFullJson);
+    exportGlbButton?.addEventListener('click', exportGlb);
     importJsonButton?.addEventListener('click', () => importJsonInput?.click());
     importJsonInput?.addEventListener('change', async () => {
       const file = importJsonInput.files?.[0] ?? null;
@@ -4527,6 +4565,7 @@ async function run() {
       getFullDungeonExport: currentFullDungeonExport,
       exportLayoutJson,
       exportFullJson,
+      exportGlb,
       importDungeonJsonTextForTest: (input, options) =>
         applyImportedDungeonJson(input, options),
       applyNaturalEdit,

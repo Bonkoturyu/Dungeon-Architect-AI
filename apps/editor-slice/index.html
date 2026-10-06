@@ -2393,14 +2393,17 @@
           <button id="generateDungeon" class="primary-action wide-action" type="button" data-i18n="create.generate">Generate</button>
           <p id="generationStatus" class="muted" aria-live="polite"></p>
           <div class="export-actions">
-            <p class="section-caption" data-i18n="export.title">Import / Export JSON</p>
+            <p class="section-caption" data-i18n="export.title">Import / Export</p>
             <div class="button-row">
               <button id="exportLayoutJson" type="button" data-i18n="export.layout">Layout JSON</button>
               <button id="exportFullJson" type="button" data-i18n="export.full">Full JSON</button>
             </div>
+            <button id="exportGlb" class="import-json-button" type="button" data-i18n="export.glb">GLB · current floor (3D visuals)</button>
+            <p id="glbExportStatus" class="muted export-note" role="status" aria-live="polite"></p>
             <button id="importJson" class="import-json-button" type="button" data-i18n="import.button">Import JSON</button>
             <input id="importJsonInput" type="file" accept=".json,application/json" aria-label="Import Dungeon JSON">
-            <p class="muted export-note" data-i18n="export.note">Layout = generic pattern · Full = complete DungeonRunSpec</p>
+            <p class="muted export-note" data-i18n="export.note">Full JSON = edit all floors again · Layout JSON = all-floor geometry only. Neither saves Play progress.</p>
+            <p class="muted export-note" data-i18n="export.glbNote">GLB = current floor geometry/materials for other 3D tools. No gameplay or Dungeon re-import; lighting may differ.</p>
             <p class="muted export-note" data-i18n="import.note">Auto-detect Layout / Full · max 2 MB</p>
           </div>
           <div class="prompt-history">

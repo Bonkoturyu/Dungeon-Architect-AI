@@ -34,6 +34,10 @@ The distribution notice for Three.js is maintained at root `THIRD_PARTY_NOTICES.
 
 ## Approval scope rule
 
+### 2026-10-06 — GLB外観出力のaddon用途レビュー
+
+`PROD-DEP-001`の固定`three@0.185.1`に含まれる公式`examples/jsm/exporters/GLTFExporter.js`を、現在階の静的な形状・材質をブラウザ内でGLB化する用途に使用する。既存rendererと同じMIT packageで、追加package・version変更・creative asset・外部serviceはない。公式[r185 source](https://github.com/mrdoob/three.js/blob/r185/examples/jsm/exporters/GLTFExporter.js)と[API文書](https://threejs.org/docs/pages/GLTFExporter.html)、installed packageのversion/LICENSEを確認した。用途はこのGLB出力に限定してApprovedとし、既存のMIT noticeを維持する。dynamic importされたaddon chunkも配布bundleに含む。検証用GLTFLoaderは同じ固定packageの公式addonで、製品bundleには追加しない。
+
 `Approved` is scoped to the usage recorded in this table/review. New runtime, model, package, version, distribution purpose, or materially different use requires another review.
 
 ## 動画制作ツールの追加レビュー

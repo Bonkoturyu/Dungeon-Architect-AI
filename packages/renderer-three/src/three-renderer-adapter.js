@@ -1,4 +1,5 @@
 import { createDrawBatcher } from './draw-batch.js';
+import { exportStagedGlb } from './glb-export.js';
 import { measurePerformance } from './performance-probe.js';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -937,6 +938,19 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
     controls.update();
   }
 
+  async function exportDungeonGlb(spec) {
+    assertAlive();
+    // 編集確定済みの1階を同じbuilderで再構築する。live rootの一時移動、
+    // 選択/ドラッグpreview、Fog of War、Play状態、cameraは参照・変更しない。
+    const { stagingRoot } = buildStagingScene(createDungeonScenePlan(spec));
+    stagingRoot.name = 'DungeonFloor';
+    try {
+      return await exportStagedGlb(stagingRoot);
+    } finally {
+      disposeObjectTree(stagingRoot);
+    }
+  }
+
   function draw() { drawBatch.draw(); }
 
   function withDeferredDraws(operation) { assertAlive(); return drawBatch.run(operation); }
@@ -1445,6 +1459,7 @@ export function createThreeRendererAdapter({ canvas, clearColor = DEFAULT_CLEAR_
 
   return {
     render,
+    exportDungeonGlb,
     withDeferredDraws,
     resize,
     getObjectBySpecId,
