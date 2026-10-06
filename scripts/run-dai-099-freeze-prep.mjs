@@ -4,9 +4,9 @@ import path from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { runtimeSourceFingerprint, collectBundleManifest, manifestSha256 } from './runtime-fingerprint.mjs';
 import { captureFileState, validateFreezeEvidence } from './recording-evidence.mjs';
+import { readReviewedLockfileSha256 } from './reviewed-lockfile.mjs';
 
-const EXPECTED_LOCK_SHA256 =
-  'ce94a9ee4241ee798c0c32c0fda55f00cb4462fb6ba6244acdd3d53589d261cc';
+const EXPECTED_LOCK_SHA256 = readReviewedLockfileSha256();
 const EXPECTED_PUBLIC_URL = 'https://dungeon-architect-ai.pages.dev/';
 const outputDir = path.resolve('artifacts/dai-099-freeze');
 const distDir = path.resolve('dist');

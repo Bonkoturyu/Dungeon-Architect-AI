@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 
-$ExpectedLockSha256 = 'ce94a9ee4241ee798c0c32c0fda55f00cb4462fb6ba6244acdd3d53589d261cc'
+$ExpectedLockSha256 = & (Join-Path $PSScriptRoot 'get-reviewed-lockfile-sha.ps1')
 $RepoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $LockPath = Join-Path $RepoRoot 'package-lock.json'
 
