@@ -62,6 +62,7 @@ benchmarks/unity-webgl/Assets/Generated/
 # IDE / OS
 .vscode/
 .idea/
+.claude/
 .DS_Store
 Thumbs.db
 
