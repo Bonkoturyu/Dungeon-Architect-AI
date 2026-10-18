@@ -125,7 +125,8 @@ try {
   const deadline = Date.now() + 30_000;
   for (;;) {
     if (vite.exitCode != null) throw new Error(`Vite exited: ${viteOutput}`);
-    try { if (viteOutput.includes('Local:') && (await fetch(url)).ok) break; } catch {}
+    // 色付き出力（TERM=xterm-256color 等）では "Local" と ":" の間に ANSI エスケープが入るため除去してから判定する
+    try { if (viteOutput.replace(/\x1b\[[0-9;]*m/g, '').includes('Local:') && (await fetch(url)).ok) break; } catch {}
     if (Date.now() > deadline) throw new Error(`Vite did not become ready: ${viteOutput}`);
     await new Promise((resolve) => setTimeout(resolve, 100));
   }

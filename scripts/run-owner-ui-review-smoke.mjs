@@ -481,7 +481,7 @@ try {
     window.__DAI_EDITOR_SLICE__.getState().rooms.find((entry) => entry.id === id), middleRoomId);
 
   // Structural authoring: direction-button Room creation plus direct 3D corridor drag.
-  const structuralSetup = await page.evaluate(() => {
+  const structuralCandidates = await page.evaluate(() => {
     const state = window.__DAI_EDITOR_SLICE__.getState();
     const rooms = state.rooms;
     const candidates = [
@@ -490,48 +490,80 @@ try {
       { room: rooms.reduce((best, room) => room.z < best.z ? room : best), side: 'north', opposite: 'south' },
       { room: rooms.reduce((best, room) => room.z > best.z ? room : best), side: 'south', opposite: 'north' },
     ];
+    const free = [];
     for (const candidate of candidates) {
       window.__DAI_EDITOR_SLICE__.selectRoom(candidate.room.id);
       const plan = window.__DAI_EDITOR_SLICE__.getCurrentRoomPlan?.();
       const occupied = (plan?.doorOpenings ?? []).some((opening) => opening.side === candidate.side);
       if (!occupied) {
-        return {
+        free.push({
           roomId: candidate.room.id,
           side: candidate.side,
           opposite: candidate.opposite,
-        };
+        });
       }
     }
-    return null;
+    return free;
   });
-  if (!structuralSetup) throw new Error('No free outward room wall available for direct corridor smoke.');
+  if (structuralCandidates.length === 0) throw new Error('No free outward room wall available for direct corridor smoke.');
 
-  const structuralAnchorId = structuralSetup.roomId;
-  await page.evaluate((id) => window.__DAI_EDITOR_SLICE__.selectRoom(id), structuralAnchorId);
-  const structuralBefore = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
+  // The drag must start and end on the 3D canvas. Depending on the seed-varying
+  // layout, the wall or the added Room can sit under a HUD panel (Details), where
+  // the press would hit the panel instead. Remove that Room and try the next wall.
+  let structuralSetup = null;
+  let structuralAnchorId = null;
+  let structuralBefore = null;
+  let structuralAfterAddRoom = null;
+  let addedRoomId = null;
+  let dragPoints = null;
+  const structuralSkippedCandidates = [];
+  for (const candidate of structuralCandidates) {
+    await page.evaluate((id) => window.__DAI_EDITOR_SLICE__.selectRoom(id), candidate.roomId);
+    const before = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
 
-  await page.click(`[data-room-add-direction="${structuralSetup.side}"]`);
-  await page.waitForFunction((roomCount) =>
-    window.__DAI_EDITOR_SLICE__.getState().rooms.length === roomCount + 1,
-  structuralBefore.rooms.length);
-  const structuralAfterAddRoom = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
-  const addedRoomId = structuralAfterAddRoom.selectedRoomId;
-  if (!addedRoomId) throw new Error('Added room did not become selected.');
+    await page.click(`[data-room-add-direction="${candidate.side}"]`);
+    await page.waitForFunction((roomCount) =>
+      window.__DAI_EDITOR_SLICE__.getState().rooms.length === roomCount + 1,
+    before.rooms.length);
+    const afterAddRoom = await page.evaluate(() => window.__DAI_EDITOR_SLICE__.getState());
+    const roomId = afterAddRoom.selectedRoomId;
+    if (!roomId) throw new Error('Added room did not become selected.');
 
-  await page.evaluate((id) => window.__DAI_EDITOR_SLICE__.selectRoom(id), structuralAnchorId);
-  const dragPoints = await page.evaluate(({ fromRoomId, toRoomId, side }) => {
-    const state = window.__DAI_EDITOR_SLICE__.getState();
-    const target = state.rooms.find((room) => room.id === toRoomId);
-    return {
-      start: window.__DAI_EDITOR_SLICE__.getScreenPositionForRoomWall(fromRoomId, side),
-      end: window.__DAI_EDITOR_SLICE__.getScreenPositionForWorldPoint({
+    await page.evaluate((id) => window.__DAI_EDITOR_SLICE__.selectRoom(id), candidate.roomId);
+    const points = await page.evaluate(({ fromRoomId, toRoomId, side }) => {
+      const state = window.__DAI_EDITOR_SLICE__.getState();
+      const target = state.rooms.find((room) => room.id === toRoomId);
+      const start = window.__DAI_EDITOR_SLICE__.getScreenPositionForRoomWall(fromRoomId, side);
+      const end = window.__DAI_EDITOR_SLICE__.getScreenPositionForWorldPoint({
         x: target.x,
         y: 0,
         z: target.z,
-      }),
-    };
-  }, { fromRoomId: structuralAnchorId, toRoomId: addedRoomId, side: structuralSetup.side });
-  if (!dragPoints.start || !dragPoints.end) throw new Error('Direct corridor drag screen points unavailable.');
+      });
+      const canvas = document.querySelector('#renderCanvas');
+      const onCanvas = (point) => Boolean(point) && document.elementFromPoint(point.x, point.y) === canvas;
+      return { start, end, unobstructed: onCanvas(start) && onCanvas(end) };
+    }, { fromRoomId: candidate.roomId, toRoomId: roomId, side: candidate.side });
+    if (!points.start || !points.end) throw new Error('Direct corridor drag screen points unavailable.');
+
+    if (points.unobstructed) {
+      structuralSetup = candidate;
+      structuralAnchorId = candidate.roomId;
+      structuralBefore = before;
+      structuralAfterAddRoom = afterAddRoom;
+      addedRoomId = roomId;
+      dragPoints = { start: points.start, end: points.end };
+      break;
+    }
+
+    structuralSkippedCandidates.push({ ...candidate, start: points.start, end: points.end });
+    await page.evaluate((id) => window.__DAI_EDITOR_SLICE__.selectRoom(id), roomId);
+    await page.click('#removeRoom');
+    await page.waitForFunction((removedId) =>
+      !window.__DAI_EDITOR_SLICE__.getState().rooms.some((entry) => entry.id === removedId),
+    roomId);
+  }
+  if (!structuralSetup) throw new Error('Every free room wall was hidden under a HUD panel for direct corridor smoke.');
+  await page.evaluate((id) => window.__DAI_EDITOR_SLICE__.selectRoom(id), structuralAnchorId);
 
   await page.mouse.move(dragPoints.start.x, dragPoints.start.y);
   await page.mouse.down({ button: 'left' });
@@ -1416,6 +1448,7 @@ try {
     middleAfterW,
     middleAfterRestore,
     structuralSetup,
+    structuralSkippedCandidates,
     structuralBefore,
     structuralAfterAddRoom,
     corridorDraftBeforeRelease,
