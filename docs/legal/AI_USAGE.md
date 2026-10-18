@@ -33,7 +33,7 @@ Record AI services/models/tools used to create production code, documentation, a
 ## 2026-10-18 更新範囲と根拠
 
 - PROD-AI-DEV-003: 公開前の確認作業で、Claude Code（Anthropic）を利用した。対象はリポジトリ設定（`.gitignore`）と本記録の更新、および非公開の監査記録の作成。runtime・素材・依存関係への変更は含まない。非公開の監査記録とチャットは本リポジトリに含めない。
-- PROD-AI-DEV-003（同日追記）: `apps/editor-slice/main.js`の詳細HUD描画を`apps/editor-slice/ui/detail-view.js`へ移した（挙動を変えないリファクタリング）。素材・依存関係・API payloadは変更していない。検証の範囲は該当PRに記録する。
+- PROD-AI-DEV-003（同日追記）: `apps/editor-slice/main.js`の詳細HUD描画を`apps/editor-slice/ui/detail-view.js`へ、Playの出口ボタン・HUD数値・Result指標の描画を`apps/editor-slice/ui/play-view.js`へ移した（挙動を変えないリファクタリング）。素材・依存関係・API payloadは変更していない。検証の範囲は該当PRに記録する。
 - PROD-AI-REVIEW-001: GitHub APIで2026-10-18に取得したところ、`copilot-pull-request-reviewer[bot]`によるレビュー817件（2026-09-12〜2026-10-01、PR #1〜#59）と、`Copilot`による行コメント4件（2026-10-01）があった。指摘の採否と反映箇所はPRごとのユーザー判断であり、本記録では特定しない。
 - 同じ取得で、`chatgpt-codex-connector[bot]`（OpenAI）によるレビュー・コメント155件（2026-09-12〜2026-10-06）を確認した。OpenAIの開発支援はPROD-AI-DEV-001〜002に記録済みである。DEV-002の期間（〜2026-10-03）より後の2026-10-04〜10-06の分も、同じ種類の自動レビューとしてここに開示する。各セッションの正確なモデル名は、引き続き未確認とする。
 - 2026-10-04〜10-06のPR #71〜#79について、上記の自動レビュー以外に開発支援を受けたか、どの範囲で受けたかは、この更新では確認していない。推定では補完しない。
