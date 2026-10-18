@@ -845,6 +845,28 @@ try {
     };
   });
 
+  // The Details heading folds the panel so the 3D view underneath can be used,
+  // keeps it folded across selection changes, and unfolds it again.
+  const readDetailsFold = () => page.evaluate(() => {
+    const overlay = document.querySelector('#roomContentsOverlay');
+    const toggle = document.querySelector('#roomContentsToggle');
+    const rect = overlay.getBoundingClientRect();
+    return {
+      stateCollapsed: window.__DAI_EDITOR_SLICE__.getState().detailsCollapsed,
+      ariaExpanded: toggle?.getAttribute('aria-expanded') ?? null,
+      itemsDisplay: getComputedStyle(document.querySelector('#roomContentsItems')).display,
+      width: rect.width,
+      height: rect.height,
+    };
+  });
+  const detailsFoldExpanded = await readDetailsFold();
+  await page.click('#roomContentsToggle');
+  const detailsFoldCollapsed = await readDetailsFold();
+  await page.evaluate((id) => window.__DAI_EDITOR_SLICE__.selectRoom(id), goalRoomId);
+  const detailsFoldAfterSelection = await readDetailsFold();
+  await page.click('#roomContentsToggle');
+  const detailsFoldRestored = await readDetailsFold();
+
   // Clear the room HUD before the 3D-entity click probe so DOM overlays
   // cannot intercept a marker click on seed-varying V2 layouts.
   await page.evaluate(() => window.__DAI_EDITOR_SLICE__.selectRoom(null));
@@ -1350,6 +1372,19 @@ try {
       editHudLayout.contents.right <= editHudLayout.viewport.right &&
       editHudLayout.contents.right >= editHudLayout.viewport.right - 32 &&
       editHudLayout.contents.left > editHudLayout.viewport.left + editHudLayout.viewport.width * 0.55,
+    detailsPanelFoldsAndRestores:
+      detailsFoldExpanded.stateCollapsed === false &&
+      detailsFoldExpanded.ariaExpanded === 'true' &&
+      detailsFoldCollapsed.stateCollapsed === true &&
+      detailsFoldCollapsed.ariaExpanded === 'false' &&
+      detailsFoldCollapsed.itemsDisplay === 'none' &&
+      detailsFoldCollapsed.width < detailsFoldExpanded.width / 2 &&
+      detailsFoldCollapsed.height < detailsFoldExpanded.height / 2 &&
+      detailsFoldAfterSelection.stateCollapsed === true &&
+      detailsFoldAfterSelection.itemsDisplay === 'none' &&
+      detailsFoldRestored.stateCollapsed === false &&
+      detailsFoldRestored.ariaExpanded === 'true' &&
+      detailsFoldRestored.itemsDisplay !== 'none',
     clicking3dEntitySelectsAndHighlights:
       selectedEntityState.state.selectedEntityId === entityPickProbe.id &&
       selectedEntityState.state.inspectorTab === 'entities' &&
@@ -1470,6 +1505,12 @@ try {
     legendState,
     roomContentsBeforeEntityClick,
     editHudLayout,
+    detailsFold: {
+      expanded: detailsFoldExpanded,
+      collapsed: detailsFoldCollapsed,
+      afterSelection: detailsFoldAfterSelection,
+      restored: detailsFoldRestored,
+    },
     entityPickProbe,
     selectedEntityId: selectedEntityState.state.selectedEntityId,
     renderedSelection: selectedEntityState.renderedSelection,
