@@ -17,6 +17,8 @@ coverage/
 .cache/
 
 # Local benchmark / smoke artifacts
+# 配下の個別列挙は過去互換のため残す。新規サブディレクトリの誤commitを防ぐため一括でも除外する。
+artifacts/
 artifacts/renderer-benchmark/
 artifacts/renderer-smoke/
 artifacts/editor-smoke/
