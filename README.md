@@ -26,17 +26,7 @@ RESULT
 
 The repository flow has focused local and hosted regression evidence. See [the 2026-10-03 acceptance record](docs/testing/ACCEPTANCE_GAP_2026-10-03.md) for its exact commit and fixture-based scope. Historical M8 / DAI-099 public-E2E evidence is retained separately; it is not a full acceptance claim for the current candidate.
 
-## 提出前の確認状況（2026-10-04）
-
-初回退避点の確認基準は `8bcce65246663bc16625a0f915ec2f202c63b5e4`。`rollback/pre-submission-2026-10-04` はこのcommitを保存する現状退避点であり、最終受入の全項目PASSを意味しません。初回退避と限定live確認の記録は [提出前検証記録 PR #74](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/74)、最新のローカル統合結果は次のr3記録を参照してください。
-
-最新のローカル統合は [Windows r3記録](docs/testing/WINDOWS_PR75_R3_FINAL_LOCAL_2026-10-04.md) の **24/24段階PASS** です。実測対象はPR #75の `8df3aeb9aeeaf31a228efbec8e901bbc2c7aa531`。Node 628/628、browser 15段階・253 checksが成功しました。この実測SHAと後続のdocs-only記録commitは区別します。
-
-所有者のWindows Brave/Chromiumによる限定live確認で、Generateのcloud Response、AI Editの `move-entity` Responseと画面適用を確認済みです。公開build-infoと対象mainのcommit/source/bundle一致、全公開E2E、全異常入力への合格はこの確認に含みません。根拠は [限定live確認記録](https://github.com/Bonkoturyu/Dungeon-Architect-AI/blob/3196f2bb942bbdfbcddc2481416f24d7196c5ead/docs/testing/LIVE_PROVIDER_OWNER_EVIDENCE_2026-10-04.md) を参照してください。
-
-10月3日の受入smokeと過去の公開E2Eは、それぞれの対象commit・fixture／実providerの区別を保持します。公開API異常入力、最終動画・証拠の整合、repository公開と提出は、個別の証拠が揃うまで完了扱いにしません。r3対象外の主観的音声レビュー、公開deployment／全公開E2E、DAI-090 Final、freeze／rollback作成も、このローカルPASSで完了扱いにしません。
-
-2026-10-05のレビュー対応ではDungeonSpec検証・audio unlock・simulation policyと証拠検査を変更しました。[追加修正の検証記録](docs/testing/REVIEW_THREAD_REMEDIATION_2026-10-05.md)を参照してください。上記Windows r3の24/24 PASSは記録済みSHAに対する履歴であり、この追加runtime差分のbrowser受入を意味しません。
+Current pre-submission verification status (recovery point, latest Windows integrated run and its scope, owner live check boundary) is recorded in Japanese in the section **提出前の確認状況** near the end of this README.
 
 ## Judge quick start
 
@@ -164,24 +154,27 @@ Relevant ADRs and design reviews:
 
 Requirements:
 
-- Node.js `24.15.0`
+- Windows
+- Node.js `24.15.0` and npm
 - desktop Google Chrome for production browser smokes
 
-Install:
+Install dependencies once:
 
 ```powershell
 npm ci --ignore-scripts --no-audit --no-fund
 ```
 
-Run the static development surface:
+Start the local UI by double-clicking `run-ui.cmd` in the repository root (or running it from a terminal):
 
 ```powershell
-npx vite --host 127.0.0.1
+.\run-ui.cmd
 ```
 
-The live AI buttons require the same-origin Pages Function endpoints; a plain static Vite server does not provide the production provider secret boundary.
+`run-ui.cmd` builds the production Pages output (`npm run build:hosting`), serves it at `http://127.0.0.1:8000/` and opens the default browser. **Generate** and **AI Edit** are forwarded by a local proxy to the public demo backend (`https://dungeon-architect-ai.pages.dev`); no API key is needed or stored on the local machine. Close the console window to stop the local server.
 
-Build the production Pages output:
+For UI-only development, `npx vite --host 127.0.0.1` serves the static development surface; it does not provide the `/api/*` endpoints, so the live AI buttons do not work there.
+
+Build the production Pages output only:
 
 ```powershell
 npm run build:hosting
@@ -221,6 +214,18 @@ See:
 - [Third-party creative assets](docs/legal/THIRD_PARTY_ASSETS.md)
 - [AI usage register](docs/legal/AI_USAGE.md)
 - [Third-party services](docs/legal/THIRD_PARTY_SERVICES.md)
+
+## 提出前の確認状況（2026-10-04）
+
+初回退避点の確認基準は `8bcce65246663bc16625a0f915ec2f202c63b5e4`。`rollback/pre-submission-2026-10-04` はこのcommitを保存する現状退避点であり、最終受入の全項目PASSを意味しません。初回退避と限定live確認の記録は [提出前検証記録 PR #74](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/74)、最新のローカル統合結果は次のr3記録を参照してください。
+
+最新のローカル統合は [Windows r3記録](docs/testing/WINDOWS_PR75_R3_FINAL_LOCAL_2026-10-04.md) の **24/24段階PASS** です。実測対象はPR #75の `8df3aeb9aeeaf31a228efbec8e901bbc2c7aa531`。Node 628/628、browser 15段階・253 checksが成功しました。この実測SHAと後続のcommitは区別します。後続にはruntime変更（下記の2026-10-05レビュー対応、2026-10-06のGLB Export〔PR #78〕、2026-10-18の詳細HUD分離〔PR #81〕）が含まれ、r3の実測対象外です。
+
+所有者のWindows Brave/Chromiumによる限定live確認で、Generateのcloud Response、AI Editの `move-entity` Responseと画面適用を確認済みです。公開build-infoと対象mainのcommit/source/bundle一致、全公開E2E、全異常入力への合格はこの確認に含みません。根拠は [限定live確認記録](https://github.com/Bonkoturyu/Dungeon-Architect-AI/blob/3196f2bb942bbdfbcddc2481416f24d7196c5ead/docs/testing/LIVE_PROVIDER_OWNER_EVIDENCE_2026-10-04.md) を参照してください。
+
+10月3日の受入smokeと過去の公開E2Eは、それぞれの対象commit・fixture／実providerの区別を保持します。公開API異常入力、最終動画・証拠の整合、repository公開と提出は、個別の証拠が揃うまで完了扱いにしません。r3対象外の主観的音声レビュー、公開deployment／全公開E2E、DAI-090 Final、freeze／rollback作成も、このローカルPASSで完了扱いにしません。
+
+2026-10-05のレビュー対応ではDungeonSpec検証・audio unlock・simulation policyと証拠検査を変更しました。[追加修正の検証記録](docs/testing/REVIEW_THREAD_REMEDIATION_2026-10-05.md)を参照してください。上記Windows r3の24/24 PASSは記録済みSHAに対する履歴であり、この追加runtime差分のbrowser受入を意味しません。
 
 ## Submission status
 

@@ -5,9 +5,7 @@
 https://dungeon-architect-ai.pages.dev/
 
 
-> **確認状況（2026-10-04）:** 現仕様の操作案内です。公開版の対象commit、実provider確認、未完了の受入項目は [PR #74](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/74) を参照してください。過去の公開E2Eだけで現候補の全項目PASSとはしていません。
-
-所有者のWindows Brave/Chromiumによる限定live確認で、Generateのcloud Response、AI Editの `move-entity` Responseと画面適用を確認済みです。公開build-infoと対象mainのcommit/source/bundle一致、全公開E2E、全異常入力への合格はこの確認に含みません。根拠は [限定live確認記録](https://github.com/Bonkoturyu/Dungeon-Architect-AI/blob/3196f2bb942bbdfbcddc2481416f24d7196c5ead/docs/testing/LIVE_PROVIDER_OWNER_EVIDENCE_2026-10-04.md) を参照してください。
+> Verification status for the current candidate, including the boundary of the owner live check, is summarized in Japanese under **Verification status** at the end of this page.
 
 ## Supported judging environment
 
@@ -41,6 +39,7 @@ The steps below describe the current repository UI. The browser Recommended sele
 11. At Goal, resolve any required active enemies/traps, then use **Finish floor** when the completion action is shown. Continue into Floor 2 with PlayerState carried forward, then clear the final Goal. Shop purchases are optional.
 12. Confirm Result shows the cleared **Floor 2/2** run state and compact metrics.
 13. Use **Return to Edit**; the generated authoring run remains available.
+14. Optional: in **Create** → **Import / Export**, **GLB · current floor (3D visuals)** saves the displayed floor's geometry and materials for other 3D tools. It contains no gameplay data and cannot be re-imported into Dungeon Architect AI; lighting may differ.
 
 ## AI/data boundary
 
@@ -69,3 +68,9 @@ This demo does not claim:
 - Safari or Firefox acceptance.
 
 See [Known Limitations](KNOWN_LIMITATIONS.md).
+
+## Verification status
+
+> **確認状況（2026-10-04）:** 現仕様の操作案内です。公開版の対象commit、実provider確認、未完了の受入項目は [PR #74](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/74) を参照してください。過去の公開E2Eだけで現候補の全項目PASSとはしていません。
+
+所有者のWindows Brave/Chromiumによる限定live確認で、Generateのcloud Response、AI Editの `move-entity` Responseと画面適用を確認済みです。公開build-infoと対象mainのcommit/source/bundle一致、全公開E2E、全異常入力への合格はこの確認に含みません。根拠は [限定live確認記録](https://github.com/Bonkoturyu/Dungeon-Architect-AI/blob/3196f2bb942bbdfbcddc2481416f24d7196c5ead/docs/testing/LIVE_PROVIDER_OWNER_EVIDENCE_2026-10-04.md) を参照してください。
