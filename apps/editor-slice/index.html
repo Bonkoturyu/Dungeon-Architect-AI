@@ -858,6 +858,36 @@
       display: grid;
       gap: 8px;
     }
+    /* DETAILS の見出しで中身を畳み、下の3D画面を見えるようにする */
+    .details-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      width: 100%;
+      min-height: 24px;
+      padding: 0;
+      border: 0;
+      border-radius: 4px;
+      background: none;
+      color: var(--text-muted);
+      text-align: left;
+    }
+    .details-toggle:hover:not(:disabled) {
+      border: 0;
+      background: none;
+      color: var(--text);
+    }
+    .details-toggle::after {
+      content: '▾';
+      font-size: 0.75rem;
+      line-height: 1;
+    }
+    .room-contents-overlay[data-collapsed="true"] { width: auto; }
+    .room-contents-overlay[data-collapsed="true"] .details-toggle::after { content: '▸'; }
+    .room-contents-overlay[data-collapsed="true"] .overlay-heading { margin-bottom: 0; }
+    .room-contents-overlay[data-collapsed="true"] #roomContentsRoom,
+    .room-contents-overlay[data-collapsed="true"] #roomContentsItems { display: none; }
     .detail-group {
       display: grid;
       gap: 5px;
@@ -2289,7 +2319,9 @@
           </div>
         </div>
         <div id="roomContentsOverlay" class="room-contents-overlay edit-hud" hidden>
-          <span class="overlay-heading" data-i18n="overlay.details">Details</span>
+          <button id="roomContentsToggle" class="details-toggle" type="button" aria-expanded="true" aria-controls="roomContentsRoom roomContentsItems" data-i18n-title="overlay.detailsToggle">
+            <span class="overlay-heading" data-i18n="overlay.details">Details</span>
+          </button>
           <span id="roomContentsRoom"></span>
           <div id="roomContentsItems"></div>
         </div>

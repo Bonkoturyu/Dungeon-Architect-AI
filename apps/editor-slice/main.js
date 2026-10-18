@@ -88,6 +88,7 @@ const entityLegend = document.querySelector('#entityLegend');
 const roomContentsOverlay = document.querySelector('#roomContentsOverlay');
 const roomContentsRoom = document.querySelector('#roomContentsRoom');
 const roomContentsItems = document.querySelector('#roomContentsItems');
+const roomContentsToggle = document.querySelector('#roomContentsToggle');
 const editStatus = document.querySelector('#editStatus');
 const validationStatus = document.querySelector('#validationStatus');
 const playStatus = document.querySelector('#playStatus');
@@ -208,6 +209,7 @@ let playActionClock = 0;
 let canvasResizeObserver = null;
 let promptHistory = [];
 let authoringPreviewConcealed = false;
+let detailsCollapsed = false;
 let pathCheckResult = null;
 let canvasPointerOrigin = null;
 let corridorDraft = null;
@@ -815,6 +817,7 @@ function snapshotState() {
     selectedRoomId,
     selectedEntityId,
     selectedCorridorId,
+    detailsCollapsed,
     targetRoomId: entityRoom?.value || null,
     canUndo: Boolean(session?.canUndo),
     canRedo: Boolean(session?.canRedo),
@@ -871,6 +874,13 @@ function snapshotState() {
     })) ?? [],
     entities: spec?.entities.map((entity) => ({ id: entity.id, type: entity.type, roomId: entity.roomId })) ?? [],
   };
+}
+
+// 選択を変えても畳んだ状態を保つ（中身の描画は renderEditContextHud が続ける）
+function toggleDetailsCollapsed() {
+  detailsCollapsed = !detailsCollapsed;
+  roomContentsOverlay.dataset.collapsed = String(detailsCollapsed);
+  roomContentsToggle.setAttribute('aria-expanded', String(!detailsCollapsed));
 }
 
 function setEditStatus(message) {
@@ -3560,6 +3570,7 @@ async function run() {
     bgmVolumeInput?.addEventListener('input', setBgmVolumeFromControl);
     seVolumeInput?.addEventListener('input', setSeVolumeFromControl);
     renderAudioToggle();
+    roomContentsToggle?.addEventListener('click', toggleDetailsCollapsed);
     undoButton.addEventListener('click', undo);
     redoButton.addEventListener('click', redo);
     for (const button of workflowTabButtons) {
