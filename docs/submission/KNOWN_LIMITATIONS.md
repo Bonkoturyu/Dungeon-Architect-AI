@@ -61,9 +61,19 @@ The historical hosted demo, under-three-minute demo video, short description, fo
 
 The browser Recommended selection is V3 with 11 selectable strategies, the current content layer and fixed-Seed 70% trap avoidance. These changes supersede the older M8 / September DAI-099 runtime. The 150-second v2 video is retained as the current video candidate; the older videos and rollback points remain historical.
 
-The initial recovery baseline is saved at `rollback/pre-submission-2026-10-04` (`8bcce65246663bc16625a0f915ec2f202c63b5e4`). This is a recovery point, not final acceptance. The [Windows r3 local integrated suite](../testing/WINDOWS_PR75_R3_FINAL_LOCAL_2026-10-04.md) passed all 24 stages at PR #75 commit `8df3aeb9aeeaf31a228efbec8e901bbc2c7aa531` (Node 628/628; 15 browser stages / 253 checks). This measured SHA is distinct from subsequent docs-only commits. Remaining checks include public build identity / full public E2E, public Generate/Edit abnormal-input coverage, subjective audio review, DAI-090 Final, candidate/video/evidence consistency, final freeze, repository visibility and submission; see [PR #74](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/74) and the r3 scope boundaries. A missing old audit script alone is not evidence that prior security/provenance audits were never performed.
+The initial recovery baseline is saved at `rollback/pre-submission-2026-10-04` (`8bcce65246663bc16625a0f915ec2f202c63b5e4`). This is a recovery point, not final acceptance. The [Windows r3 local integrated suite](../testing/WINDOWS_PR75_R3_FINAL_LOCAL_2026-10-04.md) passed all 24 stages at PR #75 commit `8df3aeb9aeeaf31a228efbec8e901bbc2c7aa531` (Node 628/628; 15 browser stages / 253 checks). This measured SHA is distinct from subsequent commits, which include runtime changes outside the r3 scope (2026-10-05 review remediation, GLB Export in PR #78, and the detail-HUD module split in PR #81). Remaining checks include public build identity / full public E2E, public Generate/Edit abnormal-input coverage, subjective audio review, DAI-090 Final, candidate/video/evidence consistency, final freeze, repository visibility and submission; see [PR #74](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/74) and the r3 scope boundaries. A missing old audit script alone is not evidence that prior security/provenance audits were never performed.
 
 Final compliance/submission remains DAI-091/DAI-092.
+
+## 9. GLB export is a static, single-floor appearance export
+
+**GLB · current floor (3D visuals)** saves only the currently displayed floor's geometry and materials for other 3D tools. Multiple floors are not stacked automatically; switch floors to export each one separately.
+
+The GLB contains no gameplay rules, progress, editing handles, camera, lighting, fog, audio or animation, and it cannot be re-imported into Dungeon Architect AI. Use JSON export for re-editing.
+
+## 10. Behavior when the cloud AI is unavailable
+
+If the cloud AI path is unavailable (for example provider errors or rate limits), the server switches to the bounded deterministic fallback, which understands a narrower Japanese/English vocabulary and always attaches review warnings. With **Manual** generation (the default), the review dialog shows those warnings and generation can continue after review. With **Auto** generation, the warnings stop generation and the current dungeon is left unchanged. **AI Edit** has no fallback: it reports an error code and leaves the current dungeon unchanged, while manual editing remains available.
 
 ## Reopen rule
 
