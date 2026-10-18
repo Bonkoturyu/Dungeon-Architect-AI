@@ -6,6 +6,12 @@ import {
   renderResultMetrics as renderResultMetricsView,
   updatePlayReadout as updatePlayReadoutView,
 } from './ui/play-view.js';
+import {
+  createFullExport,
+  createLayoutExport,
+  downloadJsonExport as downloadJsonExportFile,
+  exportBaseName as exportBaseNameFor,
+} from './ui/export-controller.js';
 import { measurePerformance, measurePerformanceAsync, startPerformanceProbe, stopPerformanceProbe } from '../../packages/renderer-three/src/performance-probe.js';
 import { reviewRoomPlan, createRoomPlanConfig, resolveGenerationDifficulty } from './room-plan-review.js';
 import { TRAP_RULES_V1 } from '../../packages/core/src/trap-rules.js';
@@ -68,12 +74,7 @@ import {
   createProgrammaticAudio,
   deriveReactiveAudioIntensity,
 } from '../../packages/audio-presentation/src/programmatic-audio.js';
-import {
-  createDungeonLayoutExchange,
-  createFullDungeonExport,
-  importDungeonJson,
-  serializeJsonExport,
-} from '../../packages/export-core/src/layout-exchange.js';
+import { importDungeonJson } from '../../packages/export-core/src/layout-exchange.js';
 import {
   bindLanguageSwitchers,
   getLanguage,
@@ -357,67 +358,23 @@ function authoringRunSpec(id = 'editor-run') {
 }
 
 function exportBaseName() {
-  const id = authoringFloorSpecs()[0]?.id ?? 'dungeon';
-  const normalized = String(id)
-    .trim()
-    .replace(/[^A-Za-z0-9._-]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-  return normalized || 'dungeon';
-}
-
-function exportProvenance() {
-  return lastGeneration
-    ? {
-        generatorStrategyId:
-          lastGeneration.generatorStrategyId ?? null,
-        generatorVersion:
-          lastGeneration.generatorVersion ?? null,
-        algorithmVersion:
-          lastGeneration.algorithmVersion ?? null,
-        contentLayerVersion: lastGeneration.contentLayerVersion ?? null,
-      }
-    : null;
+  return exportBaseNameFor(authoringFloorSpecs());
 }
 
 function currentLayoutExport(...args) { return measurePerformance('ui.currentLayoutExport', () => currentLayoutExportImplementation(...args)); }
 
 function currentLayoutExportImplementation() {
-  const base = exportBaseName();
-  return createDungeonLayoutExchange(
-    authoringFloorSpecs(),
-    {
-      id: `${base}-layout`,
-      provenance: exportProvenance(),
-    },
-  );
+  return createLayoutExport(authoringFloorSpecs(), lastGeneration);
 }
 
 function currentFullDungeonExport(...args) { return measurePerformance('ui.currentFullDungeonExport', () => currentFullDungeonExportImplementation(...args)); }
 
 function currentFullDungeonExportImplementation() {
-  const base = exportBaseName();
-  return createFullDungeonExport(
-    authoringFloorSpecs(),
-    { id: `${base}-run` },
-  );
+  return createFullExport(authoringFloorSpecs());
 }
 
 function downloadJsonExport(value, filename) {
-  const text = serializeJsonExport(value);
-  const blob = new Blob([text], {
-    type: 'application/json;charset=utf-8',
-  });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.hidden = true;
-  document.body.append(anchor);
-  anchor.click();
-  anchor.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 0);
-  setGenerationStatus(t('export.saved', { name: filename }));
-  return { filename, text };
+  return downloadJsonExportFile(value, filename, { setGenerationStatus });
 }
 
 function exportLayoutJson() {
