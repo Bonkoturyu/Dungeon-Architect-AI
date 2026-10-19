@@ -10,17 +10,17 @@ const recordingEvidence = fs.readFileSync('scripts/recording-evidence.mjs', 'utf
 
 const currentVideoDoc = videoDoc.split('## 歴史的DAI-099撮影計画')[0];
 const currentStoryboard = storyboard.split('## 歴史的DAI-099撮影計画')[0];
-const expectedVideoSha256 = '3e3516090cea0c58c9d3da02ee9b1e888a515fd0bfcb5543cafc745ff89418f8';
+const expectedVideoSha256 = '161f7674bb6963df212118919601b1da284622c234e566a156ea73c93bb17f9e';
 const aiUsage = fs.readFileSync('docs/legal/AI_USAGE.md', 'utf8');
 const checks = {
   retainedVideoCandidateRecorded:
     [currentVideoDoc, currentStoryboard].every((text) =>
-      text.includes('150-second v2') && text.includes(expectedVideoSha256) &&
+      text.includes('150-second glb_v5') && text.includes(expectedVideoSha256) &&
       text.includes('新規撮影は行いません')) && aiUsage.includes(expectedVideoSha256),
   historicalPlanAndAcceptanceLimitsExplicit:
     videoDoc.includes('## 歴史的DAI-099撮影計画') &&
     currentVideoDoc.includes('公開アップロード・最終提出の完了は主張しません') &&
-    currentVideoDoc.includes('現在の150秒v2を作成・再検証した証拠ではありません'),
+    currentVideoDoc.includes('現在の150秒glb_v5を作成・再検証した証拠ではありません'),
 
   hardLimitUnder180:
     videoDoc.includes('strictly under 180 seconds') &&

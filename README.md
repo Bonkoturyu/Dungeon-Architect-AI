@@ -247,7 +247,7 @@ Historical DAI-084 rollback point:
 
 See [DAI-084 Candidate Freeze / Rollback Point](docs/submission/DAI-084_CANDIDATE_FREEZE.md). The September DAI-099 rollback remains preserved separately. The 2026-10-04 rollback records the current baseline without promoting it to final acceptance.
 
-The M8 49.5-second and September DAI-099 59.9-second videos remain historical evidence. The retained current video candidate is the **150-second v2** described in [the video record](docs/testing/DAI-099_REFRESHED_VIDEO.md). Its existence does not establish public upload or final submission.
+The M8 49.5-second and September DAI-099 59.9-second videos remain historical evidence. The current submission video is the **150-second glb_v5** (the earlier 150-second v2 with the JSON / GLB export segments replaced) described in [the video record](docs/testing/DAI-099_REFRESHED_VIDEO.md). Its existence does not establish public upload or final submission.
 
 The GitHub repository is still private and must be switched to Public before submission.
 

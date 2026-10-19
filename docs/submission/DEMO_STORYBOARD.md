@@ -1,16 +1,19 @@
 # Demo Storyboard
 
-## 現在保持する動画候補（2026-10-04）
+## 現在の提出動画（2026-10-19更新）
 
-**150-second v2 を維持。新規撮影は行いません。**
+**150-second glb_v5 を提出動画とする。新規撮影は行いません。**
 
-- ファイル: `DAI_Demo_Review_EN_2026-10-03.mp4` の修正版
-- SHA-256: `3e3516090cea0c58c9d3da02ee9b1e888a515fd0bfcb5543cafc745ff89418f8`
+- ファイル: `DAI_Demo_Review_EN_2026-10-03_glb_v5.mp4`
+- SHA-256: `161f7674bb6963df212118919601b1da284622c234e566a156ea73c93bb17f9e`
 - 150秒、1920×1080、30 fps
-- Generate 1回、AI Editの `resize-room` とUndoを記録。その他の映像・音声・来歴と検証限界は [AI usage register](../legal/AI_USAGE.md) を参照
+- 2026-10-04時点で保持していた150秒v2（`DAI_Demo_Review_EN_2026-10-03.mp4` の修正版）を元に、0:24〜0:30 と 2:14〜2:25.5 の2区間だけを、JSON / GLB書き出しの比較画面・ナレーション・字幕に差し替えた版。ほかの映像・音声はv2を引き継ぐ。2026-10-19にv2と1秒ごとに映像を比べ、差がこの2区間だけであることを確認した（音声は比較していない）
+- GLBの場面は、アプリの3D構築とGLTFExporterの処理をNodeのテストで動かして出力した別サンプル階のGLBを、Blenderで描画した静止画。動画内にもその旨を表示している。アプリの追加撮影はしていない
+- アプリ操作の映像はv2のもの（Generate 1回、AI Editの `resize-room` とUndo）。制作の来歴と検証限界は [AI usage register](../legal/AI_USAGE.md) を参照
+- 2026-10-19に、10秒ごとの静止画を公開候補 `806d70c` の画面と比べ、審査で混乱しそうな食い違いがないことを確認した（目に見える違いはDetails見出しの折りたたみボタンの有無だけ）
 - 公開アップロード・最終提出の完了は主張しません。現UI・candidateとの整合および残る確認は [PR #74](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/74) を参照
 
-旧M8の49.5秒動画、旧DAI-099の59.9秒動画は歴史的証拠として保持します。以下の旧撮影計画／runnerは現在の150秒v2を作成・再検証した証拠ではありません。候補の確認では matching build fingerprint と動画identityを区別します。
+置き換え前の150秒v2（同一性は [AI usage register](../legal/AI_USAGE.md) に記録）、旧M8の49.5秒動画、旧DAI-099の59.9秒動画は歴史的証拠として保持します。以下の旧撮影計画／runnerは現在の150秒glb_v5を作成・再検証した証拠ではありません。候補の確認では matching build fingerprint と動画identityを区別します。
 
 ## 歴史的DAI-099撮影計画（2026-09）
 
