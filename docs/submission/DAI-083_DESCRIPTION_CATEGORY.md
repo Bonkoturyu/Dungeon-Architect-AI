@@ -98,6 +98,10 @@ Public-doc evidence JSON SHA-256:
 
 `c9dbc48df13f980fba8161fcff282716d797def70eabcd095c215d9f24f420d1`
 
+## 2026-10-19 再確認
+
+説明文とカテゴリは変更しない。公開候補 `806d70c` の画面で、説明文が述べる流れ（自然言語の依頼 → 検証済みDesignIntent → 決定的なDungeonSpec → 3D表示 → 手動とAIの単一コマンド編集 → 検証 → Play / Result）がすべて現存することを、[公開候補の記録](../testing/PUBLIC_CANDIDATE_806D70C_2026-10-19.md)と照合した。上の「Production evidence basis」にあるDAI-081 / DAI-082は当時の根拠で、現在の提出動画は [DEMO_STORYBOARD](DEMO_STORYBOARD.md) の150秒版である。説明文はGLB書き出しに触れていないが、主張を狭める方向の省略なので再開条件には当たらない。
+
 ## Reopen conditions
 
 Reopen DAI-083 if:
