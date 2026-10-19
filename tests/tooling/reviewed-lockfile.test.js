@@ -62,7 +62,7 @@ test('active PowerShell gates use one shared identity; DAI-084 keeps its frozen 
     assert.match(source, /Get-FileHash -Algorithm SHA256/, file);
     assert.match(source, /-ne \$ExpectedLockSha256/, file);
   }
-  assert.equal(count, 39);
+  assert.equal(count, 37);
   const helper = fs.readFileSync(path.join(scripts, 'get-reviewed-lockfile-sha.ps1'), 'utf8');
   assert.ok(helper.includes('REVIEWED_PACKAGE_LOCK.json'));
   assert.ok(helper.includes("$ErrorActionPreference = 'Stop'"));

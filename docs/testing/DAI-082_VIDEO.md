@@ -193,6 +193,10 @@ Required checks for that refreshed capture:
 
 Until those checks are performed against the refreshed public candidate, the submission video status remains **REFRESH REQUIRED**. Use `npm run demo:refreshed-video` and `docs/testing/DAI-099_REFRESHED_VIDEO.md` for the current capture; the older `npm run demo:video` path is historical.
 
+## 旧検査の廃止（2026-10-20）
+
+49.5秒のM8版を前提にした `npm run validate:video-plan`（`scripts/run-dai-082-video-plan-audit.mjs`）と、それを呼ぶ `scripts/run-dai-082-plan-validation.ps1`・`scripts/run-dai-082-finalize-validation.ps1` を廃止した。提出動画を150秒版へ切り替えた後の文書と前提が合わなくなり、2026-10-04の `rollback/pre-submission-2026-10-04` の時点から失敗していた。統合suiteには含まれていない。上の「Final production evidence」と「Historical M8 completion gate」の記録はそのまま残す。廃止したscriptは履歴から参照できる。現在の提出動画の同一性は `npm run validate:refreshed-video-plan` と `npm run validate:public-docs` で確認する。
+
 ## Boundaries
 
 - the video is a demonstration, not a substitute for public-demo acceptance;
