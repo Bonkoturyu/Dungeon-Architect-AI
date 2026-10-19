@@ -57,7 +57,7 @@ Status values used here: `Recorded` for disclosed development or video-productio
 - 制作: OpenAIのクラウドAIアシスタント（PROD-AI-VIDEO-002）が、編集・音声合成・描画を実行した。制作セッションの正確なモデル名は記録から確認できないため、別セッションのモデル名は流用しない。
 - 追加ナレーション: v2と同じKokoro-82M v1.0、`af_heart`、speed `0.9` で、クラウド環境のCPUを使いオフライン合成した2本（冒頭用5.350秒、後半用9.425秒）。24 kHzで生成し、編集時に48 kHzへ変換して既存音声に音量を合わせた。有料TTSサービスは使っていない。このクラウド環境のKokoroパッケージ・モデル・音声ファイルについて、`PROD-DEP-TTS-001` のようなハッシュ照合は本記録では未確認。
 - GLB静止画: アプリの3D構築とGLTFExporterの処理をNodeのテストで動かして出力したGLB（描画部分はテスト用に置き換え）。38メッシュの別サンプル階を読み込み、表示用のカメラと照明だけを加えて、Blender 4.3.2のCycles（CPU）で描画した。元の形状は変えていない。動画内に「Blenderで描画した別サンプル階」と表示している。
-- 編集・書き出し: FFmpeg 7.1.5。
+- 編集・書き出し: FFmpeg 7.1.5。使用したbuildの取得元と構成は記録がなく、台帳では過去の使用としてPending Evidenceのまま残す。
 - アプリの追加撮影はしていない（WebGL2の制約で再撮影できなかったため、既存映像とGLBの描画画像を組み合わせた）。glb_v5の追加制作での有料API呼び出し・追加の生成・AI Editは0回と記録されている。これはv5の追加制作分の記録で、元のv2制作の利用回数とは別。
 - 追加のBGMを導入した記録はない。編集していない区間の音声は、再圧縮前の時点でサンプル一致を確認したと記録されている（本リポジトリでは再検証していない）。
 - 使用したツールの扱いは [dependency register](THIRD_PARTY_DEPENDENCIES.md) の `PROD-DEP-VIDEO-001`（Blender）と `PROD-DEP-VIDEO-002`（FFmpeg）を参照。
