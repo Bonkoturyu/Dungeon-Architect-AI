@@ -73,4 +73,4 @@ See [Known Limitations](KNOWN_LIMITATIONS.md).
 
 > **確認状況（2026-10-04）:** 現仕様の操作案内です。公開版の対象commit、実provider確認、未完了の受入項目は [PR #74](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/74) を参照してください。過去の公開E2Eだけで現候補の全項目PASSとはしていません。
 
-所有者のWindows Brave/Chromiumによる限定live確認で、Generateのcloud Response、AI Editの `move-entity` Responseと画面適用を確認済みです。公開build-infoと対象mainのcommit/source/bundle一致、全公開E2E、全異常入力への合格はこの確認に含みません。根拠は [限定live確認記録](https://github.com/Bonkoturyu/Dungeon-Architect-AI/blob/3196f2bb942bbdfbcddc2481416f24d7196c5ead/docs/testing/LIVE_PROVIDER_OWNER_EVIDENCE_2026-10-04.md) を参照してください。
+所有者のWindows Brave/Chromiumによる限定live確認で、Generateのcloud Response、AI Editの `move-entity` Responseと画面適用を確認済みです。公開build-infoと対象mainのcommit/source/bundle一致、全公開E2E、全異常入力への合格はこの確認に含みません。根拠は [限定live確認記録](https://github.com/Bonkoturyu/Dungeon-Architect-AI/blob/3196f2bb942bbdfbcddc2481416f24d7196c5ead/docs/testing/LIVE_PROVIDER_OWNER_EVIDENCE_2026-10-04.md) を参照してください。公開build-infoと候補commitの一致、全公開E2Eは、2026-10-19に候補 `806d70c` で別途確認しました（[記録](../testing/PUBLIC_CANDIDATE_806D70C_2026-10-19.md)）。
