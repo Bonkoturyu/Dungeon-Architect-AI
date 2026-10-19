@@ -1,8 +1,8 @@
 # Sample Prompts
 
-## 現仕様の例と証拠の範囲（2026-10-04）
+## 現仕様の例と証拠の範囲（2026-10-04、2026-10-19更新）
 
-以下の英語例は引き続き入力例として使用できます。Generator RecommendedはV3、Auto／Manual確認と生成直前の難易度設定が現仕様です。AI Editは11種類のうち1コマンドだけを適用します。現在の実provider確認と異常入力検証の範囲は [PR #74](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/74) に記録し、旧候補の成功を現候補全体の成功へ引き継ぎません。
+以下の英語例は引き続き入力例として使用できます。Generator RecommendedはV3、Auto／Manual確認と生成直前の難易度設定が現仕様です。AI Editは11種類のうち1コマンドだけを適用します。受入の範囲と未完了の項目は [PR #74](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/74) に記録し、旧候補の成功を現候補全体の成功へ引き継ぎません。
 
 
 所有者のWindows Brave/Chromiumによる限定live確認で、Generateのcloud Response、AI Editの `move-entity` Responseと画面適用を確認済みです。公開build-infoと対象mainのcommit/source/bundle一致、全公開E2E、全異常入力への合格はこの確認に含みません。根拠は [限定live確認記録](https://github.com/Bonkoturyu/Dungeon-Architect-AI/blob/3196f2bb942bbdfbcddc2481416f24d7196c5ead/docs/testing/LIVE_PROVIDER_OWNER_EVIDENCE_2026-10-04.md) を参照してください。公開 `build-info.json` と候補commitの一致、全公開E2Eは、2026-10-19に候補 `806d70c` で別途確認しました（[記録](../testing/PUBLIC_CANDIDATE_806D70C_2026-10-19.md)）。公開版の異常入力確認も同日に行いました（[記録](../testing/PUBLIC_ABNORMAL_INPUT_DAI090_2026-10-19.md)）。
@@ -33,7 +33,7 @@ Expected refreshed path:
 
 `DESCRIBE → cloud DesignIntent → deterministic 2-floor DungeonRunSpec → ▶ Test → Room Events / CHOOSE EXIT → Floor 2 → Result`
 
-当時の受入は matching build fingerprint を必要とする計画でした。旧候補027b0f3の実行記録は [PR #55](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/55) と [PR #56](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/56) に保存されています。現候補の合否はPR #74で別途扱います。
+当時の受入は matching build fingerprint を必要とする計画でした。旧候補027b0f3の実行記録は [PR #55](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/55) と [PR #56](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/56) に保存されています。現候補 `806d70c` の公開E2E（`scripts/run-dai-099-public-smoke.mjs`）は、このプロンプトと下の編集例をliveで使い、2026-10-19に22/22 checks PASSしました。
 
 ## Verified public natural-language edit
 
