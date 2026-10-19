@@ -32,6 +32,17 @@ These checks describe the earlier M8 candidate and must not be interpreted as ac
 
 r3の実測対象はPR #75の `8df3aeb9aeeaf31a228efbec8e901bbc2c7aa531` であり、後続のdocs-only記録commitとは区別します。提出前の記録は [PR #74](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/74) と上記r3を参照してください。この一覧は全ゲートPASSの宣言ではありません。既存の包括的な公開前監査とPR #71–73のAI/TTS来歴補完を保持し、旧scriptの不在を理由に未監査とは扱いません。
 
+## 現候補の統合確認（2026-10-19、`806d70c`）
+
+- [x] [公開候補 806d70c 統合確認](../testing/PUBLIC_CANDIDATE_806D70C_2026-10-19.md): ローカル統合 24/24段階（Node 694/694）PASS
+- [x] Cloudflare Pages本番を `806d70c` に反映し、公開 `build-info.json` の commit / runtime source 指紋がローカル候補と一致
+- [x] 公開E2E 22/22 PASS（live Generate / AI Edit、2階層Play完走、Result、Edit復帰を含む）
+- [ ] 主観的音声レビュー、DAI-090 Final、公開Generate / Edit異常入力確認
+- [ ] 動画・監査証拠との整合、最終freeze / rollback作成
+- [ ] RepositoryのPublic化、最終compliance、提出
+
+この節も最終受入の宣言ではありません。上の「現候補（2026-10-04）」の未完了項目のうち、公開deploymentと全公開E2Eは、この節の記録で確認しました。
+
 以下は過去の計画時点のチェック状態です。現在の合否は上記とリンク先の対象commit付き証拠から判断してください。
 
 ## Historical September DAI-099 checklist — retained snapshot
