@@ -80,7 +80,7 @@ test('limited live evidence requires its public build identity caveat', () => wi
   assert.equal(evidence.checks.limitedLiveEvidenceNotFullAcceptance, false);
 }));
 
-test('video-plan audit records v2 identity without claiming actual video or current UI validation', () => withFixture((root) => {
+test('video-plan audit records glb_v5 identity without claiming actual video or current UI validation', () => withFixture((root) => {
   const { status, evidence } = run(root, 'videoPlan');
   assert.equal(status, 0, JSON.stringify(evidence));
   assert.equal(evidence.passed, true);
@@ -92,7 +92,7 @@ test('video-plan audit records v2 identity without claiming actual video or curr
 
 test('changing the current video identity fails both audits despite preserved historical plan', () => withFixture((root) => {
   edit(root, 'docs/submission/DEMO_STORYBOARD.md',
-    '3e3516090cea0c58c9d3da02ee9b1e888a515fd0bfcb5543cafc745ff89418f8', '0'.repeat(64));
+    '161f7674bb6963df212118919601b1da284622c234e566a156ea73c93bb17f9e', '0'.repeat(64));
   const docs = run(root, 'publicDocs');
   const video = run(root, 'videoPlan');
   assert.notEqual(docs.status, 0);

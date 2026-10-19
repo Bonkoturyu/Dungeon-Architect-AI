@@ -2,7 +2,7 @@
 
 Record AI services/models/tools used to create production code, documentation, assets, or runtime behavior.
 
-最終更新: 2026-10-18（PROD-AI-DEV-003・PROD-AI-REVIEW-001を追記）。DEV-001〜002・RUN-001・VIDEO-001のコード確認基準: `9c4d324d2be18e4b95c4f7d87fdeb456b6feea08`（PR #70）。ブラウザ本体と、別途制作した提出用デモ動画の利用範囲を区別する。
+最終更新: 2026-10-19（PROD-AI-VIDEO-002と提出動画glb_v5を追記）。2026-10-18にPROD-AI-DEV-003・PROD-AI-REVIEW-001を追記。DEV-001〜002・RUN-001・VIDEO-001のコード確認基準: `9c4d324d2be18e4b95c4f7d87fdeb456b6feea08`（PR #70）。ブラウザ本体と、別途制作した提出用デモ動画の利用範囲を区別する。
 
 | ID | Tool/Model | Provider | Purpose | Date | Output type | Human review | Terms / evidence | Included in submission | Status |
 |---|---|---|---|---|---|---|---|---|---|
@@ -12,10 +12,11 @@ Record AI services/models/tools used to create production code, documentation, a
 | PROD-AI-REVIEW-001 | GitHub Copilot pull request reviewer（モデル名は未確認） | GitHub | PRへの自動レビューコメント | 2026-09-12 through 2026-10-01（PR #1〜#59） | review comments on pull requests | 指摘の採否はユーザーが判断。個々の指摘がコードへ反映されたかはこの記録で確定しない | 下記「2026-10-18 更新範囲と根拠」 | No — PR上のレビューコメントのみ。生成物を直接収録したとは記録しない | Recorded |
 | PROD-AI-RUN-001 | Responses API / `gpt-5.6-luna` | OpenAI | Production cloud DesignIntent / room-request generation and constrained natural-language EditCommand translation | 2026-09-13 onward | schema-constrained structured JSON | Automated independent schema/semantic validation plus user-controlled authoring application | `docs/research/DAI-042_PRODUCTION_CLOUD_PROVIDER_REVIEW_2026-09-13.md`; DAI-043/044/045/053 evidence; requests use `store:false` and server-side credential boundary | Yes — runtime service integration; no model weights are bundled | Approved |
 | PROD-AI-VIDEO-001 | Kokoro package `0.9.4` / Kokoro-82M v1.0 / `af_heart`, speed `0.9` | hexgrad（ローカルCPU推論） | 150秒デモ動画の英語ナレーション合成 | 2026-10-03 | AI-generated speech mixed into MP4 | 台本・字幕・映像の対応を確認し、修正版動画をユーザー確認。技術QAと主観的音声評価は区別する | [公式モデルカード](https://huggingface.co/hexgrad/Kokoro-82M)、[公式コード](https://github.com/hexgrad/kokoro)。コード・モデルはApache-2.0。モデル・音声ファイルの同一性と出力は下記参照 | Prepared demo video only — no TTS software, model weights or generated narration bundled into browser runtime; public upload not established by this record | Recorded |
+| PROD-AI-VIDEO-002 | OpenAI AIアシスタント（クラウド環境。制作セッションの正確なモデル名は未確認） | OpenAI | 提出動画glb_v5の追加制作：ffmpegでの編集、Kokoroによる追加ナレーション2本の合成の実行、BlenderでのGLB静止画の描画 | GLB Export（PR #78、2026-10-06）以後。正確な制作日は未確認 | edited MP4、AI-generated speech、rendered stills | 差し替え区間と字幕を所有者が確認。2026-10-19にv2との映像差分が2区間だけであることを確認 | 下記「提出動画glb_v5の追加制作」 | Prepared demo video only — no tool, model or session output bundled into browser runtime; public upload not established by this record | Recorded |
 
 ## Boundaries
 
-- No AI-generated image, audio, font, texture, 3D model, animation, or other creative asset is bundled into the current production browser candidate. The separately prepared demo video contains the AI-generated narration disclosed as PROD-AI-VIDEO-001.
+- No AI-generated image, audio, font, texture, 3D model, animation, or other creative asset is bundled into the current production browser candidate. The separately prepared demo video contains the AI-generated narration disclosed as PROD-AI-VIDEO-001; the glb_v5 revision was edited, narrated and rendered by an AI assistant disclosed as PROD-AI-VIDEO-002.
 - DAI-097 audio is project-authored programmatic Web Audio synthesis defined as source-code oscillator/frequency/envelope constants; it is not an AI-generated audio asset and does not bundle generated/sample audio files.
 - AI development assistance does not bypass project review gates. Production tasks are not marked DONE solely because an AI system generated code or text.
 - Runtime model output is not arbitrary executable code. The current production paths accept constrained structured data and independently validate it before use.
@@ -48,6 +49,18 @@ Record AI services/models/tools used to create production code, documentation, a
 - 本更新は利用事実の記録のみ。正式なWindows Chrome受入、全smoke再実行、公開動画URL、最終freezeや提出手続きの完了を意味しない。
 
 Status values used here: `Recorded` for disclosed development or video-production assistance and `Approved` for a reviewed production runtime integration.
+
+## 提出動画glb_v5の追加制作
+
+- 対象: `DAI_Demo_Review_EN_2026-10-03_glb_v5.mp4`（150秒、1920 × 1080、30 fps）。SHA-256: `161f7674bb6963df212118919601b1da284622c234e566a156ea73c93bb17f9e`。2026-10-19に提出動画として採用した。公開URL・投稿完了・最終提出の証拠とは区別する。
+- 元にした動画: 上記の150秒v2（SHA-256 `3e3516090cea0c58c9d3da02ee9b1e888a515fd0bfcb5543cafc745ff89418f8`）。差し替えたのは 0:24〜0:30 と 2:14〜2:25.5 の2区間（JSON / GLB書き出しの比較画面・ナレーション・字幕・強調表示）だけで、JSON側の画面には元のv2の2:21の映像を使った。ほかの映像・音声はv2を引き継ぐ。
+- 制作: OpenAIのクラウドAIアシスタント（PROD-AI-VIDEO-002）が、編集・音声合成・描画を実行した。制作セッションの正確なモデル名は記録から確認できないため、別セッションのモデル名は流用しない。
+- 追加ナレーション: v2と同じKokoro-82M v1.0、`af_heart`、speed `0.9` で、クラウド環境のCPUを使いオフライン合成した2本（冒頭用5.350秒、後半用9.425秒）。24 kHzで生成し、編集時に48 kHzへ変換して既存音声に音量を合わせた。有料TTSサービスは使っていない。このクラウド環境のKokoroパッケージ・モデル・音声ファイルについて、`PROD-DEP-TTS-001` のようなハッシュ照合は本記録では未確認。
+- GLB静止画: アプリの3D構築とGLTFExporterの処理をNodeのテストで動かして出力したGLB（描画部分はテスト用に置き換え）。38メッシュの別サンプル階を読み込み、表示用のカメラと照明だけを加えて、Blender 4.3.2のCycles（CPU）で描画した。元の形状は変えていない。動画内に「Blenderで描画した別サンプル階」と表示している。
+- 編集・書き出し: FFmpeg 7.1.5。
+- アプリの追加撮影はしていない（WebGL2の制約で再撮影できなかったため、既存映像とGLBの描画画像を組み合わせた）。glb_v5の追加制作での有料API呼び出し・追加の生成・AI Editは0回と記録されている。これはv5の追加制作分の記録で、元のv2制作の利用回数とは別。
+- 追加のBGMを導入した記録はない。編集していない区間の音声は、再圧縮前の時点でサンプル一致を確認したと記録されている（本リポジトリでは再検証していない）。
+- 使用したツールの扱いは [dependency register](THIRD_PARTY_DEPENDENCIES.md) の `PROD-DEP-VIDEO-001`（Blender）と `PROD-DEP-VIDEO-002`（FFmpeg）を参照。
 
 ## 動画制作依存関係のレビュー補足
 

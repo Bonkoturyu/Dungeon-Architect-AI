@@ -150,8 +150,8 @@ const checks = {
       text.includes('8bcce65246663bc16625a0f915ec2f202c63b5e4')) &&
     limits.includes('recovery point, not final acceptance'),
   currentVideoIdentityAndBoundary:
-    allIncludes(currentStoryboard, ['150-second v2', '新規撮影は行いません',
-      '3e3516090cea0c58c9d3da02ee9b1e888a515fd0bfcb5543cafc745ff89418f8',
+    allIncludes(currentStoryboard, ['150-second glb_v5', '新規撮影は行いません',
+      '161f7674bb6963df212118919601b1da284622c234e566a156ea73c93bb17f9e',
       '公開アップロード・最終提出の完了は主張しません', candidateRecordUrl]),
   historicalStoryboardRetained:
     storyboard.includes('## 歴史的DAI-099撮影計画') &&

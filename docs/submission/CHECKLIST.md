@@ -39,7 +39,7 @@ r3の実測対象はPR #75の `8df3aeb9aeeaf31a228efbec8e901bbc2c7aa531` であ�
 - [x] 公開E2E 22/22 PASS（live Generate / AI Edit、2階層Play完走、Result、Edit復帰を含む）
 - [x] [公開版の異常入力確認とDAI-090 Final](../testing/PUBLIC_ABNORMAL_INPUT_DAI090_2026-10-19.md): DAI-090 Final 20/20、公開Generate / AI Edit異常入力 8/8 checks PASS
 - [x] 主観的音声レビュー（所有者がOKと判断、2026-10-19）
-- [x] デモ動画は現行の150秒v2候補を撮り直さずに使う（所有者判断、2026-10-19）
+- [x] デモ動画は既存の150秒glb_v5を撮り直さずに使う（所有者判断、2026-10-19。[動画の記録](DEMO_STORYBOARD.md)）
 - [ ] 動画と最終候補・監査証拠との整合、最終freeze / rollback作成
 - [ ] RepositoryのPublic化、最終compliance、提出
 
