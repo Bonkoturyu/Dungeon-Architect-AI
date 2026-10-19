@@ -221,9 +221,9 @@ See:
 
 最新のローカル統合は [公開候補 806d70c 統合確認](docs/testing/PUBLIC_CANDIDATE_806D70C_2026-10-19.md) の **24/24段階PASS** です。実測対象は `806d70c2be99863a2b14dbabf942422107898379`（PR #88 マージ後の `main`）で、Node 694/694 が成功しました。この候補は2026-10-05レビュー対応、GLB Export〔PR #78〕、詳細HUD分離〔PR #81〕などのruntime変更を含みます。後続のcommit（PR #89 のテストscript修正、記録の追加）はruntimeを変更していません。以前の [Windows r3記録](docs/testing/WINDOWS_PR75_R3_FINAL_LOCAL_2026-10-04.md)（PR #75 の `8df3aeb9aeeaf31a228efbec8e901bbc2c7aa531`、24/24段階）は別の実測として保持します。
 
-所有者のWindows Brave/Chromiumによる限定live確認で、Generateのcloud Response、AI Editの `move-entity` Responseと画面適用を確認済みです。公開build-infoと対象mainのcommit/source/bundle一致、全公開E2E、全異常入力への合格はこの確認に含みません。根拠は [限定live確認記録](https://github.com/Bonkoturyu/Dungeon-Architect-AI/blob/3196f2bb942bbdfbcddc2481416f24d7196c5ead/docs/testing/LIVE_PROVIDER_OWNER_EVIDENCE_2026-10-04.md) を参照してください。公開build-infoと候補commitの一致、全公開E2Eは、2026-10-19に候補 `806d70c` で別途確認しました（[記録](docs/testing/PUBLIC_CANDIDATE_806D70C_2026-10-19.md)）。
+所有者のWindows Brave/Chromiumによる限定live確認で、Generateのcloud Response、AI Editの `move-entity` Responseと画面適用を確認済みです。公開build-infoと対象mainのcommit/source/bundle一致、全公開E2E、全異常入力への合格はこの確認に含みません。根拠は [限定live確認記録](https://github.com/Bonkoturyu/Dungeon-Architect-AI/blob/3196f2bb942bbdfbcddc2481416f24d7196c5ead/docs/testing/LIVE_PROVIDER_OWNER_EVIDENCE_2026-10-04.md) を参照してください。公開 `build-info.json` と候補commitの一致、全公開E2Eは、2026-10-19に候補 `806d70c` で別途確認しました（[記録](docs/testing/PUBLIC_CANDIDATE_806D70C_2026-10-19.md)）。公開版の異常入力確認も同日に行いました（[記録](docs/testing/PUBLIC_ABNORMAL_INPUT_DAI090_2026-10-19.md)）。
 
-10月3日の受入smokeと過去の公開E2Eは、それぞれの対象commit・fixture／実providerの区別を保持します。公開API異常入力、最終動画・証拠の整合、repository公開と提出は、個別の証拠が揃うまで完了扱いにしません。主観的音声レビュー、DAI-090 Final、freeze／rollback作成も、ローカルPASSや公開E2Eでは完了扱いにしません。
+10月3日の受入smokeと過去の公開E2Eは、それぞれの対象commit・fixture／実providerの区別を保持します。公開API異常入力、DAI-090 Final、主観的音声レビューは、2026-10-19に [異常入力確認とDAI-090 Finalの記録](docs/testing/PUBLIC_ABNORMAL_INPUT_DAI090_2026-10-19.md) で確認しました。最終動画・証拠の整合、freeze／rollback作成、repository公開と提出は、個別の証拠が揃うまで完了扱いにしません。
 
 2026-10-05のレビュー対応ではDungeonSpec検証・audio unlock・simulation policyと証拠検査を変更しました。[追加修正の検証記録](docs/testing/REVIEW_THREAD_REMEDIATION_2026-10-05.md)を参照してください。上記Windows r3の24/24 PASSは記録済みSHAに対する履歴であり、この追加runtime差分のbrowser受入を意味しません。この差分を含む候補 `806d70c` のbrowser受入は、上記の公開候補記録で確認しました。
 
