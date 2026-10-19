@@ -37,11 +37,13 @@ r3の実測対象はPR #75の `8df3aeb9aeeaf31a228efbec8e901bbc2c7aa531` であ�
 - [x] [公開候補 806d70c 統合確認](../testing/PUBLIC_CANDIDATE_806D70C_2026-10-19.md): ローカル統合 24/24段階（Node 694/694）PASS
 - [x] Cloudflare Pages本番を `806d70c` に反映し、公開 `build-info.json` の commit / runtime source 指紋がローカル候補と一致
 - [x] 公開E2E 22/22 PASS（live Generate / AI Edit、2階層Play完走、Result、Edit復帰を含む）
-- [ ] 主観的音声レビュー、DAI-090 Final、公開Generate / Edit異常入力確認
-- [ ] 動画・監査証拠との整合、最終freeze / rollback作成
+- [x] [公開版の異常入力確認とDAI-090 Final](../testing/PUBLIC_ABNORMAL_INPUT_DAI090_2026-10-19.md): DAI-090 Final 20/20、公開Generate / AI Edit異常入力 8/8 checks PASS
+- [x] 主観的音声レビュー（所有者がOKと判断、2026-10-19）
+- [x] デモ動画は現行の150秒v2候補を撮り直さずに使う（所有者判断、2026-10-19）
+- [ ] 動画と最終候補・監査証拠との整合、最終freeze / rollback作成
 - [ ] RepositoryのPublic化、最終compliance、提出
 
-この節も最終受入の宣言ではありません。上の「現候補（2026-10-04）」の未完了項目のうち、公開deploymentと全公開E2Eは、この節の記録で確認しました。
+この節も最終受入の宣言ではありません。上の「現候補（2026-10-04）」の未完了項目のうち、公開deployment、全公開E2E、主観的音声レビュー、DAI-090 Final、公開Generate / Edit異常入力確認は、この節の記録で確認しました。
 
 以下は過去の計画時点のチェック状態です。現在の合否は上記とリンク先の対象commit付き証拠から判断してください。
 
