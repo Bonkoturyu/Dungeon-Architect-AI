@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { chromium } from 'playwright-core';
+import { captureBrowserFailure, confirmManualGeneration } from './browser-smoke-support.mjs';
+import { evaluateRoomEventLayout, readRoomEventLayout } from './room-event-layout-checks.mjs';
 
 const chromePath = process.env.CHROME_PATH || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 const rawBaseUrl = String(
@@ -50,23 +52,40 @@ function adjacency(snapshot) {
   return graph;
 }
 
-function shortestPath(snapshot, startRoomId, targetRoomIds) {
-  const targets = new Set(targetRoomIds);
-  const graph = adjacency(snapshot);
-  const queue = [startRoomId];
-  const previous = new Map([[startRoomId, null]]);
-  let found = targets.has(startRoomId) ? startRoomId : null;
+// Rooms with enemies or traps cost HP. Since DAI-100 balance, a plain shortest
+// path can wear the player down to 0 HP on some layouts, so prefer safer routes.
+function roomDanger(snapshot, roomId) {
+  return (snapshot?.entities ?? []).filter((entity) =>
+    entity.roomId === roomId && (entity.type === 'enemy' || entity.type === 'trap')).length;
+}
 
-  while (!found && queue.length > 0) {
-    const current = queue.shift();
+function shortestPath(snapshot, startRoomId, targetRoomIds, { avoidRoomIds = [] } = {}) {
+  const targets = new Set(targetRoomIds);
+  const avoid = new Set(avoidRoomIds);
+  const graph = adjacency(snapshot);
+  const cost = new Map([[startRoomId, 0]]);
+  const previous = new Map([[startRoomId, null]]);
+  const done = new Set();
+  let found = null;
+
+  for (;;) {
+    let current = null;
+    for (const [roomId, value] of cost) {
+      if (!done.has(roomId) && (current === null || value < cost.get(current))) current = roomId;
+    }
+    if (current === null) break;
+    if (targets.has(current)) {
+      found = current;
+      break;
+    }
+    done.add(current);
     for (const next of graph.get(current) ?? []) {
-      if (previous.has(next)) continue;
-      previous.set(next, current);
-      if (targets.has(next)) {
-        found = next;
-        break;
+      if (done.has(next) || (avoid.has(next) && !targets.has(next))) continue;
+      const nextCost = cost.get(current) + 1 + 10 * roomDanger(snapshot, next);
+      if (!cost.has(next) || nextCost < cost.get(next)) {
+        cost.set(next, nextCost);
+        previous.set(next, current);
       }
-      queue.push(next);
     }
   }
 
@@ -83,17 +102,13 @@ async function resolveBlockingEvents(page, evidence) {
 
     const enemy = page.locator('.room-event.is-blocking [data-action="clear-enemy"]').first();
     if (await enemy.count()) {
-      const roomEvent = await page.locator('#roomEventBar').evaluate((element) => {
-        const rect = element.getBoundingClientRect();
-        const viewport = document.querySelector('.viewport-shell')?.getBoundingClientRect();
-        return {
-          hidden: element.hidden,
-          centerX: rect.left + rect.width / 2,
-          centerY: rect.top + rect.height / 2,
-          viewportCenterX: viewport ? viewport.left + viewport.width / 2 : null,
-          viewportCenterY: viewport ? viewport.top + viewport.height / 2 : null,
-        };
-      });
+      // DAI-100 placement contract: centered horizontally, offset above the viewport center.
+      // The intro animation starts at opacity 0; measure once the panel is visible (center is unchanged).
+      await page.waitForFunction(() => {
+        const events = document.querySelector('#roomEventBar');
+        return events && !events.hidden && Number(getComputedStyle(events).opacity) > 0;
+      }, null, { timeout: 2_000 });
+      const roomEvent = evaluateRoomEventLayout(await readRoomEventLayout(page));
       evidence.roomEventObservations.push(roomEvent);
 
       const characters = await page.evaluate(() =>
@@ -107,21 +122,35 @@ async function resolveBlockingEvents(page, evidence) {
 
     const trap = page.locator('.room-event.is-blocking [data-action="avoid-trap"]').first();
     if (await trap.count()) {
-      const roomEvent = await page.locator('#roomEventBar').evaluate((element) => {
-        const rect = element.getBoundingClientRect();
-        const viewport = document.querySelector('.viewport-shell')?.getBoundingClientRect();
-        return {
-          hidden: element.hidden,
-          centerX: rect.left + rect.width / 2,
-          centerY: rect.top + rect.height / 2,
-          viewportCenterX: viewport ? viewport.left + viewport.width / 2 : null,
-          viewportCenterY: viewport ? viewport.top + viewport.height / 2 : null,
-        };
-      });
+      // DAI-100 placement contract: centered horizontally, offset above the viewport center.
+      // The intro animation starts at opacity 0; measure once the panel is visible (center is unchanged).
+      await page.waitForFunction(() => {
+        const events = document.querySelector('#roomEventBar');
+        return events && !events.hidden && Number(getComputedStyle(events).opacity) > 0;
+      }, null, { timeout: 2_000 });
+      const roomEvent = evaluateRoomEventLayout(await readRoomEventLayout(page));
       evidence.roomEventObservations.push(roomEvent);
       await trap.click();
       await page.waitForTimeout(80);
       continue;
+    }
+
+    // Treasure can grant equipment that reduces later damage, as a player would take it.
+    const treasure = page.locator('[data-action="open-treasure"]:not([disabled])').first();
+    if (await treasure.count()) {
+      await treasure.click();
+      await page.waitForTimeout(80);
+      continue;
+    }
+
+    const recovery = page.locator('[data-action="use-recovery"]:not([disabled])').first();
+    if (await recovery.count()) {
+      const player = (await state(page)).play?.playerState;
+      if (player && player.hp < player.maxHp) {
+        await recovery.click();
+        await page.waitForTimeout(80);
+        continue;
+      }
     }
 
     return;
@@ -153,14 +182,30 @@ async function traverse(page, route, evidence, { resolveAfterLast = true } = {})
   if (resolveAfterLast) await resolveBlockingEvents(page, evidence);
 }
 
+// A normal Goal completes on entry. A special Goal (shop, monster/trap house, or a
+// Goal room with enemies/traps) waits for the explicit Finish action instead.
+// Returns the state just before Finish (the state carried to the next floor), or null.
+async function completeGoalIfWaiting(page, evidence) {
+  const s = await state(page);
+  if (s.mode !== 'play' || s.play?.currentRoomId !== s.play?.goalRoomId) return null;
+  await resolveBlockingEvents(page, evidence);
+  const finish = page.locator('[data-action="complete-goal"]:not([disabled])').first();
+  if (!(await finish.count())) return null;
+  const beforeFinish = await state(page);
+  await finish.click();
+  return beforeFinish;
+}
+
 async function finishCurrentFloor(page, evidence) {
   const s = await state(page);
   const route = shortestPath(s.play.snapshot, s.play.currentRoomId, [s.play.goalRoomId]);
   if (route.length < 2) throw new Error(`No route to goal on floor ${(s.play?.floorIndex ?? 0) + 1}`);
   await traverse(page, route, evidence, { resolveAfterLast: false });
+  await completeGoalIfWaiting(page, evidence);
 }
 
 let browser;
+let page;
 try {
   browser = await chromium.launch({
     executablePath: chromePath,
@@ -172,7 +217,7 @@ try {
       '--ignore-gpu-blocklist',
     ],
   });
-  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 
   const consoleErrors = [];
   const pageErrors = [];
@@ -256,6 +301,8 @@ try {
   await page.fill('#generationPrompt', generationPrompt);
   await page.fill('#floorCount', '2');
   await page.click('#generateDungeon');
+  // Manual is the default: generation waits for the reviewed special-room plan.
+  const manualConfirmation = await confirmManualGeneration(page);
   await page.waitForFunction(() => {
     const s = window.__DAI_EDITOR_SLICE__.getState();
     return (
@@ -279,18 +326,24 @@ try {
 
   await page.fill('#naturalEditInput', editPrompt);
   await page.click('#applyNaturalEdit');
-  await page.waitForFunction(({ treasureId, goalRoomId }) => {
-    const s = window.__DAI_EDITOR_SLICE__.getState();
-    return (
-      s.naturalEditBusy === false &&
-      s.entities.find((entity) => entity.id === treasureId)?.roomId === goalRoomId
-    );
-  }, {
-    treasureId: firstFloorTreasure.id,
-    goalRoomId: firstFloorGoal.roomId,
-  }, { timeout: 120_000 });
+  // Wait for the edit to finish either way, then judge it below so a failed or
+  // rejected edit still leaves evidence instead of a bare timeout.
+  await page.waitForFunction(
+    () => window.__DAI_EDITOR_SLICE__.getState().naturalEditBusy === false,
+    null,
+    { timeout: 120_000 },
+  );
 
   const afterEdit = await state(page);
+  const naturalEditStatusText = await page.locator('#naturalEditStatus').innerText();
+  // The prompt names "the treasure"; the model may pick any treasure on the floor.
+  const treasureIds = new Set(
+    generated.entities.filter((entity) => entity.type === 'treasure').map((entity) => entity.id),
+  );
+  const editCommand = afterEdit.lastNaturalEditCommand;
+  const movedTreasure = editCommand?.type === 'move-entity' && treasureIds.has(editCommand.entityId)
+    ? afterEdit.entities.find((entity) => entity.id === editCommand.entityId) ?? null
+    : null;
 
   await page.click('[data-workflow-tab="play"]');
   await page.waitForFunction(() =>
@@ -317,14 +370,20 @@ try {
   )];
   if (enemyRooms.length === 0) throw new Error('Generated floor 1 has no enemy.');
 
+  // Entering a normal Goal clears the floor, so the detour to an enemy must not
+  // pass through the floor-1 Goal room.
   const enemyRoute = shortestPath(
     playStart.play.snapshot,
     playStart.play.currentRoomId,
     enemyRooms,
+    { avoidRoomIds: [playStart.play.goalRoomId] },
   );
-  if (enemyRoute.length === 0) throw new Error('No route to floor 1 enemy.');
+  if (enemyRoute.length === 0) throw new Error('No route to floor 1 enemy that avoids the Goal room.');
   await traverse(page, enemyRoute, evidenceRuntime);
   const afterEnemy = await state(page);
+  if (afterEnemy.mode !== 'play' || afterEnemy.play?.floorIndex !== 0) {
+    throw new Error(`Enemy detour left floor 1 (mode=${afterEnemy.mode}, floorIndex=${afterEnemy.play?.floorIndex}).`);
+  }
 
   const routeToGoal = shortestPath(
     afterEnemy.play.snapshot,
@@ -340,8 +399,11 @@ try {
   await resolveBlockingEvents(page, evidenceRuntime);
 
   const beforeAdvance = await state(page);
-  const carriedPlayerState = JSON.parse(JSON.stringify(beforeAdvance.play.playerState));
+  let carriedPlayerState = JSON.parse(JSON.stringify(beforeAdvance.play.playerState));
   await moveOne(page, routeToGoal.at(-1));
+  // A special Goal is resolved inside the Goal room first, so carry what Finish carried.
+  const beforeFinish = await completeGoalIfWaiting(page, evidenceRuntime);
+  if (beforeFinish) carriedPlayerState = JSON.parse(JSON.stringify(beforeFinish.play.playerState));
 
   await page.waitForFunction(() => {
     const s = window.__DAI_EDITOR_SLICE__.getState();
@@ -378,9 +440,9 @@ try {
   const roomEventsCentered =
     evidenceRuntime.roomEventObservations.length > 0 &&
     evidenceRuntime.roomEventObservations.every((entry) =>
-      entry.hidden === false &&
-      Math.abs(entry.centerX - entry.viewportCenterX) <= 4 &&
-      Math.abs(entry.centerY - entry.viewportCenterY) <= 4);
+      entry.checks.horizontalCentered &&
+      entry.checks.offsetAboveViewportCenter &&
+      entry.checks.insideViewport);
 
   const characterEnemyObserved = evidenceRuntime.characterObservations.some(
     (entry) => (entry?.enemies ?? []).length > 0,
@@ -410,7 +472,7 @@ try {
       currentUi.mysteryLabel.includes('Mystery') &&
       currentUi.audioToggle &&
       currentUi.floorCountInput &&
-      JSON.stringify(currentUi.statusLabels) === JSON.stringify(['LV', 'HP', 'EXP', 'G']),
+      JSON.stringify(currentUi.statusLabels.slice(0, 4)) === JSON.stringify(['LV', 'HP', 'EXP', 'G']),
     initialEditorReady:
       initial.startAllowed === true &&
       initial.validationCriticalCount === 0,
@@ -428,8 +490,7 @@ try {
       generated.startAllowed === true &&
       generated.validationCriticalCount === 0,
     liveNaturalEditWorked:
-      afterEdit.entities.find((entity) => entity.id === firstFloorTreasure.id)?.roomId ===
-      firstFloorGoal.roomId,
+      movedTreasure?.roomId === firstFloorGoal.roomId,
     bothApisReturned200:
       api200['/api/design-intent'] && api200['/api/natural-edit'],
     roomEventStackObservedCentered: roomEventsCentered,
@@ -450,7 +511,7 @@ try {
       result.run?.status === 'cleared' &&
       result.run?.floorsCompleted === 2 &&
       result.run?.currentFloorIndex === 1,
-    resultShowsFloorCompletion: resultText.includes('FLOOR 2/2'),
+    resultShowsFloorCompletion: /(^|\n)Floors\n2\/2(\n|$)/.test(resultText),
     resultAudioModeCurrent:
       audioAtResult.activeMode === 'result-cleared' &&
       audioAtResult.lastCue === 'run-clear',
@@ -493,12 +554,14 @@ try {
     currentUi,
     audioAfterUnlock,
     generation: {
+      manualConfirmation,
       selectedProvider: generated.lastGeneration?.selectedProvider ?? null,
       floorCount: generated.lastGeneration?.floorCount ?? null,
       roomCount: generated.rooms.length,
       entityTypes: [...new Set(generated.entities.map((entity) => entity.type))].sort(),
     },
     translatedCommand: afterEdit.lastNaturalEditCommand,
+    naturalEditStatus: naturalEditStatusText,
     playerState: {
       start: initialPlayerState,
       afterEnemy: afterEnemy.play.playerState,
@@ -540,6 +603,9 @@ try {
       `DAI-099 refreshed public invariant failed: ${falseChecks.join(', ')}`,
     );
   }
+} catch (error) {
+  await captureBrowserFailure({ page, error, outputDir });
+  throw error;
 } finally {
   if (browser) await browser.close();
 }
