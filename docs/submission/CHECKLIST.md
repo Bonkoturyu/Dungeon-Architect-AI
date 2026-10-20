@@ -40,7 +40,7 @@ r3の実測対象はPR #75の `8df3aeb9aeeaf31a228efbec8e901bbc2c7aa531` であ�
 - [x] [公開版の異常入力確認とDAI-090 Final](../testing/PUBLIC_ABNORMAL_INPUT_DAI090_2026-10-19.md): DAI-090 Final 20/20、公開Generate / AI Edit異常入力 8/8 checks PASS
 - [x] 主観的音声レビュー（所有者がOKと判断、2026-10-19）
 - [x] デモ動画は既存の150秒glb_v5を撮り直さずに使う（所有者判断、2026-10-19。[動画の記録](DEMO_STORYBOARD.md)）
-- [ ] 動画と最終候補・監査証拠との整合、最終freeze / rollback作成
+- [x] [freeze記録（2026-10-20）](FINAL_FREEZE_2026-10-20.md): 本番runtimeは `806d70c` のまま（所有者判断）、rollbackタグ `rollback/submission-runtime-806d70c` を作成、提出動画glb_v5のSHA-256と尺を再確認。動画の撮影時commitは特定できていないため、画面との差を開示した
 - [ ] RepositoryのPublic化、最終compliance、提出
 
 この節も最終受入の宣言ではありません。上の「現候補（2026-10-04）」の未完了項目のうち、公開deployment、全公開E2E、主観的音声レビュー、DAI-090 Final、公開Generate / Edit異常入力確認は、この節の記録で確認しました。
