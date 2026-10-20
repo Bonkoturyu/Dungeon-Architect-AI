@@ -43,6 +43,10 @@ Treat this branch as immutable by convention:
 
 The connected GitHub tool does not expose tag creation in this environment, so this dedicated branch is the persistent rollback ref.
 
+### 2026-10-20 — branchからタグへ移行
+
+repositoryのbranchを `main` だけにするため、`rollback/submission-candidate-m8-2026-09-19` は同じcommitを指す同名の注釈付きタグに置き換え、branchは削除した。下の復元手順はタグを使う形に直した。`scripts/run-dai-084-candidate-freeze-audit.mjs` の `rollbackRefExact` はbranchを前提にしているため、現在は失敗する。この監査は、M8候補以降の変更（`onlyDAI084BookkeepingChanged`）とlockfileの更新（`auditedLockfileExact`）により移行前から現在の `main` では失敗しており、当時の記録として残す。
+
 ## Safe rollback / recovery
 
 Do **not** force-reset `main`.
@@ -50,15 +54,15 @@ Do **not** force-reset `main`.
 To inspect the frozen candidate:
 
 ```powershell
-git fetch origin --prune
-git switch --detach origin/rollback/submission-candidate-m8-2026-09-19
+git fetch origin --prune --tags
+git switch --detach rollback/submission-candidate-m8-2026-09-19
 ```
 
 To create a reviewed recovery branch:
 
 ```powershell
-git fetch origin --prune
-git switch -c recover/m8-submission-candidate origin/rollback/submission-candidate-m8-2026-09-19
+git fetch origin --prune --tags
+git switch -c recover/m8-submission-candidate rollback/submission-candidate-m8-2026-09-19
 ```
 
 Then run the normal validation/build path and restore through a PR or deploy the exact candidate commit as appropriate.
