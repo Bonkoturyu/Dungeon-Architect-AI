@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright-core';
+import { resolveChromePath } from './browser-smoke-support.mjs';
 import { generateDungeonSpecV3 } from '../packages/generator/src/dungeon-generator.js';
 import { createFullDungeonExport } from '../packages/export-core/src/layout-exchange.js';
 import { TRAP_RULES_V1 } from '../packages/play-core/src/trap-avoidance.js';
@@ -30,7 +31,7 @@ function fixture({ legacy = false, armor = false, goal = false, seed = 2 } = {})
 }
 try {
   if (!process.env.DAI_SMOKE_URL) for (let i = 0; i < 100; i++) { try { if ((await fetch(url)).ok) break; } catch {} await new Promise((resolve) => setTimeout(resolve, 100)); }
-  browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || '/usr/bin/chromium', headless: process.env.TRAP_HEADLESS === '1' });
+  browser = await chromium.launch({ executablePath: resolveChromePath(), headless: process.env.TRAP_HEADLESS === '1' });
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   page.on('pageerror', (error) => errors.push(String(error)));
   page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });

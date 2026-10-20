@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { chromium } from 'playwright-core';
+import { resolveChromePath } from './browser-smoke-support.mjs';
 import { generateDungeonSpecV2 } from '../packages/generator/src/versions/v2/dungeon-generator.js';
 import { createFullDungeonExport } from '../packages/export-core/src/layout-exchange.js';
 const label=process.env.CAPACITY_LABEL==='repeat'?'capacity-repeat':'capacity';
@@ -13,7 +14,7 @@ let browser; const results=[];
 try {
  const url=`http://127.0.0.1:${port}/apps/editor-slice/index.html`;
  for(let i=0;i<100;i++){try{if((await fetch(url)).ok)break;}catch{} await new Promise(r=>setTimeout(r,100));}
- browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'/usr/bin/chromium',headless:false});
+ browser=await chromium.launch({executablePath:resolveChromePath(),headless:false});
  for(const count of counts) {
   const page=await browser.newPage({viewport:{width:1440,height:900}}); const errors=[]; page.on('pageerror',e=>errors.push(String(e)));
   await page.goto(url); await page.waitForFunction(()=>window.__DAI_EDITOR_SLICE__?.ready); await page.evaluate(()=>window.__DAI_ONBOARDING__?.close());
