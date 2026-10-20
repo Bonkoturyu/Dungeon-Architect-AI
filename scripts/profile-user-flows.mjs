@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright-core';
+import { resolveChromePath } from './browser-smoke-support.mjs';
 import { generateDungeonSpecV2 } from '../packages/generator/src/versions/v2/dungeon-generator.js';
 import { createFullDungeonExport } from '../packages/export-core/src/layout-exchange.js';
 import { DEFAULT_DESIGN_INTENT } from '../packages/intent/src/design-intent.js';
@@ -15,7 +16,7 @@ const summarize=(numbers)=>{const sorted=numbers.toSorted((a,b)=>a-b);return {sa
 try{
  const url=`http://127.0.0.1:${port}/apps/editor-slice/index.html`;
  for(let i=0;i<100;i++){try{if((await fetch(url)).ok)break;}catch{} await new Promise(r=>setTimeout(r,100));}
- browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'/usr/bin/chromium',headless:false});
+ browser=await chromium.launch({executablePath:resolveChromePath(),headless:false});
  for(const count of [10,100,250]){
   const page=await browser.newPage({viewport:{width:1440,height:900}}); page.on('pageerror',e=>errors.push(String(e)));
   await page.route('**/api/design-intent',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({ok:true,intent:DEFAULT_DESIGN_INTENT,roomRequests:[],difficulty:null,warnings:[],selectedProvider:'benchmark-stub'})}));

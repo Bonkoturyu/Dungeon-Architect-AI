@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright-core';
+import { resolveChromePath } from './browser-smoke-support.mjs';
 import { DEFAULT_DESIGN_INTENT } from '../packages/intent/src/design-intent.js';
 import { handleDesignIntentRequest } from '../functions/api/design-intent.js';
 import { getMessage } from '../apps/editor-slice/i18n.js';
@@ -22,7 +23,7 @@ try {
     try { if ((await fetch(url)).ok) break; } catch {}
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
-  browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || '/usr/bin/chromium', headless: false });
+  browser = await chromium.launch({ executablePath: resolveChromePath(), headless: false });
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   if (process.env.EXPECTED_DEPLOY_SHA) {
     await page.goto(new URL('build-info.json', url).href);

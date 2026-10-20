@@ -87,3 +87,18 @@ export async function captureBrowserFailure({ page, error, outputDir }) {
   }
   return evidence;
 }
+
+// CHROME_PATHが未指定なら、Windows・macOS・Linuxの標準的な場所を順に探す。
+export function resolveChromePath() {
+  if (process.env.CHROME_PATH) return process.env.CHROME_PATH;
+  const candidates = [
+    'C:/Program Files/Google/Chrome/Application/chrome.exe',
+    'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+    process.env.LOCALAPPDATA && path.join(process.env.LOCALAPPDATA, 'Google/Chrome/Application/chrome.exe'),
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    '/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/usr/bin/chromium', '/usr/bin/chromium-browser',
+  ].filter(Boolean);
+  const found = candidates.find((candidate) => fs.existsSync(candidate));
+  assert.ok(found, 'Chrome/Chromium not found. Set CHROME_PATH to an installed reviewed browser.');
+  return found;
+}

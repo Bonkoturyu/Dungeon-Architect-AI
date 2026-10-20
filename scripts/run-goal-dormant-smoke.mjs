@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright-core';
+import { resolveChromePath } from './browser-smoke-support.mjs';
 import { generateDungeonSpec } from '../packages/generator/src/dungeon-generator.js';
 import { createFullDungeonExport } from '../packages/export-core/src/layout-exchange.js';
 
@@ -26,7 +27,7 @@ function fixture(activation = 'none') {
 }
 try {
   if (vite) for (let i = 0; i < 100; i++) { try { if ((await fetch(url)).ok) break; } catch {} await new Promise((resolve) => setTimeout(resolve, 100)); }
-  browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || '/usr/bin/chromium', headless: false });
+  browser = await chromium.launch({ executablePath: resolveChromePath(), headless: false });
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   page.on('pageerror', (error) => errors.push(String(error)));
   page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });

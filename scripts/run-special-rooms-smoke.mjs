@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright-core';
+import { resolveChromePath } from './browser-smoke-support.mjs';
 import { DEFAULT_DESIGN_INTENT } from '../packages/intent/src/design-intent.js';
 const port = 4193;
 const output = path.resolve(process.env.SPECIAL_ROOM_ARTIFACT_DIR || 'artifacts/special-rooms'); fs.mkdirSync(output,{recursive:true});
@@ -11,7 +12,7 @@ let browser; const errors=[]; const checks=[];
 try {
   const url=process.env.DAI_SMOKE_URL || `http://127.0.0.1:${port}/apps/editor-slice/index.html`;
   if (!process.env.DAI_SMOKE_URL) for(let i=0;i<100;i++){try {if((await fetch(url)).ok)break;}catch{} await new Promise(r=>setTimeout(r,100));}
-  browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'/usr/bin/chromium',headless:false});
+  browser=await chromium.launch({executablePath:resolveChromePath(),headless:false});
   const page=await browser.newPage({viewport:{width:1440,height:900}});
   if (process.env.EXPECTED_DEPLOY_SHA) {
     await page.goto(new URL('build-info.json',url).href);
