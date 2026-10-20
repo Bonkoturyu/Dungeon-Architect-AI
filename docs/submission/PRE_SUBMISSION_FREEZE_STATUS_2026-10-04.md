@@ -5,7 +5,7 @@
 初回mainの退避点と旧PR整理、および後続のWindows r3ローカル統合結果を記録する。**現状を復元できる状態にした記録であり、最終受け入れPASSや提出完了の宣言ではない。**
 
 - 現状退避点: `rollback/pre-submission-2026-10-04` → `8bcce65246663bc16625a0f915ec2f202c63b5e4`
-- 旧候補向けPR #55〜#58: mergeせずclose、元branch・commitは保持
+- 旧候補向けPR #55〜#58: mergeせずclose、元branch（2026-10-20からは `archive/<元branch名>` タグ）・commitは保持
 - 最新のローカル統合: [Windows r3](../testing/WINDOWS_PR75_R3_FINAL_LOCAL_2026-10-04.md)で **24/24段階PASS**。初回main・Windows r1／r2のFAILは対象SHAごとの歴史的実測として保持
 - 公開backendのlive生成＋AI Edit: **所有者Windowsで両方の正常Responseとゲーム画面への適用を確認**（先行生成を含む回数・費用の限界は後述）
 - デモ動画: 確認済み範囲で撮り直しを必要とする実質的差分は見つからず、承認済み150秒版v2を暫定維持
@@ -18,7 +18,7 @@
 |---|---|
 | 実測／退避対象commit | [`8bcce65246663bc16625a0f915ec2f202c63b5e4`](https://github.com/Bonkoturyu/Dungeon-Architect-AI/commit/8bcce65246663bc16625a0f915ec2f202c63b5e4) |
 | 同tree | `3ec19b979d79897916e7f72f9acbedfb9315faf5` |
-| 退避branch | [`rollback/pre-submission-2026-10-04`](https://github.com/Bonkoturyu/Dungeon-Architect-AI/tree/rollback/pre-submission-2026-10-04) |
+| 退避ref（作成時はbranch、2026-10-20から同名タグ） | [`rollback/pre-submission-2026-10-04`](https://github.com/Bonkoturyu/Dungeon-Architect-AI/tree/rollback/pre-submission-2026-10-04) |
 | 状態記録のPR | [#74](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/74)（この記録の確認時点ではDraft / 未merge） |
 | 初回状態記録直前のdocs-only head | `249762b4b0dc901acccf35a5ee116a2a5faddcf2` |
 | 同tree | `02d1a7b8f1894e0d396c463aff122a7bd3115486` |
@@ -38,6 +38,8 @@
 | [#56](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/56) | closed / merged=false | `verify/dai-090-unexpected-prompts-2026-09-24` | `66bf7cf370361f6a74c40cdd5f79aa480cae68c3` |
 | [#57](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/57) | closed / merged=false | `final/dai-091-compliance-2026-09-25` | `a2f204990f04fa5946a654e9bd3dcf85342b6f25` |
 | [#58](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/58) | closed / merged=false | `verify/dai-091-final-compliance-2026-09-25` | `1807c1bbec6bb9df901b926503b849e258a52b7c` |
+
+2026-10-20に、repositoryのbranchを `main` だけにするため、4件の保持branchを同じhead SHAを指す注釈付きタグ `archive/<元branch名>` に置き換えた。#57の `final/dai-091-compliance-2026-09-25` は移行時点ですでにbranchが存在しなかったため、GitHubに残るPRのhead（上表のSHA）からタグを作った。退避点 `rollback/pre-submission-2026-10-04` も同日に同名タグへ移した。
 
 これらは主に旧候補 `027b0f3f6a5adc648dbff4cd00e28c0abe4778a3` 用のfreeze、異常入力検証、compliance、公開前監査に関するPRである。**closeは「全内容をmainへ取り込み済み」「現候補の全検証済み」という意味ではない。** 旧候補／旧動画hashに固定された記録を丸ごとmergeせず、歴史証拠・必要時の参照用として保持した。
 

@@ -75,7 +75,8 @@ runtime source指紋は `main` で `8d59aeb1ffca8275faa295fd5500018b16c8c2251cc9
 ## rollback
 
 - 新規: タグ `rollback/submission-runtime-806d70c` → `806d70c2be99863a2b14dbabf942422107898379`（2026-10-20作成）
-- 既存の退避点（`rollback/pre-submission-2026-10-04` ほか）は、それぞれの記録のまま残す
+- 既存の退避点（`rollback/pre-submission-2026-10-04` ほか2件）は、同じcommitを指す同名タグへ移した（2026-10-20）。branchは `main` だけにしている
+- マージせずcloseしたPRの元branchは、`archive/<元branch名>` タグとして残している
 
 本番に問題が起きたときは、Cloudflare Pagesで `806d70c` の本番deploymentに戻すか、このタグからbuildし直す。どちらも所有者が行う。
 

@@ -20,7 +20,7 @@ These checks describe the earlier M8 candidate and must not be interpreted as ac
 ## 現候補（2026-10-04）
 
 - [x] 現状退避点 `rollback/pre-submission-2026-10-04` → `8bcce65246663bc16625a0f915ec2f202c63b5e4` を保存
-- [x] 旧Draft #55–58を未mergeでcloseし、元branch・SHA・過去証拠を保存
+- [x] 旧Draft #55–58を未mergeでcloseし、元branch（2026-10-20からは `archive/<元branch名>` タグ）・SHA・過去証拠を保存
 - [x] 150-second v2動画候補を保持（新規撮影なし）
 - [x] 所有者Windowsで限定live Generate／AI Edit Responseと画面適用を確認（公開build-info同一性や全E2Eとは別）
 - [x] [Windows r3ローカル統合](../testing/WINDOWS_PR75_R3_FINAL_LOCAL_2026-10-04.md): 24/24段階、Node 628/628、browser 15段階・253 checks PASS

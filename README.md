@@ -242,7 +242,7 @@ Historical DAI-084 rollback point:
 
 - candidate commit: `cacba2a1f8f079ab6401768b97f9fc91fff8f3b9`;
 - candidate tree: `e2938bb46e1cf2eedc3a90e2b7603bd6050486ad`;
-- rollback branch: `rollback/submission-candidate-m8-2026-09-19`;
+- rollback ref: `rollback/submission-candidate-m8-2026-09-19` (created as a branch; moved to a tag of the same name on 2026-10-20);
 - dist manifest SHA-256: `387287bfba2aaad91a7ef4c9d98ebb522e8ce8e1e0768825d39d33d949d8ea6d`.
 
 See [DAI-084 Candidate Freeze / Rollback Point](docs/submission/DAI-084_CANDIDATE_FREEZE.md). The September DAI-099 rollback remains preserved separately. The 2026-10-04 rollback records the current baseline without promoting it to final acceptance.
