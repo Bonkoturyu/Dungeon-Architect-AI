@@ -24,9 +24,9 @@ These checks describe the earlier M8 candidate and must not be interpreted as ac
 - [x] 150-second v2動画候補を保持（新規撮影なし）
 - [x] 所有者Windowsで限定live Generate／AI Edit Responseと画面適用を確認（公開build-info同一性や全E2Eとは別）
 - [x] [Windows r3ローカル統合](../testing/WINDOWS_PR75_R3_FINAL_LOCAL_2026-10-04.md): 24/24段階、Node 628/628、browser 15段階・253 checks PASS
-- [ ] ローカルsuite対象外の公開deployment／全公開E2E、主観的音声レビュー、DAI-090 Final等を含め、最終受入を判断
-- [ ] 現公開candidateのGenerate / Edit異常入力確認を完了
-- [ ] 現candidate・公開fingerprint・動画・監査証拠を整合させて最終freezeを確定
+- [ ] 最終受入を判断（判断材料のうち、ローカルsuite対象外の公開deployment／全公開E2E、主観的音声レビュー、DAI-090 Finalは下の2026-10-19の節で確認済み。判断は提出前に所有者が行う）
+- [x] 現公開candidateのGenerate / Edit異常入力確認を完了（2026-10-19、下の節）
+- [x] 現candidate・公開fingerprint・動画・監査証拠を整合させて最終freezeを確定（2026-10-20、[freeze記録](FINAL_FREEZE_2026-10-20.md)）
 - [ ] RepositoryのPublic化を承認された手順で完了
 - [ ] 最終compliance、追加提出物、実際の提出を完了
 
