@@ -7,6 +7,12 @@ https://dungeon-architect-ai.pages.dev/
 
 > Verification status for the current candidate, including the boundary of the owner live check, is summarized in Japanese under **Verification status** at the end of this page.
 
+## What to evaluate
+
+Dungeon Architect AI is for indie level designers who want to turn a level idea into an editable, playable prototype. The intended benefit is joining generation, refinement and playtesting in one browser workflow; adoption and time savings are not yet measured.
+
+The walkthrough demonstrates that core loop. The optional reuse checks below distinguish implemented generalizability from future possibilities: multiple strategies share `DungeonSpec` and the same editor/play workflow; JSON supports authoring exchange; GLB supports static appearance export. No other-domain deployment is claimed.
+
 ## Supported judging environment
 
 - desktop Google Chrome on Windows;
@@ -41,6 +47,22 @@ The steps below describe the current repository UI. The browser Recommended sele
 13. Use **◀ Edit** at the top to return to Edit; the generated authoring run remains available.
 14. Optional: in **Create** → **Import / Export**, **GLB · current floor (3D visuals)** saves the displayed floor's geometry and materials for other 3D tools. It contains no gameplay data and cannot be re-imported into Dungeon Architect AI; lighting may differ.
 
+## Optional reuse checks
+
+Save Full JSON first if you want to keep the current authored dungeon before generating a variant or importing a file. These are inspection instructions, not a claim that every variant was included in the recorded live-provider acceptance.
+
+1. In **Create**, inspect the generator selector. Recommended is V3; 11 strategies share the authoring and play workflow. V3 shares V2 terrain, so this is not 11 independent terrain algorithms. Generate a variant with another strategy and inspect it in **Edit**; recheck validation before **Play > Test**.
+2. In **Create > Import / Export**, save **Full JSON** and import it to continue editing all floors' DungeonSpec, entities and events. It does not save current HP, play progress or Undo history. **Layout JSON** exchanges rooms, corridors, Seed and Start/Goal roles without entity/event content; it is not a full-content backup.
+3. Use **GLB · current floor (3D visuals)** for the displayed floor's static geometry and materials. Other floors require separate exports. It contains no gameplay, camera, lighting, audio or animation and cannot be re-imported into this app. A different 3D tool may render the lighting differently.
+
+Architecturally, `DungeonSpec` is renderer-independent. Reuse already exists inside this dungeon workflow and its documented output formats; adaptation to another domain would require new domain data and validation and is not implemented here. See [JSON / GLB scope](../architecture/GLB_EXPORT.md).
+
+## Reproducibility and cloud availability
+
+Generation is deterministic for the same normalized input, Seed, settings, strategy and version. A fresh live-model interpretation can differ, so re-entering the same wording is not a guarantee of identical output. Full JSON is the authoring-data handoff for an existing result.
+
+If generation falls back because cloud AI is unavailable, **Manual** mode shows review warnings; **Auto** stops without replacing the current dungeon. Do not label fallback output as a live-model result. **AI Edit** has no fallback and leaves the dungeon unchanged on error; manual editing remains available. See [Known Limitations](KNOWN_LIMITATIONS.md).
+
 ## AI/data boundary
 
 Generation sends the request text and fixed `includeRoomRequests: true` flag to same-origin `/api/design-intent`.
@@ -71,6 +93,9 @@ See [Known Limitations](KNOWN_LIMITATIONS.md).
 
 ## Verification status
 
+The 2026-10-29 revision adds benefit, reuse and export guidance only. It does not change the runtime or declare new Windows/browser/live-provider acceptance. The historical records below keep their original dates, commits and scope.
+
 > **確認状況（2026-10-04、2026-10-19に画面表記を照合）:** 現仕様の操作案内です。公開版の対象commit、実provider確認、未完了の受入項目は [PR #74](https://github.com/Bonkoturyu/Dungeon-Architect-AI/pull/74) を参照してください。過去の公開E2Eだけで現候補の全項目PASSとはしていません。
 
 所有者のWindows Brave/Chromiumによる限定live確認で、Generateのcloud Response、AI Editの `move-entity` Responseと画面適用を確認済みです。公開build-infoと対象mainのcommit/source/bundle一致、全公開E2E、全異常入力への合格はこの確認に含みません。根拠は [限定live確認記録](https://github.com/Bonkoturyu/Dungeon-Architect-AI/blob/3196f2bb942bbdfbcddc2481416f24d7196c5ead/docs/testing/LIVE_PROVIDER_OWNER_EVIDENCE_2026-10-04.md) を参照してください。公開 `build-info.json` と候補commitの一致、全公開E2Eは、2026-10-19に候補 `806d70c` で別途確認しました（[記録](../testing/PUBLIC_CANDIDATE_806D70C_2026-10-19.md)）。公開版の異常入力確認も同日に行いました（[記録](../testing/PUBLIC_ABNORMAL_INPUT_DAI090_2026-10-19.md)）。
+
