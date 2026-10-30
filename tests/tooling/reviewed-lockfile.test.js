@@ -23,6 +23,34 @@ test('current reviewed manifest matches exact lock bytes and source-map-js prove
   });
 });
 
+test('Vite pin, legal audit and production review agree with the reviewed lock', () => {
+  const packageJson = JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf8'));
+  const lock = JSON.parse(fs.readFileSync(path.join(repoRoot, 'package-lock.json'), 'utf8'));
+  const evidence = JSON.parse(fs.readFileSync(path.join(repoRoot,
+    'docs/legal/evidence/VITE_8_1_6_REVIEW_2026-10-30.json'), 'utf8'));
+  const vite = lock.packages['node_modules/vite'];
+  const reviewed = evidence.packages.find((entry) => entry.name === 'vite' && entry.version === '8.1.6');
+  assert.ok(reviewed, 'exact Vite production-review evidence is required');
+  assert.equal(packageJson.devDependencies.vite, reviewed.version);
+  assert.equal(lock.packages[''].devDependencies.vite, reviewed.version);
+  assert.equal(vite.version, reviewed.version);
+  assert.equal(vite.resolved, reviewed.tarball);
+  assert.equal(vite.integrity, reviewed.integrity);
+  assert.equal(evidence.lock.sha256, current.sha256);
+  assert.equal(evidence.review, current.review);
+  const review = fs.readFileSync(path.join(repoRoot, current.review), 'utf8');
+  assert.ok(review.includes(`vite@${reviewed.version}`));
+  const register = fs.readFileSync(path.join(repoRoot, 'docs/legal/THIRD_PARTY_DEPENDENCIES.md'), 'utf8');
+  const rows = register.split('\n').filter((line) => line.startsWith('| PROD-DEP-003 |'));
+  assert.equal(rows.length, 1);
+  const columns = rows[0].split('|').map((value) => value.trim());
+  assert.equal(columns[2], 'vite');
+  assert.equal(columns[3], reviewed.version);
+  assert.equal(columns[9], 'Approved');
+  const audit = fs.readFileSync(path.join(repoRoot, 'scripts/run-dai-073-legal-audit.mjs'), 'utf8');
+  assert.ok(audit.includes(`'vite': '${reviewed.version}'`), 'legal audit must pin the reviewed Vite version');
+});
+
 test('reviewed identity rejects missing, malformed, unsupported and invalid manifests', (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'dai-lock-review-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));

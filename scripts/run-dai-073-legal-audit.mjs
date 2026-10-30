@@ -121,7 +121,7 @@ const expectedTopLevel = {
   '@babylonjs/core': '9.18.0',
   'playwright-core': '1.62.0',
   'three': '0.185.1',
-  'vite': '8.1.5',
+  'vite': '8.1.6',
 };
 
 const dependencyVersionsExact = Object.entries(expectedTopLevel).every(([name, version]) =>
