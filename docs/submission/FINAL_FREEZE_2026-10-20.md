@@ -91,9 +91,15 @@ runtime source指紋は `main` で `8d59aeb1ffca8275faa295fd5500018b16c8c2251cc9
 ユーザー提供のDiscord告知スクリーンショット（ClaudiaS、#announcements、2026-10-29）の配点を受け、提出説明とJudge Quick Startに、対象利用者・意図する効果・実装済みの再利用範囲を追記した。READMEの導入にも同じ範囲を加えた。カテゴリは変更せず、元の短文と過去の文字数・監査結果をDAI-083文書内の履歴として保持する。
 
 - 基準となる取得済み文書: `main` commit `6a4a2b1dbe957709cad86d8589ae95cafb474993`
-- 対象: `DAI-083_DESCRIPTION_CATEGORY.md`、`JUDGE_QUICKSTART.md`、`README.md`、本記録の追記、metadata監査とその回帰テスト、および現行本文を検査するmetadata監査scriptと対応テスト
-- レビューbranch: `docs/submission-rubric-2026-10-29`。この追記を含むbranch commitが文書改訂の同一性を示す。mainへの直接push、merge、repositoryのPublic化、デプロイ、提出は行わない
+- 対象: `DAI-083_DESCRIPTION_CATEGORY.md`、`JUDGE_QUICKSTART.md`、`README.md`、本記録の追記、現行本文を検査するmetadata監査scriptと対応テスト
+- レビューbranch: `docs/submission-rubric-2026-10-29`。この追記を含むbranch commitが文書改訂の同一性を示す。この追記を作成した2026-10-29時点では、mainへの直接push、merge、repositoryのPublic化、デプロイ、提出を対象外とした
 - 本番runtime `806d70c`、rollback、上の動画ファイル・SHA-256は変更しない。過去の受入結果を今回の再実行結果とは扱わない
 - 改訂文の文字数・語数は現行本文だけを抽出して再計算する。旧metadata監査の固定文字列へのPASSを改訂文の合格根拠には使わない
 
 ユーザーによるGitHub反映の承認を受け、専用branchとdraft PRでレビューする。改訂本文に対応したmetadata監査13/13と回帰テスト7/7をcloud Linux・Node24.22.1で確認した。mainへの取り込み後は、そのmerge結果を提出文書の同一性として扱う。mergeや最終提出の完了は本記録では主張せず、runtime再デプロイも要求しない。
+
+### 2026-10-30 統合許可と検証範囲
+
+所有者の追加承認を受け、提出資料PR #102、Vite8.1.6のレビュー・lock整合を含むPR #101、AI利用記録とlocal-only ignoreの修正PR #103を、関連検証後に通常のPR手順で統合する。上の10月29日記録は当時の作業範囲であり、その後のmerge許可を否定しない。完了した統合の同一性はGitHub上の各merge記録を正本とする。
+
+10月20日freeze、本番`806d70c`、glb_v5のidentityと過去の受入記録は維持する。Viteとpackage/lockが変わるため、現行mainのsource指紋を上の過去の値と同一視しない。今回のcloud統合テストと同一環境build比較の範囲・未実施のbrowser受入は[Vite8.1.6レビュー](../legal/reviews/PROD-DEP-003-vite-8.1.6.md)を参照。Public化、runtime再デプロイ、最終compliance判定、提出は今回のmergeに含まれない。
