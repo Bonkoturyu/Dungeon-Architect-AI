@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "lockfile": "package-lock.json",
-  "sha256": "4aa37de779084e0edffc11eb4a4df6874e5c0fd09f40d7e398d4f3f49259469d",
-  "reviewDate": "2026-10-06",
-  "review": "docs/legal/reviews/PROD-DEP-006-source-map-js-1.2.2.md"
+  "sha256": "07011c9f06fa753f0dccf80eb30c169f498b100c5d18624ca73da0bdbb2d44cc",
+  "reviewDate": "2026-10-30",
+  "review": "docs/legal/reviews/PROD-DEP-003-vite-8.1.6.md"
 }

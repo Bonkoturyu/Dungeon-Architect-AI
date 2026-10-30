@@ -1,0 +1,208 @@
+{
+  "schemaVersion": 1,
+  "reviewDate": "2026-10-30",
+  "review": "docs/legal/reviews/PROD-DEP-003-vite-8.1.6.md",
+  "scope": "静的取得・差分・配布物・ライセンスレビュー。npm install/build/アプリテストは本記録では実行していない。",
+  "repository": "Bonkoturyu/Dungeon-Architect-AI",
+  "baseCommit": "6a4a2b1dbe957709cad86d8589ae95cafb474993",
+  "reviewedCommit": "e242229c516dd6608f24f07bf6e0c66a7f3a588a",
+  "lock": {
+    "previousSha256": "4aa37de779084e0edffc11eb4a4df6874e5c0fd09f40d7e398d4f3f49259469d",
+    "sha256": "07011c9f06fa753f0dccf80eb30c169f498b100c5d18624ca73da0bdbb2d44cc",
+    "gitBlob": "c14e006ab23d35f8545fcd1e290ec63af13c8c3b",
+    "semanticChanges": [
+      [
+        "/packages//devDependencies/vite",
+        "8.1.5",
+        "8.1.6"
+      ],
+      [
+        "/packages/node_modules/vite/integrity",
+        "sha512-7ULLwsCdYx/nRyrpiEwvqb5TFHrMVZyBt+rg/OAXT7rgj/z+DtTDyKFeLAdDkubDVDKD8jOsndmy7m55XcfUsw==",
+        "sha512-aRAHIxx5SW5zc1sMqFwJU/t5qaFfXb5Hj0J7W0VXihu/X99+346tz6080tO1T1xVIJORX/b3zVTXGFqUXh35uw=="
+      ],
+      [
+        "/packages/node_modules/vite/resolved",
+        "https://registry.npmjs.org/vite/-/vite-8.1.5.tgz",
+        "https://registry.npmjs.org/vite/-/vite-8.1.6.tgz"
+      ],
+      [
+        "/packages/node_modules/vite/version",
+        "8.1.5",
+        "8.1.6"
+      ]
+    ],
+    "otherEntriesUnchanged": true
+  },
+  "upstream": {
+    "repository": "https://github.com/vitejs/vite",
+    "tag": "v8.1.6",
+    "commit": "dade886f0cc17fedf777eff804593d2af182abd4",
+    "compare": "https://github.com/vitejs/vite/compare/v8.1.5...v8.1.6",
+    "commits": [
+      "4ff2522344e0b9d009954562e3ae4e42be44a16b",
+      "e46fc9c77edc7703570e96bd84cd2c7e76f06ae3",
+      "170b92791421bcd484f7325936d989a82d6bd4aa",
+      "dade886f0cc17fedf777eff804593d2af182abd4"
+    ]
+  },
+  "packages": [
+    {
+      "name": "vite",
+      "version": "8.1.5",
+      "metadataSource": "https://registry.npmjs.org/vite/8.1.5",
+      "tarball": "https://registry.npmjs.org/vite/-/vite-8.1.5.tgz",
+      "tarballSha256": "3ed0879c0db6411762d0ce96437954d85a9d17494dc4dc5871f1c239d7f13260",
+      "tarballSha1": "ccffce3ee487b1886223b24ebb27b91674827d30",
+      "integrity": "sha512-7ULLwsCdYx/nRyrpiEwvqb5TFHrMVZyBt+rg/OAXT7rgj/z+DtTDyKFeLAdDkubDVDKD8jOsndmy7m55XcfUsw==",
+      "computedIntegrity": "sha512-7ULLwsCdYx/nRyrpiEwvqb5TFHrMVZyBt+rg/OAXT7rgj/z+DtTDyKFeLAdDkubDVDKD8jOsndmy7m55XcfUsw==",
+      "license": "MIT",
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      },
+      "dependencies": {
+        "postcss": "^8.5.17",
+        "rolldown": "~1.1.5",
+        "picomatch": "^4.0.5",
+        "tinyglobby": "^0.2.17",
+        "lightningcss": "^1.32.0"
+      },
+      "lifecycleInstallScripts": {}
+    },
+    {
+      "name": "vite",
+      "version": "8.1.6",
+      "metadataSource": "https://registry.npmjs.org/vite/8.1.6",
+      "tarball": "https://registry.npmjs.org/vite/-/vite-8.1.6.tgz",
+      "tarballSha256": "4e512df2b82176a9b7462d72188e984bda6d55629a46d506f43cff7848957ee1",
+      "tarballSha1": "77f27cfb40c29d02bc60490b01d983e0ecb9a394",
+      "integrity": "sha512-aRAHIxx5SW5zc1sMqFwJU/t5qaFfXb5Hj0J7W0VXihu/X99+346tz6080tO1T1xVIJORX/b3zVTXGFqUXh35uw==",
+      "computedIntegrity": "sha512-aRAHIxx5SW5zc1sMqFwJU/t5qaFfXb5Hj0J7W0VXihu/X99+346tz6080tO1T1xVIJORX/b3zVTXGFqUXh35uw==",
+      "license": "MIT",
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      },
+      "dependencies": {
+        "postcss": "^8.5.17",
+        "rolldown": "~1.1.5",
+        "picomatch": "^4.0.5",
+        "tinyglobby": "^0.2.17",
+        "lightningcss": "^1.32.0"
+      },
+      "lifecycleInstallScripts": {}
+    }
+  ],
+  "publishedPackageComparison": {
+    "fileCountEach": 35,
+    "addedFiles": [],
+    "removedFiles": [],
+    "modifiedFiles": [
+      "package.json",
+      "dist/node/chunks/node.js"
+    ],
+    "otherFilesByteIdentical": 33,
+    "bundledVersionChanges": {
+      "launch-editor": [
+        "2.14.1",
+        "2.14.2"
+      ],
+      "launch-editor-middleware": [
+        "2.14.1",
+        "2.14.2"
+      ],
+      "shell-quote": [
+        "1.8.4",
+        "1.12.0"
+      ]
+    },
+    "licenseFileUnchanged": true,
+    "licenseSha256": "b1d741c26b53de1bbc0d4d7d3365b79888f9fe511527544a8a7b8e24dec43147",
+    "licenseSections": {
+      "MIT": 72,
+      "Apache-2.0": 1,
+      "ISC": 8,
+      "BSD-2-Clause": 2,
+      "CC0-1.0": 1
+    }
+  },
+  "registrySignatureVerification": {
+    "method": "openssl dgst -sha256, ECDSA registry public key; signed payload name@version:dist.integrity",
+    "publicKeySource": "https://registry.npmjs.org/-/npm/v1/keys",
+    "results": [
+      {
+        "index": 0,
+        "keyId": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U",
+        "keyType": "ecdsa-sha2-nistp256",
+        "keyExpires": null,
+        "signatureVerified": true,
+        "stdout": "Verified OK",
+        "stderr": ""
+      },
+      {
+        "index": 1,
+        "keyId": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U",
+        "keyType": "ecdsa-sha2-nistp256",
+        "keyExpires": null,
+        "signatureVerified": true,
+        "stdout": "Verified OK",
+        "stderr": ""
+      }
+    ]
+  },
+  "provenance": {
+    "source": "https://registry.npmjs.org/-/npm/v1/attestations/vite@8.1.6",
+    "payloadSubjectDigestMatchesDownloadedTarball": true,
+    "payloadSourceCommitMatchesOfficialTagComparison": true,
+    "workflow": "https://github.com/vitejs/vite/blob/v8.1.6/.github/workflows/publish.yml",
+    "sigstoreCertificateAndTransparencyLogVerification": "not performed; decoded payload consistency is not a verified SLSA attestation"
+  },
+  "sources": [
+    {
+      "url": "https://api.github.com/repos/vitejs/vite/compare/v8.1.5...v8.1.6",
+      "sha256": "20cd0a1baee1d79386de4f1c119e44e8f933f385f92c89272a9fe59f3fcdd62d"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/vitejs/vite/v8.1.6/packages/vite/CHANGELOG.md",
+      "sha256": "daddee0b53eba95cd23d67e4dc4c71e2a4f38cf6f9005fbf2cbd771e53765380"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/vitejs/vite/v8.1.6/LICENSE",
+      "sha256": "692057af3d664cbb79ac38293eb50aa3c4987f8182e2a440136e59e08f1b4a54"
+    },
+    {
+      "url": "https://api.github.com/repos/vitejs/launch-editor/compare/v2.14.1...v2.14.2",
+      "sha256": "93cb8fdd7ae7c8bff8f40e2f8a805ea148acc2d22853163b00682eb5aa097431"
+    },
+    {
+      "url": "https://registry.npmjs.org/launch-editor/2.14.2",
+      "sha256": "661af2fcb98864a9ff16c5f5c0d204ca623767c2e628a88deb4c81f2b0b98b64"
+    },
+    {
+      "url": "https://registry.npmjs.org/launch-editor-middleware/2.14.2",
+      "sha256": "1dc3773b026d5a215a5e1064d3d11535efd38a8feca1b7adbfe49198523693c5"
+    },
+    {
+      "url": "https://registry.npmjs.org/shell-quote/1.12.0",
+      "sha256": "8f10c6c0cf28a357703ee315d9aa5063e691d1093ad00a43334cb51ef3ebf336"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ljharb/shell-quote/v1.12.0/CHANGELOG.md",
+      "sha256": "adeb1aba44a16c656e25ca6ea8221d3a66691451671f1f30abb16b513f765a09"
+    },
+    {
+      "url": "https://registry.npmjs.org/-/npm/v1/keys",
+      "sha256": "faf23d8753d5bb79df250f10391ac89b63ecf7743e48487a544a99c847f9c8df"
+    },
+    {
+      "url": "https://registry.npmjs.org/-/npm/v1/attestations/vite@8.1.6",
+      "sha256": "dc2f99f8cb98ebf82437e1b4b570ce7429b9896e06e6363d8ca0969b11047da8"
+    }
+  ],
+  "notPerformed": [
+    "npm install / package execution",
+    "application tests / production build / browser smoke",
+    "fresh Windows editor-launch behavior test",
+    "full vulnerability audit",
+    "reproducible upstream build / Sigstore trust-chain verification"
+  ]
+}
