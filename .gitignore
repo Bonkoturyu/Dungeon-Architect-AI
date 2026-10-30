@@ -62,7 +62,37 @@ benchmarks/unity-webgl/Assets/Generated/
 # IDE / OS
 .vscode/
 .idea/
-.claude/
+# Claude: 共有settings/hooks/skillsは追跡可能にし、個人設定だけを除外する。
+# https://code.claude.com/docs/en/settings#settings-files-and-who-they-affect
+**/.claude/settings.local.json
+**/.claude/settings.local.json.*
+CLAUDE.local.md
+
+# Claudeの資格情報・履歴・cache（CLAUDE_CONFIG_DIRをproject内の.claudeへ向けた場合に備える）。
+# 共有設定にも秘密値は書かない。新規ファイルはcommit前に個別確認する。
+**/.claude/.credentials.json*
+**/.claude/.claude.json*
+**/.claude/history.jsonl
+**/.claude/projects/
+**/.claude/file-history/
+**/.claude/debug/
+**/.claude/logs/
+**/.claude/cache/
+**/.claude/paste-cache/
+**/.claude/image-cache/
+**/.claude/session-env/
+**/.claude/shell-snapshots/
+**/.claude/backups/
+**/.claude/sessions/
+**/.claude/tasks/
+**/.claude/todos/
+**/.claude/plans/
+**/.claude/uploads/
+**/.claude/feedback/
+**/.claude/feedback-bundles/
+**/.claude/usage-data/
+**/.claude/stats-cache.json
+**/.claude/worktrees/
 .DS_Store
 Thumbs.db
 
