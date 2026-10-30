@@ -6,6 +6,12 @@ Dungeon Architect AI is a browser-first dungeon-design project for **AI Builder 
 
 **Live demo:** https://dungeon-architect-ai.pages.dev/
 
+## Who it helps and what can be reused
+
+For indie level designers prototyping dungeon levels, the intended benefit is one browser workflow from a written idea to a level they can inspect, edit and playtest. Adoption and time savings have not yet been measured.
+
+The implemented reuse is concrete: renderer-independent `DungeonSpec` connects multiple generation strategies to the same editor, validation and play loop. Full JSON preserves authoring data for re-editing; Layout JSON exchanges layouts without gameplay content; GLB exports one displayed floor's static geometry and materials for other 3D tools. GLB has no gameplay or re-import into this app, and Full JSON is not an in-progress play save. Reusing this architecture in another domain is a future possibility, not a demonstrated deployment. See [JSON / GLB scope](docs/architecture/GLB_EXPORT.md).
+
 ## Verified browser flow
 
 ```text
@@ -236,7 +242,7 @@ https://dungeon-architect-ai.pages.dev/
 Submission metadata:
 
 - Focus category: **AI 3D Scene Generation**
-- Short description: frozen in [DAI-083 Submission Description / Focus Category](docs/submission/DAI-083_DESCRIPTION_CATEGORY.md)
+- Submission copy: 2026-10-29 rubric-aligned review-branch revision in [DAI-083 Submission Description and Focus Category](docs/submission/DAI-083_DESCRIPTION_CATEGORY.md); historical frozen copy retained separately. Final submission and deployment are not established by this document revision
 
 Historical DAI-084 rollback point:
 
@@ -258,3 +264,4 @@ See [Submission Checklist](docs/submission/CHECKLIST.md).
 **Team:** a few  
 **Target:** AI Builder Hackathon 2026  
 **License:** Apache-2.0
+
